@@ -94,9 +94,24 @@ Requiring pull requests on `main` would **block the automated data commits above
 1. Protect `main` with "Require a pull request" **and** allow `github-actions[bot]` to bypass. This needs a ruleset with a bypass list (available on public repos).
 2. Or keep `main` unprotected and rely on this workflow convention (the current setup).
 
-A required status check (for example `pytest`) would need a separate PR-triggered workflow. None exists today. Adding one is a small, free change (GitHub Actions minutes are free for public repos) that can be proposed in its own issue.
+**Automatic tests on PRs** (`.github/workflows/tests.yml`) run `python -m pytest -q` and the relative-path check on every PR to `main`, and show a pass/fail check on the PR. They need no secrets, use read-only permissions and cost nothing on a public repo. The owner can optionally make this check *required* in branch settings. That doesn't affect the bot's direct data commits as long as "require a pull request" stays off.
 
-## Automatic issue pickup: options assessed (not enabled)
+## Automated loop: how to hand work to Claude Code
+
+The owner, or ChatGPT on the owner's behalf, creates an issue and marks it for Claude Code in **one** of these ways:
+- add the label **`ready-for-claude`**, or
+- start the title with **`[Claude]`**.
+
+The scheduled **Doyen GitHub agent** (a Claude Code scheduled task on the owner's Claude Max subscription) runs every 2 hours. Each run:
+1. **Review feedback first.** For every open PR on a `claude/issue-*` branch, it reads review comments newer than Claude's last reply, makes the requested changes on the same branch, pushes, and replies to each point.
+2. **One new issue.** It picks the oldest marked issue that hasn't been claimed yet. It claims it with a comment ("Claude Code is working on this"), implements on `claude/issue-<n>-<desc>`, runs the tests, opens a PR linked to the issue, and comments on the issue with the PR link.
+3. **Never merges, never spends.** It stops and asks in an issue comment when a decision is consequential or unclear.
+
+The agent never merges and never enables paid services. The owner approves every merge.
+
+Unmarked issues (like owner notes or discussion issues) are ignored. An issue can be withdrawn by removing the label or the `[Claude]` prefix before it is claimed.
+
+## Automatic issue pickup: options assessed
 
 This document sets up a **GitHub-based handoff**, not real-time AI-to-AI chat. ChatGPT and Claude Code don't talk to each other directly; they communicate through issues, PRs and comments, and a person (or an explicitly enabled automation) starts each Claude Code session.
 
