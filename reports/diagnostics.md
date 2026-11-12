@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-12 21:43 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-12 21:47 UTC)
 
 ## Opportunity funnel (next 7 days)
 
@@ -27,25 +27,25 @@
 
 ## The Odds API
 
-{'skipped': 'ODDS_API_KEY not set', 'credits_remaining_after': None, 'credits_spent': None, 'fetched': None, 'matched': None, 'unmatched': None}
+{'skipped': None, 'credits_remaining_after': None, 'credits_spent': None, 'fetched': None, 'matched': None, 'unmatched': None}
 
 ## Providers
 
-- football-data:fixtures: last success 2026-11-12T21:43:19+00:00
-- football-data:E0: last success 2026-11-12T21:43:19+00:00
-- football-data:E1: last success 2026-11-12T21:43:19+00:00
-- football-data:SP1: last success 2026-11-12T21:43:19+00:00
-- football-data:D1: last success 2026-11-12T21:43:19+00:00
-- football-data:I1: last success 2026-11-12T21:43:19+00:00
-- football-data:F1: last success 2026-11-12T21:43:19+00:00
-- football-data:N1: last success 2026-11-12T21:43:20+00:00
-- football-data:P1: last success 2026-11-12T21:43:20+00:00
-- football-data:B1: last success 2026-11-12T21:43:20+00:00
-- football-data:SC0: last success 2026-11-12T21:43:20+00:00
-- espn:international: last success 2026-11-12T21:44:48+00:00
-- the-odds-api: last success 2026-11-12T21:27:12+00:00
-- espn:nfl: last success 2026-11-12T21:44:53+00:00
-- espn:nba: last success 2026-11-12T21:44:57+00:00
-- espn:tennis: last success 2026-11-12T21:45:51+00:00
+- football-data:fixtures: last success 2026-11-12T21:47:34+00:00
+- football-data:E0: last success 2026-11-12T21:47:34+00:00
+- football-data:E1: last success 2026-11-12T21:47:34+00:00
+- football-data:SP1: last success 2026-11-12T21:47:34+00:00
+- football-data:D1: last success 2026-11-12T21:47:34+00:00
+- football-data:I1: last success 2026-11-12T21:47:34+00:00
+- football-data:F1: last success 2026-11-12T21:47:34+00:00
+- football-data:N1: last success 2026-11-12T21:47:35+00:00
+- football-data:P1: last success 2026-11-12T21:47:35+00:00
+- football-data:B1: last success 2026-11-12T21:47:35+00:00
+- football-data:SC0: last success 2026-11-12T21:47:35+00:00
+- espn:international: last success 2026-11-12T21:48:20+00:00
+- the-odds-api: last success 2026-11-12T21:27:12+00:00 · last error 2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=7ec2335bc4a605601568db84e0412246
+- espn:nfl: last success 2026-11-12T21:48:21+00:00
+- espn:nba: last success 2026-11-12T21:48:22+00:00
+- espn:tennis: last success 2026-11-12T21:48:32+00:00
 - espn:golf: last success 2026-11-12T20:55:40+00:00
-- espn:context: last success 2026-11-12T21:44:57+00:00
+- espn:context: last success 2026-11-12T21:48:23+00:00
