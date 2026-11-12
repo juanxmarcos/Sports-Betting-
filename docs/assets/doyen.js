@@ -37,6 +37,9 @@
   const sportName = (k) => (SPORTS.find((s) => s[0] === k) || [k, k])[1];
 
   function inRange(startIso, endIso, range) {
+    // Periods (identical in diagnostics and reports): Today/Tomorrow = local calendar days;
+    // This Week = the next 7 x 24 hours from now.
+    if (range === "week") { const t = new Date(startIso).getTime(), n = Date.now(); return t > n - 3 * 36e5 && t <= n + 7 * 864e5; }
     const today = dkey(new Date());
     const s = dkey(new Date(startIso)), e = endIso ? dkey(new Date(endIso)) : s;
     let lo = today, hi = today;
@@ -276,6 +279,15 @@
     if (!inj || !Object.keys(inj).length) return "";
     return Object.entries(inj).map(([team, list]) => `<div class="small"><b>${esc(team)}</b>: ${list.length ? list.map((i) => `${esc(i.player)} (${esc(i.status)}${i.key ? ", key player" : ""})`).join(", ") : "no reported absences"}</div>`).join("") ;
   }
+  function weatherBlock(w) {
+    if (!w) return "";
+    return `<div class="small">Weather: ${esc(w.temperature_f)}°F · gusts ${esc(w.gust_mph ?? "—")} mph · precipitation ${esc(w.precip_pct ?? "—")}%${w.notable ? ' <span class="pill stale">notable</span>' : ""}</div>`;
+  }
+  function disagreementBlock(d) {
+    if (!d || !d.category || d.category === "none") return "";
+    const lab = { explained: "Explained", unexplained: "Unexplained · held for review", technical_suspect: "Possible data fault · held" }[d.category] || d.category;
+    return `<div class="k" style="margin-top:10px">Model vs market check</div><div class="small">${pct(d.gap)} gap · ${esc(lab)}${(d.flags || []).length ? ": " + esc(d.flags.join("; ")) : ""}</div>`;
+  }
   function extForecast(f) {
     if (!f) return "";
     return `<div class="small">${esc(f.source)}: ${Object.entries(f.probs).map(([k, v]) => `${esc(k)} ${pct(v)}`).join(" · ")} <span class="faint">(${esc(ago(f.retrieved_at))})</span></div>`;
@@ -295,9 +307,11 @@
     const stats = [
       d.expected_goals ? `<div class="small muted">Expected goals ${esc(d.expected_goals.home)}–${esc(d.expected_goals.away)}</div>` : "",
       d.model_markets && d.model_markets["1X2:H"] != null ? cmpBars({ Home: d.model_markets["1X2:H"], Draw: d.model_markets["1X2:D"], Away: d.model_markets["1X2:A"] }, null) : "",
-      `<div class="small">Doyen's model: ${pct(p.model_prob, 1)} · Sharp market (margin removed): ${pct(p.market_prob, 1)}</div>`,
+      `<div class="kv"><div class="stat"><div class="k">Estimated chance (used)</div><div class="v">${pct(p.prob, 1)}</div><div class="faint small">${p.detail.blend_weight > 0 ? "model + market blend" : "from the sharp market, margin removed"}</div></div>
+        <div class="stat"><div class="k">Sharp market</div><div class="v">${pct(p.market_prob, 1)}</div><div class="faint small">${esc(d.consensus_source || "")}, excl. ${esc(p.bookmaker)}</div></div>
+        <div class="stat"><div class="k">Doyen's model</div><div class="v">${pct(p.model_prob, 1)}</div><div class="faint small">independent · context only</div></div></div>`,
       d.context ? `<p class="small">${esc(d.context)}</p>` : "",
-      formBlock(d.form), injuriesBlock(d.injuries), extForecast(d.external_forecast),
+      formBlock(d.form), injuriesBlock(d.injuries), weatherBlock(d.weather), extForecast(d.external_forecast),
       Object.keys(prices).length ? `<div class="k" style="margin-top:10px">Prices · ${esc(d.n_bookmakers || "")} bookmakers · reference ${esc(d.consensus_source || "—")}</div><div class="prices">${Object.entries(prices).map(([bk, q]) => `<div class="${bk === p.bookmaker ? "best" : ""}"><span>${esc(bk)}</span><span>${Object.entries(q || {}).map(([s, v]) => `${esc(s)} ${dec(v)}`).join(" · ")}</span></div>`).join("")}</div>` : "",
     ].join("");
     const risks = `<div class="risk">${WARN}<span>${esc(p.risk)}</span></div>${(p.risks || []).length ? `<ul class="small muted">${p.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
@@ -328,7 +342,7 @@
         <div class="stat"><div class="k">Value vs fair</div><div class="v">${c.ev >= 0 ? "+" : ""}${pct(c.ev, 1)}</div></div></div>
         <p class="small" style="margin-top:10px"><b>${esc(r.short)}</b></p><p class="note">Not a pick because: ${esc(({ "EV below threshold": "the price isn't far enough above fair value", "too few bookmakers": "fewer than 3 bookmakers price this market", "odds outside range": "the value is only at odds outside Doyen's range", "insufficient team history": "one side has too little history", "no market consensus": "there is no sharp reference price" })[c.reason] || c.reason || "below thresholds")}. ${c.n_books != null ? esc(c.n_books) + " bookmaker(s) quote this market." : ""}</p>` : `<p class="small">Odds unavailable. ${esc(r.short || "")}</p>`;
     const stats = [cmpBars(r.model_view, r.book_view), r.expected_goals ? `<div class="small muted">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</div>` : "",
-      r.extra_text ? `<p class="small">${esc(r.extra_text)}</p>` : "", formBlock(r.form), injuriesBlock(r.injuries), extForecast(r.external_forecast),
+      r.extra_text ? `<p class="small">${esc(r.extra_text)}</p>` : "", formBlock(r.form), injuriesBlock(r.injuries), weatherBlock(r.weather), extForecast(r.external_forecast), disagreementBlock(r.disagreement),
       r.model_weight === 0 ? `<p class="note">The model has not beaten the market out of sample, so its view is context only.</p>` : ""].join("");
     const why = `<p class="why">${esc(r.why_interesting || "Routine analysis.")}</p>${r.rank_basis ? `<p class="note">Watch ranking: ${esc(r.rank_basis)}</p>` : ""}`;
     const srcs = `<p class="small">${r.odds_updated ? "Odds updated " + esc(ago(r.odds_updated)) + " · " : ""}${r.n_books || 0} bookmaker(s) · ${esc(r.competition)}${r.neutral ? " · neutral venue" : ""}</p>${(r.notes || []).length ? `<ul class="small muted">${r.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}${(r.discrepancies || []).length ? `<div class="k">Source discrepancies</div><ul class="small">${r.discrepancies.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}`;

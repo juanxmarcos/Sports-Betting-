@@ -67,13 +67,15 @@ def price_event(model: DCModel, home: str, away: str, books: dict, blend_w: dict
                 sd, q_lo = float(qs.std()), float(np.quantile(qs, 0.10))
             else:
                 sd, q_lo = 0.0, oc.q
-            mq = cons[s] if cons else None
-            w = blend_w.get(market, 0.0)
-            fq = evm.blend(oc.q, mq, w)
-            fq_lo = evm.blend(q_lo, mq, w)
             bk, quoted, net = evm.best_price(book, s, commission)
             if bk is None:
                 continue
+            c_ex, src_ex = evm.consensus_excluding(book, sels, bk)   # leave-one-out reference
+            mq = c_ex[s] if c_ex else None
+            src = src_ex
+            w = blend_w.get(market, 0.0)
+            fq = evm.blend(oc.q, mq, w)
+            fq_lo = evm.blend(q_lo, mq, w)
             out.append(Candidate(market, s, line, oc.q, sd, q_lo, mq, src, fq, fq_lo, bk, quoted,
                                  net, oc.active * (fq * net - 1), oc.active * (fq_lo * net - 1),
                                  w, oc.active, nb, oc))
@@ -139,13 +141,14 @@ def price_generic(outcome_fn, books: dict, blend_w: dict, commission: float, mar
                 oc = outcome_fn(market, s, line)
             except (ValueError, KeyError):
                 continue
-            mq = cons[s] if cons else None
-            w = blend_w.get(market, 0.0)
-            fq = evm.blend(oc.q, mq, w)
             bk, quoted, net = evm.best_price(book, s, commission)
             if bk is None:
                 continue
+            c_ex, src_ex = evm.consensus_excluding(book, sels, bk)   # leave-one-out reference
+            mq = c_ex[s] if c_ex else None
+            w = blend_w.get(market, 0.0)
+            fq = evm.blend(oc.q, mq, w)
             e = oc.active * (fq * net - 1)
-            out.append(Candidate(market, s, line, oc.q, 0.0, oc.q, mq, src, fq, fq, bk, quoted, net, e, e, w,
+            out.append(Candidate(market, s, line, oc.q, 0.0, oc.q, mq, src_ex, fq, fq, bk, quoted, net, e, e, w,
                                  oc.active, nb, oc))
     return out

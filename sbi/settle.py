@@ -54,6 +54,10 @@ def settle_all(con, now: datetime) -> dict:
                            WHERE rec_id=?""",
                         (STATUS[res], pnl(res, net, r["stake_units"]), close_px, clv, db.utcnow(), r["rec_id"]))
             n["settled"] += 1
+        elif r["ev_status"] == "void":   # e.g. tennis walkover / cancelled event -> stake returned
+            con.execute("UPDATE recommendations SET status='void', pnl_units=0, settled_at=? WHERE rec_id=?",
+                        (db.utcnow(), r["rec_id"]))
+            n["voided"] += 1
         elif datetime.fromisoformat(r["kickoff_utc"]) < now - timedelta(days=10):
             con.execute("UPDATE recommendations SET status='void', pnl_units=0, settled_at=? WHERE rec_id=?",
                         (db.utcnow(), r["rec_id"]))
@@ -81,6 +85,8 @@ def reassess_open(con, now: datetime) -> dict:
     rules = config.RULES
     out = {"checked": 0, "appended": 0}
     for r in con.execute("SELECT * FROM recommendations WHERE status='open'").fetchall():
+        if _integrity_withdrawn(con, r["rec_id"]):
+            continue   # terminal: a pick that failed the integrity audit is never re-activated by price moves
         last = con.execute("SELECT * FROM rec_updates WHERE rec_id=? ORDER BY id DESC LIMIT 1", (r["rec_id"],)).fetchone()
         ko = datetime.fromisoformat(r["kickoff_utc"])
         if ko <= now:
@@ -131,6 +137,8 @@ def _news_triggers(con, now: datetime) -> dict:
     _ensure(con)
     n = 0
     for r in con.execute("SELECT * FROM recommendations WHERE status='open' AND kickoff_utc > ?", (now.isoformat(),)).fetchall():
+        if _integrity_withdrawn(con, r["rec_id"]):
+            continue
         sport = "nba" if r["league"] == "NBA" else ("nfl" if r["league"] == "NFL" else None)
         logged = {u["note"] for u in con.execute("SELECT note FROM rec_updates WHERE rec_id=?", (r["rec_id"],))}
         last = con.execute("SELECT status FROM rec_updates WHERE rec_id=? ORDER BY id DESC LIMIT 1", (r["rec_id"],)).fetchone()
@@ -140,6 +148,19 @@ def _news_triggers(con, now: datetime) -> dict:
             for c in con.execute("""SELECT team, player, old_status, new_status FROM injury_changes WHERE sport=?
                                     AND team IN (?,?) AND first_seen > ? ORDER BY id""", (sport, r["home"], r["away"], r["published_at"])):
                 notes.append(f"Injury update: {c['player']} ({c['team']}) {c['old_status'] or 'not listed'} → {c['new_status']}.")
+        # material price movement of the sharp reference since publication (>= 3 probability points)
+        if r["market_prob"]:
+            from .pipeline import _latest_books
+            books, _, _ = _latest_books(con, r["event_id"], config.RULES.max_odds_age_hours, now)
+            book = books.get((r["market"], r["line"]), {})
+            cons, src = evm.consensus_excluding(book, SELECTIONS.get(r["market"], ["H", "A"]), r["bookmaker"])
+            recent_mv = con.execute("""SELECT 1 FROM rec_updates WHERE rec_id=? AND note LIKE 'Market moved%'
+                                       AND checked_at > ?""", (r["rec_id"], (now - timedelta(hours=6)).isoformat())).fetchone()
+            if cons and r["selection"] in cons and abs(cons[r["selection"]] - r["market_prob"]) >= 0.03 and not recent_mv:
+                notes.append(f"Market moved: fair probability {r['market_prob'] * 100:.0f}% → {cons[r['selection']] * 100:.0f}% ({src}).")
+        w = con.execute("SELECT * FROM event_weather WHERE event_id=?", (r["event_id"],)).fetchone()
+        if w and ((w["gust_mph"] or 0) >= 20 or (w["precip_pct"] or 0) >= 60):
+            notes.append(f"Weather: gusts {w['gust_mph']:.0f} mph, precipitation {w['precip_pct']:.0f}%.")
         lu = con.execute("SELECT COUNT(*) n, SUM(confirmed) c FROM lineups WHERE event_id=?", (r["event_id"],)).fetchone()
         if lu["n"] == 2 and lu["c"] == 2:
             notes.append("Starting lineups confirmed (ESPN).")
@@ -150,3 +171,8 @@ def _news_triggers(con, now: datetime) -> dict:
                 n += 1
     con.commit()
     return {"news_notes": n}
+
+
+def _integrity_withdrawn(con, rec_id) -> bool:
+    return bool(con.execute("SELECT 1 FROM rec_updates WHERE rec_id=? AND status='withdrawn' AND note LIKE 'Integrity audit%'",
+                            (rec_id,)).fetchone())

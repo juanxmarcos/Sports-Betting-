@@ -213,3 +213,48 @@ None of the models beats a bookmaker baseline, so all keep weight 0.
 - Bookmaker names are normalised so duplicate feeds don't count twice.
 - Missing or stale data excludes a market rather than filling it in.
 - Correlated markets on the same event are limited to one pick per event.
+
+
+## 13. Doyen v0.5: integrity, disagreement screening, model tests
+
+**Extreme model–market disagreement.** Historical test (club soccer, 9,920 test matches, 1X2 log loss by gap):
+
+| Gap (model vs de-vigged market) | n | Model | Market |
+|---|---|---|---|
+| < 0.05 | 4,904 | 0.996 | 0.993 |
+| 0.05–0.10 | 3,424 | 1.012 | 0.997 |
+| 0.10–0.15 | 1,169 | 0.988 | 0.933 |
+| 0.15–0.20 | 338 | 1.054 | 0.928 |
+| ≥ 0.20 | 85 | 1.029 | 0.837 |
+
+The larger the disagreement, the more decisively the market is right. Disagreements are therefore never a reason to bet.
+
+Every candidate with a gap ≥ 15 points that would otherwise qualify is screened (`sbi/disagreement.py`):
+- **Technical faults**, which always block the pick: odds feeds disagree on the same selection by ≥ 8 points, a weak team-name match (< 0.8) or kick-off mismatch (> 90 min) recorded by the odds connector.
+- **Explanations**: thin model history, a documented calibration bias, key absences from injury reports, or the sharp price moving ≥ 4 points in 48h.
+
+Unexplained or technically suspect gaps are **held for review** (stored in `disagreement_reviews`, shown as "Held for review" in Close to Value) and not published.
+
+**Odds integrity.**
+- Source-specific freshness (`sbi/odds_policy.py`). ESPN: 6h. The Odds API: 6h within 10h of the start, 12h within 36h, 24h otherwise. football-data.co.uk: 12h within 10h of the start, 24h otherwise.
+- Bookmaker names are normalised on read, and only the latest quote per bookmaker is used.
+- **Independence**: brands that share an owner or pricing platform (Betsson/NordicBet, Entain brands, Flutter brands, Kambi skins, …) count once toward the 3-bookmaker rule.
+- **No circularity**: the reference consensus always excludes the bookmaker (and its group) whose price is being tested (leave-one-out).
+- Odds Api event matches are logged with name score and kick-off difference (`odds_match_audit`).
+
+**Integrity audit of published picks** (`sbi/integrity.py`, append-only):
+- Checks that the published price was the bookmaker's latest quote, recomputes EV at that quote, and applies the disagreement rule.
+- Failure appends a terminal *withdrawn* status. Price moves cannot re-activate it.
+- v0.4 results: Spain v England draw **passed**, Slovenia **passed**, Andorra **withdrawn** (published 1.80 was a superseded quote, the latest was 1.77 at EV +1.4%, and the 34% vs 57% gap was unexplained).
+
+**Reassessment additions**: notes when the sharp fair probability moves ≥ 3 points since publication (at most one every 6h), notable weather (gusts ≥ 20 mph or precipitation ≥ 60%), injury changes and confirmed lineups. Tennis walkovers and cancellations settle as void.
+
+**Model tests (chronological, out of sample).**
+- Soccer: a DC/Elo 1X2 ensemble, weight 0.566 on DC (fitted on 2022–24). Test log loss went from 1.0036 to 1.0011, so it is **adopted** as Doyen's independent 1X2 view. The market (0.983) remains far better, so it has weight 0.
+- NFL: a starting-QB-change feature (starter differs from the team's usual starter in its previous 4 games). The coefficient is sensible (-1.55 points), but test log loss went 0.63927 → 0.63935 (95% CI of the difference -0.00425 … 0.00431), so it is **not adopted**.
+- Tennis (v0.4): re-tuned Elo adopted; fatigue rejected. NBA: no change; no free odds history to compare against.
+
+**Reporting consistency.**
+- One period definition everywhere. Today and Tomorrow are local calendar days; This Week is the next 7 × 24h.
+- The daily report reads its numbers from `data/diagnostics.json`, which is built first, so the report, diagnostics and website agree.
+- Funnel stages: discovered → complete history → valid forecast → fresh odds → 3+ independent bookmakers → **fully evaluated** → markets evaluated → positive-EV markets/events → passing all rules → published.

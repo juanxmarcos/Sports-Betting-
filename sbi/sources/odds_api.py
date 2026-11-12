@@ -95,20 +95,23 @@ def similarity(a: str, b: str) -> float:
     return difflib.SequenceMatcher(None, na, nb).ratio()
 
 
-def match_event(con, league: str, home: str, away: str, commence: datetime) -> str | None:
-    """Find our event for an Odds API event: same league family, kickoff within 3h, both names similar."""
+def match_event(con, league: str, home: str, away: str, commence: datetime, with_info: bool = False):
+    """Find our event for an Odds API event: same league family, kickoff within a window, both names similar.
+    with_info=True returns (event_id, name_score, kickoff_diff_minutes)."""
     like = "INT:%" if league.startswith("INT:") else league
     win = 30 if league.startswith("TENNIS") else 3   # tennis start times are order-of-play estimates
-    rows = con.execute("""SELECT event_id, home, away FROM events WHERE league LIKE ? AND status='scheduled'
+    rows = con.execute("""SELECT event_id, home, away, kickoff_utc FROM events WHERE league LIKE ? AND status='scheduled'
                           AND kickoff_utc BETWEEN ? AND ?""",
                        (like, (commence - timedelta(hours=win)).isoformat(),
                         (commence + timedelta(hours=win)).isoformat())).fetchall()
-    best, best_s = None, 0.0
+    best, best_s, best_d = None, 0.0, None
     for r in rows:
-        s = min(similarity(home, r["home"]), similarity(away, r["away"]))
-        if s > best_s:
-            best, best_s = r["event_id"], s
-    return best if best_s >= 0.6 else None
+        sc = min(similarity(home, r["home"]), similarity(away, r["away"]))
+        if sc > best_s:
+            best, best_s = r["event_id"], sc
+            best_d = (datetime.fromisoformat(r["kickoff_utc"]) - commence).total_seconds() / 60
+    eid = best if best_s >= 0.6 else None
+    return (eid, best_s, best_d) if with_info else eid
 
 
 def parse_odds(event: dict, two_way: bool = False) -> list[tuple]:
@@ -250,11 +253,17 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
             if not (now < commence <= window_end):
                 continue
             cov["in_window"] += 1
-            eid = match_event(con, league, e["home_team"], e["away_team"], commence)
+            eid, score, kdiff = match_event(con, league, e["home_team"], e["away_team"], commence, with_info=True)
             swapped = False
             if not eid and league.startswith("TENNIS"):   # player order differs between sources
-                eid = match_event(con, league, e["away_team"], e["home_team"], commence)
+                eid, score, kdiff = match_event(con, league, e["away_team"], e["home_team"], commence, with_info=True)
                 swapped = bool(eid)
+            if eid:
+                from ..disagreement import ensure as _ens
+                _ens(con)
+                con.execute("INSERT OR REPLACE INTO odds_match_audit VALUES (?,?,?,?,?,?,?,?)",
+                            (eid, SOURCE, e["home_team"], e["away_team"], round(score, 3),
+                             None if kdiff is None else round(kdiff, 1), int(swapped), db.utcnow()))
             if not eid:
                 out["unmatched"].append(f"{sk}: {e['home_team']} v {e['away_team']}")
                 continue

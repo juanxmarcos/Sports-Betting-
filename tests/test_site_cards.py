@@ -46,3 +46,26 @@ def test_short_reason_is_short():
     r = {"odds": 4.8, "market_prob": 0.24, "model_prob": 0.25}
     s = short_reason(r, {})
     assert len(s.split()) <= 12 and "4.80" in s and "4.17" in s
+
+
+def test_reporting_consistency_site_diagnostics_report(tmp_path, monkeypatch):
+    """Same period definition and counts in the site data, diagnostics and the daily report."""
+    from sbi import report
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "REPORTS_DIR", tmp_path / "r")
+    monkeypatch.setattr(config, "ROOT", tmp_path)
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime.now(timezone.utc)
+    rows = [watch.analysis_row(sport="soccer", event_id=f"e{i}", competition="X", title=f"A{i} v B{i}", participants=[f"A{i}", f"B{i}"],
+                               start_utc=(now + timedelta(hours=h)).isoformat(), now=now,
+                               cands=[_cand(0.01, n_books=4)], rejections={"1X2:H:None": "EV below threshold"}, odds_ts=now.isoformat(),
+                               model_view={"Home": 0.5})
+            for i, h in enumerate((5, 30, 100, 160, 200))]       # 200h is outside the 7-day window
+    watch.write("soccer_club", rows)
+    d = json.loads(site.build(con, now).read_text())
+    in_week = [e for e in d["events"] if datetime.fromisoformat(e["start_utc"]) <= now + timedelta(hours=168)]
+    diag = json.loads((tmp_path / "diagnostics.json").read_text())
+    assert d["funnel_7d"]["soccer"]["1_events_discovered"] == len(in_week) == diag["funnel_7d"]["soccer"]["funnel"]["1_events_discovered"] == 4
+    assert d["funnel_7d"]["soccer"]["6_markets_evaluated"] == 4
+    tot = report._funnel_totals()
+    assert tot["discovered"] == 4 and tot["markets"] == 4 and tot["fully"] == 4

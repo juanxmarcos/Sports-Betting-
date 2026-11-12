@@ -1,0 +1,19 @@
+{
+  "tune": {
+    "n": 798,
+    "base": 0.62812,
+    "with_qb_change": 0.6261,
+    "qb_change_points_coef": -3.92
+  },
+  "test": {
+    "n": 989,
+    "base": 0.63927,
+    "with_qb_change": 0.63859,
+    "qb_change_points_coef": -1.53,
+    "diff_ci95": [
+      -0.00505,
+      0.00355
+    ]
+  },
+  "adopt": false
+}

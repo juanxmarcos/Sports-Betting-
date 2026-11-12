@@ -89,7 +89,17 @@ def best_price(book: dict[str, dict[str, float]], selection: str, commission: fl
 
 
 def n_books(book, selections) -> int:
-    return sum(1 for b, q in book.items() if b not in AGGREGATES and all(s in q for s in selections))
+    """Number of INDEPENDENT bookmakers (same-owner / same-platform brands count once)."""
+    from .sources.books import group_of
+    return len({group_of(b) for b, q in book.items() if b not in AGGREGATES and all(s in q for s in selections)})
+
+
+def consensus_excluding(book, selections, exclude_bookmaker, priority=CONSENSUS_PRIORITY):
+    """Consensus that never uses the bookmaker (or its group) whose price is being tested,
+    so a price can't establish fair value and then 'beat' it (no circularity)."""
+    from .sources.books import group_of
+    g = group_of(exclude_bookmaker)
+    return consensus({b: q for b, q in book.items() if group_of(b) != g}, selections, priority)
 
 
 def blend(model_q: float, market_q: float | None, w: float) -> float:

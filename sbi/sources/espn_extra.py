@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS external_forecasts (
     PRIMARY KEY (event_id, source));
 CREATE TABLE IF NOT EXISTS key_players (
     sport TEXT, team TEXT, player TEXT, category TEXT, retrieved_at TEXT, PRIMARY KEY (sport, team, player));
+CREATE TABLE IF NOT EXISTS event_weather (
+    event_id TEXT PRIMARY KEY, temperature_f REAL, gust_mph REAL, precip_pct REAL, source_url TEXT, retrieved_at TEXT);
 CREATE TABLE IF NOT EXISTS lineups (
     event_id TEXT, team TEXT, confirmed INTEGER, starters TEXT, retrieved_at TEXT, PRIMARY KEY (event_id, team));
 """
@@ -123,6 +125,12 @@ def enrich_events(con, now: datetime, horizon_h: float = 36) -> dict:
             con.execute("INSERT OR REPLACE INTO external_forecasts VALUES (?,?,?,?,?,?,?)",
                         (r["event_id"], "ESPN Analytics", ph, pa, pd_, ts, url))
             out["forecasts"] += 1
+        # weather (outdoor NFL games; ESPN via AccuWeather)
+        wx = (s.get("gameInfo") or {}).get("weather")
+        if isinstance(wx, dict) and wx.get("temperature") is not None:
+            con.execute("INSERT OR REPLACE INTO event_weather VALUES (?,?,?,?,?,?)",
+                        (r["event_id"], wx.get("temperature"), wx.get("gust"), wx.get("precipitation"),
+                         ((wx.get("link") or {}).get("href") or url), ts))
         # team leaders -> key players
         for team in s.get("leaders") or []:
             tname = (team.get("team") or {}).get("displayName")
@@ -179,6 +187,11 @@ def context_for(con, event_id: str, sport: str, home: str, away: str) -> dict:
             probs["Draw"] = f["p_draw"]
         out["external_forecast"] = {"source": f["source"], "probs": probs, "retrieved_at": f["retrieved_at"],
                                     "url": f["source_url"]}
+    w = con.execute("SELECT * FROM event_weather WHERE event_id=?", (event_id,)).fetchone()
+    if w:
+        out["weather"] = {"temperature_f": w["temperature_f"], "gust_mph": w["gust_mph"], "precip_pct": w["precip_pct"],
+                          "retrieved_at": w["retrieved_at"], "notable": bool((w["gust_mph"] or 0) >= 20 or (w["precip_pct"] or 0) >= 60
+                                                                             or (w["temperature_f"] or 60) <= 25)}
     lu = con.execute("SELECT team, confirmed FROM lineups WHERE event_id=?", (event_id,)).fetchall()
     if lu:
         out["lineups_confirmed"] = all(x["confirmed"] for x in lu) and len(lu) == 2

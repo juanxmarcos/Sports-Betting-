@@ -73,6 +73,7 @@ def _pick(con, r, now) -> dict:
             "SELECT checked_at,status,best_odds,best_bookmaker,ev_now,note FROM rec_updates WHERE rec_id=? ORDER BY id", (r["rec_id"],))],
         "detail": {"consensus_source": e.get("consensus_source"), "n_bookmakers": e.get("n_bookmakers"),
                    "context": e.get("context"), "injuries": e.get("injuries"), "external_forecast": e.get("external_forecast"),
+                   "weather": e.get("weather"), "blend_weight": e.get("blend_weight", 0),
                    "prices": e.get("all_prices"), "expected_goals": e.get("expected_goals"),
                    "form": e.get("form"), "model_markets": e.get("model_markets"),
                    "sources": json.loads(r.get("source_urls") or "[]")},
@@ -129,6 +130,17 @@ def _attach_context(con, row: dict) -> None:
                 if k in mv and abs(prob - mv[k]) >= 0.10:
                     disc.append(f"{f['source']} gives {team} {prob * 100:.0f}% vs Doyen's model {mv[k] * 100:.0f}%.")
     row["discrepancies"] = sorted(set(disc))
+    c = row.get("closest")
+    if c:
+        from .disagreement import ensure
+        ensure(con)
+        h = con.execute("""SELECT category, flags, gap FROM disagreement_reviews WHERE event_id=? AND market=? AND selection=?
+                           AND IFNULL(line,-999)=IFNULL(?,-999) ORDER BY id DESC LIMIT 1""",
+                        (row["event_id"], c["market"], c["selection"], c.get("line"))).fetchone()
+        if h:
+            row["disagreement"] = {"category": h["category"], "flags": json.loads(h["flags"] or "[]"), "gap": h["gap"]}
+            if h["category"] in ("technical_suspect", "unexplained") and c.get("ev", -1) >= config.RULES.min_ev:
+                c["reason"] = "extreme disagreement (review)"
 
 
 def _watch_short(row: dict) -> str:
@@ -153,6 +165,8 @@ def _watch_short(row: dict) -> str:
         return "Not enough history on one side yet."
     if reason in ("model uncertainty too high", "pessimistic EV not positive"):
         return "Edge too uncertain to publish."
+    if reason == "extreme disagreement (review)":
+        return "Held for review: model and market disagree sharply."
     if hours < 24 and row["sport"] == "soccer" and not row.get("lineups_confirmed"):
         return "Waiting for confirmed lineups and final prices."
     if hours < 24 and row["sport"] in ("nfl", "nba"):
@@ -230,7 +244,7 @@ def build(con, now: datetime | None = None):
                  and not any("known model bias" in n.lower() for n in r.get("notes", []))]
 
     # CLOSE TO VALUE: a real, fresh price within 4 points of the EV threshold, blocked by a fixable rule.
-    fixable = ("EV below threshold", "too few bookmakers", "no market consensus",
+    fixable = ("EV below threshold", "too few bookmakers", "no market consensus", "extreme disagreement (review)",
                "model uncertainty too high", "pessimistic EV not positive")
     close = [r for r in upcoming7 if not r["has_pick"] and r.get("closest") and fresh(r)
              and r["closest"].get("reason") in fixable and r["closest"]["ev"] >= min_ev - 0.04]

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-12T21:51:12+00:00",
+  "generated": "2026-11-12T22:12:06+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -49,20 +49,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261112:187376",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-12T21:55:00+00:00",
-      "home": "Linda Noskova",
-      "away": "Jessica Pegula"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261112:401929779",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-12T22:00:00+00:00",
-      "home": "Aruba",
-      "away": "Martinique"
-    },
     {
       "event_id": "football:INT:concacaf.nations.league:20261112:401929796",
       "league": "INT:concacaf.nations.league",

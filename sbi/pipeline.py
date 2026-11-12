@@ -58,9 +58,12 @@ def _latest_books(con, event_id: str, max_age_h: float, now: datetime) -> tuple[
     Bookmaker names are normalised at READ time too, so rows stored under older aliases
     (e.g. "Unibet (SE)") and new ones ("Unibet") count as ONE bookmaker and only the most
     recent quote is used (bookmaker independence)."""
+    from .odds_policy import max_age_hours
     from .sources.books import normalize_book
-    rows = con.execute("""SELECT market, line, bookmaker, selection, price, retrieved_at, source_url
+    rows = con.execute("""SELECT market, line, bookmaker, selection, price, retrieved_at, source_url, source
                           FROM odds WHERE event_id=? AND kind='pre'""", (event_id,)).fetchall()
+    ko = con.execute("SELECT kickoff_utc FROM events WHERE event_id=?", (event_id,)).fetchone()
+    hours_to = (datetime.fromisoformat(ko[0]) - now).total_seconds() / 3600 if ko else None
     latest: dict = {}
     newest, urls = None, set()
     for r in rows:
@@ -73,7 +76,8 @@ def _latest_books(con, event_id: str, max_age_h: float, now: datetime) -> tuple[
     fresh = []
     for v in latest.values():
         newest = max(newest or v["retrieved_at"], v["retrieved_at"])
-        if (now - datetime.fromisoformat(v["retrieved_at"])).total_seconds() / 3600 <= max_age_h:
+        limit = min(max_age_h, max_age_hours(v["source"], hours_to))   # source- and time-specific
+        if (now - datetime.fromisoformat(v["retrieved_at"])).total_seconds() / 3600 <= limit:
             fresh.append((v["market"], v["line"], v["bk"], v["selection"], v["price"]))
             if v["source_url"]:
                 urls.add(v["source_url"])
@@ -173,6 +177,15 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
                      json.dumps({"home": model.home, "rho": model.rho, "xi": mcfg.xi, "ridge": mcfg.ridge,
                                  "blend_weight": mcfg.blend_weight}), db.utcnow()))
         summary["leagues"][div] = {"events": int(len(evs)), "train_matches": int(len(train))}
+        # Independent 1X2 view = DC/Elo ensemble (validated: test log loss 1.0036 -> 1.0011). Context only (weight 0 vs market).
+        from .models.elo import final_ratings, fit_ordered_logit, ordered_logit_probs, run_elo
+        tr_sorted = train.sort_values("kickoff_utc")
+        elo_d = run_elo(tr_sorted.home.values, tr_sorted.away.values, tr_sorted.hg.values.astype(float), tr_sorted.ag.values.astype(float))
+        res_ = np.where(tr_sorted.hg > tr_sorted.ag, 2, np.where(tr_sorted.hg == tr_sorted.ag, 1, 0))
+        ol = fit_ordered_logit(elo_d[-1500:], res_[-1500:])
+        elo_r = final_ratings(tr_sorted.home.values, tr_sorted.away.values, tr_sorted.hg.values, tr_sorted.ag.values)
+        w_dc = json.loads((config.DATA_DIR / "tuned.json").read_text()).get("dc_elo_weight", 1.0) \
+            if (config.DATA_DIR / "tuned.json").exists() else 1.0
         for ev in evs.itertuples():
             if not (model.has(ev.home) and model.has(ev.away)):
                 summary["warnings"].append(f"{ev.event_id}: team not in training data (promoted/renamed?)")
@@ -183,6 +196,13 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
             cands = price_event(model, ev.home, ev.away, books, mcfg.blend_weight, rules.exchange_commission,
                                 n_draws=mcfg.n_param_draws, max_goals=mcfg.max_goals, rng=rng,
                                 markets=rules.markets)
+            ep = ordered_logit_probs([elo_r.get(ev.home, 1500) - elo_r.get(ev.away, 1500) + 60], ol)[0]
+            ens = {s_: w_dc * headline[f"1X2:{s_}"] + (1 - w_dc) * ep[i] for i, s_ in enumerate("HDA")}
+            for s_ in "HDA":
+                headline[f"1X2:{s_}"] = ens[s_]
+            for c in cands:
+                if c.market == "1X2":
+                    c.model_q = ens[c.selection]
             for c in cands:
                 con.execute("""INSERT OR IGNORE INTO predictions(run_id,event_id,market,selection,line,model_prob,
                                prob_sd,market_prob,final_prob,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
@@ -220,7 +240,11 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
 
     # do not re-publish an event that already has a recommendation (dedupe / exposure)
     already = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
-    pool = {k: v for k, v in cands_by_event.items() if k not in already}
+    pool = {k: list(v) for k, v in cands_by_event.items() if k not in already}
+    from . import disagreement
+    disagreement.filter_candidates(con, now, pool, {k: m["rejections"] for k, m in meta.items()},
+                                   {k: {"n_min": min(m["model"].n_matches.get(m["ev"].home, 0), m["model"].n_matches.get(m["ev"].away, 0)),
+                                        "min_history": rules.min_team_matches} for k, m in meta.items()})
     picks = select(pool, rules, hist_ok)
     for rank, (eid, c) in enumerate(picks, 1):
         m = meta[eid]
@@ -356,11 +380,13 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
                 d["_status"] = "partial"
     with db.job(con, "reassess") as d:
         from .settle import reassess_open
+        from .integrity import audit_open
         d.update(reassess_open(con, now))
+        d["integrity"] = audit_open(con, now)
     with db.job(con, "publish") as d:
-        d["report"] = str(report.write_daily(con, now, result["analyse"]))
-        d["dashboard"] = str(dashboard.build(con))
         from . import site
-        d["site"] = str(site.build(con, now))
+        d["site"] = str(site.build(con, now))          # builds diagnostics first ...
+        d["report"] = str(report.write_daily(con, now, result["analyse"]))   # ... so the report uses the same numbers
+        d["dashboard"] = str(dashboard.build(con))
         result["publish"] = d["report"]
     return result

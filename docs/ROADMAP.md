@@ -41,3 +41,14 @@ never used to tune rules.
 | Tennis Elo re-tuning (adopted), fatigue (rejected) | **Done** |
 | Close to Value section, This Week view, re-ranked Watching | **Done** |
 | Next | Tennis games markets (store game scores), re-test odds ≤ 3.5 as data accrues, NBA efficiency features (pbpstats), validate ESPN Analytics forecasts |
+
+## Doyen v0.5 (2026-11-12)
+| Item | Status |
+|---|---|
+| Disagreement screening + historical evidence, review queue | **Done** |
+| Source-specific freshness, read-time normalisation, bookmaker groups, leave-one-out consensus, match audit | **Done** |
+| Post-publication integrity audit (terminal withdrawals) | **Done** (Andorra withdrawn) |
+| Soccer DC/Elo ensemble (adopted); NFL QB-change (rejected) | **Done** |
+| Weather, walkovers, market-movement notes | **Done** |
+| Consistent report/diagnostics/site counts | **Done** |
+| Next | Move the SQLite DB out of main's git history (data branch) to stop repo growth; validate ESPN Analytics forecasts; tennis games markets |

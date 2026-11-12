@@ -208,7 +208,7 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publ
                          ORDER BY e.kickoff_utc""", (now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat())).fetchall()
     rng = np.random.default_rng(int(now.timestamp()) // 86400)
     rows, skipped = [], []
-    cands_by_event, hist_ok, meta = {}, {}, {}
+    cands_by_event, hist_ok, meta, dinfo = {}, {}, {}, {}
     for e in evs:
         if not (model.has(e["home"]) and model.has(e["away"])):
             skipped.append(f"{e['home']} v {e['away']}: team not in history (name mismatch?)")
@@ -247,8 +247,9 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publ
                "source_url": e["source_url"]}
         c1 = [c for c in cands if c.market == "1X2"]
         if len(c1) == 3:
-            if all(c.market_q is not None for c in c1):
-                row["book_1x2"] = [round(float(next(c.market_q for c in c1 if c.selection == s)), 4) for s in "HDA"]
+            full, _src = evm.consensus(books.get(("1X2", None), {}), ["H", "D", "A"])   # display view (all books)
+            if full:
+                row["book_1x2"] = [round(float(full[s]), 4) for s in "HDA"]
             row["bookmaker"] = c1[0].bookmaker
         if best:
             ev_, c = best
@@ -268,9 +269,14 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publ
         cands_by_event[e["event_id"]] = cands
         hist_ok[e["event_id"]] = nmin >= p["min_matches"]
         meta[e["event_id"]] = (e, books, urls, odds_ts, mk, row)
+        dinfo[e["event_id"]] = {"n_min": nmin, "min_history": p["min_matches"],
+                                "known_bias": bool((row.get("largest_gap") or {}).get("flag"))}
     soon = {eid for eid, (e, *_r) in meta.items()
             if datetime.fromisoformat(e["kickoff_utc"]) <= now + timedelta(hours=publish_h or config.RULES.publish_window_hours)}
-    picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
+    from . import disagreement
+    pool = {k: list(v) for k, v in cands_by_event.items() if k in soon}
+    disagreement.filter_candidates(con, now, pool, None, dinfo)
+    picks = _publishable(con, now, pool, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):
         e, books, urls, odds_ts, mk, row = meta[eid]

@@ -41,10 +41,13 @@ All times {{ tz }}. Generated {{ generated }}. Model `{{ model_version }}`.*
 
 | Item | Value |
 |---|---|
-| Events in 48h window | {{ s.events_in_window }} |
-| Events analysed (model + odds) | {{ s.analysed_events }} |
-| Leagues covered | {{ leagues or "none" }} |
-| Qualifying opportunities | **{{ recs|length }}** |
+| Period | next 7 days (rolling 168h, same as the website "This Week") |
+| Events discovered | {{ f.discovered }} |
+| Events with fresh odds | {{ f.with_odds }} |
+| Events fully evaluated (3+ independent bookmakers, complete history) | {{ f.fully }} |
+| Markets evaluated | {{ f.markets }} |
+| Events passing all rules | {{ f.passing }} |
+| Published today | **{{ recs|length }}** |
 | Highest estimated EV | {{ best_ev }} |
 | Blend weight on model (1X2/OU/AH) | {{ blend }} |
 
@@ -155,6 +158,22 @@ def _intl(s: dict) -> dict:
     return i
 
 
+def _funnel_totals() -> dict:
+    """Totals from data/diagnostics.json so the report, diagnostics and website agree."""
+    p = config.DATA_DIR / "diagnostics.json"
+    tot = {"discovered": 0, "with_odds": 0, "fully": 0, "markets": 0, "passing": 0}
+    if not p.exists():
+        return tot
+    for sp in json.loads(p.read_text()).get("funnel_7d", {}).values():
+        f = sp["funnel"]
+        tot["discovered"] += f.get("1_events_discovered", 0)
+        tot["with_odds"] += f.get("4_fresh_odds_available", 0)
+        tot["fully"] += f.get("5b_fully_evaluated", 0)
+        tot["markets"] += f.get("6_markets_evaluated", 0)
+        tot["passing"] += f.get("9_events_passing_all_rules", 0)
+    return tot
+
+
 def write_daily(con, now: datetime, s: dict):
     day = now.astimezone(ZoneInfo(config.TIMEZONE)).strftime("%Y-%m-%d")
     rows = con.execute("SELECT * FROM recommendations WHERE substr(published_at,1,10)=? ORDER BY rank",
@@ -177,7 +196,7 @@ def write_daily(con, now: datetime, s: dict):
         leagues=", ".join(config.FOOTBALL_LEAGUES.get(k, k) for k in s.get("leagues", {})),
         recs=recs, best_ev=(f"{max(r['ev'] for r in recs) * 100:+.1f}%" if recs else "—"),
         blend="/".join(f"{config.MODEL.blend_weight.get(k, 0):.2f}" for k in ("1X2", "OU", "AH")),
-        warnings=s.get("warnings", [])[:25], rules=config.RULES, perf=rec_metrics(con), intl=_intl(s))
+        warnings=s.get("warnings", [])[:25], rules=config.RULES, perf=rec_metrics(con), intl=_intl(s), f=_funnel_totals())
     config.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     p = config.REPORTS_DIR / f"{day}.md"
     p.write_text(md)

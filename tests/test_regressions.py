@@ -75,3 +75,72 @@ def test_bookmaker_aliases_count_once_and_latest_wins(tmp_path):
                         ("e", bk, "1X2", s_, None, p, "pre", "t", ts.isoformat()))
     books, _, _ = _latest_books(con, "e", 24, now)
     assert list(books[("1X2", None)]) == ["Unibet"] and books[("1X2", None)]["Unibet"]["H"] == 5.6
+
+
+def test_source_specific_freshness():
+    from sbi.odds_policy import max_age_hours
+    assert max_age_hours("espn.com (public scoreboard)", 48) == 6
+    assert max_age_hours("the-odds-api.com", 5) == 6 and max_age_hours("the-odds-api.com", 20) == 12
+    assert max_age_hours("the-odds-api.com", 100) == 24
+    assert max_age_hours("football-data.co.uk", 4) == 12
+
+
+def test_espn_quote_older_than_6h_not_actionable(tmp_path):
+    from sbi.pipeline import _latest_books
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('e','nba','NBA',?,'A','B','scheduled','t','t')""", ((now + timedelta(days=2)).isoformat(),))
+    for src, bk, age in (("espn.com (public scoreboard)", "DraftKings", 8), ("the-odds-api.com", "Pinnacle", 8)):
+        for s_, p in (("home", 1.8), ("away", 2.1)):
+            con.execute("INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                        ("e", bk, "ML", s_, None, p, "pre", src, (now - timedelta(hours=age)).isoformat()))
+    books, _, _ = _latest_books(con, "e", 24, now)
+    assert list(books[("ML", None)]) == ["Pinnacle"]          # 8h-old ESPN quote dropped, Odds API (48h out) kept
+
+
+def test_same_group_brands_count_once_and_no_self_consensus():
+    from sbi import ev as evm
+    book = {"Betsson": {"H": 2.0, "A": 1.9}, "Nordic Bet": {"H": 2.0, "A": 1.9}, "Pinnacle": {"H": 1.95, "A": 1.95}}
+    assert evm.n_books(book, ["H", "A"]) == 2
+    c, src = evm.consensus_excluding(book, ["H", "A"], "Pinnacle")
+    assert src != "Pinnacle"
+
+
+def test_integrity_audit_withdraws_superseded_price_keeps_original(tmp_path):
+    import json, sqlite3
+    from sbi import integrity
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    pub = now - timedelta(hours=1)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('e','football','INT:x',?,'Andorra','Gibraltar','scheduled','t','t')""", ((now + timedelta(hours=8)).isoformat(),))
+    for bk, ts, px in (("LeoVegas (SE)", pub - timedelta(hours=2), 1.80), ("LeoVegas", pub - timedelta(minutes=1), 1.77)):
+        con.execute("INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                    ("e", bk, "1X2", "H", None, px, "pre", "the-odds-api.com", ts.isoformat()))
+    con.execute("""INSERT INTO recommendations(rec_id,event_id,published_at,sport,league,kickoff_utc,home,away,market,selection,
+                   line,bookmaker,odds,model_prob,market_prob,final_prob,fair_odds,ev,ev_lower,stake_units,model_version,evidence_json)
+                   VALUES ('r','e',?,'football','INT:x',?,'Andorra','Gibraltar','1X2','H',NULL,'LeoVegas (SE)',1.80,0.341,0.573,0.573,
+                   1.745,0.031,0.031,1,'t','{}')""", (pub.isoformat(), (now + timedelta(hours=8)).isoformat()))
+    out = integrity.audit_open(con, now)
+    u = con.execute("SELECT status, note FROM rec_updates").fetchone()
+    assert out == {"audited": 1, "withdrawn": 1, "passed": 0} and u["status"] == "withdrawn"
+    assert "superseded" in u["note"] and "34% vs 57%" in u["note"]
+    assert con.execute("SELECT odds FROM recommendations").fetchone()[0] == 1.80          # original untouched
+    assert integrity.audit_open(con, now)["audited"] == 0                                 # audited once
+
+
+def test_integrity_withdrawal_is_terminal(tmp_path):
+    from sbi import settle
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('e','football','INT:x',?,'A','B','scheduled','t','t')""", ((now + timedelta(hours=8)).isoformat(),))
+    con.execute("""INSERT INTO recommendations(rec_id,event_id,published_at,sport,league,kickoff_utc,home,away,market,selection,
+                   line,bookmaker,odds,model_prob,market_prob,final_prob,fair_odds,ev,ev_lower,stake_units,model_version)
+                   VALUES ('r','e',?,'football','INT:x',?,'A','B','1X2','H',NULL,'X',2.0,0.5,0.5,0.5,2.0,0.04,0.04,1,'t')""",
+                (now.isoformat(), (now + timedelta(hours=8)).isoformat()))
+    con.execute("INSERT INTO rec_updates(rec_id,checked_at,status,note) VALUES ('r',?,'withdrawn','Integrity audit (v0.5): fails — x.')",
+                (now.isoformat(),))
+    settle.reassess_open(con, now + timedelta(hours=1))
+    assert con.execute("SELECT status FROM rec_updates ORDER BY id DESC LIMIT 1").fetchone()[0] == "withdrawn"

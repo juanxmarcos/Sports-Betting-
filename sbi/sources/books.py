@@ -26,3 +26,21 @@ def normalize_book(name: str) -> str:
     if "live" in k:
         return ""            # in-play feeds are not pre-match prices
     return ALIASES.get(k, name.strip())
+
+
+# Bookmakers that share an owner or a trading/pricing platform tend to quote the SAME prices,
+# so they are one piece of evidence for the "3+ independent bookmakers" rule. Best-effort map;
+# unknown bookmakers are treated as independent.
+GROUPS = {
+    "Betsson": "Betsson Group", "Nordic Bet": "Betsson Group", "NordicBet": "Betsson Group", "Betsafe": "Betsson Group",
+    "Coral": "Entain", "Ladbrokes": "Entain", "Bwin": "Entain", "Sportingbet": "Entain", "BetMGM": "Entain",
+    "Paddy Power": "Flutter", "Betfair Sportsbook": "Flutter", "FanDuel": "Flutter", "Sky Bet": "Flutter",
+    "Unibet": "Kambi", "LeoVegas": "Kambi", "BetRivers": "Kambi", "Paf": "Kambi",
+    "William Hill": "evoke", "888sport": "evoke",
+    "BetOnline.ag": "BetOnline", "Sportsbetting.ag": "BetOnline", "LowVig.ag": "BetOnline",
+    "Winamax": "Winamax", "Bet365": "Bet365", "Pinnacle": "Pinnacle", "Betfair Exchange": "Betfair Exchange",
+}
+
+
+def group_of(bookmaker: str) -> str:
+    return GROUPS.get(bookmaker, bookmaker)

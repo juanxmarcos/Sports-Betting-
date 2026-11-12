@@ -388,7 +388,7 @@ def analyse(con, now: datetime, sport: str, horizon_h: float = 168, publish_h: f
     last_game = {}
     for r in train.itertuples():
         last_game[r.home] = last_game[r.away] = r.kickoff_utc
-    rows, cands_by_event, hist_ok, meta = [], {}, {}, {}
+    rows, cands_by_event, hist_ok, meta, dinfo = [], {}, {}, {}, {}
     ranks = sorted(model.teams, key=model.rating, reverse=True)
     for e in evs:
         h, a = e["home"], e["away"]
@@ -432,10 +432,16 @@ def analyse(con, now: datetime, sport: str, horizon_h: float = 168, publish_h: f
             extra={"extra_text": context, "model_weight": p["blend_weight"].get("ML", 0)}))
         cands_by_event[e["event_id"]] = cands
         meta[e["event_id"]] = (e, books, urls, odds_ts, context, ph, pa)
+        from .sources.espn_extra import context_for
+        dinfo[e["event_id"]] = {"n_min": nmin, "min_history": cfg["min_games"],
+                                "injuries": context_for(con, e["event_id"], sport, h, a).get("injuries")}
     # publish (standard rules, shared daily cap, no re-publishing)
     from .intl import _publishable
     soon = {k for k, v in meta.items() if datetime.fromisoformat(v[0]["kickoff_utc"]) <= now + timedelta(hours=publish_h or config.RULES.publish_window_hours)}
-    picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
+    from . import disagreement
+    pool = {k: list(v) for k, v in cands_by_event.items() if k in soon}
+    disagreement.filter_candidates(con, now, pool, None, dinfo)
+    picks = _publishable(con, now, pool, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):
         e, books, urls, odds_ts, context, ph, pa = meta[eid]

@@ -28,7 +28,8 @@ def _history(now):
 
 
 def test_end_to_end_publish_settle_immutable(con, monkeypatch):
-    from sbi import pipeline, settle, report, dashboard
+    from sbi import pipeline, settle, report, dashboard, disagreement
+    monkeypatch.setattr(disagreement, "EXTREME_GAP", 1.0)   # synthetic model vs market gap is not under test here
     now = datetime(2026, 11, 20, 9, 0, tzinfo=timezone.utc)
     hist = _history(now)
     monkeypatch.setattr(pipeline, "load_league", lambda div, seasons: (hist, None))
@@ -89,7 +90,8 @@ def test_research_note_rules(con):
 
 
 def test_reassess_withdraw_and_site(con, monkeypatch, tmp_path):
-    from sbi import pipeline, settle, site
+    from sbi import pipeline, settle, site, disagreement
+    monkeypatch.setattr(disagreement, "EXTREME_GAP", 1.0)
     now = datetime(2026, 11, 20, 9, 0, tzinfo=timezone.utc)
     hist = _history(now)
     monkeypatch.setattr(pipeline, "load_league", lambda div, seasons: (hist, None))

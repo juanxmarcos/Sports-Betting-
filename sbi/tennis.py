@@ -238,7 +238,7 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float | None 
     elo = run_elo(hist)
     upcoming = [m for m in allm if not m["completed"] and now < m["date"] <= now + timedelta(hours=horizon_h)
                 and m["state"] in ("STATUS_SCHEDULED", None)]
-    rows, cands_by_event, hist_ok, meta = [], {}, {}, {}
+    rows, cands_by_event, hist_ok, meta, dinfo = [], {}, {}, {}, {}
     register(con, now, allm)
     for m in upcoming:
         eid, league = _eid(m), f"TENNIS:{m['tour'].upper()}"
@@ -266,8 +266,12 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float | None 
                                        extra={"extra_text": ctx, "model_weight": 0}))
         cands_by_event[eid] = cands
         meta[eid] = (m, books, urls, odds_ts, ctx, url, league, comp)
+        dinfo[eid] = {"n_min": min(n1, n2), "min_history": 15}
     soon = {k for k, v in meta.items() if v[0]["date"] <= now + timedelta(hours=publish_h or config.RULES.publish_window_hours)}
-    picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
+    from . import disagreement
+    pool = {k: list(v) for k, v in cands_by_event.items() if k in soon}
+    disagreement.filter_candidates(con, now, pool, None, dinfo)
+    picks = _publishable(con, now, pool, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):
         m, books, urls, odds_ts, ctx, url, league, comp = meta[eid]

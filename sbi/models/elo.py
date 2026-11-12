@@ -54,3 +54,17 @@ def ordered_logit_probs(diffs, params):
     pa = expit(c1 - z)
     ph = 1 - expit(c2 - z)
     return np.column_stack([ph, 1 - pa - ph, pa])  # H, D, A
+
+
+def final_ratings(home, away, hg, ag, k: float = 20.0, hfa: float = 60.0, init: float = 1500.0) -> dict:
+    """Ratings after processing all (pre-cutoff) matches, for pricing upcoming fixtures."""
+    r: dict[str, float] = {}
+    for h, a, x, y in zip(home, away, hg, ag):
+        rh, ra = r.get(h, init), r.get(a, init)
+        e = 1 / (1 + 10 ** (-(rh - ra + hfa) / 400))
+        s = 1.0 if x > y else (0.5 if x == y else 0.0)
+        gd = abs(x - y)
+        mult = 1.0 if gd <= 1 else (1.5 if gd == 2 else (11 + gd) / 8)
+        d = k * mult * (s - e)
+        r[h], r[a] = rh + d, ra - d
+    return r

@@ -12,5 +12,7 @@
     "2425",
     "2526",
     "2627"
-  ]
+  ],
+  "dc_elo_weight": 0.566,
+  "dc_elo_note": "1X2 ensemble weight on DC (vs Elo), fitted on validation 2022-24; test log loss 1.0036 -> 1.0011"
 }

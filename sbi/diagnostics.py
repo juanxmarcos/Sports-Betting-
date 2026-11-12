@@ -52,7 +52,9 @@ def funnel(now: datetime, horizon_h: float = 168, con=None) -> dict:
             f["3_valid_forecast"] += int(fu.get("model_ok", bool(r.get("model_view"))))
             f["4_fresh_odds_available"] += int(fu.get("has_odds", False))
             f["4b_stale_odds_only"] += int(fu.get("stale_odds", False))
-            f["5_three_plus_bookmakers"] += int((fu.get("max_books") or 0) >= config.RULES.min_bookmakers)
+            three = (fu.get("max_books") or 0) >= config.RULES.min_bookmakers
+            f["5_three_plus_bookmakers"] += int(three)
+            f["5b_fully_evaluated"] += int(three and fu.get("history_ok", True) and fu.get("model_ok", True))
             f["6_markets_evaluated"] += fu.get("n_markets", 0)
             f["7_markets_positive_ev"] += fu.get("positive_ev", 0)
             f["8_events_positive_ev"] += int(fu.get("positive_ev", 0) > 0)
@@ -69,7 +71,7 @@ def funnel(now: datetime, horizon_h: float = 168, con=None) -> dict:
                 primary["no odds"] += 1
             else:
                 primary[(r.get("closest") or {}).get("reason") or "other"] += 1
-        out[sport] = {"funnel": dict(sorted(f.items(), key=lambda kv: int(kv[0].split("_")[0].rstrip("b")))),
+        out[sport] = {"funnel": dict(sorted(f.items(), key=lambda kv: int(float(kv[0].split("_")[0].replace("b", ".5"))))),
                       "market_rejections": dict(reasons.most_common()),
                       "primary_blocker_by_event": dict(primary.most_common())}
     return out
