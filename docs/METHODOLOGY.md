@@ -143,3 +143,15 @@ The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
 - Tennis: match winner only. Set handicaps and total games are excluded because they are not modelled reliably.
 
 **Pre-game reassessment.** Every run (every 2 hours) re-prices open picks against the latest odds and appends a status: *active* (still qualifies), *updated* (edge narrowed), *withdrawn* (no longer value) or *expired* (started). These go to the append-only `rec_updates` table. The original pick, its odds and its timestamp never change, and withdrawn picks are still settled and counted in Pick History.
+
+## 11. Doyen v0.3: diagnostics, context and feature tests
+
+- **Opportunity funnel** (`sbi/diagnostics.py` → `data/diagnostics.json`, `reports/diagnostics.md`). For each sport over the next 48h it counts: events discovered → with sufficient statistics → with odds → stale-only → with ≥ 3 bookmakers → markets evaluated → qualifying, plus the primary blocker per event. On 2026-11-12 the dominant blockers were missing multi-bookmaker coverage (international friendlies and qualifiers have only DraftKings; tomorrow's NBA and most tennis are not yet priced). Where several books quoted, prices matched the sharp consensus. That makes it a coverage problem, not a threshold problem, so **thresholds were not changed**.
+- **Minimum-bookmaker rule reviewed.** Kept at 3 independent bookmakers (after name normalisation). With fewer, there is no market consensus to measure a price against, and a lone soft book's price can't be checked.
+- **NFL EPA features.** Prior-game, exponentially weighted offensive/defensive EPA per play from nflverse play-by-play was added to the points model:
+  - Tune 2018–20: 0.6283 → 0.6252.
+  - Test 2023–26 (989 games): 0.6393 → 0.6393, 95% CI of the difference −0.0057 … +0.0055.
+  - **Not adopted** (no out-of-sample gain). The closing market (0.6093) remains far better.
+- **External forecasts** (ESPN Analytics) are stored and compared, never blended, until they are validated out of sample like any other model.
+- **Reassessment** now also appends notes for injury status changes on either team and for confirmed soccer lineups. Price-based status (active, updated, withdrawn) is unchanged.
+- **Odds API timing.** A competition is fetched when its next event is within 10h (refresh every 4h, plus a final refresh ≤ 2.5h before start). Otherwise it gets one first look per day, within the daily credit allowance.

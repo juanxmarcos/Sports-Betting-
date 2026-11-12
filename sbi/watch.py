@@ -77,8 +77,16 @@ def analysis_row(*, sport: str, event_id: str, competition: str, title: str, sta
                           "bookmaker": c.bookmaker, "prob": round(float(c.final_q), 4),
                           "model_prob": round(float(c.model_q), 4),
                           "market_prob": None if c.market_q is None else round(float(c.market_q), 4),
-                          "ev": round(float(c.ev), 4), "reason": reason}
+                          "ev": round(float(c.ev), 4), "reason": reason, "active": round(float(c.active), 4),
+                          "n_books": c.n_books}
     row["waiting_for"] = waiting_for(reason, c, hours, sport, n_books)
+    # opportunity-funnel facts for diagnostics (computed from rule outcomes only)
+    from collections import Counter
+    reasons = Counter((rejections or {}).values())
+    row["funnel"] = {"n_markets": len(cands), "reasons": dict(reasons), "max_books": n_books,
+                     "has_odds": bool(cands), "stale_odds": bool(odds_ts) and not cands,
+                     "history_ok": "insufficient team history" not in reasons,
+                     "qualified": reasons.get("ok", 0)}
     return row
 
 

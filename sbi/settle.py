@@ -120,4 +120,33 @@ def reassess_open(con, now: datetime) -> dict:
                          cons[r["selection"]] if cons else None, ev_now, note))
             out["appended"] += 1
     con.commit()
+    out.update(_news_triggers(con, now))
     return out
+
+
+def _news_triggers(con, now: datetime) -> dict:
+    """Append 'updated' notes when injury status changes or lineups are confirmed after publication.
+    Notes only: the price-based status logic above still decides active/withdrawn."""
+    from .sources.espn_extra import _ensure
+    _ensure(con)
+    n = 0
+    for r in con.execute("SELECT * FROM recommendations WHERE status='open' AND kickoff_utc > ?", (now.isoformat(),)).fetchall():
+        sport = "nba" if r["league"] == "NBA" else ("nfl" if r["league"] == "NFL" else None)
+        logged = {u["note"] for u in con.execute("SELECT note FROM rec_updates WHERE rec_id=?", (r["rec_id"],))}
+        last = con.execute("SELECT status FROM rec_updates WHERE rec_id=? ORDER BY id DESC LIMIT 1", (r["rec_id"],)).fetchone()
+        st = last["status"] if last else "active"
+        notes = []
+        if sport:
+            for c in con.execute("""SELECT team, player, old_status, new_status FROM injury_changes WHERE sport=?
+                                    AND team IN (?,?) AND first_seen > ? ORDER BY id""", (sport, r["home"], r["away"], r["published_at"])):
+                notes.append(f"Injury update: {c['player']} ({c['team']}) {c['old_status'] or 'not listed'} → {c['new_status']}.")
+        lu = con.execute("SELECT COUNT(*) n, SUM(confirmed) c FROM lineups WHERE event_id=?", (r["event_id"],)).fetchone()
+        if lu["n"] == 2 and lu["c"] == 2:
+            notes.append("Starting lineups confirmed (ESPN).")
+        for note in notes:
+            if note not in logged:
+                con.execute("INSERT INTO rec_updates(rec_id,checked_at,status,note) VALUES (?,?,?,?)",
+                            (r["rec_id"], now.isoformat(), "updated" if st in ("active", "updated") else st, note))
+                n += 1
+    con.commit()
+    return {"news_notes": n}

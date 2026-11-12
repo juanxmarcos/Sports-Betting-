@@ -89,3 +89,20 @@ def test_parse_two_way():
     assert d[("ML", "home", None)] == 1.65
     assert d[("SPREAD", "home", -2.5)] == 1.91 and d[("SPREAD", "away", -2.5)] == 1.95
     assert d[("TOTAL", "over", 51.5)] == 1.9
+
+
+def test_due_schedule(tmp_path):
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    assert oa._due(con, "basketball_nba", now + timedelta(hours=8), now)       # never fetched
+    con.execute("INSERT INTO odds_api_fetches VALUES ('basketball_nba', ?, 3)", ((now - timedelta(hours=2)).isoformat(),))
+    assert not oa._due(con, "basketball_nba", now + timedelta(hours=8), now)   # fetched 2h ago, game in 8h
+    assert oa._due(con, "basketball_nba", now + timedelta(hours=2), now)       # final pre-game refresh
+    assert not oa._due(con, "basketball_nba", now + timedelta(hours=30), now)  # already looked today
+
+
+def test_book_normalisation():
+    from sbi.sources.books import normalize_book
+    assert normalize_book("Bet 365") == normalize_book("Bet365") == "Bet365"
+    assert normalize_book("DraftKings - Live Odds") == ""
+    assert normalize_book("Unibet (SE)") == normalize_book("Unibet (UK)")

@@ -115,7 +115,10 @@ def parse_odds(event: dict, two_way: bool = False) -> list[tuple]:
     out = []
     home, away = event["home_team"], event["away_team"]
     for bk in event.get("bookmakers", []):
-        name = BOOK_NAMES.get(bk["key"], bk.get("title", bk["key"]))
+        from .books import normalize_book
+        name = normalize_book(BOOK_NAMES.get(bk["key"], bk.get("title", bk["key"])))
+        if not name:
+            continue
         for m in bk.get("markets", []):
             ts = m.get("last_update") or bk.get("last_update")
             if two_way:
@@ -148,6 +151,21 @@ def parse_odds(event: dict, two_way: bool = False) -> list[tuple]:
                     elif o["name"] == away:
                         out.append((name, "AH", "away", -float(o["point"]), float(o["price"]), ts))
     return out
+
+
+def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:
+    """Spend credits close to start times: fetch a competition when its next event is within 10h
+    and the last fetch is >= 4h old, or once a day earlier (first look) when nothing was fetched today."""
+    con.execute("CREATE TABLE IF NOT EXISTS odds_api_fetches (sport_key TEXT, fetched_at TEXT, credits INTEGER)")
+    r = con.execute("SELECT MAX(fetched_at) m FROM odds_api_fetches WHERE sport_key=?", (sport_key,)).fetchone()
+    last = datetime.fromisoformat(r["m"]) if r and r["m"] else None
+    hours_to = (soonest - now).total_seconds() / 3600
+    if last is None:
+        return True
+    age = (now - last).total_seconds() / 3600
+    if hours_to <= 10:
+        return age >= 4 or (hours_to <= 2.5 and age >= 1.5)   # final pre-game refresh
+    return last.date() != now.date()
 
 
 def budget(remaining: int | None, now: datetime, spent_today: int = 0) -> int:
@@ -191,7 +209,7 @@ def ingest(con, now: datetime, horizon_h: float = 36) -> dict:
             evs, usage = _get(f"/sports/{sk}/events", {"dateFormat": "iso"}, api_key)
             starts = [datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00")) for e in evs]
             soon = [t for t in starts if now < t <= window_end]
-            if soon:
+            if soon and _due(con, sk, min(soon), now):
                 plan.append((prio, min(soon), sk, league))   # soonest kick-off first within priority
     plan.sort()
     remaining = int(usage["remaining"]) if usage.get("remaining") not in (None, "") else None
@@ -209,6 +227,7 @@ def ingest(con, now: datetime, horizon_h: float = 36) -> dict:
                                                   "oddsFormat": "decimal", "dateFormat": "iso"}, api_key)
         spent += c
         out["fetched"].append(sk)
+        con.execute("INSERT INTO odds_api_fetches(sport_key, fetched_at, credits) VALUES (?,?,?)", (sk, now.isoformat(), c))
         url = f"{BASE}/sports/{sk}/odds?regions={REGIONS}&markets={markets}"  # key stripped
         for e in data:
             commence = datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00"))

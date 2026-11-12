@@ -32,6 +32,31 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 - **The Odds API**: `americanfootball_nfl`, `basketball_nba` (h2h, spreads, totals = 3 credits) and active `tennis_*` tournament keys (h2h = 1 credit), within the daily credit allowance.
 - **Not available free:** historical NBA and tennis odds (models cannot be validated against the market); reliable injury and lineup feeds.
 
+### ESPN game context (Doyen v0.3)
+- **League injury reports** (`/sports/{basketball/nba|football/nfl}/injuries`), one request each per run. Current status is kept in `injuries_current`, and every new, changed or cleared status is appended to `injury_changes`. These changes trigger pick reassessment notes.
+- **Game summaries** (`/summary?event=<id>`) for events in the next 36h:
+  - ESPN Analytics matchup predictor, stored separately as an *external forecast* (`external_forecasts`).
+  - Team statistical leaders, used to flag injured *key* players.
+  - Soccer: extra bookmakers (e.g. Bet365) and starting lineups (`lineups`, confirmed when 11 starters are listed).
+- **Discrepancies:** when ESPN Analytics differs from the bookmakers or Doyen's model by ≥ 10 points, the gap is flagged on the match's Details page. It is never resolved by picking a side.
+- **Bookmaker normalisation** (`sbi/sources/books.py`): the same bookmaker from two feeds counts once (e.g. "Bet 365" = "Bet365"), and in-play feeds are excluded.
+
+### nflverse play-by-play (evaluated feature)
+`github.com/nflverse/nflverse-data/releases` is an open dataset intended for programmatic download. Team EPA/play features were tested in the NFL model and **not adopted**: no out-of-sample gain (see METHODOLOGY §11).
+
+## Candidate sources reviewed 2026-11-12 (automated-access check)
+| Source | Result | Decision |
+|---|---|---|
+| Forebet, FBref, SofaScore (site + API), Pro Football Reference, ATP Tour | 403 / bot protection | Not used: no circumvention |
+| Flashscore, FotMob, OddsPortal | Reachable, but terms prohibit scraping (FotMob API disallowed by robots) | Not used |
+| Oddschecker | 403 | Not used |
+| WorldFootball | 403 | Not used |
+| Understat | Reachable, robots allow | Not needed: football-data.co.uk now carries xG for all covered leagues |
+| Basketball-Reference, NFL.com, PFF, WTA, ITF, Tennis Abstract, Ultimate Tennis Statistics | Reachable | Not integrated: terms/rate limits restrict bulk automated use, or data is behind JS/paywall; ESPN covers the needed context |
+| official.nba.com injury report | Reachable (PDF) | ESPN injuries endpoint used instead (structured, same information) |
+| stats.nba.com | Blocks cloud IPs | Not used |
+| pbpstats API | Reachable | Candidate for NBA efficiency features (next step) |
+
 ## Evaluated, not (yet) automated
 
 | Source | Sport | Status | Notes |

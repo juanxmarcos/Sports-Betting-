@@ -10,6 +10,8 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from . import config, db
+from types import SimpleNamespace
+
 from .explain import ev_plain, explain, market_label, selection_label
 
 SPORTS = {
@@ -49,6 +51,9 @@ def _pick(con, r, now) -> dict:
     r = dict(r)
     e = json.loads(r.get("evidence_json") or "{}")
     r["sport"] = sport_of(r["league"])
+    if r["sport"] in ("nba", "nfl", "soccer") and not e.get("injuries"):
+        from .sources.espn_extra import context_for
+        e = {**e, **context_for(con, r["event_id"], r["sport"], r["home"], r["away"])}
     x = explain(r, e)
     ts = r.get("odds_retrieved_at")
     age_h = (now - datetime.fromisoformat(ts)).total_seconds() / 3600 if ts else None
@@ -61,10 +66,13 @@ def _pick(con, r, now) -> dict:
         "odds": r["odds"], "bookmaker": r["bookmaker"], "net_odds": e.get("net_odds", r["odds"]),
         "prob": r["final_prob"], "fair_odds": r["fair_odds"], "ev": r["ev"], "ev_plain": ev_plain(r["ev"]),
         "model_prob": r["model_prob"], "market_prob": r["market_prob"],
-        "why": x["why"], "risk": x["risk"], "risks": x["risks"],
+        "why": x["why"], "why_short": x["why_short"], "risk": x["risk"], "risks": x["risks"],
         "odds_updated": ts, "stale": age_h is not None and age_h > 24,
         "status": _status(con, r), "model_version": r["model_version"],
+        "updates": [dict(u) for u in con.execute(
+            "SELECT checked_at,status,best_odds,best_bookmaker,ev_now,note FROM rec_updates WHERE rec_id=? ORDER BY id", (r["rec_id"],))],
         "detail": {"consensus_source": e.get("consensus_source"), "n_bookmakers": e.get("n_bookmakers"),
+                   "context": e.get("context"), "injuries": e.get("injuries"), "external_forecast": e.get("external_forecast"),
                    "prices": e.get("all_prices"), "expected_goals": e.get("expected_goals"),
                    "form": e.get("form"), "model_markets": e.get("model_markets"),
                    "sources": json.loads(r.get("source_urls") or "[]")},
@@ -98,6 +106,58 @@ def _watch_reason(row: dict) -> str:
         bits.append(n)
     out = ". ".join(bits) + ("." if bits else "")
     return out[:1].upper() + out[1:]
+
+
+def _attach_context(con, row: dict) -> None:
+    """Injuries, ESPN Analytics forecast, lineup status and source discrepancies (flagged, never resolved
+    by picking a side)."""
+    from .sources.espn_extra import context_for
+    p = row.get("participants") or [None, None]
+    if not p[0]:
+        return
+    ctx = context_for(con, row["event_id"], row["sport"], p[0], p[1])
+    row.update(ctx)
+    disc = []
+    f, bv = ctx.get("external_forecast"), row.get("book_view") or {}
+    mv = row.get("model_view") or {}
+    if f:
+        keymap = {p[0]: ["Home", f"{p[0]} win", p[0]], p[1]: ["Away", f"{p[1]} win", p[1]], "Draw": ["Draw"]}
+        for team, prob in f["probs"].items():
+            for k in keymap.get(team, []):
+                if k in bv and abs(prob - bv[k]) >= 0.10:
+                    disc.append(f"{f['source']} gives {team} {prob * 100:.0f}% vs bookmakers {bv[k] * 100:.0f}%.")
+                if k in mv and abs(prob - mv[k]) >= 0.10:
+                    disc.append(f"{f['source']} gives {team} {prob * 100:.0f}% vs Doyen's model {mv[k] * 100:.0f}%.")
+    row["discrepancies"] = sorted(set(disc))
+
+
+def _watch_short(row: dict) -> str:
+    """One short sentence: why Doyen is watching / what it is waiting for. Computed, never invented."""
+    c = row.get("closest") or {}
+    reason = c.get("reason")
+    rules = config.RULES
+    hours = (datetime.fromisoformat(row["start_utc"]) - datetime.now(timezone.utc)).total_seconds() / 3600
+    if not c:
+        return "Waiting for bookmaker prices."
+    if reason == "EV below threshold":
+        from .watch import qualifying_odds
+        q = qualifying_odds(SimpleNamespace(final_q=c["prob"], active=c.get("active", 1.0)), rules.min_ev)
+        return f"Waiting for better odds ({q:.2f}+)." if q else "Waiting for a better price."
+    if reason == "too few bookmakers":
+        return "Waiting for more bookmakers to price it."
+    if reason == "odds outside range":
+        return "Value only at long odds, outside Doyen's range."
+    if reason == "no market consensus":
+        return "Waiting for a sharp reference price."
+    if reason == "insufficient team history":
+        return "Not enough history on one side yet."
+    if reason in ("model uncertainty too high", "pessimistic EV not positive"):
+        return "Edge too uncertain to publish."
+    if hours < 24 and row["sport"] == "soccer" and not row.get("lineups_confirmed"):
+        return "Waiting for confirmed lineups and final prices."
+    if hours < 24 and row["sport"] in ("nfl", "nba"):
+        return "Waiting for final injury report and prices."
+    return "Monitoring price movement."
 
 
 def _sel_text(row: dict, c: dict) -> str:
@@ -149,34 +209,40 @@ def build(con, now: datetime | None = None):
             c = row.get("closest")
             if c:
                 c["selection_text"] = _sel_text(row, c)
+            _attach_context(con, row)
             row["why_interesting"] = _watch_reason(row)
+            row["short"] = _watch_short(row)
+            if c:
+                row["watch_label"] = f"{c['market_label']}: {c['selection_text']}"
             row["has_pick"] = any(p["event_id"] == row["event_id"] for p in current)
             events.append(row)
     events.sort(key=lambda r: r["start_utc"])
     # Matches Doyen is watching: closest-to-value and largest disagreements, no picks, next 72h
-    def interest(r):
-        """Score only on computed signals: closeness to value and model-market disagreement."""
-        c = r.get("closest") or {}
-        mv, bv = r.get("model_view") or {}, r.get("book_view") or {}
-        gap = max((abs(mv[k] - bv[k]) for k in bv if k in mv), default=0.0)
-        near = c.get("ev", -1) if c else -1
-        return max(near + 0.03, gap - 0.02) if (near > -0.015 or gap >= 0.05) else None
+    # Transparent ranking (not model confidence): 1) a current, fresh price exists,
+    # 2) distance to the qualification threshold (EV gap), 3) sooner start.
+    min_ev = config.RULES.min_ev
 
-    cand = []
-    for r in events:
-        if r["has_pick"] or datetime.fromisoformat(r["start_utc"]) >= now + timedelta(hours=72):
-            continue
-        if any("known model bias" in n.lower() for n in r.get("notes", [])):
-            continue
-        sc = interest(r)
-        if sc is not None:
-            cand.append((sc, r))
-    cand.sort(key=lambda x: -x[0])
+    def rank_key(r):
+        c = r["closest"]
+        ts = r.get("odds_updated")
+        fresh = ts is not None and (now - datetime.fromisoformat(ts)) < timedelta(hours=24)
+        gap = max(0.0, min_ev - c["ev"])
+        return (0 if fresh else 1, round(gap, 3), r["start_utc"])
+
+    cand = [r for r in events if not r["has_pick"] and r.get("closest")
+            and now < datetime.fromisoformat(r["start_utc"]) < now + timedelta(hours=72)
+            and r["closest"]["ev"] > -0.05
+            and r["closest"].get("reason") not in ("odds outside range", "insufficient team history")
+            and not any("known model bias" in n.lower() for n in r.get("notes", []))]
+    cand.sort(key=rank_key)
     watching, per = [], {}
-    for sc, r in cand:                       # at most 3 per sport so every sport gets a look-in
+    for r in cand:                            # at most 3 per sport so every sport gets a look-in
         if per.get(r["sport"], 0) < 3:
             watching.append(r["event_id"])
             per[r["sport"]] = per.get(r["sport"], 0) + 1
+            k = rank_key(r)
+            r["rank_basis"] = (f"{'Fresh price' if k[0] == 0 else 'Price over 24h old'}; "
+                               f"{k[1] * 100:.1f} pts of value short of the {min_ev * 100:.0f}% threshold; starts {r['start_utc'][:16]} UTC.")
     watching = watching[:12]
 
     settled = [p for p in picks_all if p["status"]["state"] == "settled"]
@@ -188,7 +254,9 @@ def build(con, now: datetime | None = None):
     last_jobs = {r["job"]: r["finished_at"] for r in con.execute(
         "SELECT job, MAX(finished_at) finished_at FROM job_runs WHERE status IN ('ok','partial') GROUP BY job")}
     providers = {r["provider"]: r["last_success"] for r in con.execute("SELECT provider,last_success FROM provider_status")}
-    data = {"brand": "Sports Betting Doyen", "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
+    from . import diagnostics
+    diag = diagnostics.build(con, now)
+    data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
             "events": events, "watching": watching, "sports": sports,
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,

@@ -111,4 +111,17 @@ def explain(r: dict, e: dict) -> dict:
                 "tennis": "Fitness and withdrawals aren't modelled; check for late injury news."
                 }.get(r.get("sport", "soccer"), "Unmodelled news can move this price.")
     return {"why": " ".join(parts) or "The available price is above Doyen's estimate of fair value.",
+            "why_short": short_reason(r, e),
             "risk": main, "risks": risks}
+
+
+def short_reason(r: dict, e: dict) -> str:
+    """<= ~12 words, derived only from stored numbers."""
+    fair = 1 / r["market_prob"] if r.get("market_prob") else None
+    mp, mk = r.get("model_prob"), r.get("market_prob")
+    if fair:
+        base = f"{r['odds']:.2f} beats the sharp market's fair price of {fair:.2f}"
+        if mp is not None and mk is not None and mp >= mk - 0.02:
+            return base + "; model agrees."
+        return base + "."
+    return "Price is above Doyen's estimate of fair value."

@@ -1,0 +1,19 @@
+{
+  "tune": {
+    "n": 798,
+    "base_model": 0.62826,
+    "with_epa": 0.62515
+  },
+  "test": {
+    "n": 989,
+    "base_model": 0.63927,
+    "with_epa": 0.63933,
+    "epa_minus_base_ci95": [
+      -0.00565,
+      0.00549
+    ],
+    "market_closing": 0.60926,
+    "with_epa_on_market_games": 0.63933
+  },
+  "adopt": false
+}

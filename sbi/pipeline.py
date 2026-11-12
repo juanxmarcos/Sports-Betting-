@@ -288,6 +288,17 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
                 db.provider_err(con, f"espn:{sp}", str(e))
                 d["error"] = str(e)
                 d["_status"] = "partial"
+    with db.job(con, "ingest-espn-context") as d:
+        from .sources import espn_extra
+        try:
+            for sp in ("nba", "nfl"):
+                d[f"injuries_{sp}"] = espn_extra.injuries(con, sp)
+            d["summaries"] = espn_extra.enrich_events(con, now)
+            db.provider_ok(con, "espn:context", d["summaries"]["summaries"])
+        except Exception as e:  # noqa: BLE001
+            db.provider_err(con, "espn:context", str(e))
+            d["error"] = f"{type(e).__name__}: {e}"
+            d["_status"] = "partial"
     with db.job(con, "ingest-tennis") as d:
         from . import tennis
         try:

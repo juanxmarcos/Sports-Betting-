@@ -87,118 +87,104 @@
     const cls = st.state === "settled" ? st.result.replace("half_", "") : st.state;
     return `<span class="pill ${esc(cls)}" title="${esc(st.note || "")}">${esc(st.label)}</span>`;
   }
-  function pickMeta(p) {
-    return `<div class="meta"><span class="sp">${ICON[p.sport] || ""}${esc(sportName(p.sport))}</span><span class="sep"></span><span>${esc(p.competition)}</span><span class="sep"></span><span>${esc(fmtTime(p.start_utc))}</span></div>`;
+  const fmtMon = (iso) => new Intl.DateTimeFormat("en-US", { timeZone: tz(), month: "short", day: "numeric" }).format(new Date(iso)).toUpperCase();
+  function topline(x, withDate) {
+    const today = dkey(new Date()) === dkey(new Date(x.start_utc));
+    const parts = [sportName(x.sport).toUpperCase()];
+    if (withDate || !today) parts.push(fmtMon(x.start_utc));
+    parts.push(fmtClock(x.start_utc));
+    return `<div class="tl">${ICON[x.sport] || ""}<span>${esc(parts.join(" · "))}</span></div>`;
   }
-  function pickCard(p) {
+  const vs = (t) => esc(String(t || "").replace(/ at /, " @ ").replace(/ v /, " vs. "));
+
+  // ---------- compact cards ----------
+  function pickCard(p, featured) {
     const st = p.status || {};
-    return `<article class="card pick" aria-label="${esc(p.selection)}">
-      ${starBtn(p.event_id)}
-      ${pickMeta(p)}
-      <div class="event">${esc(p.title)}</div>
-      <div class="sel-row"><div class="sel"><div class="mk">${esc(p.market)}</div><div class="pickname">${esc(p.selection)}</div></div>
-        <div class="odds"><div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div></div>
-      <div class="stats">
-        <div class="stat"><div class="k">Doyen's chance</div><div class="v">${pct(p.prob, 1)}</div></div>
-        <div class="stat"><div class="k">Fair odds</div><div class="v">${dec(p.fair_odds)}</div></div>
-        <div class="stat"><div class="k">Expected value</div><div class="v pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</div></div>
+    const flag = st.state && st.state !== "active" ? statusPill(st) : (p.stale ? '<span class="pill stale">Price may be stale</span>' : "");
+    return `<article class="card cc ${featured ? "feat" : ""}" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
+      ${featured ? `<div class="crown"><span>Doyen's Pick of the Day</span><i></i></div>` : ""}
+      <div class="cc-top">${topline(p)}${starBtn(p.event_id)}</div>
+      <div class="cc-title">${vs(p.title)}</div>
+      <div class="cc-main">
+        <div><div class="k">${esc(p.market)}</div><div class="sel">${esc(p.selection)}</div></div>
+        <div class="odds"><div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div>
       </div>
-      <p class="why">${esc(p.why)}</p>
-      <div class="risk">${WARN}<span><b>Main risk:</b> ${esc(p.risk)}</span></div>
-      <div class="foot"><span>${statusPill(st)} ${p.stale ? '<span class="pill stale">Price may be stale</span>' : ""} Odds updated ${esc(ago(p.odds_updated))}</span>
-        <button class="link" data-go="#/pick/${esc(p.id)}">Full analysis →</button></div>
+      <div class="cc-facts"><span>Estimated chance <b>${pct(p.prob)}</b></span>${featured ? `<span>Expected value <b class="pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</b></span>` : ""}</div>
+      <div class="cc-why"><span>Why</span> ${esc(p.why_short || "")}</div>
+      <div class="cc-foot"><span>${flag}</span><span class="link">Details →</span></div>
     </article>`;
   }
-  function potdCard(p, title) {
-    return `<section class="potd" aria-label="${esc(title)}"><div class="potd-in">
-      <div class="crown"><span>${esc(title)}</span><i></i></div>
-      ${pickMeta(p)}
-      <div class="potd-grid">
-        <div>
-          <div class="event" style="margin-top:6px">${esc(p.title)}</div>
-          <div class="sel" style="margin-top:14px"><div class="mk">${esc(p.market)}</div><div class="pickname">${esc(p.selection)}</div></div>
-          <p class="why" style="margin-top:14px">${esc(p.why)}</p>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div class="odds" style="text-align:left"><div class="faint" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase">Best price</div><div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")} · odds updated ${esc(ago(p.odds_updated))}</div></div>
-          <div class="stats" style="grid-template-columns:1fr 1fr">
-            <div class="stat"><div class="k">Doyen's chance</div><div class="v">${pct(p.prob, 1)}</div></div>
-            <div class="stat"><div class="k">Expected value</div><div class="v pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</div></div>
-          </div>
-          <div class="faint" style="font-size:12.5px">${esc(p.ev_plain)}</div>
-        </div>
-      </div>
-      <div class="risk" style="margin-top:16px">${WARN}<span><b>Principal risk:</b> ${esc(p.risk)}</span></div>
-      <div class="foot" style="margin-top:14px"><span>${statusPill(p.status)} ${p.stale ? '<span class="pill stale">Price may be stale</span>' : ""}</span>
-        <span style="display:flex;gap:14px"><button class="link" data-go="#/ask/pick/${esc(p.id)}">Ask Doyen</button><button class="link" data-go="#/pick/${esc(p.id)}">Read the full analysis →</button></span></div>
-    </div></section>`;
-  }
   function watchCard(r) {
-    return `<article class="card watch">
-      ${starBtn(r.event_id)}
-      <div class="meta"><span class="sp">${ICON[r.sport] || ""}${esc(sportName(r.sport))}</span><span class="sep"></span><span>${esc(r.competition)}</span><span class="sep"></span><span>${esc(when(r))}</span></div>
-      <div class="event">${esc(r.title)}</div>
-      <div><span class="pill monitor">Monitoring · not a recommendation</span></div>
-      <div class="w">${esc(r.why_interesting || "On Doyen's radar.")}</div>
-      <div class="wait">Waiting for: <b>${esc(r.waiting_for)}</b></div>
-      <div class="foot"><span>${r.odds_updated ? "Odds updated " + esc(ago(r.odds_updated)) : "No odds yet"}</span><button class="link" data-go="#/event/${esc(r.event_id)}">Details →</button></div>
+    const c = r.closest;
+    return `<article class="card cc watch" data-go="#/event/${esc(r.event_id)}" role="link" tabindex="0">
+      <div class="cc-top">${topline(r, true)}${starBtn(r.event_id)}</div>
+      <div class="cc-title">${vs(r.title)}</div>
+      <div class="cc-main">
+        <div><div class="k">Watching${c ? " · " + esc(c.market_label) : ""}</div><div class="sel">${c ? esc(c.selection_text) : "—"}</div></div>
+        <div class="odds"><div class="o ${c ? "" : "na"}">${c ? dec(c.odds) : "Odds unavailable"}</div><div class="bk">${c ? "current odds" : ""}</div></div>
+      </div>
+      <div class="cc-why wait">${esc(r.short || "")}</div>
+      <div class="cc-foot"><span class="faint">${r.odds_updated ? "Updated " + esc(ago(r.odds_updated)) : "No odds yet"}</span><span class="link">Details →</span></div>
     </article>`;
   }
 
   // ---------- views ----------
+  function briefing(D, picks, nEvents) {
+    const s = D.briefing || {};
+    return `<div class="brief"><span><b>${nEvents}</b> events monitored</span><span class="dot"></span><span><b>${picks.length || "No"}</b> pick${picks.length === 1 ? "" : "s"} ${picks.length ? "qualify" : "currently qualify"}</span>${s.sentence ? `<span class="brief-s">${esc(s.sentence)}</span>` : ""}</div>`;
+  }
   function home() {
     const D = S.data;
     const picks = D.picks.filter((p) => sportOk(p.sport, S.sport) && inRange(p.start_utc, null, S.range));
-    let featured = null, title = "Doyen's Pick of the Day";
-    if (S.sport === "all" && S.range === "today") featured = picks.find((p) => p.id === D.pick_of_the_day) || null;
-    if (!featured && picks.length && picks[0].status.state === "active") { featured = picks[0]; title = S.sport === "all" ? "Doyen's Top Pick" : `Doyen's Top ${sportName(S.sport)} Pick`; }
+    let featured = null;
+    if (S.range === "today") featured = picks.find((p) => p.id === D.pick_of_the_day && sportOk(p.sport, S.sport)) || null;
+    if (!featured && picks.length && picks[0].status.state === "active") featured = picks[0];
     const rest = picks.filter((p) => !featured || p.id !== featured.id);
     const evById = Object.fromEntries(D.events.map((e) => [e.event_id, e]));
-    const watching = D.watching.map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && inRange(r.start_utc, r.end_utc, S.range));
-    const today = dkey(new Date());
-    const rangeLabel = { today: "today", tomorrow: "tomorrow", week: "this week" }[S.range];
-    let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:8px">Today's Picks</h1>
-      <p class="lead">${picks.length ? `${picks.length} qualifying pick${picks.length > 1 ? "s" : ""} ${rangeLabel}` : `No qualifying picks ${rangeLabel}`} · ${watching.length} match${watching.length === 1 ? "" : "es"} being watched · updated ${esc(ago(D.generated))}</p>
-      ${filters()}${staleBanner()}${sportNotice(S.sport)}`;
-    if (featured) h += potdCard(featured, title);
-    else h += `<section class="potd"><div class="potd-in empty-potd"><div class="crown"><span>Doyen's Pick of the Day</span><i></i></div>
-      <h2>No opportunity qualifies right now.</h2>
-      <p style="margin-top:10px">Doyen only publishes a pick when a bookmaker's price beats a sharp market estimate by at least ${pct(D.rules.min_ev)} at odds between ${D.rules.min_odds} and ${D.rules.max_odds}, with prices from at least ${D.rules.min_bookmakers} bookmakers. Today nothing clears that bar${S.sport !== "all" ? " for " + esc(sportName(S.sport)) : ""}. No pick is better than a weak pick.</p>
-      <p>The matches below are the closest Doyen is watching. They are not recommendations.</p></div></section>`;
-    if (rest.length) h += `<section class="section"><div class="section-h"><h2>More picks</h2><span class="count">${rest.length}</span></div><div class="grid">${rest.map(pickCard).join("")}</div></section>`;
-    h += `<section class="section"><div class="section-h"><h2>Matches Doyen Is Watching</h2><span class="count">${watching.length}</span></div>`;
-    if (watching.length) h += `<div class="grid">${watching.map(watchCard).join("")}</div>`;
-    else {
-      const next = D.watching.map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
-      h += next.length ? `<p class="muted" style="margin:-4px 0 14px">Nothing left on the radar ${esc(rangeLabel)}. Coming up next:</p><div class="grid">${next.map(watchCard).join("")}</div>`
-        : `<div class="card empty"><h3>Nothing on the radar ${esc(rangeLabel)}</h3><p>Try another date or sport, or see everything Doyen is tracking under <a href="#/upcoming">Upcoming</a>.</p></div>`;
-    }
-    h += `</section>`;
-    return h;
+    const allWatch = D.watching.map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
+    const watching = allWatch.filter((r) => inRange(r.start_utc, r.end_utc, S.range));
+    const shown = (watching.length ? watching : allWatch).slice(0, 3);
+    const nEvents = D.events.filter((r) => sportOk(r.sport, S.sport) && inRange(r.start_utc, r.end_utc, S.range)).length;
+    let h = `<div class="eyebrow">${esc(fmtDay(dkey(new Date())))}</div><h1 style="margin-top:6px">Today's Picks</h1>
+      ${briefing(D, picks, nEvents)}${filters()}${staleBanner()}${sportNotice(S.sport)}`;
+    if (featured) h += `<section class="section first">${pickCard(featured, true)}</section>`;
+    else h += `<section class="section first"><div class="card empty-cc"><div class="crown"><span>Doyen's Pick of the Day</span><i></i></div><h3>No pick qualifies right now.</h3><p>Doyen publishes only when a price clearly beats the sharp market. No pick beats a weak pick.</p></div></section>`;
+    if (rest.length) h += `<section class="section"><div class="section-h"><h2>More picks</h2><span class="count">${rest.length}</span></div><div class="grid">${rest.map((p) => pickCard(p)).join("")}</div></section>`;
+    h += `<section class="section"><div class="section-h"><h2>Matches Doyen Is Watching</h2>${allWatch.length > 3 ? `<a class="link" href="#/watching">View all (${allWatch.length}) →</a>` : ""}</div>`;
+    h += shown.length ? `${!watching.length ? `<p class="muted small">Nothing left ${esc({ today: "today", tomorrow: "tomorrow", week: "this week" }[S.range])}. Coming up next:</p>` : ""}<div class="grid">${shown.map(watchCard).join("")}</div>`
+      : `<div class="card empty-cc"><h3>Nothing on the radar</h3><p>No matches are close to qualifying. See <a href="#/upcoming">Upcoming</a> for everything Doyen tracks.</p></div>`;
+    return h + `</section>`;
+  }
+  function watchingAll() {
+    const D = S.data;
+    const evById = Object.fromEntries(D.events.map((e) => [e.event_id, e]));
+    const list = D.watching.map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
+    return `<button class="back" data-go="#/">← Today's Picks</button><h1>Matches Doyen Is Watching</h1>
+      <p class="lead">Monitoring only, not recommendations. Ranked by fresh odds, closeness to the value threshold, then start time.</p>${filters(false)}
+      <div class="grid" style="margin-top:16px">${list.map(watchCard).join("") || `<div class="card empty-cc"><h3>Nothing on the radar</h3></div>`}</div>`;
   }
 
   function staleBanner() {
     const hrs = (Date.now() - new Date(S.data.generated)) / 36e5;
-    return hrs > 18 ? `<div class="banner">${WARN.replace("<svg", '<svg width="16" height="16"')}<span>Data last refreshed ${esc(ago(S.data.generated))}. Prices may have moved since.</span></div>` : "";
+    return hrs > 18 ? `<div class="banner">${WARN.replace("<svg", '<svg width="16" height="16"')}<span>Data last refreshed ${esc(ago(S.data.generated))}. Prices may have moved.</span></div>` : "";
   }
-
   function eventStatus(r) {
     if (r.has_pick) return '<span class="pill active">Pick</span>';
     if (S.data.watching.includes(r.event_id)) return '<span class="pill monitor">Watching</span>';
-    if (!r.n_books) return '<span class="pill">Awaiting odds</span>';
+    if (!r.n_books) return '<span class="pill">No odds yet</span>';
     return '<span class="pill">Analysed</span>';
   }
   function eventRow(r) {
-    const multi = r.end_utc && dkey(new Date(r.end_utc)) !== dkey(new Date(r.start_utc));
+    const brief = r.has_pick || S.data.watching.includes(r.event_id) ? r.short : "";
     return `<div class="row" data-go="#/event/${esc(r.event_id)}" role="link" tabindex="0">
-      <div class="t">${esc(fmtClock(r.start_utc))}${multi ? `<small>to ${esc(fmtDate(r.end_utc))}</small>` : ""}</div>
-      <div class="ev"><b>${esc(r.title)}</b><span>${ICON[r.sport] || ""}${esc(r.competition)}${r.neutral ? " · neutral venue" : ""}</span></div>
-      ${eventStatus(r)}${starBtn(r.event_id)}</div>`;
+      <div class="t">${esc(fmtClock(r.start_utc))}</div>
+      <div class="ev"><b>${vs(r.title)}</b><span>${ICON[r.sport] || ""}${esc(sportName(r.sport))} · ${esc(r.competition)}</span>${brief ? `<em>${esc(brief)}</em>` : ""}</div>
+      ${eventStatus(r)}</div>`;
   }
   function upcoming() {
     const ev = S.data.events.filter((r) => sportOk(r.sport, S.sport) && inRange(r.start_utc, r.end_utc, S.range));
-    let h = `<div class="eyebrow">Schedule</div><h1 style="margin-top:8px">Upcoming</h1><p class="lead">Every event Doyen is tracking across the five sports. Tap one for the research.</p>${filters()}${sportNotice(S.sport)}`;
-    if (!ev.length) return h + `<div class="card empty" style="margin-top:18px"><h3>No events in this window</h3><p>${S.sport !== "all" && !S.data.sports[S.sport].operational ? "This sport's data pipeline isn't live yet." : "Try a wider date range."}</p></div>`;
+    let h = `<h1>Upcoming</h1>${filters()}${sportNotice(S.sport)}`;
+    if (!ev.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No events in this window</h3><p>Try a wider date range.</p></div>`;
     const days = {};
     ev.forEach((r) => { const k = dkey(new Date(r.start_utc)); (days[k] = days[k] || []).push(r); });
     Object.keys(days).sort().forEach((k) => { h += `<div class="day"><h3>${esc(fmtDay(k))}</h3><div class="rows">${days[k].map(eventRow).join("")}</div></div>`; });
@@ -212,22 +198,15 @@
     const W = settled.filter((p) => ["won", "half_won"].includes(p.status.result)).length;
     const L = settled.filter((p) => ["lost", "half_lost"].includes(p.status.result)).length;
     const P = settled.length - W - L;
-    const pl = settled.reduce((a, p) => a + (p.status.pnl || 0), 0);
-    let h = `<div class="eyebrow">Accountability</div><h1 style="margin-top:8px">Pick History</h1><p class="lead">Every pick Doyen has published, at its original odds. Nothing is ever edited or removed.</p>
+    let h = `<h1>Pick History</h1><p class="lead">Every published pick at its original odds. Nothing is edited or removed.</p>
       ${filters(true, "hsport", "hrange", [["7", "7 days"], ["30", "30 days"], ["all", "All time"]])}
-      <div class="record">
-        <div class="stat"><div class="k">Record</div><div class="v">${W}–${L}${P ? "–" + P : ""}</div></div>
-        <div class="stat"><div class="k">Paper profit</div><div class="v ${pl > 0 ? "pos" : ""}">${pl >= 0 ? "+" : ""}${pl.toFixed(2)}u</div></div>
-        <div class="stat"><div class="k">Awaiting result</div><div class="v">${H.length - settled.length}</div></div>
-      </div>
-      <p class="note">Fixed one-unit paper stakes. A small sample says very little about skill; ask Doyen for the full statistical picture.</p>`;
-    if (!H.length) return h + `<div class="card empty" style="margin-top:16px"><h3>No picks in this period</h3><p>Doyen publishes only when the evidence clears its thresholds, so quiet periods are normal.</p></div>`;
-    h += `<div class="rows hist" style="margin-top:16px">` + H.map((p) => `<div class="row" data-go="#/pick/${esc(p.id)}" style="cursor:pointer">
-        <div class="t">${esc(fmtDate(p.published_at))}</div>
-        <div class="ev"><b>${esc(p.selection)} · ${esc(p.title)}</b><span>${ICON[p.sport] || ""}${esc(p.competition)} · ${esc(p.market)}</span></div>
-        <div class="t" style="text-align:right">${dec(p.odds)}<small>${esc(p.bookmaker || "")}</small></div>
-        ${statusPill(p.status.state === "settled" ? p.status : { state: "expired", label: p.status.state === "withdrawn" ? "Withdrawn · unsettled" : "Unsettled" })}</div>`).join("") + `</div>`;
-    return h;
+      <div class="brief"><span>Record <b>${W}–${L}${P ? "–" + P : ""}</b></span><span class="dot"></span><span><b>${H.length - settled.length}</b> awaiting result</span></div>`;
+    if (!H.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No picks in this period</h3><p>Quiet periods are normal: Doyen only publishes when the evidence clears its bar.</p></div>`;
+    const res = (p) => p.status.state === "settled" ? statusPill(p.status) : `<span class="pill">${p.status.state === "withdrawn" ? "Withdrawn" : "Pending"}</span>`;
+    return h + `<div class="rows hist" style="margin-top:14px">` + H.map((p) => `<div class="row" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
+        <div class="t">${esc(fmtMon(p.published_at))}</div>
+        <div class="ev"><b>${vs(p.title)}</b><span>${esc(p.selection)}</span></div>
+        <div class="t r">${dec(p.odds)}</div>${res(p)}</div>`).join("") + `</div>`;
   }
 
   function watchlist() {
@@ -235,92 +214,97 @@
     const evById = Object.fromEntries(D.events.map((e) => [e.event_id, e]));
     const picksByEv = {}; D.history.forEach((p) => { (picksByEv[p.event_id] = picksByEv[p.event_id] || []).push(p); });
     const ids = [...S.watch];
-    let h = `<div class="eyebrow">Personal</div><h1 style="margin-top:8px">Watchlist</h1><p class="lead">Events you've starred. Saved in this browser only: it won't sync to other devices, and clearing site data removes it.</p>`;
-    if (!ids.length) return h + `<div class="card empty" style="margin-top:18px"><h3>Your watchlist is empty</h3><p>Tap the ☆ on any pick or event to follow it here.</p></div>`;
-    h += `<div class="rows" style="margin-top:18px">` + ids.map((id) => {
+    let h = `<h1>Watchlist</h1><p class="lead">Saved in this browser only. It won't sync to other devices.</p>`;
+    if (!ids.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>Your watchlist is empty</h3><p>Tap ☆ on any pick or match to follow it here.</p></div>`;
+    return h + `<div class="rows" style="margin-top:16px">` + ids.map((id) => {
       const r = evById[id], pk = (picksByEv[id] || [])[0];
-      if (!r && !pk) return `<div class="row"><div class="t">—</div><div class="ev"><b>Event no longer listed</b><span>It has finished or dropped out of the data window.</span></div><span></span>${starBtn(id)}</div>`;
-      const title = r ? r.title : pk.title, start = r ? r.start_utc : pk.start_utc;
-      const status = pk ? statusPill(pk.status) : (r && D.watching.includes(id) ? '<span class="pill monitor">Watching</span>' : '<span class="pill">No pick yet</span>');
-      const odds = pk ? `${pk.selection} @ ${dec(pk.odds)}` : (r && r.closest ? `Best: ${r.closest.selection_text} @ ${dec(r.closest.odds)}` : "No odds yet");
-      const upd = pk ? (pk.status.note || "Published " + ago(pk.published_at)) : (r && r.odds_updated ? "Odds updated " + ago(r.odds_updated) : "");
-      return `<div class="row" data-go="${pk ? "#/pick/" + esc(pk.id) : "#/event/" + esc(id)}">
-        <div class="t">${esc(fmtClock(start))}<small>${esc(fmtDate(start))}</small></div>
-        <div class="ev"><b>${esc(title)}</b><span>${esc(odds)} · ${esc(upd)}</span></div>${status}${starBtn(id)}</div>`;
+      if (!r && !pk) return `<div class="row"><div class="t">—</div><div class="ev"><b>No longer listed</b><span>Finished or outside the data window.</span></div>${starBtn(id)}</div>`;
+      const x = r || pk;
+      const status = pk ? statusPill(pk.status) : eventStatus(r);
+      const line = pk ? `${pk.selection} @ ${dec(pk.odds)}` : (r.closest ? `${r.closest.selection_text} @ ${dec(r.closest.odds)}` : "Odds unavailable");
+      return `<div class="row" data-go="${pk ? "#/pick/" + esc(pk.id) : "#/event/" + esc(id)}" role="link" tabindex="0">
+        <div class="t">${esc(fmtMon(x.start_utc))}<small>${esc(fmtClock(x.start_utc))}</small></div>
+        <div class="ev"><b>${vs(x.title)}</b><span>${esc(line)}</span></div>${status}${starBtn(id)}</div>`;
     }).join("") + `</div>`;
-    return h;
   }
 
+  // ---------- details ----------
   function cmpBars(mv, bv) {
     const keys = Object.keys(mv || {});
     if (!keys.length) return "";
-    return keys.map((k) => `<div class="cmp"><span class="muted">${esc(k)}</span><div><div class="bar" title="Doyen model"><i style="width:${(mv[k] * 100).toFixed(1)}%"></i></div>${bv && bv[k] != null ? `<div class="bar" style="margin-top:4px;opacity:.55" title="Bookmakers (no-vig)"><i style="width:${(bv[k] * 100).toFixed(1)}%;background:var(--info)"></i></div>` : ""}</div><span>${pct(mv[k])}${bv && bv[k] != null ? `<br><span class="faint">${pct(bv[k])}</span>` : ""}</span></div>`).join("") +
-      (bv && Object.keys(bv).length ? `<p class="note">Gold: Doyen's model. Blue: bookmakers' consensus with their margin removed.</p>` : "");
+    return keys.map((k) => `<div class="cmp"><span class="muted">${esc(k)}</span><div><div class="bar" title="Doyen model"><i style="width:${(mv[k] * 100).toFixed(1)}%"></i></div>${bv && bv[k] != null ? `<div class="bar b2" title="Bookmakers (no-vig)"><i style="width:${(bv[k] * 100).toFixed(1)}%"></i></div>` : ""}</div><span>${pct(mv[k])}${bv && bv[k] != null ? `<br><span class="faint">${pct(bv[k])}</span>` : ""}</span></div>`).join("") +
+      (bv && Object.keys(bv).length ? `<p class="note">Gold: Doyen's model · Blue: bookmakers' consensus (margin removed)</p>` : "");
   }
   function formBlock(form) {
     if (!form) return "";
-    return Object.entries(form).map(([t, f]) => `<div class="stat"><div class="k">${esc(t)}</div><div class="v">${esc(f.last || "—")}</div><div class="faint" style="font-size:12px">${f.gf}–${f.ga} goals${f.xg_for_avg != null ? ` · xG ${f.xg_for_avg}/${f.xg_against_avg}` : ""}</div></div>`).join("");
+    return `<div class="kv">` + Object.entries(form).map(([t, f]) => `<div class="stat"><div class="k">${esc(t)}</div><div class="v">${esc(f.last || "—")}</div><div class="faint small">${f.gf}–${f.ga}${f.xg_for_avg != null ? ` · xG ${f.xg_for_avg}/${f.xg_against_avg}` : ""}</div></div>`).join("") + `</div>`;
+  }
+  const sec = (title, body, open = true) => body ? `<details class="card sec" ${open ? "open" : ""}><summary>${esc(title)}</summary><div class="sec-b">${body}</div></details>` : "";
+  function injuriesBlock(inj) {
+    if (!inj || !Object.keys(inj).length) return "";
+    return Object.entries(inj).map(([team, list]) => `<div class="small"><b>${esc(team)}</b>: ${list.length ? list.map((i) => `${esc(i.player)} (${esc(i.status)}${i.key ? ", key player" : ""})`).join(", ") : "no reported absences"}</div>`).join("") ;
+  }
+  function extForecast(f) {
+    if (!f) return "";
+    return `<div class="small">${esc(f.source)}: ${Object.entries(f.probs).map(([k, v]) => `${esc(k)} ${pct(v)}`).join(" · ")} <span class="faint">(${esc(ago(f.retrieved_at))})</span></div>`;
   }
 
   function pickDetail(id) {
     const p = S.data.history.find((x) => x.id === id);
-    if (!p) return `<div class="sheet"><button class="back" data-go="#/">← Back</button><div class="card empty"><h3>Pick not found</h3></div></div>`;
+    if (!p) return `<button class="back" data-go="#/">← Back</button><div class="card empty-cc"><h3>Pick not found</h3></div>`;
     const d = p.detail || {};
     const prices = d.prices || {};
-    const rows = Object.entries(prices).map(([bk, q]) => [bk, q && q[p._sel]]).filter((x) => x[1]);
-    let h = `<div class="sheet"><button class="back" data-go="#/">← Back</button>
-      ${pickMeta(p)}<h1 style="margin-top:8px">${esc(p.title)}</h1>
-      <div class="sel-row" style="margin-top:14px"><div class="sel"><div class="mk">${esc(p.market)}</div><div class="pickname" style="font-size:22px">${esc(p.selection)}</div></div>
-      <div class="odds"><div class="o" style="font-size:40px">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div></div>
-      <div style="margin-top:10px">${statusPill(p.status)} ${p.status.note ? `<span class="faint" style="font-size:13px">${esc(p.status.note)}</span>` : ""}</div>
-      <div class="kv" style="margin-top:16px">
-        <div class="stat"><div class="k">Doyen's chance</div><div class="v">${pct(p.prob, 1)}</div></div>
+    const sel = `<div class="kv">
+        <div class="stat"><div class="k">Best odds</div><div class="v">${dec(p.odds)} <span class="faint small">${esc(p.bookmaker)}</span></div></div>
+        <div class="stat"><div class="k">Estimated chance</div><div class="v">${pct(p.prob, 1)}</div></div>
         <div class="stat"><div class="k">Fair odds</div><div class="v">${dec(p.fair_odds)}</div></div>
-        <div class="stat"><div class="k">Expected value</div><div class="v pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</div></div>
-        <div class="stat"><div class="k">Model's own view</div><div class="v">${pct(p.model_prob, 1)}</div></div>
-      </div>
-      <p class="note">${esc(p.ev_plain)}</p>
-      <div class="card block"><h3>Why Doyen likes it</h3><p class="why">${esc(p.why)}</p></div>
-      <div class="card block"><h3>What could make it wrong</h3><div class="risk">${WARN}<span><b>Main risk:</b> ${esc(p.risk)}</span></div>
-        ${(p.risks || []).length ? `<ul style="margin:10px 0 0 18px;padding:0;color:var(--muted);font-size:14px">${p.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</div>`;
-    if (Object.keys(prices).length) {
-      const sels = new Set(); Object.values(prices).forEach((q) => Object.keys(q || {}).forEach((s) => sels.add(s)));
-      h += `<div class="card block"><h3>Prices across bookmakers</h3><p class="note" style="margin-top:0">Consensus reference: ${esc(d.consensus_source || "—")} · ${esc(d.n_bookmakers || "—")} bookmakers · odds updated ${esc(ago(p.odds_updated))}</p>
-        <div class="prices">${Object.entries(prices).map(([bk, q]) => `<div class="${bk === p.bookmaker ? "best" : ""}"><span>${esc(bk)}</span><span>${Object.entries(q || {}).map(([s, v]) => `${esc(s)} ${dec(v)}`).join(" · ")}</span></div>`).join("")}</div></div>`;
-    }
-    if (d.model_markets || d.form) {
-      const mm = d.model_markets || {};
-      const mv = mm["1X2:H"] != null ? { Home: mm["1X2:H"], Draw: mm["1X2:D"], Away: mm["1X2:A"], "Over 2.5": mm["OU:over:2.5"], "Both score": mm["BTTS:yes"] } : null;
-      h += `<div class="card block"><h3>Model context</h3>${d.expected_goals ? `<p class="muted" style="margin:0 0 8px">Expected goals ${esc(d.expected_goals.home)}–${esc(d.expected_goals.away)}</p>` : ""}${mv ? cmpBars(mv, null) : ""}
-        ${d.form ? `<div class="kv" style="margin-top:10px">${formBlock(d.form)}</div>` : ""}</div>`;
-    }
-    h += `<div class="card block"><h3>Research notes</h3>${(p.notes || []).length ? `<ul class="timeline">${p.notes.map((n) => `<li><span class="pill">${esc(n.evidence_type.replace("_", " "))}</span><span>${esc(n.claim)} ${n.source_url ? `<a href="${esc(n.source_url)}" target="_blank" rel="noopener">source</a>` : ""}</span></li>`).join("")}</ul>` : `<p class="muted" style="margin:0">No contextual research recorded yet. Team news isn't modelled, so check it before acting.</p>`}</div>
-      <div class="card block"><h3>Record</h3><ul class="timeline">
-        <li><span class="pill">Published</span><span>${esc(fmtTime(p.published_at))} at ${dec(p.odds)} (${esc(p.bookmaker)}). This entry is permanent.</span></li>
-        ${p.status.checked_at ? `<li><span class="pill ${esc(p.status.state)}">${esc(p.status.label)}</span><span>${esc(fmtTime(p.status.checked_at))}: ${esc(p.status.note || "")}</span></li>` : ""}
+        <div class="stat"><div class="k">Expected value</div><div class="v pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</div></div></div>
+        <p class="note">${esc(p.ev_plain)}</p>`;
+    const stats = [
+      d.expected_goals ? `<div class="small muted">Expected goals ${esc(d.expected_goals.home)}–${esc(d.expected_goals.away)}</div>` : "",
+      d.model_markets && d.model_markets["1X2:H"] != null ? cmpBars({ Home: d.model_markets["1X2:H"], Draw: d.model_markets["1X2:D"], Away: d.model_markets["1X2:A"] }, null) : "",
+      `<div class="small">Doyen's model: ${pct(p.model_prob, 1)} · Sharp market (margin removed): ${pct(p.market_prob, 1)}</div>`,
+      d.context ? `<p class="small">${esc(d.context)}</p>` : "",
+      formBlock(d.form), injuriesBlock(d.injuries), extForecast(d.external_forecast),
+      Object.keys(prices).length ? `<div class="k" style="margin-top:10px">Prices · ${esc(d.n_bookmakers || "")} bookmakers · reference ${esc(d.consensus_source || "—")}</div><div class="prices">${Object.entries(prices).map(([bk, q]) => `<div class="${bk === p.bookmaker ? "best" : ""}"><span>${esc(bk)}</span><span>${Object.entries(q || {}).map(([s, v]) => `${esc(s)} ${dec(v)}`).join(" · ")}</span></div>`).join("")}</div>` : "",
+    ].join("");
+    const risks = `<div class="risk">${WARN}<span>${esc(p.risk)}</span></div>${(p.risks || []).length ? `<ul class="small muted">${p.risks.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${(p.notes || []).length ? `<div class="k">Research notes</div><ul class="small">${p.notes.map((n) => `<li><span class="pill">${esc(n.evidence_type.replace("_", " "))}</span> ${esc(n.claim)} ${n.source_url ? `<a href="${esc(n.source_url)}" target="_blank" rel="noopener">source</a>` : ""}</li>`).join("")}</ul>` : ""}`;
+    const srcs = `<ul class="timeline small">
+        <li><span class="pill">Published</span><span>${esc(fmtTime(p.published_at))} at ${dec(p.odds)} (${esc(p.bookmaker)}). Permanent record.</span></li>
+        ${(p.updates || []).map((u) => `<li><span class="pill ${esc(u.status)}">${esc(u.status)}</span><span>${esc(fmtTime(u.checked_at))}: ${esc(u.note || "")}</span></li>`).join("")}
         ${p.status.state === "settled" ? `<li><span class="pill ${esc(p.status.result.replace("half_", ""))}">${esc(p.status.label)}</span><span>Paper result ${p.status.pnl >= 0 ? "+" : ""}${Number(p.status.pnl).toFixed(2)} units.</span></li>` : ""}
-      </ul><p class="note">Sources: ${(d.sources || []).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//, "").split("/")[0])}</a>`).join(" · ") || "—"} · model ${esc(p.model_version)}</p></div>
-      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">${starBtn(p.event_id).replace('class="star', 'class="ibtn').replace("star on", "ibtn on")}<a class="btn ghost" href="#/ask/pick/${esc(p.id)}">Ask Doyen about this pick</a></div></div>`;
-    return h;
+      </ul><p class="note">Odds updated ${esc(ago(p.odds_updated))} · Sources: ${(d.sources || []).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//, "").split("/")[0])}</a>`).join(" · ") || "—"} · model ${esc(p.model_version)}</p>`;
+    return `<div class="sheet"><button class="back" data-go="#/">← Back</button>
+      ${topline(p, true)}<h1 style="margin-top:6px">${vs(p.title)}</h1>
+      <div class="cc-main" style="margin-top:12px"><div><div class="k">${esc(p.market)}</div><div class="sel big">${esc(p.selection)}</div></div><div class="odds"><div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div></div>
+      <div style="margin:8px 0 4px">${statusPill(p.status)} ${p.status.note ? `<span class="faint small">${esc(p.status.note)}</span>` : ""}</div>
+      ${sec("The selection", sel)}${sec("Why Doyen is interested", `<p class="why">${esc(p.why)}</p>`)}${sec("Supporting statistics", stats, false)}
+      ${sec("What could go wrong", risks)}${sec("Sources and updates", srcs, false)}
+      <div class="actions">${starBtn(p.event_id).replace('class="star', 'class="ibtn')}<a class="btn ghost" href="#/ask/pick/${esc(p.id)}">Ask Doyen</a></div></div>`;
   }
 
   function eventDetail(id) {
     const r = S.data.events.find((x) => x.event_id === id);
-    if (!r) return `<div class="sheet"><button class="back" data-go="#/upcoming">← Back</button><div class="card empty"><h3>Event not found</h3><p>It may have finished or dropped out of the data window.</p></div></div>`;
+    if (!r) return `<button class="back" data-go="#/upcoming">← Back</button><div class="card empty-cc"><h3>Event not found</h3><p>It may have finished or left the data window.</p></div>`;
     const pk = S.data.picks.find((p) => p.event_id === id);
     const c = r.closest;
-    let h = `<div class="sheet"><button class="back" data-go="#/upcoming">← Back</button>
-      <div class="meta"><span class="sp">${ICON[r.sport] || ""}${esc(sportName(r.sport))}</span><span class="sep"></span><span>${esc(r.competition)}</span><span class="sep"></span><span>${esc(when(r))}</span></div>
-      <h1 style="margin-top:8px">${esc(r.title)}</h1>
-      <div style="margin-top:10px">${pk ? `<a class="btn" href="#/pick/${esc(pk.id)}">View Doyen's pick →</a>` : `<span class="pill monitor">${S.data.watching.includes(id) ? "Watching · not a recommendation" : "No pick · analysed"}</span>`}</div>
-      <div class="card block"><h3>Why it's interesting</h3><p class="why">${esc(r.why_interesting || "Routine analysis.")}</p><p class="muted" style="margin:8px 0 0">Waiting for: <b style="color:var(--info)">${esc(r.waiting_for)}</b></p></div>`;
-    if (c) h += `<div class="card block"><h3>Closest to value</h3><p class="why">${esc(c.market_label)} — <b>${esc(c.selection_text)}</b> at ${dec(c.odds)} (${esc(c.bookmaker || "")}). ${c.market_prob != null ? `Sharp market consensus (margin removed): ${pct(c.market_prob, 1)}` : `Doyen's estimate: ${pct(c.prob, 1)}`}${c.model_prob != null && c.market_prob != null ? `; Doyen's model: ${pct(c.model_prob, 1)}` : ""}. Value of this price against fair: ${c.ev >= 0 ? "+" : ""}${pct(c.ev, 1)}.</p><p class="note">Why it isn't a pick: ${esc(c.reason || "below thresholds")}.</p></div>`;
-    if (Object.keys(r.model_view || {}).length) h += `<div class="card block"><h3>Model vs bookmakers</h3>${r.expected_goals ? `<p class="muted" style="margin:0 0 8px">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</p>` : ""}${cmpBars(r.model_view, r.book_view)}${r.model_weight === 0 ? '<p class="note">This competition\'s model has not yet earned weight against the market, so its view is context only.</p>' : ""}</div>`;
-    if (r.form) h += `<div class="card block"><h3>Recent form</h3><div class="kv">${formBlock(r.form)}</div></div>`;
-    if (r.extra_text && r.extra_text !== r.why_interesting && !(r.why_interesting || "").includes(r.extra_text.split(". ")[0])) h += `<div class="card block"><h3>Notes</h3><p class="why">${esc(r.extra_text)}</p></div>`;
-    h += `<p class="note">${r.odds_updated ? "Odds updated " + esc(ago(r.odds_updated)) + " · " : ""}${r.n_books || 0} bookmaker${r.n_books === 1 ? "" : "s"} quoting.</p>
-      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">${starBtn(id).replace('class="star', 'class="ibtn')}<a class="btn ghost" href="#/ask/event/${esc(id)}">Ask Doyen about this event</a></div></div>`;
-    return h;
+    const watch = c ? `<div class="kv">
+        <div class="stat"><div class="k">${esc(c.market_label)}</div><div class="v">${esc(c.selection_text)}</div></div>
+        <div class="stat"><div class="k">Current odds</div><div class="v">${dec(c.odds)} <span class="faint small">${esc(c.bookmaker || "")}</span></div></div>
+        <div class="stat"><div class="k">Fair odds (sharp market)</div><div class="v">${c.market_prob ? dec(1 / c.market_prob) : "—"}</div></div>
+        <div class="stat"><div class="k">Value vs fair</div><div class="v">${c.ev >= 0 ? "+" : ""}${pct(c.ev, 1)}</div></div></div>
+        <p class="small" style="margin-top:10px"><b>${esc(r.short)}</b></p><p class="note">Not a pick because: ${esc(({ "EV below threshold": "the price isn't far enough above fair value", "too few bookmakers": "fewer than 3 bookmakers price this market", "odds outside range": "the value is only at odds outside Doyen's range", "insufficient team history": "one side has too little history", "no market consensus": "there is no sharp reference price" })[c.reason] || c.reason || "below thresholds")}. ${c.n_books != null ? esc(c.n_books) + " bookmaker(s) quote this market." : ""}</p>` : `<p class="small">Odds unavailable. ${esc(r.short || "")}</p>`;
+    const stats = [cmpBars(r.model_view, r.book_view), r.expected_goals ? `<div class="small muted">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</div>` : "",
+      r.extra_text ? `<p class="small">${esc(r.extra_text)}</p>` : "", formBlock(r.form), injuriesBlock(r.injuries), extForecast(r.external_forecast),
+      r.model_weight === 0 ? `<p class="note">The model has not beaten the market out of sample, so its view is context only.</p>` : ""].join("");
+    const why = `<p class="why">${esc(r.why_interesting || "Routine analysis.")}</p>${r.rank_basis ? `<p class="note">Watch ranking: ${esc(r.rank_basis)}</p>` : ""}`;
+    const srcs = `<p class="small">${r.odds_updated ? "Odds updated " + esc(ago(r.odds_updated)) + " · " : ""}${r.n_books || 0} bookmaker(s) · ${esc(r.competition)}${r.neutral ? " · neutral venue" : ""}</p>${(r.notes || []).length ? `<ul class="small muted">${r.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}${(r.discrepancies || []).length ? `<div class="k">Source discrepancies</div><ul class="small">${r.discrepancies.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}`;
+    return `<div class="sheet"><button class="back" data-go="#/upcoming">← Back</button>
+      ${topline(r, true)}<h1 style="margin-top:6px">${vs(r.title)}</h1>
+      <div style="margin:10px 0">${pk ? `<a class="btn" href="#/pick/${esc(pk.id)}">View Doyen's pick →</a>` : `<span class="pill monitor">${S.data.watching.includes(id) ? "Watching · not a recommendation" : "Analysed · no pick"}</span>`}</div>
+      ${sec("What Doyen is watching", watch)}${sec("Why it's interesting", why)}${sec("Supporting statistics", stats, false)}${sec("Sources and updates", srcs, false)}
+      <div class="actions">${starBtn(id).replace('class="star', 'class="ibtn')}<a class="btn ghost" href="#/ask/event/${esc(id)}">Ask Doyen</a></div></div>`;
   }
 
   // ---------- Ask Doyen (handoff to Claude; no embedded AI, no secrets) ----------
@@ -359,24 +343,26 @@
   }
 
   // ---------- router ----------
+  const TITLES = { upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching" };
   function render() {
     if (!S.data) return;
     const parts = (location.hash.replace(/^#\/?/, "") || "").split("/");
     const r = parts[0] || "home";
-    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "pick" || r === "event" ? "" : r)));
+    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "watching" ? "home" : (r === "pick" || r === "event" ? "" : r))));
     let html;
     if (r === "upcoming") html = upcoming();
     else if (r === "history") html = history();
     else if (r === "watchlist") html = watchlist();
     else if (r === "ask") html = ask(parts[1], parts[2]);
+    else if (r === "watching") html = watchingAll();
     else if (r === "pick") html = pickDetail(parts[1]);
     else if (r === "event") html = eventDetail(parts[1]);
     else html = home();
     $app.innerHTML = html;
-    document.title = ({ upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Event" }[r] ? ({ upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Event" }[r] + " · ") : "") + "Sports Betting Doyen";
+    document.title = (TITLES[r] ? TITLES[r] + " · " : "") + "Sports Betting Doyen";
   }
   window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
-  $app.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches("[data-go]")) location.hash = e.target.dataset.go; });
+  $app.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-go]")) { e.preventDefault(); location.hash = e.target.dataset.go; } });
 
   function tzSelect() {
     const sel = document.getElementById("tz");

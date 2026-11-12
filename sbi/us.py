@@ -79,7 +79,10 @@ def parse_espn(e: dict, sport: str) -> dict | None:
     for o in c.get("odds") or []:
         if not isinstance(o, dict):
             continue
-        bk = (o.get("provider") or {}).get("name", "ESPN odds")
+        from .sources.books import normalize_book as _nb
+        bk = _nb((o.get("provider") or {}).get("name", "ESPN odds"))
+        if not bk:
+            continue
         ml = o.get("moneyline") or {}
         for side in ("home", "away"):
             px = _am(((ml.get(side) or {}).get("close") or {}).get("odds"))
