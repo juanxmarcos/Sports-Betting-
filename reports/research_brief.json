@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-12T18:27:33+00:00",
+  "generated": "2026-11-12T19:52:00+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [],
   "upcoming_events": [
@@ -184,6 +184,55 @@
       "kickoff_utc": "2026-11-14T17:00:00+00:00",
       "home": "Norway",
       "away": "Wales"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261114:401927204",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-14T19:00:00+00:00",
+      "home": "Algeria",
+      "away": "Togo"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261114:401927215",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-14T19:00:00+00:00",
+      "home": "Angola",
+      "away": "South Sudan"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861170",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T19:45:00+00:00",
+      "home": "Austria",
+      "away": "Republic of Ireland"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861169",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T19:45:00+00:00",
+      "home": "Northern Ireland",
+      "away": "Ukraine"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861167",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T19:45:00+00:00",
+      "home": "Portugal",
+      "away": "Denmark"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861168",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T19:45:00+00:00",
+      "home": "Romania",
+      "away": "Poland"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861166",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T19:45:00+00:00",
+      "home": "Sweden",
+      "away": "Bosnia and Herzegovina"
     }
   ]
 }
