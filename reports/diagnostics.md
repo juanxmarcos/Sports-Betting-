@@ -1,16 +1,16 @@
-# Sports Betting Doyen — diagnostics (2026-11-12 22:14 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-12 22:16 UTC)
 
 ## Opportunity funnel (next 7 days)
 
-**SOCCER**: events discovered 149 → complete history 146 → valid forecast 149 → fresh odds available 57 → stale odds only 0 → three plus bookmakers 22 → fully evaluated 22 → markets evaluated 431 → markets positive ev 117 → events positive ev 50 → events passing all rules 2 → final recommendations 3
+**SOCCER**: events discovered 149 → complete history 146 → valid forecast 149 → fresh odds available 57 → stale odds only 0 → three plus bookmakers 22 → fully evaluated 22 → markets evaluated 431 → markets positive ev 23 → events positive ev 14 → events passing all rules 2 → final recommendations 3
   - market rejections: too few bookmakers (321), EV below threshold (89), odds outside range (19)
-  - primary blocker per event: no bookmaker prices yet (92), too few bookmakers price these markets (50), prices are in line with the sharp market (3), qualified (2), value only at long odds outside the allowed range (2)
+  - primary blocker per event: no bookmaker prices yet (92), too few bookmakers price these markets (40), prices are in line with the sharp market (12), value only at long odds outside the allowed range (3), qualified (2)
 
-**NFL**: events discovered 14 → complete history 14 → valid forecast 14 → fresh odds available 14 → stale odds only 0 → three plus bookmakers 1 → fully evaluated 1 → markets evaluated 94 → markets positive ev 34 → events positive ev 14 → events passing all rules 0 → final recommendations 0
+**NFL**: events discovered 14 → complete history 14 → valid forecast 14 → fresh odds available 14 → stale odds only 0 → three plus bookmakers 1 → fully evaluated 1 → markets evaluated 94 → markets positive ev 2 → events positive ev 1 → events passing all rules 0 → final recommendations 0
   - market rejections: too few bookmakers (80), EV below threshold (14)
-  - primary blocker per event: too few bookmakers price these markets (14)
+  - primary blocker per event: too few bookmakers price these markets (13), prices are in line with the sharp market (1)
 
-**NBA**: events discovered 52 → complete history 52 → valid forecast 52 → fresh odds available 4 → stale odds only 0 → three plus bookmakers 4 → fully evaluated 4 → markets evaluated 56 → markets positive ev 5 → events positive ev 4 → events passing all rules 0 → final recommendations 0
+**NBA**: events discovered 52 → complete history 52 → valid forecast 52 → fresh odds available 4 → stale odds only 0 → three plus bookmakers 4 → fully evaluated 4 → markets evaluated 56 → markets positive ev 4 → events positive ev 4 → events passing all rules 0 → final recommendations 0
   - market rejections: EV below threshold (41), too few bookmakers (14), odds outside range (1)
   - primary blocker per event: no bookmaker prices yet (48), prices are in line with the sharp market (2), too few bookmakers price these markets (2)
 
@@ -27,25 +27,25 @@
 
 ## The Odds API
 
-{'skipped': None, 'credits_remaining_after': '482', 'credits_spent': 0, 'fetched': [], 'matched': 0, 'unmatched': []}
+{'skipped': 'ODDS_API_KEY not set', 'credits_remaining_after': None, 'credits_spent': None, 'fetched': None, 'matched': None, 'unmatched': None}
 
 ## Providers
 
-- football-data:fixtures: last success 2026-11-12T22:14:29+00:00
-- football-data:E0: last success 2026-11-12T22:14:29+00:00
-- football-data:E1: last success 2026-11-12T22:14:30+00:00
-- football-data:SP1: last success 2026-11-12T22:14:30+00:00
-- football-data:D1: last success 2026-11-12T22:14:30+00:00
-- football-data:I1: last success 2026-11-12T22:14:30+00:00
-- football-data:F1: last success 2026-11-12T22:14:30+00:00
-- football-data:N1: last success 2026-11-12T22:14:30+00:00
-- football-data:P1: last success 2026-11-12T22:14:30+00:00
-- football-data:B1: last success 2026-11-12T22:14:31+00:00
-- football-data:SC0: last success 2026-11-12T22:14:31+00:00
-- espn:international: last success 2026-11-12T22:14:55+00:00
+- football-data:fixtures: last success 2026-11-12T22:16:40+00:00
+- football-data:E0: last success 2026-11-12T22:16:40+00:00
+- football-data:E1: last success 2026-11-12T22:16:40+00:00
+- football-data:SP1: last success 2026-11-12T22:16:41+00:00
+- football-data:D1: last success 2026-11-12T22:16:41+00:00
+- football-data:I1: last success 2026-11-12T22:16:41+00:00
+- football-data:F1: last success 2026-11-12T22:16:41+00:00
+- football-data:N1: last success 2026-11-12T22:16:41+00:00
+- football-data:P1: last success 2026-11-12T22:16:41+00:00
+- football-data:B1: last success 2026-11-12T22:16:41+00:00
+- football-data:SC0: last success 2026-11-12T22:16:41+00:00
+- espn:international: last success 2026-11-12T22:17:18+00:00
 - the-odds-api: last success 2026-11-12T22:14:58+00:00 · last error 2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED
-- espn:nfl: last success 2026-11-12T22:14:55+00:00
-- espn:nba: last success 2026-11-12T22:14:55+00:00
-- espn:tennis: last success 2026-11-12T22:15:08+00:00
+- espn:nfl: last success 2026-11-12T22:17:18+00:00
+- espn:nba: last success 2026-11-12T22:17:18+00:00
+- espn:tennis: last success 2026-11-12T22:17:52+00:00
 - espn:golf: last success 2026-11-12T20:55:40+00:00
-- espn:context: last success 2026-11-12T22:14:56+00:00
+- espn:context: last success 2026-11-12T22:17:42+00:00

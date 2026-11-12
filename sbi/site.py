@@ -139,7 +139,7 @@ def _attach_context(con, row: dict) -> None:
                         (row["event_id"], c["market"], c["selection"], c.get("line"))).fetchone()
         if h:
             row["disagreement"] = {"category": h["category"], "flags": json.loads(h["flags"] or "[]"), "gap": h["gap"]}
-            if h["category"] in ("technical_suspect", "unexplained") and c.get("ev", -1) >= config.RULES.min_ev:
+            if h["category"] in ("technical_suspect", "unexplained") and (c.get("ev") or -1) >= config.RULES.min_ev:
                 c["reason"] = "extreme disagreement (review)"
 
 
@@ -247,11 +247,11 @@ def build(con, now: datetime | None = None):
     fixable = ("EV below threshold", "too few bookmakers", "no market consensus", "extreme disagreement (review)",
                "model uncertainty too high", "pessimistic EV not positive")
     close = [r for r in upcoming7 if not r["has_pick"] and r.get("closest") and fresh(r)
-             and r["closest"].get("reason") in fixable and r["closest"]["ev"] >= min_ev - 0.04]
-    close.sort(key=lambda r: (max(0.0, min_ev - r["closest"]["ev"]), r["start_utc"]))
+             and r["closest"].get("reason") in fixable and (r["closest"].get("ev") or -1) >= min_ev - 0.04]
+    close.sort(key=lambda r: (max(0.0, min_ev - (r["closest"].get("ev") or -1)), r["start_utc"]))
     close_ids = [r["event_id"] for r in close][:20]
     for r in close:
-        r["rank_basis"] = (f"Fresh price; {max(0.0, min_ev - r['closest']['ev']) * 100:.1f} pts short of the "
+        r["rank_basis"] = (f"Fresh price; {max(0.0, min_ev - (r['closest'].get('ev') or -1)) * 100:.1f} pts short of the "
                            f"{min_ev * 100:.0f}% value threshold.")
 
     # WATCHING: completeness, price quality/freshness, pending information, proximity, start time.
@@ -261,7 +261,7 @@ def build(con, now: datetime | None = None):
         quality = int(fresh(r)) + int((fu.get("max_books") or 0) >= config.RULES.min_bookmakers)
         hours = (datetime.fromisoformat(r["start_utc"]) - now).total_seconds() / 3600
         pending = int(hours <= 36 and (r["sport"] in ("soccer", "nfl", "nba") or not fu.get("has_odds")))
-        gap = max(0.0, min_ev - (r.get("closest") or {}).get("ev", -1.0))
+        gap = max(0.0, min_ev - ((r.get("closest") or {}).get("ev") or -1.0))
         return (-complete, -quality, -pending, round(gap, 3), r["start_utc"])
 
     pool = [r for r in upcoming7 if not r["has_pick"] and r["event_id"] not in close_ids

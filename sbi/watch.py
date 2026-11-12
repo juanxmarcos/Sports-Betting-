@@ -51,9 +51,12 @@ def waiting_for(reason: str | None, c, hours_to_start: float, sport: str, n_book
 
 
 def best_candidate(cands, rejections: dict):
+    """Closest-to-value candidate among those WITH a market reference; otherwise the most widely
+    quoted market (shown with its price but without any value figure)."""
     if not cands:
         return None, None
-    c = max(cands, key=lambda x: x.ev)
+    valid = [x for x in cands if x.market_q is not None]
+    c = max(valid, key=lambda x: x.ev) if valid else max(cands, key=lambda x: (x.n_books, x.market in ("1X2", "ML")))
     return c, rejections.get(f"{c.market}:{c.selection}:{c.line}")
 
 
@@ -77,7 +80,8 @@ def analysis_row(*, sport: str, event_id: str, competition: str, title: str, sta
                           "bookmaker": c.bookmaker, "prob": round(float(c.final_q), 4),
                           "model_prob": round(float(c.model_q), 4),
                           "market_prob": None if c.market_q is None else round(float(c.market_q), 4),
-                          "ev": round(float(c.ev), 4), "reason": reason, "active": round(float(c.active), 4),
+                          "ev": round(float(c.ev), 4) if c.market_q is not None else None,
+                          "reason": reason, "active": round(float(c.active), 4),
                           "n_books": c.n_books}
     row["waiting_for"] = waiting_for(reason, c, hours, sport, n_books)
     # opportunity-funnel facts for diagnostics (computed from rule outcomes only)
@@ -86,7 +90,7 @@ def analysis_row(*, sport: str, event_id: str, competition: str, title: str, sta
     row["funnel"] = {"n_markets": len(cands), "reasons": dict(reasons), "max_books": n_books,
                      "has_odds": bool(cands), "stale_odds": bool(odds_ts) and not cands,
                      "history_ok": (history_ok if history_ok is not None else "insufficient team history" not in reasons),
-                     "model_ok": bool(model_view), "positive_ev": sum(1 for x in cands if x.ev > 0),
+                     "model_ok": bool(model_view), "positive_ev": sum(1 for x in cands if x.market_q is not None and x.ev > 0),
                      "qualified": reasons.get("ok", 0)}
     row["stage"] = ("actionable" if cands else ("stale" if odds_ts else "forecast"))
     return row

@@ -56,3 +56,14 @@ def test_filter_removes_held_and_records_reason(tmp_path):
     assert [c.selection for c in pool["e"]] == ["D"]
     assert rej["e"]["1X2:H:None"] == "extreme disagreement (review)"
     assert con.execute("SELECT COUNT(*) FROM disagreement_reviews WHERE held=1").fetchone()[0] == 1
+
+
+def test_single_bookmaker_gives_no_value_claim():
+    """Leave-one-out with one bookmaker leaves no reference: EV must not fall back to the model."""
+    import numpy as np
+    from sbi.engine import NO_EV, books_from_rows, price_event
+    from sbi.models.dixon_coles import DCModel
+    m = DCModel(teams=["A", "B"], home=0.3, att=np.array([0.4, -0.4]), dfn=np.array([-0.3, 0.3]), rho=-0.05)
+    rows = [("1X2", None, "DraftKings", s, p) for s, p in zip("HDA", (3.5, 3.4, 2.0))]   # model loves A at 3.5
+    cands = price_event(m, "A", "B", books_from_rows(rows), {}, 0.05, n_draws=0, markets=("1X2",))
+    assert cands and all(c.market_q is None and c.ev == NO_EV for c in cands)

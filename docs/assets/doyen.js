@@ -339,7 +339,7 @@
         <div class="stat"><div class="k">${esc(c.market_label)}</div><div class="v">${esc(c.selection_text)}</div></div>
         <div class="stat"><div class="k">Current odds</div><div class="v">${dec(c.odds)} <span class="faint small">${esc(c.bookmaker || "")}</span></div></div>
         <div class="stat"><div class="k">Fair odds (sharp market)</div><div class="v">${c.market_prob ? dec(1 / c.market_prob) : "—"}</div></div>
-        <div class="stat"><div class="k">Value vs fair</div><div class="v">${c.ev >= 0 ? "+" : ""}${pct(c.ev, 1)}</div></div></div>
+        <div class="stat"><div class="k">Value vs fair</div><div class="v">${c.ev == null ? "—" : (c.ev >= 0 ? "+" : "") + pct(c.ev, 1)}</div></div></div>
         <p class="small" style="margin-top:10px"><b>${esc(r.short)}</b></p><p class="note">Not a pick because: ${esc(({ "EV below threshold": "the price isn't far enough above fair value", "too few bookmakers": "fewer than 3 bookmakers price this market", "odds outside range": "the value is only at odds outside Doyen's range", "insufficient team history": "one side has too little history", "no market consensus": "there is no sharp reference price" })[c.reason] || c.reason || "below thresholds")}. ${c.n_books != null ? esc(c.n_books) + " bookmaker(s) quote this market." : ""}</p>` : `<p class="small">Odds unavailable. ${esc(r.short || "")}</p>`;
     const stats = [cmpBars(r.model_view, r.book_view), r.expected_goals ? `<div class="small muted">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</div>` : "",
       r.extra_text ? `<p class="small">${esc(r.extra_text)}</p>` : "", formBlock(r.form), injuriesBlock(r.injuries), weatherBlock(r.weather), extForecast(r.external_forecast), disagreementBlock(r.disagreement),

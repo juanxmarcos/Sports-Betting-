@@ -10,6 +10,8 @@ from . import ev as evm
 from .markets import Outcome, outcome, q_many
 from .models.dixon_coles import DCModel
 
+NO_EV = -1.0   # sentinel: EV not computable (no independent market reference)
+
 SELECTIONS = {"1X2": ["H", "D", "A"], "OU": ["over", "under"], "AH": ["home", "away"],
               "ML": ["home", "away"], "SPREAD": ["home", "away"], "TOTAL": ["over", "under"],
               "BTTS": ["yes", "no"]}
@@ -76,9 +78,12 @@ def price_event(model: DCModel, home: str, away: str, books: dict, blend_w: dict
             w = blend_w.get(market, 0.0)
             fq = evm.blend(oc.q, mq, w)
             fq_lo = evm.blend(q_lo, mq, w)
+            if mq is None:   # no independent market reference -> no value claim (never fall back to the model alone)
+                e = e_lo = NO_EV
+            else:
+                e, e_lo = oc.active * (fq * net - 1), oc.active * (fq_lo * net - 1)
             out.append(Candidate(market, s, line, oc.q, sd, q_lo, mq, src, fq, fq_lo, bk, quoted,
-                                 net, oc.active * (fq * net - 1), oc.active * (fq_lo * net - 1),
-                                 w, oc.active, nb, oc))
+                                 net, e, e_lo, w, oc.active, nb, oc))
     return out
 
 
@@ -148,7 +153,7 @@ def price_generic(outcome_fn, books: dict, blend_w: dict, commission: float, mar
             mq = c_ex[s] if c_ex else None
             w = blend_w.get(market, 0.0)
             fq = evm.blend(oc.q, mq, w)
-            e = oc.active * (fq * net - 1)
+            e = oc.active * (fq * net - 1) if mq is not None else NO_EV   # no market reference -> no value claim
             out.append(Candidate(market, s, line, oc.q, 0.0, oc.q, mq, src_ex, fq, fq, bk, quoted, net, e, e, w,
                                  oc.active, nb, oc))
     return out
