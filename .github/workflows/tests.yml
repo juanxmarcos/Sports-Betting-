@@ -1,0 +1,32 @@
+# Sports Betting Doyen: run the automated test suite on every pull request.
+# Free for public repositories. Needs no secrets. Read-only permissions.
+name: tests
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Check site asset paths are relative (GitHub Pages base path)
+        run: |
+          if grep -nE '(src|href)="/[^/]' docs/index.html docs/dashboard/index.html docs/dev/index.html; then
+            echo "Root-absolute paths break under /Sports-Betting-/"; exit 1; fi
+          if grep -nE 'fetch\("/|"/assets|"/data' docs/assets/doyen.js; then
+            echo "Root-absolute paths in doyen.js"; exit 1; fi
+          echo "OK: relative paths only"
