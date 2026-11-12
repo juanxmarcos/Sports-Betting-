@@ -108,8 +108,7 @@ def explain(r: dict, e: dict) -> dict:
         main = {"soccer": "Lineups aren't confirmed yet; a late absence can move this price quickly.",
                 "nfl": "Quarterback and injury news isn't modelled; check the final injury report.",
                 "nba": "Late scratches and rest decisions aren't modelled; check availability before tip-off.",
-                "tennis": "Fitness and withdrawals aren't modelled; check for late injury news.",
-                "golf": "Golf outcomes are highly variable; even a correct probability loses most of the time."
+                "tennis": "Fitness and withdrawals aren't modelled; check for late injury news."
                 }.get(r.get("sport", "soccer"), "Unmodelled news can move this price.")
     return {"why": " ".join(parts) or "The available price is above Doyen's estimate of fair value.",
             "risk": main, "risks": risks}

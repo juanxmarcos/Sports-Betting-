@@ -6,7 +6,7 @@
 | Storage | `sbi/db.py` (SQLite, immutable `recommendations` via triggers) | ✅ retained |
 | Club soccer data | `sbi/sources/football_data.py` (results, xG, multi-book pre/closing odds, fixtures) | ✅ retained |
 | International soccer | `sbi/sources/international.py`, `sbi/intl.py` (martj42 history + ESPN fixtures/odds) | ✅ retained, merged into "Soccer" in the UI |
-| Multi-book odds | `sbi/sources/odds_api.py` (The Odds API free tier, budgeted) | ✅ retained, extended to NFL/NBA/tennis/golf |
+| Multi-book odds | `sbi/sources/odds_api.py` (The Odds API free tier, budgeted) | ✅ retained, extended to NFL/NBA/tennis |
 | Models | `sbi/models/dixon_coles.py`, `sbi/models/elo.py` | ✅ retained |
 | Pricing / EV | `sbi/markets.py`, `sbi/ev.py`, `sbi/engine.py` | ✅ retained; generic 2-way pricing added for other sports |
 | Pipeline | `sbi/pipeline.py`, `sbi/settle.py`, `sbi/performance.py` | ✅ retained; reassessment lifecycle added |

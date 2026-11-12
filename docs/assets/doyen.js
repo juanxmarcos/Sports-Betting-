@@ -9,13 +9,12 @@
   const S = { data: null, sport: store.get("sport", "all"), range: "today", hrange: "all", hsport: "all",
               tz: store.get("tz", null), watch: new Set(store.get("watch", [])) };
 
-  const SPORTS = [["all", "All Sports"], ["soccer", "Soccer"], ["nfl", "NFL"], ["nba", "NBA"], ["tennis", "Tennis"], ["golf", "Golf"]];
+  const SPORTS = [["all", "All Sports"], ["soccer", "Soccer"], ["nfl", "NFL"], ["nba", "NBA"], ["tennis", "Tennis"]];
   const ICON = {
     soccer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5l3.6 2.6-1.4 4.2H9.8l-1.4-4.2z"/><path d="M12 3.5v4M15.6 10.1l4.2-1.3M14.2 14.3l2.6 3.6M9.8 14.3l-2.6 3.6M8.4 10.1L4.2 8.8"/></svg>',
     nfl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="12" rx="9" ry="5.6" transform="rotate(-35 12 12)"/><path d="M9.5 14.5l5-5M10.6 11.4l2 2M12 10l2 2M9.2 12.8l2 2"/></svg>',
     nba: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5v17M6 6c2.5 2.2 2.5 9.8 0 12M18 6c-2.5 2.2-2.5 9.8 0 12"/></svg>',
     tennis: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.5"/><path d="M5.2 6.6c3.4 2.8 3.4 8 0 10.8M18.8 6.6c-3.4 2.8-3.4 8 0 10.8"/></svg>',
-    golf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 20V3.5l9 3.5-9 3.5"/><ellipse cx="12" cy="20" rx="7" ry="1.6"/></svg>',
     all: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
   };
   const STAR = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.9l-5.3 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>';
@@ -29,8 +28,7 @@
   const tz = () => S.tz || (S.data && S.data.default_timezone) || "America/New_York";
   const dkey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: tz(), year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const addDays = (key, n) => { const [y, m, d] = key.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1, d + n)); return t.toISOString().slice(0, 10); };
-  const isGolf = (x) => x && x.sport === "golf";
-  const when = (x) => isGolf(x) ? `${fmtDate(x.start_utc)}${x.end_utc ? " – " + fmtDate(x.end_utc) : ""}` : fmtTime(x.start_utc);
+  const when = (x) => fmtTime(x.start_utc);
   const fmtTime = (iso) => new Intl.DateTimeFormat("en-US", { timeZone: tz(), weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(new Date(iso));
   const fmtClock = (iso) => new Intl.DateTimeFormat("en-US", { timeZone: tz(), hour: "numeric", minute: "2-digit" }).format(new Date(iso));
   const fmtDay = (key) => { const [y, m, d] = key.split("-").map(Number); return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
@@ -193,7 +191,7 @@
   function eventRow(r) {
     const multi = r.end_utc && dkey(new Date(r.end_utc)) !== dkey(new Date(r.start_utc));
     return `<div class="row" data-go="#/event/${esc(r.event_id)}" role="link" tabindex="0">
-      <div class="t">${isGolf(r) ? "All day" : esc(fmtClock(r.start_utc))}${multi ? `<small>to ${esc(fmtDate(r.end_utc))}</small>` : ""}</div>
+      <div class="t">${esc(fmtClock(r.start_utc))}${multi ? `<small>to ${esc(fmtDate(r.end_utc))}</small>` : ""}</div>
       <div class="ev"><b>${esc(r.title)}</b><span>${ICON[r.sport] || ""}${esc(r.competition)}${r.neutral ? " · neutral venue" : ""}</span></div>
       ${eventStatus(r)}${starBtn(r.event_id)}</div>`;
   }
@@ -317,10 +315,9 @@
       <div style="margin-top:10px">${pk ? `<a class="btn" href="#/pick/${esc(pk.id)}">View Doyen's pick →</a>` : `<span class="pill monitor">${S.data.watching.includes(id) ? "Watching · not a recommendation" : "No pick · analysed"}</span>`}</div>
       <div class="card block"><h3>Why it's interesting</h3><p class="why">${esc(r.why_interesting || "Routine analysis.")}</p><p class="muted" style="margin:8px 0 0">Waiting for: <b style="color:var(--info)">${esc(r.waiting_for)}</b></p></div>`;
     if (c) h += `<div class="card block"><h3>Closest to value</h3><p class="why">${esc(c.market_label)} — <b>${esc(c.selection_text)}</b> at ${dec(c.odds)} (${esc(c.bookmaker || "")}). ${c.market_prob != null ? `Sharp market consensus (margin removed): ${pct(c.market_prob, 1)}` : `Doyen's estimate: ${pct(c.prob, 1)}`}${c.model_prob != null && c.market_prob != null ? `; Doyen's model: ${pct(c.model_prob, 1)}` : ""}. Value of this price against fair: ${c.ev >= 0 ? "+" : ""}${pct(c.ev, 1)}.</p><p class="note">Why it isn't a pick: ${esc(c.reason || "below thresholds")}.</p></div>`;
-    if (Object.keys(r.model_view || {}).length) h += `<div class="card block"><h3>${r.sport === "golf" ? "Win probability: top of the field" : "Model vs bookmakers"}</h3>${r.expected_goals ? `<p class="muted" style="margin:0 0 8px">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</p>` : ""}${cmpBars(r.model_view, r.book_view)}${r.model_weight === 0 ? '<p class="note">This competition\'s model has not yet earned weight against the market, so its view is context only.</p>' : ""}</div>`;
+    if (Object.keys(r.model_view || {}).length) h += `<div class="card block"><h3>Model vs bookmakers</h3>${r.expected_goals ? `<p class="muted" style="margin:0 0 8px">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</p>` : ""}${cmpBars(r.model_view, r.book_view)}${r.model_weight === 0 ? '<p class="note">This competition\'s model has not yet earned weight against the market, so its view is context only.</p>' : ""}</div>`;
     if (r.form) h += `<div class="card block"><h3>Recent form</h3><div class="kv">${formBlock(r.form)}</div></div>`;
     if (r.extra_text && r.extra_text !== r.why_interesting && !(r.why_interesting || "").includes(r.extra_text.split(". ")[0])) h += `<div class="card block"><h3>Notes</h3><p class="why">${esc(r.extra_text)}</p></div>`;
-    if (r.golf_table) h += `<div class="card block"><h3>Simulated finishing chances</h3><div class="rows">${r.golf_table.slice(0, 15).map((g) => `<div class="golfrow"><b>${esc(g.player)}</b><div class="gnums"><span>${pct(g.win, 1)}<small>win</small></span><span>${pct(g.top5)}<small>top 5</small></span><span>${pct(g.top10)}<small>top 10</small></span><span>${pct(g.top20)}<small>top 20</small></span><span>${pct(g.cut)}<small>cut</small></span></div></div>`).join("")}</div><p class="note">10,000 simulations from strokes-versus-field ratings. Probabilities, not predictions. Doyen has no free golf odds to compare against outside the majors, so these are not picks.</p></div>`;
     h += `<p class="note">${r.odds_updated ? "Odds updated " + esc(ago(r.odds_updated)) + " · " : ""}${r.n_books || 0} bookmaker${r.n_books === 1 ? "" : "s"} quoting.</p>
       <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">${starBtn(id).replace('class="star', 'class="ibtn')}<a class="btn ghost" href="#/ask/event/${esc(id)}">Ask Doyen about this event</a></div></div>`;
     return h;
@@ -343,7 +340,7 @@
   function ask(kind, id) {
     const sugg = ["Why do you like this selection?", "What's your strongest opportunity today?", "What are the biggest risks in today's selections?",
       "Do you see any value in the NFL games this weekend?", "What changed in the odds for this match?", "How have your soccer recommendations performed this month?",
-      "What does your tennis model think about this matchup?", "Which golf markets look interesting this week?"];
+      "What does your tennis model think about this matchup?"];
     const ctx = askContext(kind, id);
     const subject = kind === "pick" ? (S.data.history.find((x) => x.id === id) || {}).selection : kind === "event" ? (S.data.events.find((x) => x.event_id === id) || {}).title : null;
     setTimeout(() => {

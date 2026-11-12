@@ -17,12 +17,11 @@ SPORTS = {
     "nfl": {"name": "NFL", "analysis": ["nfl"]},
     "nba": {"name": "NBA", "analysis": ["nba"]},
     "tennis": {"name": "Tennis", "analysis": ["tennis"]},
-    "golf": {"name": "Golf", "analysis": ["golf"]},
 }
 
 
 def sport_of(league: str) -> str:
-    for k in ("nfl", "nba", "tennis", "golf"):
+    for k in ("nfl", "nba", "tennis"):
         if league.lower().startswith(k):
             return k
     return "soccer"
@@ -56,7 +55,7 @@ def _pick(con, r, now) -> dict:
     comp = e.get("competition") or config.FOOTBALL_LEAGUES.get(r["league"], r["league"])
     return {
         "id": r["rec_id"], "event_id": r["event_id"], "sport": r["sport"], "competition": comp,
-        "title": f"{r['home']} v {r['away']}" if r["sport"] != "golf" else r["home"],
+        "title": f"{r['home']} v {r['away']}",
         "start_utc": r["kickoff_utc"], "published_at": r["published_at"],
         "market": market_label(r["market"]), "selection": selection_label(r),
         "odds": r["odds"], "bookmaker": r["bookmaker"], "net_odds": e.get("net_odds", r["odds"]),
@@ -144,7 +143,8 @@ def build(con, now: datetime | None = None):
                        "markets": meta.get("markets"), "note": meta.get("note"),
                        "picks_possible": meta.get("picks_possible", key == "soccer")}
         for row in rows:
-            if datetime.fromisoformat(row.get("end_utc") or row["start_utc"]) < now - timedelta(hours=3):
+            if row.get("sport") not in SPORTS or \
+                    datetime.fromisoformat(row.get("end_utc") or row["start_utc"]) < now - timedelta(hours=3):
                 continue
             c = row.get("closest")
             if c:
@@ -177,8 +177,7 @@ def build(con, now: datetime | None = None):
         if per.get(r["sport"], 0) < 3:
             watching.append(r["event_id"])
             per[r["sport"]] = per.get(r["sport"], 0) + 1
-    golf_now = [r["event_id"] for r in events if r["sport"] == "golf"]
-    watching = (watching + golf_now)[:12]
+    watching = watching[:12]
 
     settled = [p for p in picks_all if p["status"]["state"] == "settled"]
     rec = {"won": sum(p["status"]["result"] in ("won", "half_won") for p in settled),

@@ -125,14 +125,15 @@ The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
 - **Why there are no recommendations yet:** free international odds come from one bookmaker, and there is no free history of international odds. The model's skill *relative to the market*, which is what matters for value, therefore cannot be backtested. The system publishes model-vs-book comparisons as **monitoring signals**, stores every prediction with the bookmaker's de-vigged probability, and scores both once results arrive (dashboard → Model analytics → live prediction tracking). Once roughly 300 or more matches have settled, a blend weight can be fitted on that live out-of-sample record. Adding multi-bookmaker odds (The Odds API free key) would allow consensus pricing like the club-football pipeline.
 
 
-## 10. NFL, NBA, tennis and golf (Doyen v0.2)
+## 10. NFL, NBA and tennis (Doyen v0.2)
+
+*Golf was built and evaluated, then removed from Doyen on 2026-11-12 at the owner's request. Its code remains in git history.*
 
 | Sport | Model | Out-of-sample test | Result | Weight vs market |
 |---|---|---|---|---|
 | NFL | Points ratings (time-decayed ridge on offence/defence, home field), discrete-normal margin/total | 989 games, 2023–2026, vs **de-vigged closing moneyline** (nflverse) | log loss 0.63927 vs market 0.60926 (95% CI of gap 0.01688 … 0.04306); home-rate baseline 0.68962 | **0** (fitted on 2021–22) |
 | NBA | Same points model; a back-to-back feature was tested and **dropped** (no out-of-sample gain) | 1492 games, 2025-26 season to date | log loss 0.60552 (with rest feature 0.60517 without); home-rate 0.68822 | **0**: no free NBA odds history to validate against |
 | Tennis | Overall + surface Elo (dynamic K); best-of-5 conversion for men's Slams; match winner only | 11609 matches since Jul 2025 (29057 in history) | log loss 0.63811 vs coin flip 0.69315; favourite won 62.7% | **0**: no free tennis odds history |
-| Golf | Strokes vs field average (time-weighted, shrunk), 10,000-run tournament simulation with 36-hole cut | 18021 player-events, pre-tournament top-20 | log loss 0.42252 vs naive 20/field 0.45631 (95% CI of gap -0.03727 … -0.03037) | n/a: no free golf odds outside the majors, so monitoring only |
 
 **Consequence.** For every sport, a published pick rests on *price versus the sharp multi-bookmaker consensus*, the only mechanism with positive evidence (club soccer CLV +4.5%). Models supply context (projections, ratings, simulations) and risk flags when they disagree with the market. They earn weight only by beating the market out of sample.
 
@@ -140,6 +141,5 @@ The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
 - Soccer: 1X2, O/U, Asian handicap.
 - NFL/NBA: moneyline, spread, total (discrete margin/total distributions handle pushes on whole-number lines).
 - Tennis: match winner only. Set handicaps and total games are excluded because they are not modelled reliably.
-- Golf: winner / top 5 / top 10 / top 20 / make the cut, computed for display. Head-to-head matchups are not modelled yet.
 
 **Pre-game reassessment.** Every run (every 2 hours) re-prices open picks against the latest odds and appends a status: *active* (still qualifies), *updated* (edge narrowed), *withdrawn* (no longer value) or *expired* (started). These go to the append-only `rec_updates` table. The original pick, its odds and its timestamp never change, and withdrawn picks are still settled and counted in Pick History.

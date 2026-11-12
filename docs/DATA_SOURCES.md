@@ -26,11 +26,11 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 - **Matching:** an Odds API event is matched to our event when kick-off is within ±3h and both team names are similar (normalised; difflib ≥ 0.6). Unmatched events are logged, never guessed.
 - **Timestamps:** each bookmaker's own `last_update` is stored as `retrieved_at`.
 
-### NFL / NBA / tennis / golf (Doyen v0.2)
-- **ESPN public scoreboards** (`site.api.espn.com/apis/site/v2/sports/{football/nfl|basketball/nba|tennis/atp|tennis/wta|golf/pga|golf/eur}/scoreboard`): fixtures, results, DraftKings odds (NFL/NBA), full tennis draws with set scores, golf leaderboards with round strokes. These endpoints are undocumented, so usage is kept light and past dates are cached. Note: golf ignores `?event=`; past events are fetched by `?dates=<start date>` and checked by id.
+### NFL / NBA / tennis (Doyen v0.2)
+- **ESPN public scoreboards** (`site.api.espn.com/apis/site/v2/sports/{football/nfl|basketball/nba|tennis/atp|tennis/wta}/scoreboard`): fixtures, results, DraftKings odds (NFL/NBA), full tennis draws with set scores. These endpoints are undocumented, so usage is kept light and past dates are cached.
 - **nflverse games.csv** (`raw.githubusercontent.com/nflverse/nfldata`): every NFL game since 1999 with closing moneyline, spread and total, plus ESPN game ids.
 - **The Odds API**: `americanfootball_nfl`, `basketball_nba` (h2h, spreads, totals = 3 credits) and active `tennis_*` tournament keys (h2h = 1 credit), within the daily credit allowance.
-- **Not available free:** historical NBA, tennis and golf odds (models cannot be validated against the market); golf odds outside the majors; reliable injury and lineup feeds.
+- **Not available free:** historical NBA and tennis odds (models cannot be validated against the market); reliable injury and lineup feeds.
 
 ## Evaluated, not (yet) automated
 

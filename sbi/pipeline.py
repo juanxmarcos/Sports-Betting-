@@ -329,7 +329,7 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             except Exception as e:  # noqa: BLE001
                 d["error"] = f"{type(e).__name__}: {e}"
                 d["_status"] = "partial"
-    for sp, mod in (("tennis", "tennis"), ("golf", "golf")):
+    for sp, mod in (("tennis", "tennis"),):
         with db.job(con, f"analyse-{sp}") as d:
             import importlib
             try:
