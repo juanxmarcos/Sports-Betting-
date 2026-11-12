@@ -53,26 +53,30 @@ def _training_seasons(now: datetime, n: int = 4) -> list[str]:
 
 
 def _latest_books(con, event_id: str, max_age_h: float, now: datetime) -> tuple[dict, str | None, list[str]]:
-    rows = con.execute("""
-        SELECT o.market, o.line, o.bookmaker, o.selection, o.price, o.retrieved_at, o.source_url
-        FROM odds o JOIN (
-            SELECT bookmaker, market, selection, IFNULL(line,-999) l, MAX(retrieved_at) mr
-            FROM odds WHERE event_id=? AND kind='pre' GROUP BY bookmaker, market, selection, IFNULL(line,-999)
-        ) x ON o.bookmaker=x.bookmaker AND o.market=x.market AND o.selection=x.selection
-           AND IFNULL(o.line,-999)=x.l AND o.retrieved_at=x.mr
-        WHERE o.event_id=? AND o.kind='pre'""", (event_id, event_id)).fetchall()
-    fresh, warnings, urls = [], [], set()
-    newest = None
+    """Latest quote per (normalised bookmaker, market, selection, line), fresh quotes only.
+
+    Bookmaker names are normalised at READ time too, so rows stored under older aliases
+    (e.g. "Unibet (SE)") and new ones ("Unibet") count as ONE bookmaker and only the most
+    recent quote is used (bookmaker independence)."""
+    from .sources.books import normalize_book
+    rows = con.execute("""SELECT market, line, bookmaker, selection, price, retrieved_at, source_url
+                          FROM odds WHERE event_id=? AND kind='pre'""", (event_id,)).fetchall()
+    latest: dict = {}
+    newest, urls = None, set()
     for r in rows:
-        ts = datetime.fromisoformat(r["retrieved_at"])
-        age = (now - ts).total_seconds() / 3600
-        newest = max(newest or r["retrieved_at"], r["retrieved_at"])
-        if r["source_url"]:
-            urls.add(r["source_url"])
-        if age <= max_age_h:
-            fresh.append((r["market"], r["line"], r["bookmaker"], r["selection"], r["price"]))
-    if rows and not fresh:
-        warnings.append(f"all odds older than {max_age_h:.0f}h (newest {newest}) - excluded as stale")
+        bk = normalize_book(r["bookmaker"])
+        if not bk:
+            continue
+        key = (bk, r["market"], r["selection"], -999 if r["line"] is None else r["line"])
+        if key not in latest or r["retrieved_at"] > latest[key]["retrieved_at"]:
+            latest[key] = {"bk": bk, **dict(r)}
+    fresh = []
+    for v in latest.values():
+        newest = max(newest or v["retrieved_at"], v["retrieved_at"])
+        if (now - datetime.fromisoformat(v["retrieved_at"])).total_seconds() / 3600 <= max_age_h:
+            fresh.append((v["market"], v["line"], v["bk"], v["selection"], v["price"]))
+            if v["source_url"]:
+                urls.add(v["source_url"])
     return books_from_rows(fresh), newest, sorted(urls)
 
 

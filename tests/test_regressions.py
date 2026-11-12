@@ -61,3 +61,17 @@ def test_stale_odds_are_not_actionable(tmp_path):
     books, newest, _ = _latest_books(con, "e", config.RULES.max_odds_age_hours, now)
     assert books == {} and newest == old                            # stale -> excluded, but recorded as stale
     assert config.RULES.max_odds_age_hours <= 24 and config.RULES.publish_window_hours == 168
+
+
+def test_bookmaker_aliases_count_once_and_latest_wins(tmp_path):
+    from sbi.pipeline import _latest_books
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('e','football','INT:x',?,'A','B','scheduled','t','t')""", ((now + timedelta(days=1)).isoformat(),))
+    for bk, ts, px in (("Unibet (SE)", now - timedelta(hours=6), 6.0), ("Unibet", now - timedelta(hours=1), 5.6)):
+        for s_, p in zip("HDA", (px, 4.0, 1.6)):
+            con.execute("INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                        ("e", bk, "1X2", s_, None, p, "pre", "t", ts.isoformat()))
+    books, _, _ = _latest_books(con, "e", 24, now)
+    assert list(books[("1X2", None)]) == ["Unibet"] and books[("1X2", None)]["Unibet"]["H"] == 5.6

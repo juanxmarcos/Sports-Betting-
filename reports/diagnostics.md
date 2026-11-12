@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-12 21:50 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-12 21:52 UTC)
 
 ## Opportunity funnel (next 7 days)
 
