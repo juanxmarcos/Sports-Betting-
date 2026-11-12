@@ -74,5 +74,35 @@ breakdowns by league, market and odds band. Brier and log loss are reported for 
 and for **all** predictions, so calibration is tracked even on days without bets. Sample-size
 warnings are shown until at least 500 settled selections exist.
 
-## 8. Results
-See `RESULTS` below (generated from `data/backtest/report.json`).
+## 8. Results — walk-forward backtest run 2026-11-12 (`data/backtest/report.json`)
+
+**Selected hyperparameters (tune seasons):** ξ = 0.0026/day (half-life ≈ 9 months), ridge = 2.0.
+The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
+
+**1X2 forecasting, out-of-sample test (2024-25 → Nov 2026; 5,258 matches, 6 leagues)**
+
+| Model | Log loss | Brier |
+|---|---|---|
+| Base rate (in-sample) | 1.0738 | 0.6498 |
+| Elo + ordered logit | 1.0024 | 0.5990 |
+| Dixon-Coles | 1.0036 | 0.5998 |
+| Market consensus, pre-match (de-vigged) | **0.9834** | **0.5867** |
+| Market consensus, closing | 0.9814 | 0.5853 |
+
+- Dixon-Coles is well calibrated (reliability bins within about 2–4 pp) and far better than base rates. It is **about as good as Elo**, but **clearly worse than the betting market**: the per-match log-loss gap is +0.016 to +0.025 (95% CI), and the validation seasons show the same result.
+- O/U 2.5: model 0.6859 vs market 0.6737 log loss.
+- **Consequently the fitted blend weights are ≈ 0 for every market.** The model's probabilities carry no information the market lacks. The system therefore does **not** trust the model's disagreements with the market, which is exactly the safeguard intended.
+
+**Simulated betting, test seasons, deployed rules** (equal to the model-ignored benchmark, because w ≈ 0)
+
+| Metric | Value |
+|---|---|
+| Bets | 250 (212 in 2024-25, 27 in 2025-26, 11 in 2026-27) |
+| Profit / ROI | +28.5 u / +11.4% (95% CI −7.5% to +32.0%), **not significant** |
+| Average CLV vs closing sharp consensus | **+4.5% (95% CI +3.6% to +5.3%)**; 83% of bets beat the close |
+| Average odds / hit rate / max drawdown | 3.46 / 35.6% / 12.4 u |
+
+**Interpretation (honest):**
+1. The only edge the system detects is **price-shopping**: prices at individual bookmakers that exceed a sharp de-vigged consensus. Positive CLV is credible evidence that those prices really were above fair value. However, 78% of test bets came from a single soft bookmaker (1xBet) that football-data stopped publishing after 2024-25. Volume has since fallen sharply, and such bookmakers often limit winning accounts.
+2. ROI is positive, but its confidence interval comfortably includes zero. **This is not proof of a persistent advantage.**
+3. Next model improvements must beat the market's log loss to earn non-zero weight. Candidates are xG-based ratings, lineup strength, and fresher odds snapshots (Roadmap 2b/3b). Until then, recommendations should be read as "this price is above the sharp consensus", not "the model knows better".

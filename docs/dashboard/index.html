@@ -51,14 +51,14 @@ const cls=x=>x>0?"pos":(x<0?"neg":"");
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 function nav(){const n=document.getElementById("nav");n.innerHTML=TABS.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join("");
- n.onclick=e=>{const k=e.target.dataset.k;if(!k)return;show(k)};let k=location.hash.slice(1);show(TABS.some(t=>t[0]==k)?k:"today")}
+ n.onclick=e=>{const k=e.target.dataset.k;if(!k)return;show(k)};const go=()=>{let k=location.hash.slice(1);show(TABS.some(t=>t[0]==k)?k:"today")};window.addEventListener("hashchange",go);go()}
 function show(k){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==k));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.k==k));history.replaceState(null,"","#"+k)}
 function kpi(l,v,c=""){return `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div></div>`}
 
 function today(D){
  const day=D.generated.slice(0,10);const recs=D.recommendations.filter(r=>r.published_at.slice(0,10)==day);
  const open=D.recommendations.filter(r=>r.status=="open");
- let h=`<div class="grid">${kpi("Published today",recs.length)}${kpi("Open selections",open.length)}${kpi("Best EV today",recs.length?spct(Math.max(...recs.map(r=>r.ev))):"—")}${kpi("Blend weight (model)",Object.entries(D.blend_weight).map(([k,v])=>k+" "+num(v,2)).join(" · "))}</div>`;
+ let h=`<div class="grid">${kpi("Published today",recs.length)}${kpi("Open selections",open.length)}${kpi("Best EV today",recs.length?spct(Math.max(...recs.map(r=>r.ev))):"—")}${kpi("Blend weight on model",`<span style="font-size:15px">${Object.entries(D.blend_weight).map(([k,v])=>k+" "+num(v,2)).join(" · ")}</span>`)}</div>`;
  const list=open.length?open:[];
  h+=`<div class="card"><h2>Open +EV research selections</h2>`;
  if(!list.length){h+=`<div class="empty"><b>No qualifying opportunities today.</b><br>Nothing passed the conservative selection rules. No pick is better than a weak pick.</div>`}

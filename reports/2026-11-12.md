@@ -1,7 +1,7 @@
 # Daily Betting Intelligence Report — 2026-11-12
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times Europe/London. Generated Thu 12 Nov 17:31 GMT. Model `dc-0.1`.*
+All times Europe/London. Generated Thu 12 Nov 17:37 GMT. Model `dc-0.1`.*
 
 ## Daily overview
 
