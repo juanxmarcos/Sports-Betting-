@@ -32,27 +32,35 @@ def _rows(name):
     return json.loads(p.read_text())["rows"] if p.exists() else []
 
 
-def funnel(now: datetime, horizon_h: float = 48) -> dict:
+def funnel(now: datetime, horizon_h: float = 168, con=None) -> dict:
+    """Per sport: every stage from discovery to final recommendation, plus rejection reasons."""
     out = {}
+    recs = {}
+    if con is not None:
+        for r in con.execute("SELECT event_id FROM recommendations WHERE kickoff_utc > ? AND kickoff_utc <= ?",
+                             (now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat())):
+            recs[r[0]] = 1
     for sport, files in SPORT_FILES.items():
         rows = [r for f in files for r in _rows(f)
                 if now < datetime.fromisoformat(r["start_utc"]) <= now + timedelta(hours=horizon_h)]
         f = Counter()
-        reasons = Counter()
-        primary = Counter()
+        reasons, primary = Counter(), Counter()
         for r in rows:
             fu = r.get("funnel") or {}
-            f["events_discovered"] += 1
-            f["with_sufficient_stats"] += int(fu.get("history_ok", True))
-            f["with_odds"] += int(fu.get("has_odds", False))
-            f["stale_odds_only"] += int(fu.get("stale_odds", False))
-            f["with_3plus_bookmakers"] += int((fu.get("max_books") or 0) >= config.RULES.min_bookmakers)
-            f["markets_evaluated"] += fu.get("n_markets", 0)
-            f["qualifying_markets"] += fu.get("qualified", 0)
+            f["1_events_discovered"] += 1
+            f["2_complete_history"] += int(fu.get("history_ok", True))
+            f["3_valid_forecast"] += int(fu.get("model_ok", bool(r.get("model_view"))))
+            f["4_fresh_odds_available"] += int(fu.get("has_odds", False))
+            f["4b_stale_odds_only"] += int(fu.get("stale_odds", False))
+            f["5_three_plus_bookmakers"] += int((fu.get("max_books") or 0) >= config.RULES.min_bookmakers)
+            f["6_markets_evaluated"] += fu.get("n_markets", 0)
+            f["7_markets_positive_ev"] += fu.get("positive_ev", 0)
+            f["8_events_positive_ev"] += int(fu.get("positive_ev", 0) > 0)
+            f["9_events_passing_all_rules"] += int(fu.get("qualified", 0) > 0)
+            f["10_final_recommendations"] += int(r["event_id"] in recs)
             for k, v in (fu.get("reasons") or {}).items():
                 if k != "ok":
                     reasons[k] += v
-            # primary blocker per event
             if fu.get("qualified"):
                 primary["qualified"] += 1
             elif fu.get("stale_odds"):
@@ -60,9 +68,9 @@ def funnel(now: datetime, horizon_h: float = 48) -> dict:
             elif not fu.get("has_odds"):
                 primary["no odds"] += 1
             else:
-                c = (r.get("closest") or {}).get("reason")
-                primary[c or "other"] += 1
-        out[sport] = {"funnel": dict(f), "market_rejections": dict(reasons.most_common()),
+                primary[(r.get("closest") or {}).get("reason") or "other"] += 1
+        out[sport] = {"funnel": dict(sorted(f.items(), key=lambda kv: int(kv[0].split("_")[0].rstrip("b")))),
+                      "market_rejections": dict(reasons.most_common()),
                       "primary_blocker_by_event": dict(primary.most_common())}
     return out
 
@@ -74,13 +82,13 @@ def providers(con, now: datetime) -> dict:
     for sport, like in (("soccer", "football"), ("nfl", "nfl"), ("nba", "nba"), ("tennis", "tennis")):
         ages, books = [], []
         for ev in con.execute("SELECT event_id FROM events WHERE sport=? AND status='scheduled' AND kickoff_utc BETWEEN ? AND ?",
-                              (like, now.isoformat(), (now + timedelta(hours=48)).isoformat())):
+                              (like, now.isoformat(), (now + timedelta(hours=168)).isoformat())):
             r = con.execute("SELECT MAX(retrieved_at) m, COUNT(DISTINCT bookmaker) n FROM odds WHERE event_id=? AND kind='pre'",
                             (ev[0],)).fetchone()
             if r["m"]:
                 ages.append((now - datetime.fromisoformat(r["m"])).total_seconds() / 3600)
                 books.append(r["n"])
-        fresh[sport] = {"events_with_odds": len(ages), "median_odds_age_h": round(median(ages), 1) if ages else None,
+        fresh[sport] = {"events_with_odds": len(ages), "median_odds_age_h": round(abs(median(ages)), 1) if ages else None,
                         "median_bookmakers": median(books) if books else None,
                         "share_3plus_books": round(sum(b >= 3 for b in books) / len(books), 2) if books else None}
     oa = con.execute("SELECT details FROM job_runs WHERE job='ingest-odds-api' ORDER BY id DESC LIMIT 1").fetchone()
@@ -112,14 +120,18 @@ def briefing(fun: dict) -> str:
 
 def build(con, now: datetime | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
-    fun = funnel(now)
-    rep = {"generated": now.isoformat(), "funnel_48h": fun, **providers(con, now), "briefing": briefing(fun)}
+    fun = funnel(now, 168, con)
+    fun48 = funnel(now, 48, con)
+    rep = {"generated": now.isoformat(), "funnel_7d": fun, "funnel_48h": fun48, **providers(con, now),
+           "briefing": briefing(fun)}
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     (config.DATA_DIR / "diagnostics.json").write_text(json.dumps(rep, indent=2, default=str))
-    lines = [f"# Sports Betting Doyen — diagnostics ({now:%Y-%m-%d %H:%M} UTC)", "", "## Opportunity funnel (next 48h)", ""]
+    lines = [f"# Sports Betting Doyen — diagnostics ({now:%Y-%m-%d %H:%M} UTC)", "", "## Opportunity funnel (next 7 days)", ""]
     for sport, d in fun.items():
         f = d["funnel"]
-        lines.append(f"**{sport.upper()}**: " + " → ".join(f"{k.replace('_', ' ')} {v}" for k, v in f.items()))
+        lines.append(f"**{sport.upper()}**: " + " → ".join(f"{k.split('_', 1)[1].replace('_', ' ')} {v}" for k, v in f.items()))
+        if d["market_rejections"]:
+            lines.append("  - market rejections: " + ", ".join(f"{k} ({v})" for k, v in d["market_rejections"].items()))
         if d["primary_blocker_by_event"]:
             lines.append("  - primary blocker per event: " + ", ".join(f"{BLOCKER_TEXT.get(k, k)} ({v})" for k, v in d["primary_blocker_by_event"].items()))
         lines.append("")

@@ -241,3 +241,5 @@ details.sec[open] summary::after{content:"–"}
 .sec-b ul{margin:6px 0 0 18px;padding:0}
 .bar.b2{margin-top:4px;opacity:.6}.bar.b2 i{background:var(--info)}
 .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.cc.close{border-color:rgba(221,184,114,.22)}
+.cc-why.close-r{color:var(--warn)}

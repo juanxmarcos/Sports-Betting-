@@ -171,6 +171,8 @@ def _sel_text(row: dict, c: dict) -> str:
         return f"{p[0]} {ln:+g}" if s == "home" else f"{p[1]} {-ln:+g}"
     if c["market"] == "ML":
         return p[0] if s in ("home", "H") else p[1]
+    if c["market"] == "BTTS":
+        return "Yes" if s == "yes" else "No"
     return str(s)
 
 
@@ -218,31 +220,48 @@ def build(con, now: datetime | None = None):
             events.append(row)
     events.sort(key=lambda r: r["start_utc"])
     # Matches Doyen is watching: closest-to-value and largest disagreements, no picks, next 72h
-    # Transparent ranking (not model confidence): 1) a current, fresh price exists,
-    # 2) distance to the qualification threshold (EV gap), 3) sooner start.
     min_ev = config.RULES.min_ev
 
-    def rank_key(r):
-        c = r["closest"]
+    def fresh(r):
         ts = r.get("odds_updated")
-        fresh = ts is not None and (now - datetime.fromisoformat(ts)) < timedelta(hours=24)
-        gap = max(0.0, min_ev - c["ev"])
-        return (0 if fresh else 1, round(gap, 3), r["start_utc"])
+        return ts is not None and (now - datetime.fromisoformat(ts)) < timedelta(hours=config.RULES.max_odds_age_hours)
 
-    cand = [r for r in events if not r["has_pick"] and r.get("closest")
-            and now < datetime.fromisoformat(r["start_utc"]) < now + timedelta(hours=72)
-            and r["closest"]["ev"] > -0.05
-            and r["closest"].get("reason") not in ("odds outside range", "insufficient team history")
-            and not any("known model bias" in n.lower() for n in r.get("notes", []))]
-    cand.sort(key=rank_key)
+    upcoming7 = [r for r in events if now < datetime.fromisoformat(r["start_utc"]) <= now + timedelta(days=7)
+                 and not any("known model bias" in n.lower() for n in r.get("notes", []))]
+
+    # CLOSE TO VALUE: a real, fresh price within 4 points of the EV threshold, blocked by a fixable rule.
+    fixable = ("EV below threshold", "too few bookmakers", "no market consensus",
+               "model uncertainty too high", "pessimistic EV not positive")
+    close = [r for r in upcoming7 if not r["has_pick"] and r.get("closest") and fresh(r)
+             and r["closest"].get("reason") in fixable and r["closest"]["ev"] >= min_ev - 0.04]
+    close.sort(key=lambda r: (max(0.0, min_ev - r["closest"]["ev"]), r["start_utc"]))
+    close_ids = [r["event_id"] for r in close][:20]
+    for r in close:
+        r["rank_basis"] = (f"Fresh price; {max(0.0, min_ev - r['closest']['ev']) * 100:.1f} pts short of the "
+                           f"{min_ev * 100:.0f}% value threshold.")
+
+    # WATCHING: completeness, price quality/freshness, pending information, proximity, start time.
+    def watch_key(r):
+        fu = r.get("funnel") or {}
+        complete = int(bool(fu.get("history_ok", True)) and bool(fu.get("model_ok", True)))
+        quality = int(fresh(r)) + int((fu.get("max_books") or 0) >= config.RULES.min_bookmakers)
+        hours = (datetime.fromisoformat(r["start_utc"]) - now).total_seconds() / 3600
+        pending = int(hours <= 36 and (r["sport"] in ("soccer", "nfl", "nba") or not fu.get("has_odds")))
+        gap = max(0.0, min_ev - (r.get("closest") or {}).get("ev", -1.0))
+        return (-complete, -quality, -pending, round(gap, 3), r["start_utc"])
+
+    pool = [r for r in upcoming7 if not r["has_pick"] and r["event_id"] not in close_ids
+            and (r.get("closest") or {}).get("reason") not in ("odds outside range", "insufficient team history")]
+    pool.sort(key=watch_key)
     watching, per = [], {}
-    for r in cand:                            # at most 3 per sport so every sport gets a look-in
+    for r in pool:                            # at most 3 per sport so every sport gets a look-in
         if per.get(r["sport"], 0) < 3:
             watching.append(r["event_id"])
             per[r["sport"]] = per.get(r["sport"], 0) + 1
-            k = rank_key(r)
-            r["rank_basis"] = (f"{'Fresh price' if k[0] == 0 else 'Price over 24h old'}; "
-                               f"{k[1] * 100:.1f} pts of value short of the {min_ev * 100:.0f}% threshold; starts {r['start_utc'][:16]} UTC.")
+            k = watch_key(r)
+            r["rank_basis"] = ("Complete data" if k[0] == -1 else "Incomplete data") + \
+                (", fresh multi-bookmaker prices" if k[1] == -2 else (", partial prices" if k[1] == -1 else ", no current prices")) + \
+                (", key information pending before the start" if k[2] == -1 else "") + "."
     watching = watching[:12]
 
     settled = [p for p in picks_all if p["status"]["state"] == "settled"]
@@ -258,7 +277,8 @@ def build(con, now: datetime | None = None):
     diag = diagnostics.build(con, now)
     data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
-            "events": events, "watching": watching, "sports": sports,
+            "events": events, "watching": watching, "close_to_value": close_ids, "sports": sports,
+            "funnel_7d": {k: v["funnel"] for k, v in diag["funnel_7d"].items()},
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,
                       "max_odds": config.RULES.max_odds, "min_bookmakers": config.RULES.min_bookmakers},
             "updated": {"pipeline": last_jobs.get("publish"), "providers": providers}}

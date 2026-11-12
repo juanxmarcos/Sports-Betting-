@@ -24,6 +24,8 @@ def selection_label(r: dict) -> str:
         return f"{team} {h:+g}"
     if m == "ML":
         return f"{home if s in ('H', 'home') else away} to win"
+    if m == "BTTS":
+        return "Both teams to score" if s == "yes" else "Both teams not to score"
     return f"{s}"
 
 

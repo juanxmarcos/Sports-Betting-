@@ -1,0 +1,275 @@
+{
+  "variants": {
+    "baseline (EV>=3%, 3 books, odds<=6)": {
+      "validation": {
+        "n_bets": 45,
+        "roi": 0.4531,
+        "roi_ci95": [
+          -0.0954,
+          1.0771
+        ],
+        "avg_clv": 0.0119,
+        "clv_ci95": [
+          -0.0181,
+          0.0407
+        ],
+        "clv_positive_share": 0.6
+      },
+      "test": {
+        "n_bets": 250,
+        "roi": 0.1138,
+        "roi_ci95": [
+          -0.0747,
+          0.3196
+        ],
+        "avg_clv": 0.0445,
+        "clv_ci95": [
+          0.0362,
+          0.0528
+        ],
+        "clv_positive_share": 0.83
+      }
+    },
+    "EV>=1%": {
+      "validation": {
+        "n_bets": 258,
+        "roi": -0.1488,
+        "roi_ci95": [
+          -0.3079,
+          0.0257
+        ],
+        "avg_clv": 0.0059,
+        "clv_ci95": [
+          -0.0033,
+          0.0153
+        ],
+        "clv_positive_share": 0.6008
+      },
+      "test": {
+        "n_bets": 1013,
+        "roi": -0.0259,
+        "roi_ci95": [
+          -0.1211,
+          0.0662
+        ],
+        "avg_clv": 0.0242,
+        "clv_ci95": [
+          0.0203,
+          0.0278
+        ],
+        "clv_positive_share": 0.7174
+      }
+    },
+    "EV>=2%": {
+      "validation": {
+        "n_bets": 103,
+        "roi": 0.0257,
+        "roi_ci95": [
+          -0.2796,
+          0.3543
+        ],
+        "avg_clv": 0.0081,
+        "clv_ci95": [
+          -0.0083,
+          0.0241
+        ],
+        "clv_positive_share": 0.6117
+      },
+      "test": {
+        "n_bets": 508,
+        "roi": 0.0527,
+        "roi_ci95": [
+          -0.081,
+          0.1889
+        ],
+        "avg_clv": 0.0317,
+        "clv_ci95": [
+          0.0263,
+          0.0369
+        ],
+        "clv_positive_share": 0.7649
+      }
+    },
+    "EV>=5%": {
+      "validation": {
+        "n_bets": 10,
+        "roi": 1.458,
+        "roi_ci95": [
+          -0.1,
+          2.9416
+        ],
+        "avg_clv": 0.039,
+        "clv_ci95": [
+          0.0006,
+          0.0759
+        ],
+        "clv_positive_share": 0.7
+      },
+      "test": {
+        "n_bets": 43,
+        "roi": 0.1126,
+        "roi_ci95": [
+          -0.3089,
+          0.5661
+        ],
+        "avg_clv": 0.0478,
+        "clv_ci95": [
+          0.0146,
+          0.0771
+        ],
+        "clv_positive_share": 0.7317
+      }
+    },
+    "2 bookmakers": {
+      "validation": {
+        "n_bets": 57,
+        "roi": 0.3577,
+        "roi_ci95": [
+          -0.1541,
+          0.9111
+        ],
+        "avg_clv": 0.0271,
+        "clv_ci95": [
+          0.0018,
+          0.0523
+        ],
+        "clv_positive_share": 0.6842
+      },
+      "test": {
+        "n_bets": 250,
+        "roi": 0.1138,
+        "roi_ci95": [
+          -0.0747,
+          0.3196
+        ],
+        "avg_clv": 0.0445,
+        "clv_ci95": [
+          0.0362,
+          0.0528
+        ],
+        "clv_positive_share": 0.83
+      }
+    },
+    "5 bookmakers": {
+      "validation": {
+        "n_bets": 45,
+        "roi": 0.4531,
+        "roi_ci95": [
+          -0.0954,
+          1.0771
+        ],
+        "avg_clv": 0.0119,
+        "clv_ci95": [
+          -0.0181,
+          0.0407
+        ],
+        "clv_positive_share": 0.6
+      },
+      "test": {
+        "n_bets": 189,
+        "roi": 0.1337,
+        "roi_ci95": [
+          -0.1001,
+          0.3961
+        ],
+        "avg_clv": 0.0488,
+        "clv_ci95": [
+          0.0407,
+          0.0564
+        ],
+        "clv_positive_share": 0.8624
+      }
+    },
+    "odds<=10": {
+      "validation": {
+        "n_bets": 93,
+        "roi": 0.2703,
+        "roi_ci95": [
+          -0.205,
+          0.7737
+        ],
+        "avg_clv": 0.0173,
+        "clv_ci95": [
+          -0.0089,
+          0.045
+        ],
+        "clv_positive_share": 0.5269
+      },
+      "test": {
+        "n_bets": 259,
+        "roi": 0.0904,
+        "roi_ci95": [
+          -0.0939,
+          0.3026
+        ],
+        "avg_clv": 0.0434,
+        "clv_ci95": [
+          0.0343,
+          0.0522
+        ],
+        "clv_positive_share": 0.8242
+      }
+    },
+    "odds<=3.5": {
+      "validation": {
+        "n_bets": 21,
+        "roi": -0.0343,
+        "roi_ci95": [
+          -0.5525,
+          0.5119
+        ],
+        "avg_clv": 0.0287,
+        "clv_ci95": [
+          0.0008,
+          0.0559
+        ],
+        "clv_positive_share": 0.7143
+      },
+      "test": {
+        "n_bets": 115,
+        "roi": 0.3625,
+        "roi_ci95": [
+          0.105,
+          0.6325
+        ],
+        "avg_clv": 0.0511,
+        "clv_ci95": [
+          0.0387,
+          0.0633
+        ],
+        "clv_positive_share": 0.8393
+      }
+    }
+  },
+  "assessment": [
+    {
+      "variant": "EV>=1%",
+      "beats_baseline_clv_in_both": false
+    },
+    {
+      "variant": "EV>=2%",
+      "beats_baseline_clv_in_both": false
+    },
+    {
+      "variant": "EV>=5%",
+      "beats_baseline_clv_in_both": false
+    },
+    {
+      "variant": "2 bookmakers",
+      "beats_baseline_clv_in_both": false
+    },
+    {
+      "variant": "5 bookmakers",
+      "beats_baseline_clv_in_both": false
+    },
+    {
+      "variant": "odds<=10",
+      "beats_baseline_clv_in_both": false
+    },
+    {
+      "variant": "odds<=3.5",
+      "beats_baseline_clv_in_both": false
+    }
+  ],
+  "note": "Market-only strategy (price vs sharp consensus). CLV is the primary criterion; ROI CIs are wide."
+}

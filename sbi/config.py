@@ -50,12 +50,13 @@ class SelectionRules:
     min_team_matches: int = 12      # per team, in the training window
     max_prob_sd: float = 0.06       # parameter-uncertainty sd of the model prob
     min_bookmakers: int = 3         # consensus needs >= 3 prices
-    max_odds_age_hours: float = 96  # older odds snapshots flagged as stale -> excluded
+    max_odds_age_hours: float = 24  # v0.4: only quotes <=24h old are 'actionable'; older -> stale, excluded
+    publish_window_hours: float = 168  # v0.4: picks may be published up to 7 days ahead (with fresh odds)
     exchange_commission: float = 0.05  # applied to Betfair Exchange prices
     max_per_event: int = 1          # one selection per event (markets are correlated)
     stake_units: float = 1.0        # fixed-unit staking only
     max_daily_units: float = 10.0
-    markets: tuple = ("1X2", "OU", "AH")
+    markets: tuple = ("1X2", "OU", "AH", "BTTS")
 
 
 @dataclass

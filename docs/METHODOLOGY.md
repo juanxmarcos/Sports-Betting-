@@ -155,3 +155,61 @@ The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
 - **External forecasts** (ESPN Analytics) are stored and compared, never blended, until they are validated out of sample like any other model.
 - **Reassessment** now also appends notes for injury status changes on either team and for confirmed soccer lineups. Price-based status (active, updated, withdrawn) is unchanged.
 - **Odds API timing.** A competition is fetched when its next event is within 10h (refresh every 4h, plus a final refresh ≤ 2.5h before start). Otherwise it gets one first look per day, within the daily credit allowance.
+
+
+## 12. Doyen v0.4: weekly coverage, rule sensitivity, model audit
+
+**Why the week had zero picks (diagnosed 2026-11-12).** In the 7-day window, NBA had 52 games but only 4 (all that night) had any odds. Sunday's 11 NFL games had only DraftKings. Soccer beyond day 0 had no multi-bookmaker prices, and tennis had almost none. The causes:
+1. A connector defect: The Odds API returns every upcoming game per request, but Doyen stored only games starting within 36h. About 50 of 58 paid-for games were discarded per run.
+2. Credits were under-used: a per-run cap of 8, with roughly 483 of 500 monthly credits idle.
+3. ESPN prices NBA games only on game day.
+4. Picks could only be published within 48h.
+5. Genuine coverage gaps: international friendlies, most qualifiers and most tennis are not offered by any free multi-bookmaker source.
+
+Fixes 1, 2 and 4 are in v0.4. Point 5 is a real limitation.
+
+**Actionable versus preliminary.** Analysis covers 7 days. A market is *actionable* only with quotes no more than 24h old (previously 96h). Older quotes are treated as stale and excluded, and the event shows a preliminary model forecast only. Picks may be published up to 7 days ahead when fresh multi-bookmaker prices exist.
+
+**Odds API allocation.**
+- Every event in the 7-day window is stored from each response, with per-competition coverage logged (returned / in window / matched).
+- Fetches happen once a day per competition with events this week, every 8h within 36h of the start, every 4h within 10h, plus a final refresh within 2.5h.
+- Up to 12 credits per run, inside the daily allowance.
+- Soccer now also requests both-teams-to-score (h2h, totals, btts = 3 credits).
+
+**Rule sensitivity** (club soccer, market-only, validation 2022–24 / test 2024–Nov 2026):
+
+| Variant | Val bets | Val CLV | Val ROI | Test bets | Test CLV | Test ROI (95% CI) |
+|---|---|---|---|---|---|---|
+| baseline (EV>=3%, 3 books, odds<=6) | 45 | +1.2% | +45.3% | 250 | +4.5% | +11.4% (-7…+32) |
+| EV>=1% | 258 | +0.6% | -14.9% | 1013 | +2.4% | -2.6% (-12…+7) |
+| EV>=2% | 103 | +0.8% | +2.6% | 508 | +3.2% | +5.3% (-8…+19) |
+| EV>=5% | 10 | +3.9% | +145.8% | 43 | +4.8% | +11.3% (-31…+57) |
+| 2 bookmakers | 57 | +2.7% | +35.8% | 250 | +4.5% | +11.4% (-7…+32) |
+| 5 bookmakers | 45 | +1.2% | +45.3% | 189 | +4.9% | +13.4% (-10…+40) |
+| odds<=10 | 93 | +1.7% | +27.0% | 259 | +4.3% | +9.0% (-9…+30) |
+| odds<=3.5 | 21 | +2.9% | -3.4% | 115 | +5.1% | +36.2% (+10…+63) |
+
+**Conclusion: rules unchanged.**
+- Lowering the EV threshold raises volume but lowers CLV, and turns ROI negative at 1%.
+- The 3-bookmaker rule is not binding in the historical data, because football-data rows carry many books. Live, it binds only on single-bookmaker markets that have no sharp reference.
+- Odds ≤ 3.5 looks promising (test ROI CI excludes zero) but rests on only 21 validation bets. It is flagged for re-testing and **not adopted**.
+
+**Model audit.**
+- Tennis Elo was re-tuned chronologically: surface weight 0.15, K scale 0.6. Test log loss went from 0.63811 to 0.63479 on 11609 matches, so it was **adopted**.
+- A fatigue feature (matches in the previous 7 days) gave 0.63395, below the adoption bar, so it was **not adopted**.
+- NFL EPA: no out-of-sample gain (§11).
+- NBA rest: no gain (§10).
+- Soccer and international models: unchanged. The club model is still worse than the market.
+
+None of the models beats a bookmaker baseline, so all keep weight 0.
+
+**Markets.**
+- Enabled: soccer 1X2, O/U, Asian handicap and both-teams-to-score (new); NFL/NBA moneyline, spread and total; tennis match winner.
+- Not enabled: tennis set handicaps and total games. Settlement needs game-level scores that are not yet stored, and there is no validated model for them.
+
+**Value method audit.**
+- Fair value comes from the sharp source's own two- or three-way market, de-vigged with the power method.
+- The best price is taken from a *different*, independent bookmaker. If the best price comes from the consensus source itself, it cannot beat its own fair value. Exchange prices are net of commission.
+- Bookmaker names are normalised so duplicate feeds don't count twice.
+- Missing or stale data excludes a market rather than filling it in.
+- Correlated markets on the same event are limited to one pick per event.

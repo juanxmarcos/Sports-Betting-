@@ -1,0 +1,26 @@
+{
+  "tune_grid_logloss": {
+    "w=0.15,k=0.6": 0.64682,
+    "w=0.15,k=0.8": 0.64911,
+    "w=0.15,k=1.0": 0.65368,
+    "w=0.3,k=0.6": 0.64719,
+    "w=0.3,k=0.8": 0.64885,
+    "w=0.3,k=1.0": 0.65287,
+    "w=0.5,k=0.6": 0.64962,
+    "w=0.5,k=0.8": 0.65111,
+    "w=0.5,k=1.0": 0.65501
+  },
+  "chosen": {
+    "w_surface": 0.15,
+    "k_scale": 0.6,
+    "fatigue_coef": 0.0439
+  },
+  "test": {
+    "n": 11609,
+    "current_model": 0.63811,
+    "tuned_elo": 0.63479,
+    "tuned_elo_plus_fatigue": 0.63395
+  },
+  "adopt_tuned_elo": true,
+  "adopt_fatigue": false
+}

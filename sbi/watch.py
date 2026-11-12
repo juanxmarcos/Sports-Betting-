@@ -14,7 +14,7 @@ from datetime import datetime
 from . import config, db
 
 MARKET_LABEL = {"1X2": "Match result", "OU": "Total goals", "AH": "Asian handicap",
-                "ML": "Moneyline", "SPREAD": "Point spread", "TOTAL": "Total points",
+                "BTTS": "Both teams to score", "ML": "Moneyline", "SPREAD": "Point spread", "TOTAL": "Total points",
                 "WIN": "Outright winner", "TOP5": "Top 5 finish", "TOP10": "Top 10 finish",
                 "TOP20": "Top 20 finish", "CUT": "Make the cut", "H2H": "Head-to-head"}
 
@@ -61,7 +61,7 @@ def analysis_row(*, sport: str, event_id: str, competition: str, title: str, sta
                  now: datetime, cands=None, rejections=None, model_view: dict | None = None,
                  book_view: dict | None = None, end_utc: str | None = None, notes: list | None = None,
                  participants: list | None = None, neutral: bool = False, odds_ts: str | None = None,
-                 extra: dict | None = None) -> dict:
+                 extra: dict | None = None, history_ok: bool | None = None) -> dict:
     cands = cands or []
     c, reason = best_candidate(cands, rejections or {})
     start = datetime.fromisoformat(start_utc)
@@ -85,8 +85,10 @@ def analysis_row(*, sport: str, event_id: str, competition: str, title: str, sta
     reasons = Counter((rejections or {}).values())
     row["funnel"] = {"n_markets": len(cands), "reasons": dict(reasons), "max_books": n_books,
                      "has_odds": bool(cands), "stale_odds": bool(odds_ts) and not cands,
-                     "history_ok": "insufficient team history" not in reasons,
+                     "history_ok": (history_ok if history_ok is not None else "insufficient team history" not in reasons),
+                     "model_ok": bool(model_view), "positive_ev": sum(1 for x in cands if x.ev > 0),
                      "qualified": reasons.get("ok", 0)}
+    row["stage"] = ("actionable" if cands else ("stale" if odds_ts else "forecast"))
     return row
 
 

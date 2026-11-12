@@ -139,7 +139,7 @@ def publish_pick(con, now, eid, c, ev, base_evidence: dict, books: dict, urls: l
     return cur.rowcount
 
 
-def analyse(con, now: datetime | None = None, horizon_h: float = 48) -> dict:
+def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
     now = now or _now()
     rules, mcfg = config.RULES, config.MODEL
     config.load_tuned()
@@ -244,7 +244,7 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 48) -> dict:
         rows.append(watch.analysis_row(
             sport="soccer", event_id=eid, competition=config.FOOTBALL_LEAGUES.get(ev.league, ev.league),
             title=f"{ev.home} v {ev.away}", participants=[ev.home, ev.away], start_utc=ev.kickoff_utc, now=now,
-            cands=m["cands"], rejections=m["rejections"], odds_ts=m["odds_ts"],
+            cands=m["cands"], rejections=m["rejections"], odds_ts=m["odds_ts"], history_ok=hist_ok.get(eid),
             model_view={"Home": mm["1X2:H"], "Draw": mm["1X2:D"], "Away": mm["1X2:A"],
                         "Over 2.5": mm["OU:over:2.5"], "BTTS": mm["BTTS:yes"]},
             book_view=({"Home": c1["H"], "Draw": c1["D"], "Away": c1["A"]} if len(c1) == 3 else {}),

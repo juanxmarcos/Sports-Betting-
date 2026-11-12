@@ -72,7 +72,7 @@ def test_ingest_matches_and_stores(monkeypatch, tmp_path):
     monkeypatch.setattr(oa, "_get", fake_get)
     now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
     out = oa.ingest(con, now)
-    assert out["matched"] == 1 and out["credits_spent"] == 2 and out["odds_rows"] > 5
+    assert out["matched"] == 1 and out["credits_spent"] == 3 and out["odds_rows"] > 5  # h2h,totals,btts
     assert "/sports/soccer_uefa_nations_league/odds" in calls
     url = con.execute("SELECT source_url FROM odds LIMIT 1").fetchone()[0]
     assert "apiKey" not in url and "dummy" not in url
@@ -106,3 +106,29 @@ def test_book_normalisation():
     assert normalize_book("Bet 365") == normalize_book("Bet365") == "Bet365"
     assert normalize_book("DraftKings - Live Odds") == ""
     assert normalize_book("Unibet (SE)") == normalize_book("Unibet (UK)")
+
+
+def test_ingest_keeps_whole_week(monkeypatch, tmp_path):
+    """Regression: v0.3 dropped events beyond 36h from paid responses."""
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    evs = []
+    for k, d in enumerate((1, 3, 6, 9)):
+        t = now + timedelta(days=d)
+        con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                       VALUES (?,?,?,?,?,?,?,?,?)""", (f"nba:{k}", "nba", "NBA", t.isoformat(), f"H{k} Team", f"A{k} Team",
+                                                     "scheduled", "t", "t"))
+        evs.append({"home_team": f"H{k} Team", "away_team": f"A{k} Team", "commence_time": t.isoformat().replace("+00:00", "Z"),
+                    "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "last_update": now.isoformat().replace("+00:00", "Z"),
+                                    "markets": [{"key": "h2h", "outcomes": [{"name": f"H{k} Team", "price": 1.8},
+                                                                            {"name": f"A{k} Team", "price": 2.1}]}]}]})
+    monkeypatch.setenv("ODDS_API_KEY", "dummy")
+    def fake_get(path, params, api_key):
+        u = {"remaining": "400", "used": "100", "last": "0"}
+        if path == "/sports":
+            return [{"key": "basketball_nba", "active": True}], u
+        return evs, u
+    monkeypatch.setattr(oa, "_get", fake_get)
+    out = oa.ingest(con, now)
+    assert out["matched"] == 3                         # day 1, 3 and 6 kept; day 9 is outside the 7-day window
+    assert out["coverage"]["basketball_nba"] == {"returned": 4, "in_window": 3, "matched": 3}

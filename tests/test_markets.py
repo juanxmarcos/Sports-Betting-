@@ -59,3 +59,18 @@ def test_high_probability_is_not_value():
     o = Outcome(pw=0.8, pl=0.2)
     assert o.ev(1.20) < 0          # 80% at 1.20 -> negative EV
     assert Outcome(pw=0.3, pl=0.7).ev(3.6) > 0  # 30% at 3.60 -> positive EV
+
+
+def test_btts_pricing_and_settlement():
+    from sbi.engine import books_from_rows, price_event
+    from sbi.models.dixon_coles import DCModel
+    import numpy as np
+    m = DCModel(teams=["A", "B"], home=0.2, att=np.array([0.1, -0.1]), dfn=np.array([0.0, 0.0]), rho=-0.05)
+    rows = []
+    for bk, (y, n) in {"Pinnacle": (1.80, 2.05), "Bet365": (1.75, 2.0), "Unibet": (1.95, 1.85)}.items():
+        rows += [("BTTS", None, bk, "yes", y), ("BTTS", None, bk, "no", n)]
+    cands = price_event(m, "A", "B", books_from_rows(rows), {}, 0.05, n_draws=0, markets=("BTTS",))
+    assert {c.selection for c in cands} == {"yes", "no"}
+    yes = next(c for c in cands if c.selection == "yes")
+    assert yes.bookmaker == "Unibet" and yes.odds == 1.95 and yes.n_books == 3
+    assert settle_value("BTTS", "yes", None, 1, 1) == 1.0 and settle_value("BTTS", "no", None, 2, 0) == 1.0

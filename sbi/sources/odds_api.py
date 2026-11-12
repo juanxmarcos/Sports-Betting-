@@ -27,8 +27,8 @@ from .. import config, db
 BASE = "https://api.the-odds-api.com/v4"
 SOURCE = "the-odds-api.com"
 REGIONS = "eu"
-MARKETS = "h2h,totals"
-MAX_CREDITS_PER_RUN = 8
+MARKETS = "h2h,totals,btts"   # soccer; btts added in v0.4 (2-way, settles from final score)
+MAX_CREDITS_PER_RUN = 12   # several competitions per run; the DAILY allowance is the real limit
 RUNS_PER_DAY = 2
 RESERVE = 20  # never spend the last credits of the month
 
@@ -142,6 +142,10 @@ def parse_odds(event: dict, two_way: bool = False) -> list[tuple]:
                 for o in m["outcomes"]:
                     if o.get("point") is not None and o["name"] in ("Over", "Under"):
                         out.append((name, "OU", o["name"].lower(), float(o["point"]), float(o["price"]), ts))
+            elif m["key"] == "btts":
+                for o in m["outcomes"]:
+                    if o["name"] in ("Yes", "No"):
+                        out.append((name, "BTTS", o["name"].lower(), None, float(o["price"]), ts))
             elif m["key"] == "spreads":
                 for o in m["outcomes"]:
                     if o.get("point") is None:
@@ -165,7 +169,9 @@ def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:
     age = (now - last).total_seconds() / 3600
     if hours_to <= 10:
         return age >= 4 or (hours_to <= 2.5 and age >= 1.5)   # final pre-game refresh
-    return last.date() != now.date()
+    if hours_to <= 36:
+        return age >= 8                                        # day-before refresh
+    return last.date() != now.date()                           # weekly horizon: one look per day
 
 
 def budget(remaining: int | None, now: datetime, spent_today: int = 0) -> int:
@@ -191,7 +197,9 @@ def spent_today(con, now: datetime) -> int:
     return tot
 
 
-def ingest(con, now: datetime, horizon_h: float = 36) -> dict:
+def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
+    """Fetch odds for competitions with events in the next 7 days and STORE EVERY EVENT in that window
+    (v0.3 kept only <36h, discarding most of what each paid request returned)."""
     api_key = key()
     if not api_key:
         return {"skipped": "ODDS_API_KEY not set"}
@@ -215,7 +223,7 @@ def ingest(con, now: datetime, horizon_h: float = 36) -> dict:
     remaining = int(usage["remaining"]) if usage.get("remaining") not in (None, "") else None
     allowed = budget(remaining, now, spent_today(con, now))
     out = {"credits_remaining_before": remaining, "budget_credits": allowed, "planned": [p[2] for p in plan],
-           "fetched": [], "matched": 0, "unmatched": [], "odds_rows": 0}
+           "fetched": [], "matched": 0, "unmatched": [], "odds_rows": 0, "coverage": {}}
     spent = 0
     for _, _, sk, league in plan:
         two_way = sk in US or sk.startswith("tennis_")
@@ -229,10 +237,13 @@ def ingest(con, now: datetime, horizon_h: float = 36) -> dict:
         out["fetched"].append(sk)
         con.execute("INSERT INTO odds_api_fetches(sport_key, fetched_at, credits) VALUES (?,?,?)", (sk, now.isoformat(), c))
         url = f"{BASE}/sports/{sk}/odds?regions={REGIONS}&markets={markets}"  # key stripped
+        cov = out["coverage"].setdefault(sk, {"returned": 0, "in_window": 0, "matched": 0})
+        cov["returned"] = len(data)
         for e in data:
             commence = datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00"))
             if not (now < commence <= window_end):
                 continue
+            cov["in_window"] += 1
             eid = match_event(con, league, e["home_team"], e["away_team"], commence)
             swapped = False
             if not eid and league.startswith("TENNIS"):   # player order differs between sources
@@ -242,6 +253,7 @@ def ingest(con, now: datetime, horizon_h: float = 36) -> dict:
                 out["unmatched"].append(f"{sk}: {e['home_team']} v {e['away_team']}")
                 continue
             out["matched"] += 1
+            cov["matched"] += 1
             for bk, market, sel, line, price, ts in parse_odds(e, two_way=two_way):
                 if swapped:
                     sel = {"home": "away", "away": "home"}.get(sel, sel)

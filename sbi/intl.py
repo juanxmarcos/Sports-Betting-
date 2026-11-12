@@ -193,7 +193,7 @@ def ingest(con, now: datetime, ahead_days: int = 7) -> tuple[dict, list[dict]]:
     return out, events
 
 
-def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publish_h: float = 48) -> dict:
+def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publish_h: float | None = None) -> dict:
     p = params()
     rules = config.RULES
     train = src.training_frame(now, recent)
@@ -222,7 +222,7 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publ
         from .pipeline import _latest_books
         books, odds_ts, urls = _latest_books(con, e["event_id"], rules.max_odds_age_hours, now)
         cands = price_event(model, e["home"], e["away"], books, {}, rules.exchange_commission,
-                            n_draws=200, rng=rng, neutral=neutral, markets=("1X2", "OU", "AH"))
+                            n_draws=200, rng=rng, neutral=neutral, markets=rules.markets)
         cal = {"H": mk["1X2:H"], "D": mk["1X2:D"], "A": mk["1X2:A"]}
         for c in cands:
             if c.market == "1X2":
@@ -269,7 +269,7 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publ
         hist_ok[e["event_id"]] = nmin >= p["min_matches"]
         meta[e["event_id"]] = (e, books, urls, odds_ts, mk, row)
     soon = {eid for eid, (e, *_r) in meta.items()
-            if datetime.fromisoformat(e["kickoff_utc"]) <= now + timedelta(hours=publish_h)}
+            if datetime.fromisoformat(e["kickoff_utc"]) <= now + timedelta(hours=publish_h or config.RULES.publish_window_hours)}
     picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):
@@ -305,7 +305,7 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publ
         wrows.append(watch.analysis_row(
             sport="soccer", event_id=eid, competition=row["competition"] or "International",
             title=f"{e['home']} v {e['away']}", participants=[e["home"], e["away"]], start_utc=e["kickoff_utc"],
-            now=now, cands=cs, rejections=rej, odds_ts=odds_ts, neutral=row["neutral"], notes=notes,
+            now=now, cands=cs, rejections=rej, odds_ts=odds_ts, neutral=row["neutral"], notes=notes, history_ok=hist_ok[eid],
             model_view={"Home": mk["1X2:H"], "Draw": mk["1X2:D"], "Away": mk["1X2:A"],
                         "Over 2.5": mk["OU:over:2.5"], "BTTS": mk["BTTS:yes"]},
             book_view=bv, extra={"expected_goals": {"home": row["xg"][0], "away": row["xg"][1]},

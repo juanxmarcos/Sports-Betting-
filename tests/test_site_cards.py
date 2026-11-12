@@ -32,11 +32,13 @@ def test_watch_short_and_funnel(tmp_path, monkeypatch):
     assert ev["e0"]["short"].startswith("Waiting for better odds (") and len(ev["e0"]["short"].split()) <= 12
     assert ev["e1"]["short"] == "Waiting for more bookmakers to price it."
     assert ev["e9"]["short"] == "Waiting for bookmaker prices." and "closest" not in ev["e9"]   # no invented odds
-    assert d["watching"][0] == "e0"                          # closest to threshold ranks first
+    assert d["close_to_value"] == ["e0"]                     # fresh price within 4 pts of the threshold
+    assert "e0" not in d["watching"] and "e1" in d["watching"]
     assert d["briefing"]["sentence"]
     diag = json.loads((tmp_path / "diagnostics.json").read_text())
-    f = diag["funnel_48h"]["soccer"]["funnel"]
-    assert f["events_discovered"] == 3 and f["with_odds"] == 2 and f["with_3plus_bookmakers"] == 1
+    f = diag["funnel_7d"]["soccer"]["funnel"]
+    assert f["1_events_discovered"] == 3 and f["4_fresh_odds_available"] == 2 and f["5_three_plus_bookmakers"] == 1
+    assert f["7_markets_positive_ev"] == 1 and f["8_events_positive_ev"] == 1 and f["9_events_passing_all_rules"] == 0
 
 
 def test_short_reason_is_short():

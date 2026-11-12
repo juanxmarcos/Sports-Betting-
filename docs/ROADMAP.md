@@ -30,3 +30,14 @@ never used to tune rules.
 | NFL (ESPN + nflverse + Odds API), NBA (ESPN + Odds API), tennis (ESPN + Odds API tournaments) | **Done** (models validated, weight 0 vs market) |
 | Pre-game reassessment statuses, 2-hourly schedule | **Done** |
 | Next | injury/QB availability feeds (free sources needed); per-sport calibration layer; in-page Ask Doyen once a zero-cost secure backend exists |
+
+## Doyen v0.4 (2026-11-12)
+| Item | Status |
+|---|---|
+| 7-day analysis, actionable (≤24h odds) vs preliminary forecasts, 7-day publish window | **Done** |
+| Odds API: store full week, better allocation, coverage logging, soccer BTTS | **Done** |
+| Full opportunity funnel (10 stages) for 7 days and 48h | **Done** |
+| Rule sensitivity analysis (rules unchanged; odds ≤ 3.5 flagged) | **Done** |
+| Tennis Elo re-tuning (adopted), fatigue (rejected) | **Done** |
+| Close to Value section, This Week view, re-ranked Watching | **Done** |
+| Next | Tennis games markets (store game scores), re-test odds ≤ 3.5 as data accrues, NBA efficiency features (pbpstats), validate ESPN Analytics forecasts |

@@ -359,7 +359,7 @@ def _team_key(sport, name, abbr):
     return name
 
 
-def analyse(con, now: datetime, sport: str, horizon_h: float = 168, publish_h: float = 48) -> dict:
+def analyse(con, now: datetime, sport: str, horizon_h: float = 168, publish_h: float | None = None) -> dict:
     from . import watch
     from .pipeline import _latest_books, publish_pick
     cfg, p, rules = CFG[sport], params(sport), config.RULES
@@ -425,6 +425,7 @@ def analyse(con, now: datetime, sport: str, horizon_h: float = 168, publish_h: f
         rows.append(watch.analysis_row(
             sport=sport, event_id=e["event_id"], competition=e["competition"] or cfg["competition"], title=f"{a} at {h}",
             participants=[h, a], start_utc=e["kickoff_utc"], now=now, cands=cands, rejections=rej, odds_ts=odds_ts,
+            history_ok=hist_ok[e["event_id"]],
             neutral=bool(e["neutral"]),
             model_view={f"{h} win": p_home, f"{a} win": 1 - p_home},
             book_view=({f"{h} win": mlc["home"], f"{a} win": mlc["away"]} if len(mlc) == 2 else {}),
@@ -433,7 +434,7 @@ def analyse(con, now: datetime, sport: str, horizon_h: float = 168, publish_h: f
         meta[e["event_id"]] = (e, books, urls, odds_ts, context, ph, pa)
     # publish (standard rules, shared daily cap, no re-publishing)
     from .intl import _publishable
-    soon = {k for k, v in meta.items() if datetime.fromisoformat(v[0]["kickoff_utc"]) <= now + timedelta(hours=publish_h)}
+    soon = {k for k, v in meta.items() if datetime.fromisoformat(v[0]["kickoff_utc"]) <= now + timedelta(hours=publish_h or config.RULES.publish_window_hours)}
     picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):

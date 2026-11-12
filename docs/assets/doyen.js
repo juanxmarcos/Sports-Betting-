@@ -128,10 +128,27 @@
     </article>`;
   }
 
+  function closeCard(r) {
+    const c = r.closest;
+    return `<article class="card cc close" data-go="#/event/${esc(r.event_id)}" role="link" tabindex="0">
+      <div class="cc-top">${topline(r, true)}${starBtn(r.event_id)}</div>
+      <div class="cc-title">${vs(r.title)}</div>
+      <div class="cc-main">
+        <div><div class="k">${esc(c.market_label)}</div><div class="sel">${esc(c.selection_text)}</div></div>
+        <div class="odds"><div class="o">${dec(c.odds)}</div><div class="bk">${esc(c.bookmaker || "")}</div></div>
+      </div>
+      <div class="cc-why close-r">${esc(r.short || "")}</div>
+      <div class="cc-foot"><span class="faint">Not a recommendation · updated ${esc(ago(r.odds_updated))}</span><span class="link">Details →</span></div>
+    </article>`;
+  }
+
   // ---------- views ----------
   function briefing(D, picks, nEvents) {
     const s = D.briefing || {};
-    return `<div class="brief"><span><b>${nEvents}</b> events monitored</span><span class="dot"></span><span><b>${picks.length || "No"}</b> pick${picks.length === 1 ? "" : "s"} ${picks.length ? "qualify" : "currently qualify"}</span>${s.sentence ? `<span class="brief-s">${esc(s.sentence)}</span>` : ""}</div>`;
+    const f = D.funnel_7d || {};
+    const sp = S.sport === "all" ? Object.keys(f) : [S.sport];
+    const markets = sp.reduce((a, k) => a + ((f[k] || {})["6_markets_evaluated"] || 0), 0);
+    return `<div class="brief"><span><b>${nEvents}</b> events</span><span class="dot"></span><span><b>${markets.toLocaleString()}</b> markets priced this week</span><span class="dot"></span><span><b>${picks.length || "No"}</b> pick${picks.length === 1 ? "" : "s"} ${picks.length ? "qualify" : "qualify yet"}</span>${s.sentence ? `<span class="brief-s">${esc(s.sentence)}</span>` : ""}</div>`;
   }
   function home() {
     const D = S.data;
@@ -148,19 +165,34 @@
     let h = `<div class="eyebrow">${esc(fmtDay(dkey(new Date())))}</div><h1 style="margin-top:6px">Today's Picks</h1>
       ${briefing(D, picks, nEvents)}${filters()}${staleBanner()}${sportNotice(S.sport)}`;
     if (featured) h += `<section class="section first">${pickCard(featured, true)}</section>`;
-    else h += `<section class="section first"><div class="card empty-cc"><div class="crown"><span>Doyen's Pick of the Day</span><i></i></div><h3>No pick qualifies right now.</h3><p>Doyen publishes only when a price clearly beats the sharp market. No pick beats a weak pick.</p></div></section>`;
+    else h += `<section class="section first"><div class="card empty-cc"><div class="crown"><span>${S.range === "week" ? "This Week's Picks" : "Doyen's Pick of the Day"}</span><i></i></div><h3>No verified pick ${esc({ today: "today", tomorrow: "for tomorrow", week: "this week" }[S.range])} yet.</h3><p>Every priced market is checked against the sharp consensus; none clears the bar right now.</p></div></section>`;
     if (rest.length) h += `<section class="section"><div class="section-h"><h2>More picks</h2><span class="count">${rest.length}</span></div><div class="grid">${rest.map((p) => pickCard(p)).join("")}</div></section>`;
+    const closeAll = (D.close_to_value || []).map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
+    const closeIn = closeAll.filter((r) => inRange(r.start_utc, r.end_utc, S.range));
+    const closeShown = (closeIn.length ? closeIn : closeAll).slice(0, 3);
+    h += `<section class="section"><div class="section-h"><h2>Close to Value</h2>${closeAll.length > 3 ? `<a class="link" href="#/close">View all (${closeAll.length}) →</a>` : ""}</div>`;
+    h += closeShown.length ? `${!closeIn.length ? `<p class="muted small">None ${esc({ today: "today", tomorrow: "tomorrow", week: "this week" }[S.range])}. Next up:</p>` : ""}<div class="grid">${closeShown.map(closeCard).join("")}</div>`
+      : `<div class="card empty-cc"><p>No prices are close to Doyen's value threshold right now.</p></div>`;
+    h += `</section>`;
     h += `<section class="section"><div class="section-h"><h2>Matches Doyen Is Watching</h2>${allWatch.length > 3 ? `<a class="link" href="#/watching">View all (${allWatch.length}) →</a>` : ""}</div>`;
     h += shown.length ? `${!watching.length ? `<p class="muted small">Nothing left ${esc({ today: "today", tomorrow: "tomorrow", week: "this week" }[S.range])}. Coming up next:</p>` : ""}<div class="grid">${shown.map(watchCard).join("")}</div>`
       : `<div class="card empty-cc"><h3>Nothing on the radar</h3><p>No matches are close to qualifying. See <a href="#/upcoming">Upcoming</a> for everything Doyen tracks.</p></div>`;
     return h + `</section>`;
+  }
+  function closeAllView() {
+    const D = S.data;
+    const evById = Object.fromEntries(D.events.map((e) => [e.event_id, e]));
+    const list = (D.close_to_value || []).map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
+    return `<button class="back" data-go="#/">← Today's Picks</button><h1>Close to Value</h1>
+      <p class="lead">Real, current prices near Doyen's threshold. Not recommendations.</p>${filters(false)}
+      <div class="grid" style="margin-top:16px">${list.map(closeCard).join("") || `<div class="card empty-cc"><h3>Nothing close right now</h3></div>`}</div>`;
   }
   function watchingAll() {
     const D = S.data;
     const evById = Object.fromEntries(D.events.map((e) => [e.event_id, e]));
     const list = D.watching.map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
     return `<button class="back" data-go="#/">← Today's Picks</button><h1>Matches Doyen Is Watching</h1>
-      <p class="lead">Monitoring only, not recommendations. Ranked by fresh odds, closeness to the value threshold, then start time.</p>${filters(false)}
+      <p class="lead">Monitoring only, not recommendations. Ranked by data completeness, price quality, pending information, then start time.</p>${filters(false)}
       <div class="grid" style="margin-top:16px">${list.map(watchCard).join("") || `<div class="card empty-cc"><h3>Nothing on the radar</h3></div>`}</div>`;
   }
 
@@ -343,18 +375,19 @@
   }
 
   // ---------- router ----------
-  const TITLES = { upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching" };
+  const TITLES = { close: "Close to Value", upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching" };
   function render() {
     if (!S.data) return;
     const parts = (location.hash.replace(/^#\/?/, "") || "").split("/");
     const r = parts[0] || "home";
-    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "watching" ? "home" : (r === "pick" || r === "event" ? "" : r))));
+    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "watching" || r === "close" ? "home" : (r === "pick" || r === "event" ? "" : r))));
     let html;
     if (r === "upcoming") html = upcoming();
     else if (r === "history") html = history();
     else if (r === "watchlist") html = watchlist();
     else if (r === "ask") html = ask(parts[1], parts[2]);
     else if (r === "watching") html = watchingAll();
+    else if (r === "close") html = closeAllView();
     else if (r === "pick") html = pickDetail(parts[1]);
     else if (r === "event") html = eventDetail(parts[1]);
     else html = home();

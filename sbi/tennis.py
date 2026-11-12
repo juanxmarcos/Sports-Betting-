@@ -102,16 +102,30 @@ def matches(start: date, end: date, now: datetime) -> list[dict]:
 
 # ---------------------------------------------------------------- Elo
 
+def _tuned() -> tuple[float, float]:
+    """Surface weight and K scale adopted from the chronological tuning (data/backtest/tennis_tuning.json)."""
+    try:
+        t = json.loads((config.DATA_DIR / "backtest" / "tennis_tuning.json").read_text())
+        if t.get("adopt_tuned_elo"):
+            return float(t["chosen"]["w_surface"]), float(t["chosen"]["k_scale"])
+    except (OSError, ValueError, KeyError):
+        pass
+    return 0.5, 1.0
+
+
 class Elo:
-    def __init__(self):
+    def __init__(self, w_surface: float | None = None, k_scale: float | None = None):
         self.r, self.rs, self.n, self.ns = {}, {}, {}, {}
+        tw, tk = _tuned()
+        self.w = tw if w_surface is None else w_surface
+        self.ks = tk if k_scale is None else k_scale
 
     def _k(self, n):
-        return 250 / (n + 5) ** 0.4
+        return self.ks * 250 / (n + 5) ** 0.4
 
     def prob(self, a, b, surf):
-        ra = 0.5 * self.r.get(a, 1500) + 0.5 * self.rs.get((a, surf), 1500)
-        rb = 0.5 * self.r.get(b, 1500) + 0.5 * self.rs.get((b, surf), 1500)
+        ra = (1 - self.w) * self.r.get(a, 1500) + self.w * self.rs.get((a, surf), 1500)
+        rb = (1 - self.w) * self.r.get(b, 1500) + self.w * self.rs.get((b, surf), 1500)
         return 1 / (1 + 10 ** ((rb - ra) / 400))
 
     def update(self, w, l, surf):
@@ -210,7 +224,7 @@ def register(con, now: datetime, allm: list[dict] | None = None) -> dict:
     con.commit()
     return {"events": n}
 
-def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float = 48) -> dict:
+def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float | None = None) -> dict:
     from types import SimpleNamespace
 
     from . import watch
@@ -237,8 +251,8 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float = 48) -
         n1, n2 = elo.matches_played(m["p1"]), elo.matches_played(m["p2"])
         hist_ok[eid] = min(n1, n2) >= 15
         rej = {f"{c.market}:{c.selection}:{c.line}": passes(c, rules, hist_ok[eid])[1] for c in cands}
-        r1 = 0.5 * elo.r.get(m["p1"], 1500) + 0.5 * elo.rs.get((m["p1"], m["surface"]), 1500)
-        r2 = 0.5 * elo.r.get(m["p2"], 1500) + 0.5 * elo.rs.get((m["p2"], m["surface"]), 1500)
+        r1 = (1 - elo.w) * elo.r.get(m["p1"], 1500) + elo.w * elo.rs.get((m["p1"], m["surface"]), 1500)
+        r2 = (1 - elo.w) * elo.r.get(m["p2"], 1500) + elo.w * elo.rs.get((m["p2"], m["surface"]), 1500)
         ctx = (f"Surface-adjusted Elo ({m['surface']}): {m['p1']} {r1:.0f} vs {m['p2']} {r2:.0f}; "
                f"{n1} and {n2} matches in Doyen's history" + ("; best of five sets." if m["slam"] and m["tour"] == "atp" else "."))
         if min(n1, n2) < 15:
@@ -246,13 +260,13 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float = 48) -
         mlc = {c.selection: c.market_q for c in cands if c.market_q is not None}
         rows.append(watch.analysis_row(sport="tennis", event_id=eid, competition=comp, title=f"{m['p1']} v {m['p2']}",
                                        participants=[m["p1"], m["p2"]], start_utc=m["date"].isoformat(), now=now,
-                                       cands=cands, rejections=rej, odds_ts=odds_ts,
+                                       cands=cands, rejections=rej, odds_ts=odds_ts, history_ok=hist_ok[eid],
                                        model_view={m["p1"]: p1, m["p2"]: 1 - p1},
                                        book_view=({m["p1"]: mlc["home"], m["p2"]: mlc["away"]} if len(mlc) == 2 else {}),
                                        extra={"extra_text": ctx, "model_weight": 0}))
         cands_by_event[eid] = cands
         meta[eid] = (m, books, urls, odds_ts, ctx, url, league, comp)
-    soon = {k for k, v in meta.items() if v[0]["date"] <= now + timedelta(hours=publish_h)}
+    soon = {k for k, v in meta.items() if v[0]["date"] <= now + timedelta(hours=publish_h or config.RULES.publish_window_hours)}
     picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):

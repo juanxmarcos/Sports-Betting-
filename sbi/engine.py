@@ -11,7 +11,8 @@ from .markets import Outcome, outcome, q_many
 from .models.dixon_coles import DCModel
 
 SELECTIONS = {"1X2": ["H", "D", "A"], "OU": ["over", "under"], "AH": ["home", "away"],
-              "ML": ["home", "away"], "SPREAD": ["home", "away"], "TOTAL": ["over", "under"]}
+              "ML": ["home", "away"], "SPREAD": ["home", "away"], "TOTAL": ["over", "under"],
+              "BTTS": ["yes", "no"]}
 
 
 @dataclass
