@@ -1,0 +1,37 @@
+# Free scheduling: GitHub Actions (public repos: free; private: 2,000 free min/month,
+# this job uses ~2-4 min/run). No API keys required. Never places bets.
+name: daily-research
+on:
+  schedule:
+    - cron: "15 6 * * *"    # 06:15 UTC: results, settlement, morning analysis
+    - cron: "15 16 * * *"   # 16:15 UTC: refresh after football-data's afternoon fixture/odds updates
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: daily-research
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - name: Daily pipeline
+        env:
+          SBI_TIMEZONE: ${{ vars.SBI_TIMEZONE || 'Europe/London' }}
+        run: python -m sbi daily
+      - name: Commit results
+        run: |
+          git config user.name "sbi-bot"
+          git config user.email "sbi-bot@users.noreply.github.com"
+          python -c "import sqlite3; c=sqlite3.connect('data/sbi.sqlite'); c.execute('PRAGMA wal_checkpoint(TRUNCATE)'); c.close()"
+          git add data/sbi.sqlite data/tuned.json reports docs/dashboard ledger || true
+          git diff --cached --quiet || git commit -m "daily research run $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
