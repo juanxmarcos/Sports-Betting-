@@ -17,7 +17,7 @@ SITE_DIR = Path(os.environ.get("SBI_SITE_DIR", ROOT / "docs" / "dashboard"))
 CACHE_DIR = DATA_DIR / "cache"
 
 # Display timezone for reports/dashboard (IANA name). Storage is always UTC.
-TIMEZONE = os.environ.get("SBI_TIMEZONE", "Europe/London")
+TIMEZONE = os.environ.get("SBI_TIMEZONE", "America/New_York")  # US Eastern (EST/EDT)
 
 USER_AGENT = "sbi-research/0.1 (personal non-commercial research)"
 

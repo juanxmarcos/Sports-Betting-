@@ -25,7 +25,7 @@ jobs:
       - run: python -m pytest -q
       - name: Daily pipeline
         env:
-          SBI_TIMEZONE: ${{ vars.SBI_TIMEZONE || 'Europe/London' }}
+          SBI_TIMEZONE: ${{ vars.SBI_TIMEZONE || 'America/New_York' }}
         run: python -m sbi daily
       - name: Commit results
         run: |
