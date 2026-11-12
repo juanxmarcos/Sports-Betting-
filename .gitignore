@@ -8,3 +8,4 @@ data/*.sqlite-shm
 .env
 .venv/
 node_modules/
+data_bt.log
