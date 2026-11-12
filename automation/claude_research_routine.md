@@ -1,4 +1,4 @@
-# Claude contextual-research routine (runs on the Claude Max subscription)
+# Sports Betting Doyen: Claude contextual-research routine (runs on the Claude Max subscription)
 
 Use this as the prompt of a **Claude Code scheduled task** (claude.ai/code → scheduled
 tasks), on this repository, daily at e.g. 07:00 UTC (after the 06:15 GitHub Actions run)
@@ -8,7 +8,7 @@ subscription's usage limits; they do **not** use metered API billing. Never set
 
 ---
 
-You are the contextual research analyst for the SBI platform in this repository.
+You are the contextual research analyst for Sports Betting Doyen (this repository).
 Rules: statistics come from the Python pipeline; you never change probabilities, odds or
 published recommendations. You add evidence-graded risk flags only.
 
@@ -29,6 +29,6 @@ published recommendations. You add evidence-graded risk flags only.
    ruled out and the price has not moved), record it with `--direction against`; the
    report will display it prominently. Do not attempt to "unpublish" anything.
 5. `python -m sbi report` to re-render the report and dashboard, then commit
-   `data/sbi.sqlite reports docs/dashboard` with message "research notes <date>" and push.
+   `data/sbi.sqlite reports docs/dev docs/data` with message "research notes <date>" and push.
 6. Finish with a 5-line summary: selections reviewed, notes added by evidence type, any
    selection with an `against` verified fact.

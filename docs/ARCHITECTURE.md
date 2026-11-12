@@ -1,4 +1,4 @@
-# Architecture
+# Sports Betting Doyen — Architecture
 
 ```
                  ┌──────────────── GitHub Actions cron (free) ────────────────┐

@@ -1,10 +1,11 @@
 # Free scheduling: GitHub Actions (public repos: free; private: 2,000 free min/month,
 # this job uses ~2-4 min/run). No API keys required. Never places bets.
-name: daily-research
+name: daily-research   # Sports Betting Doyen
 on:
   schedule:
-    - cron: "15 6 * * *"    # 06:15 UTC: results, settlement, morning analysis
-    - cron: "15 16 * * *"   # 16:15 UTC: refresh after football-data's afternoon fixture/odds updates
+    # Every 2 hours: pre-game reassessments need fresh prices close to start times.
+    # Public repo => Actions minutes are free; The Odds API spend is budgeted per day in code.
+    - cron: "15 */2 * * *"
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -39,6 +40,6 @@ jobs:
           git config user.name "sbi-bot"
           git config user.email "sbi-bot@users.noreply.github.com"
           python -c "import sqlite3; c=sqlite3.connect('data/sbi.sqlite'); c.execute('PRAGMA wal_checkpoint(TRUNCATE)'); c.close()"
-          git add data/sbi.sqlite data/tuned.json reports docs/dashboard ledger || true
-          git diff --cached --quiet || git commit -m "daily research run $(date -u +%Y-%m-%dT%H:%MZ)"
+          git add data/sbi.sqlite data/*.json data/analysis data/backtest reports docs/dev docs/data ledger || true
+          git diff --cached --quiet || git commit -m "Doyen research run $(date -u +%Y-%m-%dT%H:%MZ)"
           git push

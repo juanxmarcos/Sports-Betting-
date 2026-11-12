@@ -19,7 +19,7 @@ CACHE_DIR = DATA_DIR / "cache"
 # Display timezone for reports/dashboard (IANA name). Storage is always UTC.
 TIMEZONE = os.environ.get("SBI_TIMEZONE", "America/New_York")  # US Eastern (EST/EDT)
 
-USER_AGENT = "sbi-research/0.1 (personal non-commercial research)"
+USER_AGENT = "sports-betting-doyen/0.2 (personal non-commercial research)"
 
 # football-data.co.uk division codes -> human names. These leagues all appear
 # in football-data's free fixtures.csv with multi-bookmaker odds.

@@ -187,3 +187,9 @@ footer{max-width:1120px;margin:0 auto;padding:26px 16px 120px;color:var(--faint)
 footer a{color:var(--muted)}
 select.tz{background:var(--surface);color:var(--ivory);border:1px solid var(--line-2);border-radius:999px;height:36px;padding:0 12px;font:13px var(--sans);max-width:220px}
 .settings{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+
+.golfrow{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:var(--radius-s);background:var(--surface);border:1px solid var(--line-2)}
+.golfrow b{color:var(--ivory);font-weight:600}
+.gnums{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.gnums span{font-weight:600;color:var(--ivory);font-size:14px}
+.gnums small{display:block;font-weight:400;color:var(--faint);font-size:11px}

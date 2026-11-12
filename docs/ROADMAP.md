@@ -1,4 +1,4 @@
-# Roadmap
+# Sports Betting Doyen — Roadmap
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -21,3 +21,12 @@ Model change policy: every change gets a new `model_version`. It is evaluated on
 walk-forward test seasons, and it is adopted only if it improves out-of-sample log loss
 and/or CLV beyond bootstrap noise. Results from previously published recommendations are
 never used to tune rules.
+
+## Doyen v0.2 (2026-11-12)
+| Item | Status |
+|---|---|
+| Rebrand + new site (Pick of the Day, cards, watching, upcoming, history, watchlist, Ask Doyen handoff) | **Done** |
+| Audit + three-strategy backtest (A1 identical-benchmark explained) | **Done** |
+| NFL (ESPN + nflverse + Odds API), NBA (ESPN + Odds API), tennis (ESPN + Odds API tournaments), golf (ESPN) | **Done** (models validated, weight 0 vs market) |
+| Pre-game reassessment statuses, 2-hourly schedule | **Done** |
+| Next | Golf head-to-heads and majors' outright odds; injury/QB availability feeds (free sources needed); per-sport calibration layer; in-page Ask Doyen once a zero-cost secure backend exists |

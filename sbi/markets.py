@@ -72,6 +72,14 @@ def settle_value(market: str, selection: str, line: float | None, hg: int, ag: i
     if market == "DC":
         res = "H" if hg > ag else ("A" if hg < ag else "D")
         return 1.0 if res in selection else -1.0
+    if market == "ML":
+        if hg == ag:
+            return 0.0
+        return 1.0 if (hg > ag) == (selection in ("home", "H")) else -1.0
+    if market in ("SPREAD", "TOTAL"):
+        margin = ((hg - ag + line) if selection == "home" else (ag - hg - line)) if market == "SPREAD" else \
+                 ((hg + ag - line) if selection == "over" else (line - hg - ag))
+        return 0.0 if abs(margin) < 1e-9 else (1.0 if margin > 0 else -1.0)
     if market == "BTTS":
         yes = hg > 0 and ag > 0
         return 1.0 if (yes == (selection == "yes")) else -1.0

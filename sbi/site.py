@@ -88,14 +88,17 @@ def _watch_reason(row: dict) -> str:
         if gaps:
             k = max(gaps, key=lambda z: abs(gaps[z]))
             if abs(gaps[k]) >= 0.05:
-                bits.append(f"Model and bookmakers differ on {k.lower()} ({mv[k] * 100:.0f}% vs {bv[k] * 100:.0f}%)")
-    if mv and not bits:
-        fav = max((k for k in mv if k in ("Home", "Away", "Draw")), key=lambda z: mv[z], default=None)
-        if fav:
-            bits.append(f"Model view: {fav.lower()} {mv[fav] * 100:.0f}%")
+                lab = k.lower() if k in ("Home", "Away", "Draw") else k
+                txt = f"Doyen's model and the bookmakers differ on {lab} ({mv[k] * 100:.0f}% vs {bv[k] * 100:.0f}%)"
+                if abs(gaps[k]) >= 0.10:
+                    txt += ", a gap this size usually means news the model can't see (injuries, rest, lineups)"
+                bits.append(txt)
+    if row.get("extra_text") and (not bits or row["sport"] != "soccer"):
+        bits.append(row["extra_text"].split(". ")[0].rstrip("."))
     for n in row.get("notes") or []:
         bits.append(n)
-    return ". ".join(bits) + ("." if bits else "")
+    out = ". ".join(bits) + ("." if bits else "")
+    return out[:1].upper() + out[1:]
 
 
 def _sel_text(row: dict, c: dict) -> str:
@@ -151,11 +154,31 @@ def build(con, now: datetime | None = None):
             events.append(row)
     events.sort(key=lambda r: r["start_utc"])
     # Matches Doyen is watching: closest-to-value and largest disagreements, no picks, next 72h
-    cand = [r for r in events if not r["has_pick"] and r.get("closest")
-            and datetime.fromisoformat(r["start_utc"]) < now + timedelta(hours=72)
-            and not any("known model bias" in n.lower() for n in r.get("notes", []))]
-    cand.sort(key=lambda r: -(r["closest"]["ev"]))
-    watching = [r["event_id"] for r in cand[:8]]
+    def interest(r):
+        """Score only on computed signals: closeness to value and model-market disagreement."""
+        c = r.get("closest") or {}
+        mv, bv = r.get("model_view") or {}, r.get("book_view") or {}
+        gap = max((abs(mv[k] - bv[k]) for k in bv if k in mv), default=0.0)
+        near = c.get("ev", -1) if c else -1
+        return max(near + 0.03, gap - 0.02) if (near > -0.015 or gap >= 0.05) else None
+
+    cand = []
+    for r in events:
+        if r["has_pick"] or datetime.fromisoformat(r["start_utc"]) >= now + timedelta(hours=72):
+            continue
+        if any("known model bias" in n.lower() for n in r.get("notes", [])):
+            continue
+        sc = interest(r)
+        if sc is not None:
+            cand.append((sc, r))
+    cand.sort(key=lambda x: -x[0])
+    watching, per = [], {}
+    for sc, r in cand:                       # at most 3 per sport so every sport gets a look-in
+        if per.get(r["sport"], 0) < 3:
+            watching.append(r["event_id"])
+            per[r["sport"]] = per.get(r["sport"], 0) + 1
+    golf_now = [r["event_id"] for r in events if r["sport"] == "golf"]
+    watching = (watching + golf_now)[:12]
 
     settled = [p for p in picks_all if p["status"]["state"] == "settled"]
     rec = {"won": sum(p["status"]["result"] in ("won", "half_won") for p in settled),

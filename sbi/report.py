@@ -32,7 +32,7 @@ def describe(r) -> str:
     return f"{m} {s} {ln}"
 
 
-TEMPLATE = r"""# Daily Betting Intelligence Report — {{ date }}
+TEMPLATE = r"""# Sports Betting Doyen — Daily Report, {{ date }}
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
 All times {{ tz }}. Generated {{ generated }}. Model `{{ model_version }}`.*

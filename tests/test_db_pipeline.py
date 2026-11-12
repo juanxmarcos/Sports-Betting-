@@ -86,3 +86,44 @@ def test_research_note_rules(con):
     with pytest.raises(ValueError):
         add_note(con, "e", "injury", "X out", "verified_fact")  # needs URL
     assert add_note(con, "e", "injury", "X out", "verified_fact", "against", "https://example.org") > 0
+
+
+def test_reassess_withdraw_and_site(con, monkeypatch, tmp_path):
+    from sbi import pipeline, settle, site
+    now = datetime(2026, 11, 20, 9, 0, tzinfo=timezone.utc)
+    hist = _history(now)
+    monkeypatch.setattr(pipeline, "load_league", lambda div, seasons: (hist, None))
+    monkeypatch.setattr(config.RULES, "max_prob_sd", 1.0)
+    monkeypatch.setattr(config, "ROOT", tmp_path)
+    eid = "football:E0:20261120:t0:t1"
+    con.execute("""INSERT INTO events(event_id,sport,league,season,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""", (eid, "football", "E0", "2627", (now + timedelta(hours=10)).isoformat(),
+                                                    "T0", "T1", "scheduled", "test", db.utcnow()))
+    def odds(ts, soft_away):
+        for bk, (h, d, a) in {"Pinnacle": (2.0, 3.6, 4.0), "Bet365": (2.05, 3.5, 3.9), "Bwin": (1.95, 3.6, soft_away),
+                              "Betfred": (2.0, 3.4, 3.9)}.items():
+            for s, p in zip("HDA", (h, d, a)):
+                con.execute("INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?)",
+                            (eid, bk, "1X2", s, None, p, "pre", "test", ts))
+        con.commit()
+    odds((now - timedelta(hours=2)).isoformat(), 4.8)
+    pipeline.analyse(con, now)
+    rec = con.execute("SELECT * FROM recommendations").fetchone()
+    assert rec["bookmaker"] == "Bwin" and rec["odds"] == 4.8
+    # price drops back in line -> withdrawn, original untouched
+    later = now + timedelta(hours=2)
+    odds(later.isoformat(), 3.9)
+    out = settle.reassess_open(con, later)
+    u = con.execute("SELECT * FROM rec_updates ORDER BY id DESC").fetchone()
+    assert out["appended"] == 1 and u["status"] == "withdrawn"
+    assert con.execute("SELECT odds FROM recommendations").fetchone()[0] == 4.8
+    with pytest.raises(sqlite3.DatabaseError):
+        con.execute("UPDATE rec_updates SET status='active'")
+    # site data
+    p = site.build(con, later)
+    d = json.loads(p.read_text())
+    assert d["brand"] == "Sports Betting Doyen"
+    assert d["picks"] == []                      # withdrawn picks leave Today's Picks
+    h = d["history"][0]
+    assert h["status"]["state"] == "withdrawn" and h["odds"] == 4.8 and h["why"] and h["risk"]
+    assert d["pick_of_the_day"] is None

@@ -29,6 +29,8 @@
   const tz = () => S.tz || (S.data && S.data.default_timezone) || "America/New_York";
   const dkey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: tz(), year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const addDays = (key, n) => { const [y, m, d] = key.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1, d + n)); return t.toISOString().slice(0, 10); };
+  const isGolf = (x) => x && x.sport === "golf";
+  const when = (x) => isGolf(x) ? `${fmtDate(x.start_utc)}${x.end_utc ? " – " + fmtDate(x.end_utc) : ""}` : fmtTime(x.start_utc);
   const fmtTime = (iso) => new Intl.DateTimeFormat("en-US", { timeZone: tz(), weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(new Date(iso));
   const fmtClock = (iso) => new Intl.DateTimeFormat("en-US", { timeZone: tz(), hour: "numeric", minute: "2-digit" }).format(new Date(iso));
   const fmtDay = (key) => { const [y, m, d] = key.split("-").map(Number); return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
@@ -136,7 +138,7 @@
   function watchCard(r) {
     return `<article class="card watch">
       ${starBtn(r.event_id)}
-      <div class="meta"><span class="sp">${ICON[r.sport] || ""}${esc(sportName(r.sport))}</span><span class="sep"></span><span>${esc(r.competition)}</span><span class="sep"></span><span>${esc(fmtTime(r.start_utc))}</span></div>
+      <div class="meta"><span class="sp">${ICON[r.sport] || ""}${esc(sportName(r.sport))}</span><span class="sep"></span><span>${esc(r.competition)}</span><span class="sep"></span><span>${esc(when(r))}</span></div>
       <div class="event">${esc(r.title)}</div>
       <div><span class="pill monitor">Monitoring · not a recommendation</span></div>
       <div class="w">${esc(r.why_interesting || "On Doyen's radar.")}</div>
@@ -191,7 +193,7 @@
   function eventRow(r) {
     const multi = r.end_utc && dkey(new Date(r.end_utc)) !== dkey(new Date(r.start_utc));
     return `<div class="row" data-go="#/event/${esc(r.event_id)}" role="link" tabindex="0">
-      <div class="t">${esc(fmtClock(r.start_utc))}${multi ? `<small>to ${esc(fmtDate(r.end_utc))}</small>` : ""}</div>
+      <div class="t">${isGolf(r) ? "All day" : esc(fmtClock(r.start_utc))}${multi ? `<small>to ${esc(fmtDate(r.end_utc))}</small>` : ""}</div>
       <div class="ev"><b>${esc(r.title)}</b><span>${ICON[r.sport] || ""}${esc(r.competition)}${r.neutral ? " · neutral venue" : ""}</span></div>
       ${eventStatus(r)}${starBtn(r.event_id)}</div>`;
   }
@@ -255,7 +257,7 @@
     const keys = Object.keys(mv || {});
     if (!keys.length) return "";
     return keys.map((k) => `<div class="cmp"><span class="muted">${esc(k)}</span><div><div class="bar" title="Doyen model"><i style="width:${(mv[k] * 100).toFixed(1)}%"></i></div>${bv && bv[k] != null ? `<div class="bar" style="margin-top:4px;opacity:.55" title="Bookmakers (no-vig)"><i style="width:${(bv[k] * 100).toFixed(1)}%;background:var(--info)"></i></div>` : ""}</div><span>${pct(mv[k])}${bv && bv[k] != null ? `<br><span class="faint">${pct(bv[k])}</span>` : ""}</span></div>`).join("") +
-      `<p class="note">Gold: Doyen's model. Blue: bookmakers' consensus with their margin removed.</p>`;
+      (bv && Object.keys(bv).length ? `<p class="note">Gold: Doyen's model. Blue: bookmakers' consensus with their margin removed.</p>` : "");
   }
   function formBlock(form) {
     if (!form) return "";
@@ -310,14 +312,15 @@
     const pk = S.data.picks.find((p) => p.event_id === id);
     const c = r.closest;
     let h = `<div class="sheet"><button class="back" data-go="#/upcoming">← Back</button>
-      <div class="meta"><span class="sp">${ICON[r.sport] || ""}${esc(sportName(r.sport))}</span><span class="sep"></span><span>${esc(r.competition)}</span><span class="sep"></span><span>${esc(fmtTime(r.start_utc))}${r.end_utc ? " – " + esc(fmtDate(r.end_utc)) : ""}</span></div>
+      <div class="meta"><span class="sp">${ICON[r.sport] || ""}${esc(sportName(r.sport))}</span><span class="sep"></span><span>${esc(r.competition)}</span><span class="sep"></span><span>${esc(when(r))}</span></div>
       <h1 style="margin-top:8px">${esc(r.title)}</h1>
       <div style="margin-top:10px">${pk ? `<a class="btn" href="#/pick/${esc(pk.id)}">View Doyen's pick →</a>` : `<span class="pill monitor">${S.data.watching.includes(id) ? "Watching · not a recommendation" : "No pick · analysed"}</span>`}</div>
       <div class="card block"><h3>Why it's interesting</h3><p class="why">${esc(r.why_interesting || "Routine analysis.")}</p><p class="muted" style="margin:8px 0 0">Waiting for: <b style="color:var(--info)">${esc(r.waiting_for)}</b></p></div>`;
     if (c) h += `<div class="card block"><h3>Closest to value</h3><p class="why">${esc(c.market_label)} — <b>${esc(c.selection_text)}</b> at ${dec(c.odds)} (${esc(c.bookmaker || "")}). ${c.market_prob != null ? `Sharp market consensus (margin removed): ${pct(c.market_prob, 1)}` : `Doyen's estimate: ${pct(c.prob, 1)}`}${c.model_prob != null && c.market_prob != null ? `; Doyen's model: ${pct(c.model_prob, 1)}` : ""}. Value of this price against fair: ${c.ev >= 0 ? "+" : ""}${pct(c.ev, 1)}.</p><p class="note">Why it isn't a pick: ${esc(c.reason || "below thresholds")}.</p></div>`;
-    if (Object.keys(r.model_view || {}).length) h += `<div class="card block"><h3>Model vs bookmakers</h3>${r.expected_goals ? `<p class="muted" style="margin:0 0 8px">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</p>` : ""}${cmpBars(r.model_view, r.book_view)}${r.model_weight === 0 ? '<p class="note">This competition\'s model has not yet earned weight against the market, so its view is context only.</p>' : ""}</div>`;
+    if (Object.keys(r.model_view || {}).length) h += `<div class="card block"><h3>${r.sport === "golf" ? "Win probability: top of the field" : "Model vs bookmakers"}</h3>${r.expected_goals ? `<p class="muted" style="margin:0 0 8px">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</p>` : ""}${cmpBars(r.model_view, r.book_view)}${r.model_weight === 0 ? '<p class="note">This competition\'s model has not yet earned weight against the market, so its view is context only.</p>' : ""}</div>`;
     if (r.form) h += `<div class="card block"><h3>Recent form</h3><div class="kv">${formBlock(r.form)}</div></div>`;
-    if (r.extra_text) h += `<div class="card block"><h3>Notes</h3><p class="why">${esc(r.extra_text)}</p></div>`;
+    if (r.extra_text && r.extra_text !== r.why_interesting && !(r.why_interesting || "").includes(r.extra_text.split(". ")[0])) h += `<div class="card block"><h3>Notes</h3><p class="why">${esc(r.extra_text)}</p></div>`;
+    if (r.golf_table) h += `<div class="card block"><h3>Simulated finishing chances</h3><div class="rows">${r.golf_table.slice(0, 15).map((g) => `<div class="golfrow"><b>${esc(g.player)}</b><div class="gnums"><span>${pct(g.win, 1)}<small>win</small></span><span>${pct(g.top5)}<small>top 5</small></span><span>${pct(g.top10)}<small>top 10</small></span><span>${pct(g.top20)}<small>top 20</small></span><span>${pct(g.cut)}<small>cut</small></span></div></div>`).join("")}</div><p class="note">10,000 simulations from strokes-versus-field ratings. Probabilities, not predictions. Doyen has no free golf odds to compare against outside the majors, so these are not picks.</p></div>`;
     h += `<p class="note">${r.odds_updated ? "Odds updated " + esc(ago(r.odds_updated)) + " · " : ""}${r.n_books || 0} bookmaker${r.n_books === 1 ? "" : "s"} quoting.</p>
       <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">${starBtn(id).replace('class="star', 'class="ibtn')}<a class="btn ghost" href="#/ask/event/${esc(id)}">Ask Doyen about this event</a></div></div>`;
     return h;

@@ -117,3 +117,34 @@ def books_from_rows(rows) -> dict:
         key = (market, line)
         books.setdefault(key, {}).setdefault(bk, {})[sel] = float(price)
     return books
+
+
+def price_generic(outcome_fn, books: dict, blend_w: dict, commission: float, markets=None) -> list[Candidate]:
+    """Pricing for sports without a score-matrix model. outcome_fn(market, selection, line) -> Outcome.
+    Parameter uncertainty is not estimated for these models, so prob_sd = 0 (the blend weight,
+    fitted out of sample, is what limits trust in the model)."""
+    out: list[Candidate] = []
+    for (market, line), book in books.items():
+        if market not in SELECTIONS or (markets and market not in markets):
+            continue
+        sels = SELECTIONS[market]
+        book = evm.clean(book, sels)
+        if not book:
+            continue
+        cons, src = evm.consensus(book, sels)
+        nb = evm.n_books(book, sels)
+        for s in sels:
+            try:
+                oc = outcome_fn(market, s, line)
+            except (ValueError, KeyError):
+                continue
+            mq = cons[s] if cons else None
+            w = blend_w.get(market, 0.0)
+            fq = evm.blend(oc.q, mq, w)
+            bk, quoted, net = evm.best_price(book, s, commission)
+            if bk is None:
+                continue
+            e = oc.active * (fq * net - 1)
+            out.append(Candidate(market, s, line, oc.q, 0.0, oc.q, mq, src, fq, fq, bk, quoted, net, e, e, w,
+                                 oc.active, nb, oc))
+    return out

@@ -1,0 +1,49 @@
+{
+  "sport": "tennis",
+  "model": "surface-elo-0.1",
+  "history_matches": 29057,
+  "n_test": 11609,
+  "test_from": "2025-07-01",
+  "test_logloss": {
+    "model": 0.63811,
+    "coin_flip": 0.69315
+  },
+  "test_logloss_ci95": [
+    0.63094,
+    0.64502
+  ],
+  "favourite_win_rate": 0.6274,
+  "calibration_model": [
+    {
+      "bin": "0.5-0.6",
+      "n": 4320,
+      "pred": 0.5486,
+      "obs": 0.5352
+    },
+    {
+      "bin": "0.6-0.7",
+      "n": 3532,
+      "pred": 0.6481,
+      "obs": 0.6107
+    },
+    {
+      "bin": "0.7-0.8",
+      "n": 2312,
+      "pred": 0.7453,
+      "obs": 0.6964
+    },
+    {
+      "bin": "0.8-0.9",
+      "n": 1086,
+      "pred": 0.8423,
+      "obs": 0.8057
+    },
+    {
+      "bin": "0.9-1.0",
+      "n": 359,
+      "pred": 0.9365,
+      "obs": 0.9164
+    }
+  ],
+  "note": "No free historical tennis odds: model weight vs market is 0; picks need multi-bookmaker odds."
+}

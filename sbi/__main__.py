@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="sbi", description="Sports Betting Intelligence (research / paper trading only)")
+    ap = argparse.ArgumentParser(prog="sbi", description="Sports Betting Doyen (research / paper trading only)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init", help="create the SQLite database")
     sub.add_parser("ingest", help="fetch fixtures, odds and results")

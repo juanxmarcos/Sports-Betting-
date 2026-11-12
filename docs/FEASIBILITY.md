@@ -1,4 +1,4 @@
-# Phase 1 — Feasibility under a zero-additional-cost constraint
+# Sports Betting Doyen — Phase 1 — Feasibility under a zero-additional-cost constraint
 
 *Verified 2026-11-12 from this cloud session (HTTP checks) and the official Claude Code docs.*
 

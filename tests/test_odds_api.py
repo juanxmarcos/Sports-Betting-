@@ -40,8 +40,9 @@ def test_name_similarity():
 def test_budget():
     now = datetime(2026, 11, 12, tzinfo=timezone.utc)  # 19 days left -> 38 runs
     assert oa.budget(None, now) == oa.MAX_CREDITS_PER_RUN
-    assert oa.budget(420, now) == oa.MAX_CREDITS_PER_RUN  # (420-20)/38 = 10.5 -> capped
-    assert oa.budget(100, now) == 2
+    assert oa.budget(420, now) == oa.MAX_CREDITS_PER_RUN      # daily (420-20)/19 = 21 -> capped at 8/run
+    assert oa.budget(420, now, spent_today=16) == 5            # (436-20)/19 = 21.9 - 16
+    assert oa.budget(100, now) == 4                            # (100-20)/19 = 4.2
     assert oa.budget(15, now) == 0
 
 
@@ -75,3 +76,16 @@ def test_ingest_matches_and_stores(monkeypatch, tmp_path):
     assert "/sports/soccer_uefa_nations_league/odds" in calls
     url = con.execute("SELECT source_url FROM odds LIMIT 1").fetchone()[0]
     assert "apiKey" not in url and "dummy" not in url
+
+
+def test_parse_two_way():
+    ev = {"home_team": "Detroit Lions", "away_team": "New England Patriots", "bookmakers": [
+        {"key": "pinnacle", "title": "Pinnacle", "last_update": "2026-11-14T08:00:00Z", "markets": [
+            {"key": "h2h", "outcomes": [{"name": "Detroit Lions", "price": 1.65}, {"name": "New England Patriots", "price": 2.35}]},
+            {"key": "spreads", "outcomes": [{"name": "Detroit Lions", "price": 1.91, "point": -2.5},
+                                            {"name": "New England Patriots", "price": 1.95, "point": 2.5}]},
+            {"key": "totals", "outcomes": [{"name": "Over", "price": 1.9, "point": 51.5}, {"name": "Under", "price": 1.95, "point": 51.5}]}]}]}
+    d = {(m, s, l): p for _, m, s, l, p, _ in oa.parse_odds(ev, two_way=True)}
+    assert d[("ML", "home", None)] == 1.65
+    assert d[("SPREAD", "home", -2.5)] == 1.91 and d[("SPREAD", "away", -2.5)] == 1.95
+    assert d[("TOTAL", "over", 51.5)] == 1.9

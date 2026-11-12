@@ -278,6 +278,23 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             db.provider_err(con, "espn:international", str(e))
             d["error"] = str(e)
             d["_status"] = "partial"
+    for sp in ("nfl", "nba"):
+        with db.job(con, f"ingest-{sp}") as d:
+            from . import us
+            try:
+                d.update(us.ingest(con, now, sp))
+                db.provider_ok(con, f"espn:{sp}", d.get("events", 0))
+            except Exception as e:  # noqa: BLE001
+                db.provider_err(con, f"espn:{sp}", str(e))
+                d["error"] = str(e)
+                d["_status"] = "partial"
+    with db.job(con, "ingest-tennis") as d:
+        from . import tennis
+        try:
+            d.update(tennis.register(con, now))
+        except Exception as e:  # noqa: BLE001
+            d["error"] = str(e)
+            d["_status"] = "partial"
     with db.job(con, "ingest-odds-api") as d:
         from .sources import odds_api
         try:
@@ -304,6 +321,24 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             d["_status"] = "partial"
         result["analyse"]["international"] = si
         (config.DATA_DIR / "international_latest.json").write_text(json.dumps(si, default=str))
+    for sp in ("nfl", "nba"):
+        with db.job(con, f"analyse-{sp}") as d:
+            from . import us
+            try:
+                d.update(us.analyse(con, now, sp))
+            except Exception as e:  # noqa: BLE001
+                d["error"] = f"{type(e).__name__}: {e}"
+                d["_status"] = "partial"
+    for sp, mod in (("tennis", "tennis"), ("golf", "golf")):
+        with db.job(con, f"analyse-{sp}") as d:
+            import importlib
+            try:
+                d.update(importlib.import_module(f".{mod}", "sbi").analyse(con, now))
+                db.provider_ok(con, f"espn:{sp}", d.get("analysed", d.get("events", 0)))
+            except Exception as e:  # noqa: BLE001
+                db.provider_err(con, f"espn:{sp}", str(e))
+                d["error"] = f"{type(e).__name__}: {e}"
+                d["_status"] = "partial"
     with db.job(con, "reassess") as d:
         from .settle import reassess_open
         d.update(reassess_open(con, now))

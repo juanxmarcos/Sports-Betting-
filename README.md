@@ -1,55 +1,35 @@
-# SBI — Sports Betting Intelligence (research platform)
+# Sports Betting Doyen
 
-An autonomous, statistically rigorous **research and paper-trading** system that looks for
-potentially mispriced betting markets, publishes a daily evidence-based report, and measures
-its own performance honestly over time.
+**Live site:** https://juanxmarcos.github.io/Sports-Betting-/
 
-> **It never places bets.** All tracked results are simulated, fixed-unit paper trades.
-> Nothing here is financial advice. Short-term profit is not evidence of an edge.
+An autonomous sports betting research assistant for **soccer, NFL, NBA, tennis and golf**. You open the site, see the day's strongest evidence-based opportunities, why they qualify, and what could go wrong.
 
-**Zero additional cost:** Python + SQLite + free data (football-data.co.uk) + GitHub Actions
-cron + a static dashboard. Claude is used through your Claude Max subscription (Claude Code
-and scheduled tasks) for development and contextual research. The pipeline itself makes no
-metered API calls. See [docs/FEASIBILITY.md](docs/FEASIBILITY.md).
+> Research and paper trading only. Doyen never places bets. Picks are estimates, never guarantees. Most bets lose, including good ones.
 
-## Quick start
+## What you see
+- **Doyen's Pick of the Day:** the single strongest qualifying opportunity, or an honest "nothing qualifies".
+- **Today's Picks:** cards with selection, best price, Doyen's probability, expected value in plain English, the reasoning, and the main risk.
+- **Matches Doyen Is Watching:** near-misses and interesting fixtures, clearly *not* recommendations, with what Doyen is waiting for.
+- **Upcoming**, **Pick History** (immutable, at original odds), **Watchlist** (stored in your browser), and **Ask Doyen** (opens Claude with your question plus Doyen's data; no embedded AI, no secrets).
+- Sport filters (All / Soccer / NFL / NBA / Tennis / Golf), date filters (Today / Tomorrow / This Week), and a timezone picker (DST-aware).
 
+## How picks are made (short version)
+A pick needs a bookmaker price that beats a **sharp, margin-free market consensus** (Pinnacle / Betfair Exchange / multi-book median) by at least 3%. It also needs odds between 1.30 and 6.00, quotes from at least 3 bookmakers, fresh prices, and enough history on both sides. Each sport has its own model (Dixon-Coles goals; points ratings for NFL/NBA; surface Elo for tennis; strokes-vs-field simulation for golf). A model only gets weight against the market once it has beaten the market out of sample. So far none has, so the models provide context and risk flags rather than the edge. Details: [docs/METHODOLOGY.md](docs/METHODOLOGY.md) and [docs/AUDIT.md](docs/AUDIT.md).
+
+## Running it
 ```bash
 pip install -r requirements.txt
 ```
-
 ```bash
-python -m sbi daily        # ingest → settle → model → EV → report → dashboard
+python -m sbi daily        # ingest all sports → settle → model → EV → reassess → site
 ```
-
 ```bash
-python -m sbi serve        # dashboard at http://localhost:8000
+python -m sbi serve        # diagnostics view (docs/dev) on http://localhost:8000
 ```
-
-```bash
-python -m sbi backtest     # walk-forward evaluation (~25 min); writes data/tuned.json
-```
-
 ```bash
 python -m pytest -q
 ```
-
-Other commands: `ingest`, `settle`, `analyse`, `report`, `dashboard`, `brief`, `note`, `status`.
-
-## Outputs
-- `reports/YYYY-MM-DD.md`, `reports/latest.md`: the daily intelligence report
-- `docs/dashboard/`: static dashboard (open via `sbi serve` or GitHub Pages)
-- `ledger/recommendations.csv`: permanent, human-readable record of every published selection
-- `data/sbi.sqlite`: full database (published rows are immutable and enforced by triggers)
-- `data/backtest/report.json`: latest out-of-sample evaluation
-
-## Automation
-1. Merge to the default branch. `.github/workflows/daily.yml` then runs at 06:15 and 16:15 UTC and commits results.
-2. Optional: create a Claude Code scheduled task with `automation/claude_research_routine.md` to add evidence-graded team-news flags.
-3. Optional: add a free The Odds API key as the Actions secret `ODDS_API_KEY` (multi-bookmaker odds; enables international selections).
-4. Optional: set the repository variable `SBI_TIMEZONE` (IANA name, default `America/New_York` = US Eastern).
+Automation: `.github/workflows/daily.yml` runs every 2 hours and commits the data, reports and site. A Claude Code scheduled task (`automation/claude_research_routine.md`) adds evidence-graded team-news notes. Optional: the `ODDS_API_KEY` secret enables multi-bookmaker odds (free tier, budgeted per day).
 
 ## Docs
-[Feasibility](docs/FEASIBILITY.md) · [Architecture & DB](docs/ARCHITECTURE.md) ·
-[Methodology & results](docs/METHODOLOGY.md) · [Data sources](docs/DATA_SOURCES.md) ·
-[Roadmap](docs/ROADMAP.md)
+[Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)
