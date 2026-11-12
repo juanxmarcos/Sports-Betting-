@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-12T21:47:33+00:00",
+  "generated": "2026-11-12T21:49:42.068127+00:00",
   "funnel_7d": {
     "soccer": {
       "funnel": {
@@ -256,7 +256,7 @@
     },
     "the-odds-api": {
       "last_success": "2026-11-12T21:27:12+00:00",
-      "last_error": "2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=7ec2335bc4a605601568db84e0412246",
+      "last_error": "2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED",
       "rows": 462
     },
     "espn:nfl": {
@@ -306,7 +306,7 @@
     },
     "tennis": {
       "events_with_odds": 3,
-      "median_odds_age_h": 0.3,
+      "median_odds_age_h": 0.4,
       "median_bookmakers": 22,
       "share_3plus_books": 1.0
     }
@@ -323,7 +323,7 @@
     {
       "job": "ingest-odds-api",
       "started_at": "2026-11-12T21:48:25+00:00",
-      "details": "{\"error\": \"422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=7ec2335bc4a605601568db84e0412246\"}"
+      "details": "{\"error\": \"422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED\"}"
     },
     {
       "job": "analyse-international",

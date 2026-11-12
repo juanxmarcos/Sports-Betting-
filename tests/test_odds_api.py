@@ -72,7 +72,7 @@ def test_ingest_matches_and_stores(monkeypatch, tmp_path):
     monkeypatch.setattr(oa, "_get", fake_get)
     now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
     out = oa.ingest(con, now)
-    assert out["matched"] == 1 and out["credits_spent"] == 3 and out["odds_rows"] > 5  # h2h,totals,btts
+    assert out["matched"] == 1 and out["credits_spent"] == 2 and out["odds_rows"] > 5
     assert "/sports/soccer_uefa_nations_league/odds" in calls
     url = con.execute("SELECT source_url FROM odds LIMIT 1").fetchone()[0]
     assert "apiKey" not in url and "dummy" not in url
@@ -132,3 +132,46 @@ def test_ingest_keeps_whole_week(monkeypatch, tmp_path):
     out = oa.ingest(con, now)
     assert out["matched"] == 3                         # day 1, 3 and 6 kept; day 9 is outside the 7-day window
     assert out["coverage"]["basketball_nba"] == {"returned": 4, "in_window": 3, "matched": 3}
+
+
+def test_errors_never_leak_api_key(monkeypatch, tmp_path):
+    con = db.connect(tmp_path / "t.sqlite")
+    monkeypatch.setenv("ODDS_API_KEY", "abcdef1234567890secret")
+    assert "abcdef1234567890secret" not in db.redact("422 for url: https://x/odds?markets=h2h&apiKey=abcdef1234567890secret")
+    assert "secret" not in db.redact("token abcdef1234567890secret leaked")
+
+    class R:
+        status_code, text = 422, "bad market"
+    monkeypatch.setattr(oa.requests, "get", lambda *a, **k: R())
+    with pytest.raises(RuntimeError) as ei:
+        oa._get("/sports/x/odds", {}, "abcdef1234567890secret")
+    assert "abcdef1234567890secret" not in str(ei.value)
+    with pytest.raises(RuntimeError):
+        with db.job(con, "t"):
+            raise RuntimeError("https://api/odds?apiKey=abcdef1234567890secret")
+    row = con.execute("SELECT details FROM job_runs").fetchone()[0]
+    assert "abcdef1234567890secret" not in row and "REDACTED" in row
+
+
+def test_one_failing_competition_does_not_stop_others(monkeypatch, tmp_path):
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    t = now + timedelta(days=1)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('n1','nba','NBA',?,'H Team','A Team','scheduled','t','t')""", (t.isoformat(),))
+    monkeypatch.setenv("ODDS_API_KEY", "dummy")
+    ev = [{"home_team": "H Team", "away_team": "A Team", "commence_time": t.isoformat().replace("+00:00", "Z"),
+           "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "last_update": now.isoformat().replace("+00:00", "Z"),
+                           "markets": [{"key": "h2h", "outcomes": [{"name": "H Team", "price": 1.8}, {"name": "A Team", "price": 2.1}]}]}]}]
+    def fake_get(path, params, api_key):
+        u = {"remaining": "400", "used": "100", "last": "0"}
+        if path == "/sports":
+            return [{"key": "soccer_uefa_nations_league", "active": True}, {"key": "basketball_nba", "active": True}], u
+        if path.endswith("/events"):
+            return ev, u
+        if "soccer" in path:
+            raise RuntimeError("The Odds API HTTP 422 for /sports/soccer_uefa_nations_league/odds")
+        return ev, u
+    monkeypatch.setattr(oa, "_get", fake_get)
+    out = oa.ingest(con, now)
+    assert out["matched"] == 1 and out["errors"] and "basketball_nba" in out["fetched"]

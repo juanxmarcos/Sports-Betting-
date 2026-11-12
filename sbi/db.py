@@ -191,6 +191,24 @@ CREATE TABLE IF NOT EXISTS backtest_results (
 """
 
 
+import os
+import re as _re
+
+_SECRET_PARAM = _re.compile(r"(api[_-]?key|apikey|token|key)=([^&\s\"']+)", _re.I)
+
+
+def redact(text: str) -> str:
+    """Remove secrets from any text before it is stored or published (DB rows end up in a public repo)."""
+    if not text:
+        return text
+    text = _SECRET_PARAM.sub(lambda m: f"{m.group(1)}=REDACTED", str(text))
+    for var in ("ODDS_API_KEY",):
+        val = os.environ.get(var)
+        if val and len(val) >= 6:
+            text = text.replace(val, "REDACTED")
+    return text
+
+
 def utcnow() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -217,13 +235,13 @@ def job(con: sqlite3.Connection, name: str):
         status = details.pop("_status", "ok")
     except Exception as e:  # noqa: BLE001
         con.rollback()
-        details["error"] = f"{type(e).__name__}: {e}"
+        details["error"] = redact(f"{type(e).__name__}: {e}")
         con.execute("UPDATE job_runs SET finished_at=?, status='error', details=? WHERE id=?",
-                    (utcnow(), json.dumps(details, default=str), jid))
+                    (utcnow(), redact(json.dumps(details, default=str)), jid))
         con.commit()
         raise
     con.execute("UPDATE job_runs SET finished_at=?, status=?, details=? WHERE id=?",
-                (utcnow(), status, json.dumps(details, default=str), jid))
+                (utcnow(), status, redact(json.dumps(details, default=str)), jid))
     con.commit()
 
 
@@ -240,4 +258,4 @@ def provider_err(con, provider: str, err: str) -> None:
     con.execute("""INSERT INTO provider_status(provider,last_attempt,last_error)
                    VALUES (?,?,?) ON CONFLICT(provider) DO UPDATE SET
                    last_attempt=excluded.last_attempt, last_error=excluded.last_error""",
-                (provider, now, f"{now} {err}"[:500]))
+                (provider, now, redact(f"{now} {err}")[:500]))

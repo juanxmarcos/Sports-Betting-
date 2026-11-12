@@ -174,7 +174,7 @@ Fixes 1, 2 and 4 are in v0.4. Point 5 is a real limitation.
 - Every event in the 7-day window is stored from each response, with per-competition coverage logged (returned / in window / matched).
 - Fetches happen once a day per competition with events this week, every 8h within 36h of the start, every 4h within 10h, plus a final refresh within 2.5h.
 - Up to 12 credits per run, inside the daily allowance.
-- Soccer now also requests both-teams-to-score (h2h, totals, btts = 3 credits).
+- Both-teams-to-score: The Odds API rejects `btts` on its bulk endpoint (HTTP 422; per-event requests only, which would cost one call per match), so BTTS is supported in pricing and settlement but **not fetched live**.
 
 **Rule sensitivity** (club soccer, market-only, validation 2022–24 / test 2024–Nov 2026):
 
@@ -204,7 +204,7 @@ Fixes 1, 2 and 4 are in v0.4. Point 5 is a real limitation.
 None of the models beats a bookmaker baseline, so all keep weight 0.
 
 **Markets.**
-- Enabled: soccer 1X2, O/U, Asian handicap and both-teams-to-score (new); NFL/NBA moneyline, spread and total; tennis match winner.
+- Enabled: soccer 1X2, O/U and Asian handicap (BTTS is ready in code, but no free bulk odds exist); NFL/NBA moneyline, spread and total; tennis match winner.
 - Not enabled: tennis set handicaps and total games. Settlement needs game-level scores that are not yet stored, and there is no validated model for them.
 
 **Value method audit.**

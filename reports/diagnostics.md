@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-12 21:47 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-12 21:49 UTC)
 
 ## Opportunity funnel (next 7 days)
 
@@ -23,7 +23,7 @@
 - soccer: {'events_with_odds': 49, 'median_odds_age_h': 0.0, 'median_bookmakers': 1, 'share_3plus_books': 0.2}
 - nfl: {'events_with_odds': 14, 'median_odds_age_h': 0.0, 'median_bookmakers': 1.0, 'share_3plus_books': 0.07}
 - nba: {'events_with_odds': 4, 'median_odds_age_h': 0.0, 'median_bookmakers': 31.0, 'share_3plus_books': 1.0}
-- tennis: {'events_with_odds': 3, 'median_odds_age_h': 0.3, 'median_bookmakers': 22, 'share_3plus_books': 1.0}
+- tennis: {'events_with_odds': 3, 'median_odds_age_h': 0.4, 'median_bookmakers': 22, 'share_3plus_books': 1.0}
 
 ## The Odds API
 
@@ -43,7 +43,7 @@
 - football-data:B1: last success 2026-11-12T21:47:35+00:00
 - football-data:SC0: last success 2026-11-12T21:47:35+00:00
 - espn:international: last success 2026-11-12T21:48:20+00:00
-- the-odds-api: last success 2026-11-12T21:27:12+00:00 · last error 2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=7ec2335bc4a605601568db84e0412246
+- the-odds-api: last success 2026-11-12T21:27:12+00:00 · last error 2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED
 - espn:nfl: last success 2026-11-12T21:48:21+00:00
 - espn:nba: last success 2026-11-12T21:48:22+00:00
 - espn:tennis: last success 2026-11-12T21:48:32+00:00

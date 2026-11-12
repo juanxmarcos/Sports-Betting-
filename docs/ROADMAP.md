@@ -35,7 +35,7 @@ never used to tune rules.
 | Item | Status |
 |---|---|
 | 7-day analysis, actionable (≤24h odds) vs preliminary forecasts, 7-day publish window | **Done** |
-| Odds API: store full week, better allocation, coverage logging, soccer BTTS | **Done** |
+| Odds API: store full week, better allocation, coverage logging (BTTS code-ready; no free bulk odds) | **Done** |
 | Full opportunity funnel (10 stages) for 7 days and 48h | **Done** |
 | Rule sensitivity analysis (rules unchanged; odds ≤ 3.5 flagged) | **Done** |
 | Tennis Elo re-tuning (adopted), fatigue (rejected) | **Done** |

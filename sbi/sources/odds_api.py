@@ -27,7 +27,7 @@ from .. import config, db
 BASE = "https://api.the-odds-api.com/v4"
 SOURCE = "the-odds-api.com"
 REGIONS = "eu"
-MARKETS = "h2h,totals,btts"   # soccer; btts added in v0.4 (2-way, settles from final score)
+MARKETS = "h2h,totals"   # btts is not offered on the bulk /odds endpoint (HTTP 422), only per event
 MAX_CREDITS_PER_RUN = 12   # several competitions per run; the DAILY allowance is the real limit
 RUNS_PER_DAY = 2
 RESERVE = 20  # never spend the last credits of the month
@@ -70,7 +70,9 @@ def _get(path: str, params: dict, api_key: str) -> tuple[object, dict]:
         raise PermissionError(f"The Odds API rejected the key (HTTP {r.status_code})")
     if r.status_code == 429:
         raise RuntimeError("The Odds API quota/rate limit reached (HTTP 429)")
-    r.raise_for_status()
+    if r.status_code >= 400:
+        # never let requests' default message (full URL incl. apiKey) escape
+        raise RuntimeError(f"The Odds API HTTP {r.status_code} for {path} ({r.text[:120]!r})")
     usage = {k: r.headers.get(h) for k, h in (("remaining", "x-requests-remaining"),
                                               ("used", "x-requests-used"), ("last", "x-requests-last"))}
     return r.json(), usage
@@ -231,8 +233,12 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
         c = len(markets.split(",")) * len(REGIONS.split(","))
         if spent + c > allowed:
             continue
-        data, usage = _get(f"/sports/{sk}/odds", {"regions": REGIONS, "markets": markets,
-                                                  "oddsFormat": "decimal", "dateFormat": "iso"}, api_key)
+        try:
+            data, usage = _get(f"/sports/{sk}/odds", {"regions": REGIONS, "markets": markets,
+                                                      "oddsFormat": "decimal", "dateFormat": "iso"}, api_key)
+        except (RuntimeError, requests.RequestException) as ex:   # one competition failing must not stop the rest
+            out.setdefault("errors", []).append(db.redact(str(ex))[:200])
+            continue
         spent += c
         out["fetched"].append(sk)
         con.execute("INSERT INTO odds_api_fetches(sport_key, fetched_at, credits) VALUES (?,?,?)", (sk, now.isoformat(), c))
