@@ -119,7 +119,8 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 48) -> dict:
     rules, mcfg = config.RULES, config.MODEL
     config.load_tuned()
     events = pd.read_sql_query(
-        "SELECT * FROM events WHERE sport='football' AND status='scheduled' AND kickoff_utc > ? AND kickoff_utc <= ?",
+        "SELECT * FROM events WHERE sport='football' AND league NOT LIKE 'INT:%' AND status='scheduled' "
+        "AND kickoff_utc > ? AND kickoff_utc <= ?",
         con, params=(now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat()))
     summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0}
     cands_by_event, hist_ok, meta = {}, {}, {}
@@ -245,10 +246,32 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
     with db.job(con, "settle") as d:
         d.update(settle.settle_all(con, now))
         result["settle"] = d
+    recent = []
+    with db.job(con, "ingest-international") as d:
+        from . import intl
+        try:
+            info, recent = intl.ingest(con, now)
+            db.provider_ok(con, "espn:international", info["events"])
+            d.update(info)
+        except Exception as e:  # noqa: BLE001 - one source failing must not stop the run
+            db.provider_err(con, "espn:international", str(e))
+            d["error"] = str(e)
+            d["_status"] = "partial"
     with db.job(con, "analyse") as d:
         s = analyse(con, now)
         d.update({k: v for k, v in s.items() if k != "top_candidates"})
         result["analyse"] = s
+    with db.job(con, "analyse-international") as d:
+        from . import intl
+        try:
+            si = intl.analyse(con, now, recent)
+            d.update({k: v for k, v in si.items() if k != "rows"})
+        except Exception as e:  # noqa: BLE001
+            si = {"error": str(e), "rows": []}
+            d["error"] = str(e)
+            d["_status"] = "partial"
+        result["analyse"]["international"] = si
+        (config.DATA_DIR / "international_latest.json").write_text(json.dumps(si, default=str))
     with db.job(con, "publish") as d:
         d["report"] = str(report.write_daily(con, now, result["analyse"]))
         d["dashboard"] = str(dashboard.build(con))

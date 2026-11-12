@@ -50,6 +50,10 @@ def build(con) -> Path:
         "performance": rec_metrics(con), "predictions": prediction_metrics(con),
         "backtest": json.loads(bt["metrics_json"]) if bt else None,
         "backtest_at": bt["created_at"] if bt else None,
+        "international": (json.loads((config.DATA_DIR / "international_latest.json").read_text())
+                          if (config.DATA_DIR / "international_latest.json").exists() else None),
+        "intl_backtest": (json.loads((config.DATA_DIR / "backtest" / "international.json").read_text())
+                          if (config.DATA_DIR / "backtest" / "international.json").exists() else None),
         "jobs": [dict(r) for r in con.execute("SELECT * FROM job_runs ORDER BY id DESC LIMIT 30")],
         "providers": [dict(r) for r in con.execute("SELECT * FROM provider_status ORDER BY provider")],
     }

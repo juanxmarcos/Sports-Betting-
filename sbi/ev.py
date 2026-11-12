@@ -70,6 +70,10 @@ def consensus(book: dict[str, dict[str, float]], selections: list[str],
         med = np.median(np.array(fairs), axis=0)
         med = med / med.sum()
         return dict(zip(selections, med)), "median"
+    singles = [b for b in book if b not in AGGREGATES]
+    if len(fairs) == 1 and len(singles) == 1:
+        # one bookmaker only: de-vig it, but label it so callers (and n_books rules) know
+        return dict(zip(selections, fairs[0])), f"single:{singles[0]}"
     return None, None
 
 

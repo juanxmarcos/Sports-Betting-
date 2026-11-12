@@ -9,6 +9,7 @@
 | 5 Daily reports | Markdown report incl. "no qualifying opportunities", evidence, risks, near-misses | **Done** |
 | 6 Backtesting & paper trading | Walk-forward, tuned hyperparameters and blend weights, ROI/CLV with CIs, static dashboard | **Done** (MVP) |
 | 7 Automation | GitHub Actions twice daily; Claude scheduled-task research routine | **Configured** — activate after merge |
+| 2c National teams | martj42 history + ESPN fixtures/odds, neutral-venue DC (beats Elo out of sample), live monitoring vs DraftKings | **Done** (monitoring mode) |
 | 2b | The Odds API (free key) connector for fresher odds and BTTS/DC markets; ESPN fixtures fallback | Next |
 | 3b | xG-based DC variant (football-data xG from 2026-27), evaluated once enough out-of-sample matches exist; lineup-strength features | Next |
 | 3c | Probability calibration layer (isotonic/Platt on validation) if reliability diagrams show bias | Next |

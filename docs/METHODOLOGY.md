@@ -106,3 +106,20 @@ The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
 1. The only edge the system detects is **price-shopping**: prices at individual bookmakers that exceed a sharp de-vigged consensus. Positive CLV is credible evidence that those prices really were above fair value. However, 78% of test bets came from a single soft bookmaker (1xBet) that football-data stopped publishing after 2024-25. Volume has since fallen sharply, and such bookmakers often limit winning accounts.
 2. ROI is positive, but its confidence interval comfortably includes zero. **This is not proof of a persistent advantage.**
 3. Next model improvements must beat the market's log loss to earn non-zero weight. Candidates are xG-based ratings, lineup strength, and fresher odds snapshots (Roadmap 2b/3b). Until then, recommendations should be read as "this price is above the sharp consensus", not "the model knows better".
+
+## 9. National teams (model `dc-intl-0.1`) — monitoring mode
+
+- **Data:** every men's international result (martj42/international_results, CC0) with tournament and a neutral-venue flag. ESPN scoreboards fill the gap after the dataset's last update and supply fixtures plus DraftKings odds (opening and current).
+- **Model:** the same Dixon-Coles likelihood, with the home-advantage term switched off at neutral venues, over an 8-year window. Friendlies get their own weight factor. Teams need at least 15 matches in the window.
+- **Hyperparameters** were tuned on 2023–24 walk-forward predictions (monthly refits): ξ = 0.001/day (half-life ≈ 1.9 years), ridge = 0.1, friendly weight = 1.0. Several optima sat at grid edges, so the grid was extended once.
+- **Known bias:** on the test period the model is **underconfident on heavy favourites**. Predicted home-win probabilities of 0.70–0.80 hit 0.83, and 0.80–0.90 hit 0.94. A power calibration fitted on the tune period came out at a ≈ 0.98 and did not correct it, and it was not re-fitted on test data. Monitoring rows where the model backs an underdog against a >70% bookmaker favourite are flagged as likely artifacts. Fix candidates (Roadmap 3c): per-outcome Platt/isotonic calibration on a rolling validation window, and a goal model with over-dispersion or a mismatch-dependent draw term.
+- **Out-of-sample test (Jan 2025 – Oct 2026, 1,758 matches), 1X2 log loss:**
+
+| Subset | n | Dixon-Coles | Elo | Base rate |
+|---|---|---|---|---|
+| All | 1,758 | **0.8294** (calibrated 0.8305) | 0.8434 | 1.0469 |
+| Competitive | 1,273 | **0.8167** | 0.8304 | 1.0480 |
+| Friendlies | 485 | **0.8627** | 0.8777 | 1.0439 |
+
+  DC beats Elo significantly (paired 95% CI of the log-loss difference: −0.025 to −0.004).
+- **Why there are no recommendations yet:** free international odds come from one bookmaker, and there is no free history of international odds. The model's skill *relative to the market*, which is what matters for value, therefore cannot be backtested. The system publishes model-vs-book comparisons as **monitoring signals**, stores every prediction with the bookmaker's de-vigged probability, and scores both once results arrive (dashboard → Model analytics → live prediction tracking). Once roughly 300 or more matches have settled, a blend weight can be fitted on that live out-of-sample record. Adding multi-bookmaker odds (The Odds API free key) would allow consensus pricing like the club-football pipeline.

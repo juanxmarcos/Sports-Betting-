@@ -114,6 +114,24 @@ Sources: {% for u in r.urls %}<{{ u }}> {% endfor %}
 {% for c in s.top_candidates[:10] %}| {{ c.match }} ({{ c.league }}) | {{ c.market }} {{ c.selection }}{% if c.line is not none %} {{ c.line }}{% endif %} | {{ "%.2f"|format(c.odds) }} {{ c.bookmaker }} | {{ "%.1f"|format(c.final_q*100) }}% | {{ "%+.1f"|format(c.ev*100) }}% | {{ "%+.1f"|format(c.ev_lower*100) }}% | {{ c.reason }} |
 {% endfor %}
 
+## International fixtures — model monitoring (not recommendations)
+
+{% if intl.rows %}{{ intl.analysed }} national-team matches analysed in the next 48h (model `dc-intl-0.1`,
+trained on {{ intl.train_matches }} internationals). Odds come from a **single bookmaker** (DraftKings via ESPN),
+and no free historical international odds exist to validate the model against the market. These are
+therefore **monitoring signals, not selections**: they are tracked and scored, and the model earns weight
+only once live out-of-sample evidence supports it.
+
+| Kick-off | Competition | Match | Model H/D/A | Book H/D/A (no-vig) | Largest model–book gap |
+|---|---|---|---|---|---|
+{% for r in intl.rows[:40] %}| {{ r.ko }} | {{ r.competition }} | {{ r.home }} v {{ r.away }}{% if r.neutral %} (N){% endif %} | {{ "%.0f/%.0f/%.0f"|format(r.model_1x2[0]*100, r.model_1x2[1]*100, r.model_1x2[2]*100) }} | {% if r.book_1x2 %}{{ "%.0f/%.0f/%.0f"|format(r.book_1x2[0]*100, r.book_1x2[1]*100, r.book_1x2[2]*100) }}{% else %}—{% endif %} | {% if r.largest_gap %}{{ r.largest_gap.market }} {{ r.largest_gap.selection }}{% if r.largest_gap.line is not none %} {{ r.largest_gap.line }}{% endif %} @ {{ "%.2f"|format(r.largest_gap.odds) }}: model EV {{ "%+.1f"|format(r.largest_gap.model_ev*100) }}%{% if r.largest_gap.flag %} ⚠ bias{% endif %}{% endif %} |
+{% endfor %}
+⚠ bias = the model is backing an underdog against a heavy bookmaker favourite (>70%). Out of sample the model
+is underconfident on heavy favourites, so these gaps are most likely model error, not value.
+
+{% if intl.skipped %}Skipped: {{ intl.skipped|join("; ") }}{% endif %}
+{% elif intl.error %}International analysis failed: {{ intl.error }}{% else %}No national-team fixtures in the next 48h.{% endif %}
+
 ## Track record (paper, fixed 1-unit stakes)
 
 {% if perf.settled %}Settled {{ perf.settled }} · W {{ perf.won }} / L {{ perf.lost }} / P {{ perf.push }} ·
@@ -122,6 +140,18 @@ profit {{ "%+.2f"|format(perf.profit_units) }}u · yield {{ "%+.1f"|format(perf.
 avg CLV {{ "%+.1f"|format((perf.avg_clv or 0)*100) }}% · max drawdown {{ perf.max_drawdown_units }}u.
 {% endif %}*{{ perf.sample_warning }}*
 """
+
+
+def _intl(s: dict) -> dict:
+    i = dict(s.get("international") or {})
+    if not i:
+        p = config.DATA_DIR / "international_latest.json"
+        if p.exists():
+            i = json.loads(p.read_text())
+    i.setdefault("rows", [])
+    for r in i["rows"]:
+        r["ko"] = local(r["kickoff_utc"])
+    return i
 
 
 def write_daily(con, now: datetime, s: dict):
@@ -146,7 +176,7 @@ def write_daily(con, now: datetime, s: dict):
         leagues=", ".join(config.FOOTBALL_LEAGUES.get(k, k) for k in s.get("leagues", {})),
         recs=recs, best_ev=(f"{max(r['ev'] for r in recs) * 100:+.1f}%" if recs else "—"),
         blend="/".join(f"{config.MODEL.blend_weight.get(k, 0):.2f}" for k in ("1X2", "OU", "AH")),
-        warnings=s.get("warnings", [])[:25], rules=config.RULES, perf=rec_metrics(con))
+        warnings=s.get("warnings", [])[:25], rules=config.RULES, perf=rec_metrics(con), intl=_intl(s))
     config.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     p = config.REPORTS_DIR / f"{day}.md"
     p.write_text(md)

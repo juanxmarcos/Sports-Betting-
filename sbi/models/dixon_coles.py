@@ -37,30 +37,33 @@ class DCModel:
     def has(self, team: str) -> bool:
         return team in self.index
 
-    def rates(self, home: str, away: str, theta: np.ndarray | None = None) -> tuple[float, float]:
+    def rates(self, home: str, away: str, theta: np.ndarray | None = None,
+              neutral: bool = False) -> tuple[float, float]:
         ix = self.index
         i, j = ix[home], ix[away]
+        hf = 0.0 if neutral else 1.0
         if theta is None:
-            return (float(np.exp(self.home + self.att[i] + self.dfn[j])),
+            return (float(np.exp(hf * self.home + self.att[i] + self.dfn[j])),
                     float(np.exp(self.att[j] + self.dfn[i])))
         n = len(self.teams)
         h, att, dfn = theta[0], theta[1:1 + n], theta[1 + n:1 + 2 * n]
-        return float(np.exp(h + att[i] + dfn[j])), float(np.exp(att[j] + dfn[i]))
+        return float(np.exp(hf * h + att[i] + dfn[j])), float(np.exp(att[j] + dfn[i]))
 
     def theta(self) -> np.ndarray:
         return np.concatenate([[self.home], self.att, self.dfn])
 
-    def score_matrix(self, home: str, away: str, max_goals: int = 10, theta=None) -> np.ndarray:
-        lam, mu = self.rates(home, away, theta)
+    def score_matrix(self, home: str, away: str, max_goals: int = 10, theta=None,
+                     neutral: bool = False) -> np.ndarray:
+        lam, mu = self.rates(home, away, theta, neutral)
         return score_matrix(lam, mu, self.rho, max_goals)
 
     def sample_matrices(self, home: str, away: str, n: int, max_goals: int = 10,
-                        rng: np.random.Generator | None = None) -> list[np.ndarray]:
+                        rng: np.random.Generator | None = None, neutral: bool = False) -> list[np.ndarray]:
         if self.cov is None:
-            return [self.score_matrix(home, away, max_goals)]
+            return [self.score_matrix(home, away, max_goals, neutral=neutral)]
         rng = rng or np.random.default_rng(0)
         draws = rng.multivariate_normal(self.theta(), self.cov, size=n, method="cholesky")
-        return [self.score_matrix(home, away, max_goals, th) for th in draws]
+        return [self.score_matrix(home, away, max_goals, th, neutral) for th in draws]
 
 
 _LOGFACT = np.cumsum(np.log(np.maximum(np.arange(64), 1)))
@@ -80,12 +83,14 @@ def score_matrix(lam: float, mu: float, rho: float, max_goals: int = 10) -> np.n
     return m / m.sum()
 
 
-def _nll_grad(params, hi, ai, hg, ag, w, n, ridge):
+def _nll_grad(params, hi, ai, hg, ag, w, n, ridge, hf=None):
     h = params[0]
     att = params[1:1 + n]
     dfn = params[1 + n:1 + 2 * n]
     rho = params[-1]
-    ll_lam = h + att[hi] + dfn[ai]
+    if hf is None:
+        hf = np.ones_like(hg)
+    ll_lam = h * hf + att[hi] + dfn[ai]
     ll_mu = att[ai] + dfn[hi]
     lam, mu = np.exp(ll_lam), np.exp(ll_mu)
 
@@ -119,7 +124,7 @@ def _nll_grad(params, hi, ai, hg, ag, w, n, ridge):
     nll = -(w * ll).sum() + ridge * (att @ att + dfn @ dfn)
     wl, wm = w * g_lam, w * g_mu
     grad = np.zeros_like(params)
-    grad[0] = -wl.sum()
+    grad[0] = -(wl * hf).sum()
     g_att = -(np.bincount(hi, wl, n) + np.bincount(ai, wm, n))
     g_def = -(np.bincount(ai, wl, n) + np.bincount(hi, wm, n))
     grad[1:1 + n] = g_att + 2 * ridge * att
@@ -130,7 +135,8 @@ def _nll_grad(params, hi, ai, hg, ag, w, n, ridge):
 
 def fit(home: np.ndarray, away: np.ndarray, hg: np.ndarray, ag: np.ndarray,
         days_ago: np.ndarray, xi: float = 0.0019, ridge: float = 2.0,
-        with_cov: bool = True, init: DCModel | None = None) -> DCModel:
+        with_cov: bool = True, init: DCModel | None = None,
+        neutral: np.ndarray | None = None, match_weight: np.ndarray | None = None) -> DCModel:
     """Fit on matches strictly before the cutoff (caller guarantees no leakage)."""
     teams = sorted(set(home) | set(away))
     ix = {t: i for i, t in enumerate(teams)}
@@ -139,6 +145,9 @@ def fit(home: np.ndarray, away: np.ndarray, hg: np.ndarray, ag: np.ndarray,
     hg = np.asarray(hg, float)
     ag = np.asarray(ag, float)
     w = np.exp(-xi * np.asarray(days_ago, float))
+    if match_weight is not None:
+        w = w * np.asarray(match_weight, float)
+    hf = np.ones(len(hg)) if neutral is None else 1.0 - np.asarray(neutral, float)
     n = len(teams)
     x0 = np.zeros(2 * n + 2)
     x0[0] = 0.25
@@ -150,7 +159,7 @@ def fit(home: np.ndarray, away: np.ndarray, hg: np.ndarray, ag: np.ndarray,
                 x0[1 + i], x0[1 + n + i] = init.att[k], init.dfn[k]
         x0[0], x0[-1] = init.home, init.rho
     bounds = [(None, None)] * (2 * n + 1) + [(-0.25, 0.25)]
-    res = minimize(_nll_grad, x0, args=(hi, ai, hg, ag, w, n, ridge), jac=True,
+    res = minimize(_nll_grad, x0, args=(hi, ai, hg, ag, w, n, ridge, hf), jac=True,
                    method="L-BFGS-B", bounds=bounds, options={"maxiter": 500})
     p = res.x
     model = DCModel(teams=teams, home=float(p[0]), att=p[1:1 + n].copy(),
@@ -158,21 +167,22 @@ def fit(home: np.ndarray, away: np.ndarray, hg: np.ndarray, ag: np.ndarray,
     counts = np.bincount(hi, minlength=n) + np.bincount(ai, minlength=n)
     model.n_matches = {t: int(counts[i]) for t, i in ix.items()}
     if with_cov:
-        model.cov = _covariance(model, hi, ai, w, ridge)
+        model.cov = _covariance(model, hi, ai, w, ridge, hf)
     return model
 
 
-def _covariance(model: DCModel, hi, ai, w, ridge) -> np.ndarray | None:
+def _covariance(model: DCModel, hi, ai, w, ridge, hf=None) -> np.ndarray | None:
     """Inverse observed Fisher information of the (penalised) Poisson log-likelihood."""
     n = len(model.teams)
     k = 1 + 2 * n
-    lam = np.exp(model.home + model.att[hi] + model.dfn[ai])
+    hf = np.ones(len(hi)) if hf is None else hf
+    lam = np.exp(model.home * hf + model.att[hi] + model.dfn[ai])
     mu = np.exp(model.att[ai] + model.dfn[hi])
     m = len(hi)
     X_l = np.zeros((m, k))
     X_m = np.zeros((m, k))
     r = np.arange(m)
-    X_l[:, 0] = 1
+    X_l[:, 0] = hf
     X_l[r, 1 + hi] = 1
     X_l[r, 1 + n + ai] = 1
     X_m[r, 1 + ai] = 1

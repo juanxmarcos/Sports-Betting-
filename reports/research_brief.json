@@ -1,6 +1,189 @@
 {
-  "generated": "2026-11-12T17:37:53+00:00",
+  "generated": "2026-11-12T18:27:33+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [],
-  "upcoming_events": []
+  "upcoming_events": [
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927206",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T13:00:00+00:00",
+      "home": "Comoros",
+      "away": "Congo"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927187",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T13:00:00+00:00",
+      "home": "Mozambique",
+      "away": "Ethiopia"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927203",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T13:00:00+00:00",
+      "home": "Zambia",
+      "away": "Burundi"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927208",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T16:00:00+00:00",
+      "home": "Burkina Faso",
+      "away": "Mauritania"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927186",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T16:00:00+00:00",
+      "home": "Cape Verde",
+      "away": "Liberia"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927192",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T16:00:00+00:00",
+      "home": "Gabon",
+      "away": "Lesotho"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927183",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T16:00:00+00:00",
+      "home": "Nigeria",
+      "away": "Tanzania"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927212",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T16:00:00+00:00",
+      "home": "South Africa",
+      "away": "Kenya"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927205",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T16:00:00+00:00",
+      "home": "Tunisia",
+      "away": "Libya"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861162",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T17:00:00+00:00",
+      "home": "Moldova",
+      "away": "Kazakhstan"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927190",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T19:00:00+00:00",
+      "home": "Egypt",
+      "away": "Malawi"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927185",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T19:00:00+00:00",
+      "home": "Mali",
+      "away": "Rwanda"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861155",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Andorra",
+      "away": "Gibraltar"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861157",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Bulgaria",
+      "away": "Iceland"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861153",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Liechtenstein",
+      "away": "Azerbaijan"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861154",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Luxembourg",
+      "away": "Estonia"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861159",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Netherlands",
+      "away": "Greece"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861161",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Scotland",
+      "away": "North Macedonia"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861158",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Serbia",
+      "away": "Germany"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861160",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Slovakia",
+      "away": "Faroe Islands"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261113:401861156",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Slovenia",
+      "away": "Switzerland"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261113:401927191",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-13T20:00:00+00:00",
+      "home": "Morocco",
+      "away": "Niger"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861163",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T14:00:00+00:00",
+      "home": "Kosovo",
+      "away": "Israel"
+    },
+    {
+      "event_id": "football:INT:caf.nations_qual:20261114:401927188",
+      "league": "INT:caf.nations_qual",
+      "kickoff_utc": "2026-11-14T16:00:00+00:00",
+      "home": "Uganda",
+      "away": "Botswana"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861164",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T17:00:00+00:00",
+      "home": "Georgia",
+      "away": "Hungary"
+    },
+    {
+      "event_id": "football:INT:uefa.nations:20261114:401861165",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-14T17:00:00+00:00",
+      "home": "Norway",
+      "away": "Wales"
+    }
+  ]
 }

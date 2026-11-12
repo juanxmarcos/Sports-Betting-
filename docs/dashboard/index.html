@@ -37,13 +37,14 @@ canvas{max-height:300px}
 <nav id="nav"></nav>
 <main>
 <section id="today"></section>
+<section id="intl"></section>
 <section id="upcoming"></section>
 <section id="history"></section>
 <section id="models"></section>
 <section id="status"></section>
 </main>
 <script>
-const TABS=[["today","Today's opportunities"],["upcoming","Upcoming fixtures"],["history","Performance"],["models","Model analytics"],["status","System status"]];
+const TABS=[["today","Today's opportunities"],["intl","International"],["upcoming","Upcoming fixtures"],["history","Performance"],["models","Model analytics"],["status","System status"]];
 const pct=(x,d=1)=>x==null||isNaN(x)?"—":(x*100).toFixed(d)+"%";
 const spct=(x,d=1)=>x==null||isNaN(x)?"—":(x>0?"+":"")+(x*100).toFixed(d)+"%";
 const num=(x,d=2)=>x==null||isNaN(x)?"—":Number(x).toFixed(d);
@@ -80,6 +81,13 @@ function detail(r){const e=r.evidence||{};const f=e.form||{};const mm=e.model_ma
  <h3>Research flags</h3>${r.notes.length?`<ul>${r.notes.map(n=>`<li><span class="chip">${esc(n.evidence_type)}</span> <span class="chip">${esc(n.category)}</span> ${esc(n.claim)} ${n.source_url?`<a href="${esc(n.source_url)}" target="_blank" rel="noopener">source</a>`:""}</li>`).join("")}</ul>`:'<span class="muted">None recorded. Team news is not modelled.</span>'}
  <h3>Sources</h3>${r.source_urls.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")}</div></div>`}
 
+function intl(D){const I=D.international,B=D.intl_backtest;let h="";
+ h+=`<div class="card warn" style="margin-bottom:12px">Monitoring only, not recommendations. International odds come from a single bookmaker (DraftKings via ESPN), and no free historical international odds exist to validate the model against the market. Every prediction is tracked so the model can earn a validated weight.</div>`;
+ if(B){const t=B.test_logloss;h+=`<div class="card" style="margin-bottom:12px"><h2>International model validation (walk-forward ${esc(B.test[0])} → ${esc(B.test[1])})</h2><div class="tbl"><table><thead><tr><th>Subset</th><th>n</th><th>Dixon-Coles</th><th>Elo</th><th>Base rate</th></tr></thead><tbody>${Object.entries(t).map(([k,v])=>`<tr><td>${k}</td><td>${v.n}</td><td>${num(v.dc,4)}</td><td>${num(v.elo,4)}</td><td>${num(v.base_rate,4)}</td></tr>`).join("")}</tbody></table></div><p class="note">1X2 log loss, lower is better. DC − Elo 95% CI: ${B.dc_minus_elo_ci95.join(" … ")} (negative = DC better). Hyperparameters: ${Object.entries(B.hyperparameters).map(([k,v])=>k+" "+v).join(", ")}.</p></div>`}
+ const rows=(I&&I.rows)||[];h+=`<div class="card"><h2>National-team fixtures, next 48h (${rows.length})</h2>`;
+ if(!rows.length)h+=`<div class="empty">${I&&I.error?esc(I.error):"No national-team fixtures in the window."}</div>`;
+ else{h+=`<div class="tbl"><table><thead><tr><th>Kick-off (UTC)</th><th>Competition</th><th>Match</th><th>Model H/D/A</th><th>Book H/D/A</th><th>xG</th><th>Largest gap</th><th>Model EV</th></tr></thead><tbody>${rows.map(r=>{const g=r.largest_gap;return `<tr><td>${esc(r.kickoff_utc.slice(0,16).replace("T"," "))}</td><td><span class="chip">${esc(r.competition)}</span></td><td>${esc(r.home)} v ${esc(r.away)}${r.neutral?' <span class="chip">N</span>':""}</td><td>${r.model_1x2.map(x=>pct(x,0)).join(" / ")}</td><td class="muted">${r.book_1x2?r.book_1x2.map(x=>pct(x,0)).join(" / "):"—"}</td><td>${r.xg.join("–")}</td><td>${g?esc(g.market+" "+g.selection+(g.line!=null?" "+g.line:"")+" @ "+num(g.odds)):"—"}</td><td class="${g?cls(g.model_ev):""}">${g?spct(g.model_ev):"—"}${g&&g.flag?` <span class="chip warn" title="${esc(g.flag)}">bias</span>`:""}</td></tr>`}).join("")}</tbody></table></div>`}
+ document.getElementById("intl").innerHTML=h+`</div>`}
 function upcoming(D){const u=D.upcoming;let h=`<div class="card"><h2>Monitored fixtures (${u.length})</h2>`;
  if(!u.length)h+=`<div class="empty">No scheduled fixtures in the database. football-data.co.uk usually publishes upcoming fixtures with odds on Tuesdays and Fridays; international breaks have none.</div>`;
  else{h+=`<div class="tbl"><table><thead><tr><th>Kick-off</th><th>League</th><th>Match</th><th>Model H/D/A</th><th>Market H/D/A</th><th>Books</th></tr></thead><tbody>`;
@@ -117,7 +125,7 @@ function status(D){const last=D.jobs.find(j=>j.status=="ok");let h=`<div class="
  <div class="card"><h2>Recent jobs</h2><div class="tbl"><table><thead><tr><th>Job</th><th>Started</th><th>Finished</th><th>Status</th><th>Details</th></tr></thead><tbody>${D.jobs.map(j=>`<tr><td>${esc(j.job)}</td><td>${esc(j.started_at)}</td><td>${esc(j.finished_at||"")}</td><td class="${j.status=="error"?"neg":(j.status=="ok"?"pos":"")}">${esc(j.status)}</td><td class="muted" style="white-space:normal;max-width:520px">${esc((j.details||"").slice(0,300))}</td></tr>`).join("")}</tbody></table></div></div>`;
  document.getElementById("status").innerHTML=h}
 
-fetch("data.json",{cache:"no-store"}).then(r=>r.json()).then(D=>{document.getElementById("gen").textContent=`Updated ${D.generated_local} · model ${D.model_version}`;nav();today(D);upcoming(D);history_(D);models(D);status(D)})
+fetch("data.json",{cache:"no-store"}).then(r=>r.json()).then(D=>{document.getElementById("gen").textContent=`Updated ${D.generated_local} · model ${D.model_version}`;nav();today(D);intl(D);upcoming(D);history_(D);models(D);status(D)})
 .catch(e=>{document.querySelector("main").innerHTML=`<div class="card empty">Could not load data.json (${esc(e)}). Serve this folder over HTTP: <code>python -m sbi serve</code></div>`});
 </script>
 </body>

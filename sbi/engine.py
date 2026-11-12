@@ -42,10 +42,12 @@ class Candidate:
 
 def price_event(model: DCModel, home: str, away: str, books: dict, blend_w: dict,
                 commission: float, n_draws: int = 200, max_goals: int = 10,
-                rng: np.random.Generator | None = None, markets=("1X2", "OU", "AH")) -> list[Candidate]:
+                rng: np.random.Generator | None = None, markets=("1X2", "OU", "AH"),
+                neutral: bool = False) -> list[Candidate]:
     """books: {(market, line): {bookmaker: {selection: price}}}"""
-    m = model.score_matrix(home, away, max_goals)
-    draws = np.array(model.sample_matrices(home, away, n_draws, max_goals, rng)) if n_draws else None
+    m = model.score_matrix(home, away, max_goals, neutral=neutral)
+    draws = (np.array(model.sample_matrices(home, away, n_draws, max_goals, rng, neutral))
+             if n_draws else None)
     out: list[Candidate] = []
     for (market, line), book in books.items():
         if market not in markets:
