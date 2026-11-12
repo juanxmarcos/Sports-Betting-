@@ -32,4 +32,4 @@ python -m pytest -q
 Automation: `.github/workflows/daily.yml` runs every 2 hours and commits the data, reports and site. A Claude Code scheduled task (`automation/claude_research_routine.md`) adds evidence-graded team-news notes. Optional: the `ODDS_API_KEY` secret enables multi-bookmaker odds (free tier, budgeted per day).
 
 ## Docs
-[Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)
+[Development workflow](docs/DEVELOPMENT_WORKFLOW.md) · [Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)
