@@ -1,7 +1,53 @@
 {
-  "generated": "2026-11-12T21:48:32+00:00",
+  "generated": "2026-11-12T21:51:12+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
-  "open_selections": [],
+  "open_selections": [
+    {
+      "rec_id": "2e41a414738eaf55",
+      "event_id": "football:INT:uefa.nations:20261113:401861156",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Slovenia",
+      "away": "Switzerland",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 6.0,
+      "bookmaker": "Unibet (SE)",
+      "final_prob": 0.17212577482909944,
+      "ev": 0.032754648974596685
+    },
+    {
+      "rec_id": "5eaaef5043f53bea",
+      "event_id": "football:INT:uefa.nations:20261113:401861155",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-13T19:45:00+00:00",
+      "home": "Andorra",
+      "away": "Gibraltar",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 1.8,
+      "bookmaker": "LeoVegas (SE)",
+      "final_prob": 0.5730277208355329,
+      "ev": 0.031449897503959205
+    },
+    {
+      "rec_id": "a47585838eca7fd0",
+      "event_id": "football:INT:uefa.nations:20261115:401861175",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-15T19:45:00+00:00",
+      "home": "Spain",
+      "away": "England",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 4.55,
+      "bookmaker": "1xBet",
+      "final_prob": 0.23265707691586143,
+      "ev": 0.05858969996716956
+    }
+  ],
   "upcoming_events": [
     {
       "event_id": "tennis:WTA:20261112:187376",
