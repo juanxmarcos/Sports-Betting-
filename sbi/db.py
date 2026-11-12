@@ -145,6 +145,24 @@ CREATE TABLE IF NOT EXISTS research_notes (
     created_at    TEXT NOT NULL
 );
 
+-- Pre-game reassessments: append-only, the original recommendation is never modified.
+CREATE TABLE IF NOT EXISTS rec_updates (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    rec_id        TEXT NOT NULL REFERENCES recommendations(rec_id),
+    checked_at    TEXT NOT NULL,
+    status        TEXT NOT NULL CHECK (status IN ('active','updated','withdrawn','expired')),
+    best_odds     REAL,
+    best_bookmaker TEXT,
+    original_book_odds REAL,
+    consensus_prob REAL,
+    ev_now        REAL,
+    note          TEXT
+);
+CREATE TRIGGER IF NOT EXISTS trg_rec_updates_append_only
+BEFORE UPDATE ON rec_updates BEGIN SELECT RAISE(ABORT, 'rec_updates is append-only'); END;
+CREATE TRIGGER IF NOT EXISTS trg_rec_updates_nodelete
+BEFORE DELETE ON rec_updates BEGIN SELECT RAISE(ABORT, 'rec_updates is append-only'); END;
+
 CREATE TABLE IF NOT EXISTS job_runs (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     job         TEXT NOT NULL,

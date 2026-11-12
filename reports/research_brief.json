@@ -1,8 +1,22 @@
 {
-  "generated": "2026-11-12T20:14:49+00:00",
+  "generated": "2026-11-12T20:34:13+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [],
   "upcoming_events": [
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261112:401929779",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-12T22:00:00+00:00",
+      "home": "Aruba",
+      "away": "Martinique"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261112:401929796",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-12T23:00:00+00:00",
+      "home": "Antigua and Barbuda",
+      "away": "Trinidad and Tobago"
+    },
     {
       "event_id": "football:INT:concacaf.nations.league:20261113:401929776",
       "league": "INT:concacaf.nations.league",
@@ -58,6 +72,13 @@
       "kickoff_utc": "2026-11-13T14:45:00+00:00",
       "home": "Qatar",
       "away": "Australia"
+    },
+    {
+      "event_id": "football:INT:fifa.friendly:20261113:401933636",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-13T15:00:00+00:00",
+      "home": "Iraq",
+      "away": "Lebanon"
     },
     {
       "event_id": "football:INT:caf.nations_qual:20261113:401927208",
@@ -221,11 +242,25 @@
       "away": "Saint Kitts and Nevis"
     },
     {
+      "event_id": "football:INT:fifa.friendly:20261113:401919975",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-13T20:00:00+00:00",
+      "home": "Jordan",
+      "away": "Indonesia"
+    },
+    {
       "event_id": "football:INT:fifa.friendly:20261113:401930876",
       "league": "INT:fifa.friendly",
       "kickoff_utc": "2026-11-13T23:00:00+00:00",
       "home": "Argentina",
       "away": "Uruguay"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261113:401929712",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-13T23:00:00+00:00",
+      "home": "Saint Martin",
+      "away": "El Salvador"
     },
     {
       "event_id": "football:INT:fifa.friendly:20261114:401921325",
@@ -242,6 +277,13 @@
       "away": "Costa Rica"
     },
     {
+      "event_id": "football:INT:concacaf.nations.league:20261114:401929775",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-14T00:00:00+00:00",
+      "home": "Montserrat",
+      "away": "Nicaragua"
+    },
+    {
       "event_id": "football:INT:fifa.friendly:20261114:401930878",
       "league": "INT:fifa.friendly",
       "kickoff_utc": "2026-11-14T01:00:00+00:00",
@@ -256,6 +298,20 @@
       "away": "Canada"
     },
     {
+      "event_id": "football:INT:fifa.friendly:20261114:401933864",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-14T05:30:00+00:00",
+      "home": "Tahiti",
+      "away": "Cook Islands"
+    },
+    {
+      "event_id": "football:INT:fifa.friendly:20261114:401930879",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-14T06:00:00+00:00",
+      "home": "Bahrain",
+      "away": "Yemen"
+    },
+    {
       "event_id": "football:INT:fifa.friendly:20261114:401916337",
       "league": "INT:fifa.friendly",
       "kickoff_utc": "2026-11-14T10:15:00+00:00",
@@ -263,11 +319,32 @@
       "away": "Brazil"
     },
     {
+      "event_id": "football:INT:fifa.friendly:20261114:401930236",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-14T12:00:00+00:00",
+      "home": "China",
+      "away": "Malaysia"
+    },
+    {
+      "event_id": "football:INT:fifa.friendly:20261114:401930243",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-14T12:00:00+00:00",
+      "home": "Taiwan",
+      "away": "Kyrgyzstan"
+    },
+    {
       "event_id": "football:INT:uefa.nations:20261114:401861163",
       "league": "INT:uefa.nations",
       "kickoff_utc": "2026-11-14T14:00:00+00:00",
       "home": "Kosovo",
       "away": "Israel"
+    },
+    {
+      "event_id": "football:INT:fifa.friendly:20261114:401932237",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-14T15:00:00+00:00",
+      "home": "Palestine",
+      "away": "Iran"
     },
     {
       "event_id": "football:INT:caf.nations_qual:20261114:401927188",
@@ -303,6 +380,13 @@
       "kickoff_utc": "2026-11-14T19:00:00+00:00",
       "home": "Angola",
       "away": "South Sudan"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261114:401929774",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-14T19:00:00+00:00",
+      "home": "Sint Maarten",
+      "away": "French Guiana"
     },
     {
       "event_id": "football:INT:uefa.nations:20261114:401861170",

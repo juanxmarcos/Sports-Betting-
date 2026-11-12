@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sports Betting Doyen</title>
+<meta name="description" content="Sports Betting Doyen — independent, evidence-based sports betting research across soccer, NFL, NBA, tennis and golf. Paper trading only; no guarantees.">
+<meta name="theme-color" content="#0B1220">
+<meta property="og:title" content="Sports Betting Doyen">
+<meta property="og:description" content="Today's strongest evidence-based betting opportunities, explained.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/doyen.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#/" aria-label="Sports Betting Doyen home">
+      <img src="assets/logo.svg" alt="">
+      <span class="wm"><small>Sports Betting</small><b>DOYEN</b></span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="#/" data-r="home">Today's Picks</a>
+      <a href="#/upcoming" data-r="upcoming">Upcoming</a>
+      <a href="#/history" data-r="history">Pick History</a>
+    </nav>
+    <div class="icons">
+      <a class="ibtn" href="#/watchlist" data-r="watchlist" title="Watchlist" aria-label="Watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.9l-5.3 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg><span class="lbl">Watchlist</span></a>
+      <a class="ibtn" href="#/ask" data-r="ask" title="Ask Doyen" aria-label="Ask Doyen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/></svg><span class="lbl">Ask Doyen</span></a>
+    </div>
+  </div>
+</header>
+<main id="app" aria-live="polite"><div class="skeleton" style="margin-top:24px"></div><div class="skeleton" style="margin-top:14px"></div></main>
+<footer>
+  <div><b style="color:var(--muted)">Sports Betting Doyen</b> is a research tool. Picks are estimates, never guarantees; most bets lose, including good ones.
+  Results shown are paper-traded at fixed one-unit stakes. No bets are ever placed automatically. Please gamble responsibly and only where legal.</div>
+  <div class="settings" style="margin-top:12px">
+    <label for="tz" class="faint">Times shown in</label>
+    <select id="tz" class="tz"></select>
+    <span id="updated" class="faint"></span>
+    <a href="https://github.com/juanxmarcos/Sports-Betting-/blob/main/docs/METHODOLOGY.md" target="_blank" rel="noopener">Methodology</a>
+    <a href="dev/" title="Developer diagnostics">Diagnostics</a>
+  </div>
+</footer>
+<nav class="tabbar" aria-label="Primary mobile">
+  <a href="#/" data-r="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.4l-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg>Today</a>
+  <a href="#/upcoming" data-r="upcoming"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>Upcoming</a>
+  <a href="#/history" data-r="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/><path d="M12 8v4l3 2"/></svg>History</a>
+  <a href="#/watchlist" data-r="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>Watchlist</a>
+</nav>
+<script src="assets/doyen.js"></script>
+</body>
+</html>

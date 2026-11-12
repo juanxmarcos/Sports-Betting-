@@ -299,21 +299,26 @@ def run(leagues: list[str], seasons: list[str], tune: list[str], validate: list[
          "AH": fit_blend_bin(val, "ah_model", "ah_mkt", "ah_y") or 0.0}
     print(f"  blend weights (validation): {w}")
 
-    # 3) betting simulation on TEST seasons only, using the deployed selection rules
+    # 3) betting simulation on TEST seasons only, deployed selection rules, three strategies:
+    #    market_only (w=0: price vs sharp consensus), model_only (w=1), blend (validation-fitted w).
+    #    When the fitted w is ~0 the blend IS the market-only strategy; that is reported explicitly
+    #    instead of printing two identical tables (audit finding A1).
     rules = config.RULES
-    bets = []
-    for div, (m, o) in data.items():
-        _, b = walk_forward(div, m, o, test[0], xi, rg, blend_w=w, rules=rules, n_draws=n_draws)
-        bets += b
-    bets = pd.DataFrame(bets)
-
-    # 4) pure line-shopping benchmark: same rules with w=0 (model ignored) -> isolates model value
-    bets0 = []
-    for div, (m, o) in data.items():
-        _, b = walk_forward(div, m, o, test[0], xi, rg, blend_w={"1X2": 0, "OU": 0, "AH": 0},
-                            rules=rules, n_draws=0)
-        bets0 += b
-    bets0 = pd.DataFrame(bets0)
+    strategies = {"market_only": {"1X2": 0.0, "OU": 0.0, "AH": 0.0},
+                  "model_only": {"1X2": 1.0, "OU": 1.0, "AH": 1.0}}
+    blend_is_market = all(v < 0.01 for v in w.values())
+    if not blend_is_market:
+        strategies["blend"] = w
+    results = {}
+    for name, bw in strategies.items():
+        bets = []
+        for div, (m, o) in data.items():
+            _, b = walk_forward(div, m, o, test[0], xi, rg, blend_w=bw, rules=rules,
+                                n_draws=n_draws if name != "market_only" else 0)
+            bets += b
+        results[name] = pd.DataFrame(bets)
+    bets = results.get("blend", results["market_only"])
+    bets0 = results["market_only"]
 
     report = {
         "model_version": config.MODEL.model_version,
@@ -327,6 +332,8 @@ def run(leagues: list[str], seasons: list[str], tune: list[str], validate: list[
             "market": round(bin_logloss(tst.dropna(subset=['ou_model'])['ou_mkt'], tst.dropna(subset=['ou_model'])['ou_y']), 5)},
         "test_bets": evaluate_bets(bets),
         "test_bets_market_only_benchmark": evaluate_bets(bets0),
+        "strategies": {k: evaluate_bets(v) for k, v in results.items()},
+        "blend_equals_market_only": blend_is_market,
         "rules": asdict(rules),
     }
     pred.to_csv(out_dir / "predictions.csv", index=False)

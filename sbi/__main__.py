@@ -22,6 +22,7 @@ def main(argv=None) -> int:
     b = sub.add_parser("backtest", help="walk-forward backtest; writes data/tuned.json")
     b.add_argument("--leagues", default="E0,E1,SP1,D1,I1,F1")
     b.add_argument("--quick", action="store_true", help="single league, small grid (smoke test)")
+    b.add_argument("--fixed", action="store_true", help="reuse tuned xi/ridge (skip the tuning grid)")
     n = sub.add_parser("note", help="record a contextual research finding (risk flag only)")
     n.add_argument("--event", required=True)
     n.add_argument("--category", required=True)
@@ -81,10 +82,14 @@ def main(argv=None) -> int:
             r = backtest.run(["E0"], seasons[4:], tune=["2223"], validate=["2324"], test=["2425", "2526", "2627"],
                              xi_grid=(0.0019,), ridge_grid=(2.0,), n_draws=50)
         else:
+            grid = {}
+            if args.fixed:
+                config.load_tuned()
+                grid = {"xi_grid": (config.MODEL.xi,), "ridge_grid": (config.MODEL.ridge,)}
             r = backtest.run(args.leagues.split(","), seasons, tune=["2021", "2122"], validate=["2223", "2324"],
-                             test=["2425", "2526", "2627"])
-        print(json.dumps({k: r[k] for k in ("hyperparameters", "blend_weight", "test_bets",
-                                            "test_bets_market_only_benchmark")}, indent=1, default=str))
+                             test=["2425", "2526", "2627"], **grid)
+        print(json.dumps({k: r[k] for k in ("hyperparameters", "blend_weight", "strategies",
+                                            "blend_equals_market_only")}, indent=1, default=str))
     elif args.cmd == "note":
         from .research import add_note
         print("note id", add_note(con, args.event, args.category, args.claim, args.evidence_type,

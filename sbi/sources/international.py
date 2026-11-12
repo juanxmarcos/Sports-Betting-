@@ -104,6 +104,8 @@ def _parse_event(e: dict, lg: str) -> dict | None:
         except (TypeError, ValueError):
             out["completed"] = False
     for o in c.get("odds") or []:
+        if not isinstance(o, dict):
+            continue
         bk = (o.get("provider") or {}).get("name", "ESPN odds")
         ml = o.get("moneyline") or {}
         for side, sel in (("home", "H"), ("away", "A")):
@@ -147,7 +149,8 @@ def scoreboard(lg: str, d: date, max_age_hours: float) -> list[dict]:
     for e in data.get("events", []):
         try:
             x = _parse_event(e, lg)
-        except (KeyError, TypeError, ValueError, AttributeError):
+        except (KeyError, TypeError, ValueError, AttributeError) as ex:
+            print(f"warning: skipped malformed ESPN event {e.get('id')} ({lg}): {ex}")
             continue  # one malformed event must not drop the whole day
         if x:
             out.append(x)
@@ -162,7 +165,7 @@ def collect(start: date, end: date, now: datetime, polite_delay: float = 0.15) -
         past = d < (now.date() - timedelta(days=2))
         for lg in COMPETITIONS:
             try:
-                events += scoreboard(lg, d, max_age_hours=24 * 365 if past else 1)
+                events += scoreboard(lg, d, max_age_hours=24 * 365 if past else 0.9)
             except Exception as e:  # noqa: BLE001
                 errors.append(f"{lg} {d}: {e}")
             time.sleep(0 if past else polite_delay)

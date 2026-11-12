@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SBI Research Desk</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#14181f;--muted:#5b6575;--line:#e3e6eb;--accent:#1f5eff;--pos:#0a7d45;--neg:#c0362c;--warn:#a86400;--chip:#eef1f6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1116;--panel:#161b22;--ink:#e6e9ee;--muted:#9aa4b2;--line:#262d36;--accent:#6c9bff;--pos:#3fbf7f;--neg:#ff6b5e;--warn:#e0a640;--chip:#1e252e}}
+:root[data-theme="dark"]{--bg:#0e1116;--panel:#161b22;--ink:#e6e9ee;--muted:#9aa4b2;--line:#262d36;--accent:#6c9bff;--pos:#3fbf7f;--neg:#ff6b5e;--warn:#e0a640;--chip:#1e252e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between;padding:16px;border-bottom:1px solid var(--line);background:var(--panel)}
+h1{font-size:18px;margin:0;letter-spacing:.2px}h2{font-size:15px;margin:0 0 10px}h3{font-size:14px;margin:14px 0 6px}
+.muted{color:var(--muted)}nav{display:flex;gap:4px;flex-wrap:wrap;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+nav button{border:0;background:none;color:var(--muted);padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--chip);color:var(--ink);font-weight:600}
+main{padding:16px;max-width:1280px;margin:0 auto}section{display:none}section.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .v{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums}.kpi .l{color:var(--muted);font-size:12px}
+.tbl{width:100%;overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:600;font-size:12px}
+tr.click{cursor:pointer}tr.click:hover{background:var(--chip)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.warn{color:var(--warn)}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 8px;font-size:12px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.detail{white-space:normal}.detail ul{margin:4px 0 0 18px;padding:0}
+canvas{max-height:300px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:820px){.two{grid-template-columns:1fr}}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<header><div><h1>SBI Research Desk</h1><span class="muted">Quantitative +EV research · paper trading only · no real-money bets</span></div>
+<div class="muted" id="gen"></div></header>
+<nav id="nav"></nav>
+<main>
+<section id="today"></section>
+<section id="intl"></section>
+<section id="upcoming"></section>
+<section id="history"></section>
+<section id="models"></section>
+<section id="status"></section>
+</main>
+<script>
+const TABS=[["today","Today's opportunities"],["intl","International"],["upcoming","Upcoming fixtures"],["history","Performance"],["models","Model analytics"],["status","System status"]];
+const pct=(x,d=1)=>x==null||isNaN(x)?"—":(x*100).toFixed(d)+"%";
+const spct=(x,d=1)=>x==null||isNaN(x)?"—":(x>0?"+":"")+(x*100).toFixed(d)+"%";
+const num=(x,d=2)=>x==null||isNaN(x)?"—":Number(x).toFixed(d);
+const cls=x=>x>0?"pos":(x<0?"neg":"");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function nav(){const n=document.getElementById("nav");n.innerHTML=TABS.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join("");
+ n.onclick=e=>{const k=e.target.dataset.k;if(!k)return;show(k)};const go=()=>{let k=location.hash.slice(1);show(TABS.some(t=>t[0]==k)?k:"today")};window.addEventListener("hashchange",go);go()}
+function show(k){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==k));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.k==k));history.replaceState(null,"","#"+k)}
+function kpi(l,v,c=""){return `<div class="card kpi"><div class="l">${l}</div><div class="v ${c}">${v}</div></div>`}
+
+function today(D){
+ const day=D.generated.slice(0,10);const recs=D.recommendations.filter(r=>r.published_at.slice(0,10)==day);
+ const open=D.recommendations.filter(r=>r.status=="open");
+ let h=`<div class="grid">${kpi("Published today",recs.length)}${kpi("Open selections",open.length)}${kpi("Best EV today",recs.length?spct(Math.max(...recs.map(r=>r.ev))):"—")}${kpi("Blend weight on model",`<span style="font-size:15px">${Object.entries(D.blend_weight).map(([k,v])=>k+" "+num(v,2)).join(" · ")}</span>`)}</div>`;
+ const list=open.length?open:[];
+ h+=`<div class="card"><h2>Open +EV research selections</h2>`;
+ if(!list.length){h+=`<div class="empty"><b>No qualifying opportunities today.</b><br>Nothing passed the conservative selection rules. No pick is better than a weak pick.</div>`}
+ else{h+=`<div class="tbl"><table><thead><tr><th>#</th><th>Kick-off</th><th>League</th><th>Match</th><th>Selection</th><th>Odds</th><th>Book</th><th>Model p</th><th>Market p</th><th>Final p</th><th>Fair</th><th>EV</th><th>Pess. EV</th></tr></thead><tbody>`;
+  list.forEach((r,i)=>{h+=`<tr class="click" onclick="toggle('d${i}')"><td>${r.rank??""}</td><td>${esc(r.ko_local)}</td><td><span class="chip">${esc(r.league)}</span></td><td>${esc(r.home)} v ${esc(r.away)}</td><td><b>${esc(r.desc)}</b></td><td>${num(r.odds)}</td><td>${esc(r.bookmaker)}</td><td>${pct(r.model_prob)}</td><td>${pct(r.market_prob)}</td><td>${pct(r.final_prob)}</td><td>${num(r.fair_odds)}</td><td class="${cls(r.ev)}">${spct(r.ev)}</td><td class="${cls(r.ev_lower)}">${spct(r.ev_lower)}</td></tr>
+  <tr id="d${i}" style="display:none"><td colspan="13" class="detail">${detail(r)}</td></tr>`});
+  h+=`</tbody></table></div>`}
+ h+=`<p class="note">Ranked by pessimistic EV (EV at the 10th-percentile model probability). Click a row for evidence, prices, risks and sources.</p></div>`;
+ document.getElementById("today").innerHTML=h}
+function toggle(id){const e=document.getElementById(id);e.style.display=e.style.display=="none"?"":"none"}
+function detail(r){const e=r.evidence||{};const f=e.form||{};const mm=e.model_markets||{};
+ const prices=Object.entries(e.all_prices||{}).map(([b,q])=>`${esc(b)}: ${Object.entries(q).map(([s,p])=>s+" "+p).join(" / ")}`).join("<br>");
+ return `<div class="two"><div><h3>Statistical evidence</h3>Expected goals ${e.expected_goals?.home}–${e.expected_goals?.away}${e.strength_rank?` · strength rank ${e.strength_rank.home} vs ${e.strength_rank.away} of ${e.strength_rank.of}`:""}${e.neutral_venue?" · neutral venue":""}<br>
+ Model 1X2 ${pct(mm["1X2:H"],0)} / ${pct(mm["1X2:D"],0)} / ${pct(mm["1X2:A"],0)} · O2.5 ${pct(mm["OU:over:2.5"],0)} · BTTS ${pct(mm["BTTS:yes"],0)}<br>
+ Form: ${Object.entries(f).map(([t,v])=>`${esc(t)} ${v.last} (GF ${v.gf} GA ${v.ga}${v.xg_for_avg!=null?`, xG ${v.xg_for_avg}/${v.xg_against_avg}`:""})`).join(" · ")}<br>
+ Consensus: ${esc(e.consensus_source)} · books ${e.n_bookmakers} · model p10 ${pct(e.model_q_p10)} · param sd ${pct(r.prob_sd)}
+ <h3>Prices</h3><div class="muted">${prices}</div><div class="muted">Odds snapshot: ${esc(r.odds_retrieved_at)}</div></div>
+ <div><h3>Why it could be wrong</h3><ul>${(e.risks||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+ <h3>Research flags</h3>${r.notes.length?`<ul>${r.notes.map(n=>`<li><span class="chip">${esc(n.evidence_type)}</span> <span class="chip">${esc(n.category)}</span> ${esc(n.claim)} ${n.source_url?`<a href="${esc(n.source_url)}" target="_blank" rel="noopener">source</a>`:""}</li>`).join("")}</ul>`:'<span class="muted">None recorded. Team news is not modelled.</span>'}
+ <h3>Sources</h3>${r.source_urls.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")}</div></div>`}
+
+function intl(D){const I=D.international,B=D.intl_backtest;let h="";
+ h+=`<div class="card warn" style="margin-bottom:12px">Model gaps below are monitoring signals, not recommendations: no free historical international odds exist to validate the model against the market, so it has weight 0. Real paper selections appear in Today's opportunities only when The Odds API supplies 3+ bookmakers and a price beats the sharp de-vigged consensus.</div>`;
+ if(B){const t=B.test_logloss;h+=`<div class="card" style="margin-bottom:12px"><h2>International model validation (walk-forward ${esc(B.test[0])} → ${esc(B.test[1])})</h2><div class="tbl"><table><thead><tr><th>Subset</th><th>n</th><th>Dixon-Coles</th><th>Elo</th><th>Base rate</th></tr></thead><tbody>${Object.entries(t).map(([k,v])=>`<tr><td>${k}</td><td>${v.n}</td><td>${num(v.dc,4)}</td><td>${num(v.elo,4)}</td><td>${num(v.base_rate,4)}</td></tr>`).join("")}</tbody></table></div><p class="note">1X2 log loss, lower is better. DC − Elo 95% CI: ${B.dc_minus_elo_ci95.join(" … ")} (negative = DC better). Hyperparameters: ${Object.entries(B.hyperparameters).map(([k,v])=>k+" "+v).join(", ")}.</p></div>`}
+ const rows=(I&&I.rows)||[];h+=`<div class="card"><h2>National-team fixtures, next 48h (${rows.length})</h2>`;
+ if(!rows.length)h+=`<div class="empty">${I&&I.error?esc(I.error):"No national-team fixtures in the window."}</div>`;
+ else{h+=`<div class="tbl"><table><thead><tr><th>Kick-off</th><th>Competition</th><th>Match</th><th>Model H/D/A</th><th>Book H/D/A</th><th>xG</th><th>Largest gap</th><th>Model EV</th></tr></thead><tbody>${rows.map(r=>{const g=r.largest_gap;return `<tr><td>${esc(r.ko_local||r.kickoff_utc)}</td><td><span class="chip">${esc(r.competition)}</span></td><td>${esc(r.home)} v ${esc(r.away)}${r.neutral?' <span class="chip">N</span>':""}</td><td>${r.model_1x2.map(x=>pct(x,0)).join(" / ")}</td><td class="muted">${r.book_1x2?r.book_1x2.map(x=>pct(x,0)).join(" / "):"—"}</td><td>${r.xg.join("–")}</td><td>${g?esc(g.market+" "+g.selection+(g.line!=null?" "+g.line:"")+" @ "+num(g.odds)):"—"}</td><td class="${g?cls(g.model_ev):""}">${g?spct(g.model_ev):"—"}${g&&g.flag?` <span class="chip warn" title="${esc(g.flag)}">bias</span>`:""}</td></tr>`}).join("")}</tbody></table></div>`}
+ document.getElementById("intl").innerHTML=h+`</div>`}
+function upcoming(D){const u=D.upcoming;let h=`<div class="card"><h2>Monitored fixtures (${u.length})</h2>`;
+ if(!u.length)h+=`<div class="empty">No scheduled fixtures in the database. football-data.co.uk usually publishes upcoming fixtures with odds on Tuesdays and Fridays; international breaks have none.</div>`;
+ else{h+=`<div class="tbl"><table><thead><tr><th>Kick-off</th><th>League</th><th>Match</th><th>Model H/D/A</th><th>Market H/D/A</th><th>Books</th></tr></thead><tbody>`;
+ u.forEach(r=>{h+=`<tr><td>${esc(r.ko_local)}</td><td><span class="chip">${esc(r.league)}</span></td><td>${esc(r.home)} v ${esc(r.away)}</td><td>${pct(r.p_home,0)} / ${pct(r.p_draw,0)} / ${pct(r.p_away,0)}</td><td class="muted">${pct(r.m_home,0)} / ${pct(r.m_draw,0)} / ${pct(r.m_away,0)}</td><td>${r.n_books}</td></tr>`});h+=`</tbody></table></div>`}
+ document.getElementById("upcoming").innerHTML=h+`</div>`}
+
+let charts=[];
+function history_(D){const P=D.performance;let h=`<div class="grid">${kpi("Settled",P.settled||0)}${kpi("Profit (units)",P.profit_units!=null?num(P.profit_units):"—",cls(P.profit_units))}${kpi("Yield",spct(P.yield),cls(P.yield))}${kpi("Yield 95% CI",P.yield_ci95?spct(P.yield_ci95[0])+" … "+spct(P.yield_ci95[1]):"—")}${kpi("Avg CLV",spct(P.avg_clv),cls(P.avg_clv))}${kpi("Max drawdown",P.max_drawdown_units!=null?num(P.max_drawdown_units)+"u":"—")}${kpi("Hit rate",pct(P.hit_rate))}${kpi("Expected profit",P.expected_profit_units!=null?num(P.expected_profit_units)+"u":"—")}</div>
+ <div class="card warn" style="margin-bottom:12px">${esc(P.sample_warning)}</div>
+ <div class="card" style="margin-bottom:12px"><h2>Cumulative paper P/L (units)</h2><canvas id="cum"></canvas></div>
+ <div class="two">${grp("By league",P.by_league)}${grp("By market",P.by_market)}</div><div class="two" style="margin-top:12px">${grp("By odds range",P.by_odds)}<div></div></div>
+ <div class="card" style="margin-top:12px"><h2>All published selections</h2><div class="tbl"><table><thead><tr><th>Published</th><th>Kick-off</th><th>Match</th><th>Selection</th><th>Odds</th><th>EV</th><th>Status</th><th>P/L</th><th>Close</th><th>CLV</th></tr></thead><tbody>${D.recommendations.map(r=>`<tr><td>${esc(r.published_at.slice(0,16))}</td><td>${esc(r.ko_local)}</td><td>${esc(r.home)} v ${esc(r.away)}</td><td>${esc(r.desc)}</td><td>${num(r.odds)} ${esc(r.bookmaker)}</td><td>${spct(r.ev)}</td><td>${esc(r.status)}</td><td class="${cls(r.pnl_units)}">${num(r.pnl_units)}</td><td>${num(r.closing_odds)}</td><td class="${cls(r.clv)}">${spct(r.clv)}</td></tr>`).join("")||'<tr><td colspan="10" class="empty">No selections published yet.</td></tr>'}</tbody></table></div></div>`;
+ document.getElementById("history").innerHTML=h;
+ if(P.series&&P.series.length){charts.push(new Chart(document.getElementById("cum"),{type:"line",data:{labels:P.series.map(s=>s.date),datasets:[{data:P.series.map(s=>s.cum),borderColor:css("--accent"),pointRadius:0,tension:.1,borderWidth:2}]},options:{plugins:{legend:{display:false}},scales:axes()}}))}}
+function grp(t,a){a=a||[];return `<div class="card"><h2>${t}</h2>${a.length?`<table><thead><tr><th></th><th>n</th><th>Profit</th><th>ROI</th><th>CLV</th></tr></thead><tbody>${a.map(g=>`<tr><td>${esc(g.key)}</td><td>${g.n}</td><td class="${cls(g.profit)}">${num(g.profit)}</td><td class="${cls(g.roi)}">${spct(g.roi)}</td><td>${spct(g.avg_clv)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">No data yet</div>'}</div>`}
+function axes(){return{x:{ticks:{color:css("--muted"),maxTicksLimit:8},grid:{color:css("--line")}},y:{ticks:{color:css("--muted")},grid:{color:css("--line")}}}}
+
+function models(D){const B=D.backtest,PR=D.predictions;let h="";
+ if(B){const t=B.test_1x2,v=B.validation_1x2,tb=B.test_bets,tb0=B.test_bets_market_only_benchmark;
+ const rows=["base_rate","elo","dixon_coles","market_pre","blend","market_closing"].filter(k=>t[k]);
+ h+=`<div class="card" style="margin-bottom:12px"><h2>Walk-forward backtest (out-of-sample test: ${B.seasons.test.join(", ")})</h2>
+ <p class="muted">Leagues ${B.leagues.join(", ")} · xi ${B.hyperparameters.xi} · ridge ${B.hyperparameters.ridge} · blend weights ${Object.entries(B.blend_weight).map(([k,v])=>k+" "+num(v,2)).join(", ")} · run ${esc(D.backtest_at)}</p>
+ <div class="tbl"><table><thead><tr><th>1X2 model</th><th>Test log loss</th><th>Test Brier</th><th>Validation log loss</th></tr></thead><tbody>${rows.map(k=>`<tr><td>${k}</td><td>${num(t[k].logloss,4)}</td><td>${num(t[k].brier,4)}</td><td>${v[k]?num(v[k].logloss,4):"—"}</td></tr>`).join("")}</tbody></table></div>
+ <p class="note">Lower is better. n=${t.n_matches} test matches. DC minus market log loss 95% CI: ${t.dc_minus_market_logloss_ci95.join(" … ")} (positive = market better). Base rate uses in-sample frequencies (optimistic).</p>
+ <div class="two"><div><h3>Simulated betting, deployed rules</h3>${betTbl(tb)}</div><div><h3>Benchmark: same rules, model ignored (pure price-shopping)</h3>${betTbl(tb0)}</div></div></div>
+ <div class="card" style="margin-bottom:12px"><h2>Calibration: DC home-win probability (test)</h2><canvas id="cal"></canvas></div>`}
+ else h+=`<div class="card empty">No backtest has been run yet (<code>python -m sbi backtest</code>).</div>`;
+ h+=`<div class="card"><h2>Live prediction tracking (all analysed fixtures)</h2>${PR.n_events?`<p>${PR.n_events} finished events. Model log loss ${num(PR.model_prob?.logloss,4)} vs market ${num(PR.market_prob?.logloss,4)}; Brier ${num(PR.model_prob?.brier,4)} vs ${num(PR.market_prob?.brier,4)}.</p>`:'<div class="empty">No finished events with stored predictions yet.</div>'}</div>`;
+ document.getElementById("models").innerHTML=h;
+ if(B&&B.test_1x2.calibration_dc_home){const c=B.test_1x2.calibration_dc_home;charts.push(new Chart(document.getElementById("cal"),{type:"scatter",data:{datasets:[{label:"bins",data:c.map(b=>({x:b.pred,y:b.obs})),backgroundColor:css("--accent"),pointRadius:5},{label:"perfect",type:"line",data:[{x:0,y:0},{x:1,y:1}],borderColor:css("--muted"),borderDash:[4,4],pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{min:0,max:1,title:{display:true,text:"predicted",color:css("--muted")},ticks:{color:css("--muted")},grid:{color:css("--line")}},y:{min:0,max:1,title:{display:true,text:"observed",color:css("--muted")},ticks:{color:css("--muted")},grid:{color:css("--line")}}}}}))}}
+function betTbl(b){if(!b||!b.n_bets)return '<div class="empty">No bets passed the rules.</div>';return `<table><tbody><tr><td>Bets</td><td>${b.n_bets}</td></tr><tr><td>Profit</td><td class="${cls(b.profit_units)}">${num(b.profit_units)}u</td></tr><tr><td>ROI (95% CI)</td><td>${spct(b.roi)} (${spct(b.roi_ci95[0])} … ${spct(b.roi_ci95[1])})</td></tr><tr><td>Avg claimed EV</td><td>${spct(b.avg_ev_claimed)}</td></tr><tr><td>Avg CLV (95% CI)</td><td>${spct(b.avg_clv)} ${b.clv_ci95?`(${spct(b.clv_ci95[0])} … ${spct(b.clv_ci95[1])})`:""}</td></tr><tr><td>Avg odds</td><td>${num(b.avg_odds)}</td></tr><tr><td>Max drawdown</td><td>${num(b.max_drawdown_units)}u</td></tr></tbody></table>`}
+
+function status(D){const last=D.jobs.find(j=>j.status=="ok");let h=`<div class="grid">${kpi("Last successful job",last?esc(last.job)+" · "+esc(last.finished_at):"—")}${kpi("Errors (last 30 jobs)",D.jobs.filter(j=>j.status=="error").length,D.jobs.some(j=>j.status=="error")?"neg":"")}</div>
+ <div class="card" style="margin-bottom:12px"><h2>Data providers</h2><div class="tbl"><table><thead><tr><th>Provider</th><th>Last success</th><th>Rows</th><th>Last error</th></tr></thead><tbody>${D.providers.map(p=>`<tr><td>${esc(p.provider)}</td><td>${esc(p.last_success||"—")}</td><td>${p.rows_last??"—"}</td><td class="${p.last_error?"warn":""}" style="white-space:normal">${esc(p.last_error||"")}</td></tr>`).join("")}</tbody></table></div></div>
+ <div class="card"><h2>Recent jobs</h2><div class="tbl"><table><thead><tr><th>Job</th><th>Started</th><th>Finished</th><th>Status</th><th>Details</th></tr></thead><tbody>${D.jobs.map(j=>`<tr><td>${esc(j.job)}</td><td>${esc(j.started_at)}</td><td>${esc(j.finished_at||"")}</td><td class="${j.status=="error"?"neg":(j.status=="ok"?"pos":"")}">${esc(j.status)}</td><td class="muted" style="white-space:normal;max-width:520px">${esc((j.details||"").slice(0,300))}</td></tr>`).join("")}</tbody></table></div></div>`;
+ document.getElementById("status").innerHTML=h}
+
+fetch("data.json",{cache:"no-store"}).then(r=>r.json()).then(D=>{document.getElementById("gen").textContent=`Updated ${D.generated_local} · model ${D.model_version}`;nav();today(D);intl(D);upcoming(D);history_(D);models(D);status(D)})
+.catch(e=>{document.querySelector("main").innerHTML=`<div class="card empty">Could not load data.json (${esc(e)}). Serve this folder over HTTP: <code>python -m sbi serve</code></div>`});
+</script>
+</body>
+</html>

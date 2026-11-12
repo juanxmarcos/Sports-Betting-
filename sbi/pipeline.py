@@ -235,6 +235,22 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 48) -> dict:
                          "reason": meta[eid]["rejections"].get(f"{c.market}:{c.selection}:{c.line}")})
     near.sort(key=lambda x: x["ev"], reverse=True)
     summary["top_candidates"] = near[:15]
+    from . import watch
+    rows = []
+    for eid, m in meta.items():
+        ev = m["ev"]
+        mm = m["evidence"]["model_markets"]
+        c1 = {c.selection: c.market_q for c in m["cands"] if c.market == "1X2" and c.market_q is not None}
+        rows.append(watch.analysis_row(
+            sport="soccer", event_id=eid, competition=config.FOOTBALL_LEAGUES.get(ev.league, ev.league),
+            title=f"{ev.home} v {ev.away}", participants=[ev.home, ev.away], start_utc=ev.kickoff_utc, now=now,
+            cands=m["cands"], rejections=m["rejections"], odds_ts=m["odds_ts"],
+            model_view={"Home": mm["1X2:H"], "Draw": mm["1X2:D"], "Away": mm["1X2:A"],
+                        "Over 2.5": mm["OU:over:2.5"], "BTTS": mm["BTTS:yes"]},
+            book_view=({"Home": c1["H"], "Draw": c1["D"], "Away": c1["A"]} if len(c1) == 3 else {}),
+            extra={"expected_goals": m["evidence"]["expected_goals"], "form": m["evidence"]["form"],
+                   "strength_rank": m["evidence"]["strength_rank"]}))
+    watch.write("soccer_club", rows)
     summary["analysed_events"] = len(cands_by_event)
     summary["now"] = now.isoformat()
     return summary
@@ -288,8 +304,13 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             d["_status"] = "partial"
         result["analyse"]["international"] = si
         (config.DATA_DIR / "international_latest.json").write_text(json.dumps(si, default=str))
+    with db.job(con, "reassess") as d:
+        from .settle import reassess_open
+        d.update(reassess_open(con, now))
     with db.job(con, "publish") as d:
         d["report"] = str(report.write_daily(con, now, result["analyse"]))
         d["dashboard"] = str(dashboard.build(con))
+        from . import site
+        d["site"] = str(site.build(con, now))
         result["publish"] = d["report"]
     return result

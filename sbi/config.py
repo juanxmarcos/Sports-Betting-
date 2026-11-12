@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("SBI_DATA_DIR", ROOT / "data"))
 DB_PATH = Path(os.environ.get("SBI_DB", DATA_DIR / "sbi.sqlite"))
 REPORTS_DIR = Path(os.environ.get("SBI_REPORTS_DIR", ROOT / "reports"))
-SITE_DIR = Path(os.environ.get("SBI_SITE_DIR", ROOT / "docs" / "dashboard"))
+SITE_DIR = Path(os.environ.get("SBI_SITE_DIR", ROOT / "docs" / "dev"))  # developer diagnostics view
 CACHE_DIR = DATA_DIR / "cache"
 
 # Display timezone for reports/dashboard (IANA name). Storage is always UTC.

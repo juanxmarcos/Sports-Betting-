@@ -66,3 +66,58 @@ def settle_all(con, now: datetime) -> dict:
             n["clv_updated"] += 1
     con.commit()
     return n
+
+
+def reassess_open(con, now: datetime) -> dict:
+    """Re-price every open, not-yet-started recommendation against the latest odds.
+
+    Appends a row to rec_updates only when the status or the price changes:
+      active    - still qualifies (EV >= threshold) at an available price
+      updated   - still positive but the edge or price moved materially
+      withdrawn - the price no longer offers value (EV <= 0) or vanished
+      expired   - kick-off passed (awaiting settlement)
+    """
+    from .pipeline import _latest_books
+    rules = config.RULES
+    out = {"checked": 0, "appended": 0}
+    for r in con.execute("SELECT * FROM recommendations WHERE status='open'").fetchall():
+        last = con.execute("SELECT * FROM rec_updates WHERE rec_id=? ORDER BY id DESC LIMIT 1", (r["rec_id"],)).fetchone()
+        ko = datetime.fromisoformat(r["kickoff_utc"])
+        if ko <= now:
+            if not last or last["status"] != "expired":
+                con.execute("""INSERT INTO rec_updates(rec_id,checked_at,status,note) VALUES (?,?,?,?)""",
+                            (r["rec_id"], now.isoformat(), "expired", "Event started; awaiting result."))
+                out["appended"] += 1
+            continue
+        out["checked"] += 1
+        books, ts, _ = _latest_books(con, r["event_id"], rules.max_odds_age_hours, now)
+        book = books.get((r["market"], r["line"]), {})
+        sels = SELECTIONS.get(r["market"], ["H", "A"])
+        cons, _ = evm.consensus(book, sels)
+        same = (book.get(r["bookmaker"]) or {}).get(r["selection"])
+        bk, quoted, net = evm.best_price(evm.clean(book, sels), r["selection"], rules.exchange_commission)
+        if not cons or not bk:
+            status, ev_now, note = ("withdrawn", None, "No current price available.") if not book else \
+                                   (last["status"] if last else "active", None, "Consensus unavailable; unchanged.")
+        else:
+            q = cons[r["selection"]]
+            ev_now = net * q - 1
+            if ev_now >= rules.min_ev:
+                status = "active"
+                note = (f"Still qualifies: best {quoted:.2f} at {bk} vs fair {1 / q:.2f}.")
+            elif ev_now > 0:
+                status = "updated"
+                note = (f"Edge has narrowed to {ev_now * 100:+.1f}%: best {quoted:.2f} at {bk}, fair {1 / q:.2f}.")
+            else:
+                status = "withdrawn"
+                note = (f"No longer value: best {quoted:.2f} vs fair {1 / q:.2f} (market moved).")
+        changed = (not last or last["status"] != status or
+                   (quoted and last["best_odds"] and abs(quoted - last["best_odds"]) > 1e-9))
+        if changed and not (not last and status == "active" and quoted and abs(quoted - r["odds"]) < 1e-9):
+            con.execute("""INSERT INTO rec_updates(rec_id,checked_at,status,best_odds,best_bookmaker,original_book_odds,
+                           consensus_prob,ev_now,note) VALUES (?,?,?,?,?,?,?,?,?)""",
+                        (r["rec_id"], now.isoformat(), status, quoted if bk else None, bk, same,
+                         cons[r["selection"]] if cons else None, ev_now, note))
+            out["appended"] += 1
+    con.commit()
+    return out

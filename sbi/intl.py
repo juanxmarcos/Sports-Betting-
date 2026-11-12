@@ -182,7 +182,7 @@ def _publishable(con, now, cands_by_event, hist_ok, rules):
     return picks[:room]
 
 
-def ingest(con, now: datetime, ahead_days: int = 2) -> tuple[dict, list[dict]]:
+def ingest(con, now: datetime, ahead_days: int = 7) -> tuple[dict, list[dict]]:
     hist_last = src.load_history().kickoff_utc.max().date()
     start = max(hist_last, now.date() - timedelta(days=60))
     events, errors = src.collect(start, now.date() + timedelta(days=ahead_days), now)
@@ -193,7 +193,7 @@ def ingest(con, now: datetime, ahead_days: int = 2) -> tuple[dict, list[dict]]:
     return out, events
 
 
-def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 48) -> dict:
+def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 168, publish_h: float = 48) -> dict:
     p = params()
     rules = config.RULES
     train = src.training_frame(now, recent)
@@ -268,7 +268,9 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 48) -> di
         cands_by_event[e["event_id"]] = cands
         hist_ok[e["event_id"]] = nmin >= p["min_matches"]
         meta[e["event_id"]] = (e, books, urls, odds_ts, mk, row)
-    picks = _publishable(con, now, cands_by_event, hist_ok, rules)
+    soon = {eid for eid, (e, *_r) in meta.items()
+            if datetime.fromisoformat(e["kickoff_utc"]) <= now + timedelta(hours=publish_h)}
+    picks = _publishable(con, now, {k: v for k, v in cands_by_event.items() if k in soon}, hist_ok, rules)
     published = 0
     for rank, (eid, c) in enumerate(picks, 1):
         e, books, urls, odds_ts, mk, row = meta[eid]
@@ -290,6 +292,26 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 48) -> di
         published += publish_pick(con, now, eid, c, ev, evidence, books, urls, odds_ts, rank, "dc-intl-0.1+mkt", risks)
     con.commit()
     rows.sort(key=lambda r: r.get("largest_gap", {}).get("model_ev", -9), reverse=True)
+    from . import watch
+    from .engine import passes
+    wrows = []
+    for eid, (e, books, urls, odds_ts, mk, row) in meta.items():
+        cs = cands_by_event.get(eid, [])
+        rej = {f"{c.market}:{c.selection}:{c.line}": passes(c, rules, hist_ok[eid])[1] for c in cs}
+        notes = []
+        if (row.get("largest_gap") or {}).get("flag"):
+            notes.append("Model gap here matches a known model bias (heavy favourites) and is ignored.")
+        bv = dict(zip(["Home", "Draw", "Away"], row["book_1x2"])) if row.get("book_1x2") else {}
+        wrows.append(watch.analysis_row(
+            sport="soccer", event_id=eid, competition=row["competition"] or "International",
+            title=f"{e['home']} v {e['away']}", participants=[e["home"], e["away"]], start_utc=e["kickoff_utc"],
+            now=now, cands=cs, rejections=rej, odds_ts=odds_ts, neutral=row["neutral"], notes=notes,
+            model_view={"Home": mk["1X2:H"], "Draw": mk["1X2:D"], "Away": mk["1X2:A"],
+                        "Over 2.5": mk["OU:over:2.5"], "BTTS": mk["BTTS:yes"]},
+            book_view=bv, extra={"expected_goals": {"home": row["xg"][0], "away": row["xg"][1]},
+                                 "form": {e["home"]: _form(train, e["home"]), e["away"]: _form(train, e["away"])},
+                                 "model_weight": 0}))
+    watch.write("soccer_intl", wrows)
     return {"run_id": run_id, "events_in_window": len(evs), "analysed": len(rows), "rows": rows,
             "published": published, "multi_book_events": sum(1 for cs in cands_by_event.values()
                                                               if any(c.n_books >= rules.min_bookmakers for c in cs)),
