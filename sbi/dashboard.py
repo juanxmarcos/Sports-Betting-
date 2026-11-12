@@ -40,7 +40,7 @@ def build(con) -> Path:
         WHERE e.status='scheduled' AND e.kickoff_utc > datetime('now','-3 hours')
         GROUP BY e.event_id ORDER BY e.kickoff_utc LIMIT 300""", con)
     upcoming["ko_local"] = upcoming.kickoff_utc.map(local)
-    bt = con.execute("SELECT metrics_json, created_at FROM backtest_results ORDER BY id DESC LIMIT 1").fetchone()
+    bt = con.execute("SELECT metrics_json, created_at FROM backtest_results WHERE label LIKE 'walkforward:%' ORDER BY id DESC LIMIT 1").fetchone()
     data = {
         "generated": db.utcnow(), "generated_local": local(db.utcnow()), "timezone": config.TIMEZONE,
         "model_version": config.MODEL.model_version, "blend_weight": config.MODEL.blend_weight,
@@ -57,6 +57,8 @@ def build(con) -> Path:
         "jobs": [dict(r) for r in con.execute("SELECT * FROM job_runs ORDER BY id DESC LIMIT 30")],
         "providers": [dict(r) for r in con.execute("SELECT * FROM provider_status ORDER BY provider")],
     }
+    for r in (data["international"] or {}).get("rows", []):
+        r["ko_local"] = local(r["kickoff_utc"])
     (site / "data.json").write_text(json.dumps(data, default=str))
     # Human-readable permanent ledger (git-tracked; mirrors the immutable DB rows)
     ledger = config.ROOT / "ledger"
