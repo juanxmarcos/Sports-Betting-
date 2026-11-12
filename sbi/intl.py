@@ -17,9 +17,12 @@ import numpy as np
 import pandas as pd
 
 from . import config, db
+from types import SimpleNamespace
+
 from . import ev as evm
 from .backtest import bootstrap_ci, calibration, logloss
-from .engine import books_from_rows, price_event
+from .engine import price_event
+from .pipeline import publish_pick
 from .markets import standard_markets
 from .models import dixon_coles as dc
 from .models.elo import fit_ordered_logit, ordered_logit_probs
@@ -157,6 +160,28 @@ def backtest(tune=("2023-01-01", "2025-01-01"), test=("2025-01-01", "2026-11-01"
 
 # ---------------------------------------------------------------- live
 
+def _form(train: pd.DataFrame, team: str, n: int = 6) -> dict:
+    g = train[(train.home == team) | (train.away == team)].tail(n)
+    res, gf, ga = [], 0, 0
+    for r in g.itertuples():
+        f, a = (r.hg, r.ag) if r.home == team else (r.ag, r.hg)
+        gf, ga = gf + f, ga + a
+        res.append("W" if f > a else ("D" if f == a else "L"))
+    return {"last": "".join(res), "gf": int(gf), "ga": int(ga), "n": len(g)}
+
+
+def _publishable(con, now, cands_by_event, hist_ok, rules):
+    """Same selection rules as club football, blend weight 0, shared daily exposure cap, no re-publishing."""
+    from .engine import select
+    already = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
+    pool = {k: v for k, v in cands_by_event.items() if k not in already}
+    picks = select(pool, rules, hist_ok)
+    today = con.execute("SELECT COUNT(*) FROM recommendations WHERE substr(published_at,1,10)=?",
+                        (now.strftime("%Y-%m-%d"),)).fetchone()[0]
+    room = max(0, int(rules.max_daily_units // rules.stake_units) - today)
+    return picks[:room]
+
+
 def ingest(con, now: datetime, ahead_days: int = 2) -> tuple[dict, list[dict]]:
     hist_last = src.load_history().kickoff_utc.max().date()
     start = max(hist_last, now.date() - timedelta(days=60))
@@ -183,6 +208,7 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 48) -> di
                          ORDER BY e.kickoff_utc""", (now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat())).fetchall()
     rng = np.random.default_rng(int(now.timestamp()) // 86400)
     rows, skipped = [], []
+    cands_by_event, hist_ok, meta = {}, {}, {}
     for e in evs:
         if not (model.has(e["home"]) and model.has(e["away"])):
             skipped.append(f"{e['home']} v {e['away']}: team not in history (name mismatch?)")
@@ -193,10 +219,8 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 48) -> di
         mk = standard_markets(mat)
         p1 = calibrate(np.array([mk["1X2:H"], mk["1X2:D"], mk["1X2:A"]]), p["calib_power"])
         mk["1X2:H"], mk["1X2:D"], mk["1X2:A"] = (float(x) for x in p1)
-        orows = con.execute("""SELECT market,line,bookmaker,selection,price FROM odds WHERE event_id=? AND kind='pre'
-                               AND retrieved_at=(SELECT MAX(retrieved_at) FROM odds WHERE event_id=? AND kind='pre')""",
-                            (e["event_id"], e["event_id"])).fetchall()
-        books = books_from_rows([tuple(r) for r in orows])
+        from .pipeline import _latest_books
+        books, odds_ts, urls = _latest_books(con, e["event_id"], rules.max_odds_age_hours, now)
         cands = price_event(model, e["home"], e["away"], books, {}, rules.exchange_commission,
                             n_draws=200, rng=rng, neutral=neutral, markets=("1X2", "OU", "AH"))
         cal = {"H": mk["1X2:H"], "D": mk["1X2:D"], "A": mk["1X2:A"]}
@@ -239,7 +263,34 @@ def analyse(con, now: datetime, recent: list[dict], horizon_h: float = 48) -> di
                 g["flag"] = ("known model bias: underconfident on heavy favourites out of sample "
                              "(predicted 85% -> observed 94%); this gap is likely an artifact")
         rows.append(row)
+        # Multi-bookmaker events can yield real (paper) recommendations: price vs. sharp consensus,
+        # model weight 0 (the international model is not validated against the market).
+        cands_by_event[e["event_id"]] = cands
+        hist_ok[e["event_id"]] = nmin >= p["min_matches"]
+        meta[e["event_id"]] = (e, books, urls, odds_ts, mk, row)
+    picks = _publishable(con, now, cands_by_event, hist_ok, rules)
+    published = 0
+    for rank, (eid, c) in enumerate(picks, 1):
+        e, books, urls, odds_ts, mk, row = meta[eid]
+        ev = SimpleNamespace(league=e["league"], kickoff_utc=e["kickoff_utc"], home=e["home"], away=e["away"],
+                             source_url=e["source_url"])
+        risks = ["International selection: the model has weight 0. The edge is the price versus the sharp "
+                 "de-vigged consensus (validated on club data: +4.5% CLV), not a model opinion.",
+                 "Team news (call-ups, withdrawals, rotation) moves international prices sharply and is not modelled."]
+        if c.market_q is not None and abs(c.model_q - c.market_q) > 0.05:
+            risks.append(f"Model and market disagree by {c.model_q - c.market_q:+.1%}.")
+        g = row.get("largest_gap") or {}
+        if g.get("flag") and g.get("selection") == c.selection and c.market == "1X2":
+            risks.append(g["flag"])
+        evidence = {"expected_goals": {"home": row["xg"][0], "away": row["xg"][1]},
+                    "model_markets": {k: round(v, 4) for k, v in mk.items()},
+                    "form": {e["home"]: _form(train, e["home"]), e["away"]: _form(train, e["away"])},
+                    "neutral_venue": row["neutral"], "competition": row["competition"],
+                    "train_matches": {e["home"]: model.n_matches[e["home"]], e["away"]: model.n_matches[e["away"]]}}
+        published += publish_pick(con, now, eid, c, ev, evidence, books, urls, odds_ts, rank, "dc-intl-0.1+mkt", risks)
     con.commit()
     rows.sort(key=lambda r: r.get("largest_gap", {}).get("model_ev", -9), reverse=True)
     return {"run_id": run_id, "events_in_window": len(evs), "analysed": len(rows), "rows": rows,
+            "published": published, "multi_book_events": sum(1 for cs in cands_by_event.values()
+                                                              if any(c.n_books >= rules.min_bookmakers for c in cs)),
             "skipped": skipped, "train_matches": int(len(train)), "params": p}

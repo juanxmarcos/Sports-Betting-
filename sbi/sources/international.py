@@ -88,7 +88,7 @@ def _parse_event(e: dict, lg: str) -> dict | None:
     if "home" not in teams or "away" not in teams:
         return None
     home, away = canon(teams["home"]["team"]["displayName"]), canon(teams["away"]["team"]["displayName"])
-    venue_country = (c.get("venue") or {}).get("address", {}).get("country")
+    venue_country = (((c.get("venue") or {}).get("address")) or {}).get("country")
     raw_home = teams["home"]["team"]["displayName"]
     vc = canon(venue_country) if venue_country else None
     neutral = bool(c.get("neutralSite")) or (vc is not None and vc not in (home, raw_home)
@@ -143,7 +143,15 @@ def _parse_event(e: dict, lg: str) -> dict | None:
 def scoreboard(lg: str, d: date, max_age_hours: float) -> list[dict]:
     content, _ = fetch(ESPN.format(lg=lg, d=d.strftime("%Y%m%d")), max_age_hours=max_age_hours)
     data = json.loads(content)
-    return [x for x in (_parse_event(e, lg) for e in data.get("events", [])) if x]
+    out = []
+    for e in data.get("events", []):
+        try:
+            x = _parse_event(e, lg)
+        except (KeyError, TypeError, ValueError, AttributeError):
+            continue  # one malformed event must not drop the whole day
+        if x:
+            out.append(x)
+    return out
 
 
 def collect(start: date, end: date, now: datetime, polite_delay: float = 0.15) -> tuple[list[dict], list[str]]:

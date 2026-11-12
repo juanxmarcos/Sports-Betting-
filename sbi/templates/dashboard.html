@@ -72,7 +72,7 @@ function today(D){
 function toggle(id){const e=document.getElementById(id);e.style.display=e.style.display=="none"?"":"none"}
 function detail(r){const e=r.evidence||{};const f=e.form||{};const mm=e.model_markets||{};
  const prices=Object.entries(e.all_prices||{}).map(([b,q])=>`${esc(b)}: ${Object.entries(q).map(([s,p])=>s+" "+p).join(" / ")}`).join("<br>");
- return `<div class="two"><div><h3>Statistical evidence</h3>Expected goals ${e.expected_goals?.home}–${e.expected_goals?.away} · strength rank ${e.strength_rank?.home} vs ${e.strength_rank?.away} of ${e.strength_rank?.of}<br>
+ return `<div class="two"><div><h3>Statistical evidence</h3>Expected goals ${e.expected_goals?.home}–${e.expected_goals?.away}${e.strength_rank?` · strength rank ${e.strength_rank.home} vs ${e.strength_rank.away} of ${e.strength_rank.of}`:""}${e.neutral_venue?" · neutral venue":""}<br>
  Model 1X2 ${pct(mm["1X2:H"],0)} / ${pct(mm["1X2:D"],0)} / ${pct(mm["1X2:A"],0)} · O2.5 ${pct(mm["OU:over:2.5"],0)} · BTTS ${pct(mm["BTTS:yes"],0)}<br>
  Form: ${Object.entries(f).map(([t,v])=>`${esc(t)} ${v.last} (GF ${v.gf} GA ${v.ga}${v.xg_for_avg!=null?`, xG ${v.xg_for_avg}/${v.xg_against_avg}`:""})`).join(" · ")}<br>
  Consensus: ${esc(e.consensus_source)} · books ${e.n_bookmakers} · model p10 ${pct(e.model_q_p10)} · param sd ${pct(r.prob_sd)}
@@ -82,7 +82,7 @@ function detail(r){const e=r.evidence||{};const f=e.form||{};const mm=e.model_ma
  <h3>Sources</h3>${r.source_urls.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")}</div></div>`}
 
 function intl(D){const I=D.international,B=D.intl_backtest;let h="";
- h+=`<div class="card warn" style="margin-bottom:12px">Monitoring only, not recommendations. International odds come from a single bookmaker (DraftKings via ESPN), and no free historical international odds exist to validate the model against the market. Every prediction is tracked so the model can earn a validated weight.</div>`;
+ h+=`<div class="card warn" style="margin-bottom:12px">Model gaps below are monitoring signals, not recommendations: no free historical international odds exist to validate the model against the market, so it has weight 0. Real paper selections appear in Today's opportunities only when The Odds API supplies 3+ bookmakers and a price beats the sharp de-vigged consensus.</div>`;
  if(B){const t=B.test_logloss;h+=`<div class="card" style="margin-bottom:12px"><h2>International model validation (walk-forward ${esc(B.test[0])} → ${esc(B.test[1])})</h2><div class="tbl"><table><thead><tr><th>Subset</th><th>n</th><th>Dixon-Coles</th><th>Elo</th><th>Base rate</th></tr></thead><tbody>${Object.entries(t).map(([k,v])=>`<tr><td>${k}</td><td>${v.n}</td><td>${num(v.dc,4)}</td><td>${num(v.elo,4)}</td><td>${num(v.base_rate,4)}</td></tr>`).join("")}</tbody></table></div><p class="note">1X2 log loss, lower is better. DC − Elo 95% CI: ${B.dc_minus_elo_ci95.join(" … ")} (negative = DC better). Hyperparameters: ${Object.entries(B.hyperparameters).map(([k,v])=>k+" "+v).join(", ")}.</p></div>`}
  const rows=(I&&I.rows)||[];h+=`<div class="card"><h2>National-team fixtures, next 48h (${rows.length})</h2>`;
  if(!rows.length)h+=`<div class="empty">${I&&I.error?esc(I.error):"No national-team fixtures in the window."}</div>`;

@@ -19,6 +19,13 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 - **Load:** about 16 competitions × 3 days per run. Past dates are cached (persisted in Actions via `actions/cache`). On first run, a gap fill of up to 60 days covers results after the dataset's last update.
 - **Name matching:** an ESPN→dataset alias table (for example Türkiye→Turkey, Congo DR→DR Congo, Czechia→Czech Republic). Unmatched teams are reported as warnings and never guessed.
 
+### The Odds API (optional, free key)
+- **Access:** free plan, about 500 credits/month. The key lives in the `ODDS_API_KEY` GitHub Actions secret, is never logged, and is stripped from every stored URL. Without a key the connector skips itself.
+- **Requests:** `/v4/sports` and `/v4/sports/{key}/events` are free. `/v4/sports/{key}/odds?regions=eu&markets=h2h,totals` costs 2 credits. The `eu` region includes Pinnacle and Betfair Exchange, which are the sharp consensus references.
+- **Budget:** each run spends at most min(8, (remaining − 20 reserve) / runs left this month) credits. It spends only on competitions with events in the next 36h: internationals first, then club leagues.
+- **Matching:** an Odds API event is matched to our event when kick-off is within ±3h and both team names are similar (normalised; difflib ≥ 0.6). Unmatched events are logged, never guessed.
+- **Timestamps:** each bookmaker's own `last_update` is stored as `retrieved_at`.
+
 ## Evaluated, not (yet) automated
 
 | Source | Sport | Status | Notes |
@@ -26,7 +33,6 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 | Understat | football | accessible | xG history. Terms unclear, so not scraped |
 | Forebet | football | 403 | Independent prediction signal. Manual reference only |
 | FBref | football | 403 | Sports-Reference bot policy |
-| The Odds API | multi | key needed | Free tier ~500 credits/month. Best free live-odds API. Planned optional connector (`ODDS_API_KEY` env var) |
 | Open-Meteo | weather | free (non-commercial) | Rate-limited on shared IPs |
 | MLB Stats API | MLB | accessible | Schedules, results, probable pitchers |
 | NHL api-web | NHL | accessible | Schedules, results, goalies |

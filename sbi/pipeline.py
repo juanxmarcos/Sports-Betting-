@@ -67,7 +67,8 @@ def _latest_books(con, event_id: str, max_age_h: float, now: datetime) -> tuple[
         ts = datetime.fromisoformat(r["retrieved_at"])
         age = (now - ts).total_seconds() / 3600
         newest = max(newest or r["retrieved_at"], r["retrieved_at"])
-        urls.add(r["source_url"])
+        if r["source_url"]:
+            urls.add(r["source_url"])
         if age <= max_age_h:
             fresh.append((r["market"], r["line"], r["bookmaker"], r["selection"], r["price"]))
     if rows and not fresh:
@@ -112,6 +113,30 @@ def _risks(c, model, home, away, rules) -> list[str]:
     if c.consensus_src == "Avg":
         r.append("Consensus from the market average rather than a sharp book/exchange.")
     return r
+
+
+def publish_pick(con, now, eid, c, ev, base_evidence: dict, books: dict, urls: list, odds_ts, rank: int,
+                 model_version: str, risks: list[str]) -> int:
+    """Insert one immutable paper recommendation. Returns 1 if inserted, 0 if duplicate."""
+    evidence = dict(base_evidence)
+    evidence.update({
+        "consensus_source": c.consensus_src, "n_bookmakers": c.n_books,
+        "model_q_p10": round(c.model_q_lo, 4), "net_odds": round(c.net_odds, 4),
+        "stake_share_active": round(c.active, 4),
+        "outcome_split": {k: round(getattr(c.outcome, k), 4) for k in ("pw", "phw", "pp", "phl", "pl")},
+        "all_prices": {bk: q for bk, q in books.get((c.market, c.line), {}).items()},
+        "risks": risks, "blend_weight": c.blend_w,
+    })
+    rec_id = hashlib.sha1(f"{eid}|{c.market}|{c.selection}|{c.line}".encode()).hexdigest()[:16]
+    cur = con.execute("""INSERT OR IGNORE INTO recommendations(rec_id,event_id,published_at,sport,league,kickoff_utc,
+            home,away,market,selection,line,bookmaker,odds,odds_retrieved_at,model_prob,market_prob,final_prob,
+            fair_odds,ev,ev_lower,prob_sd,stake_units,model_version,rank,evidence_json,source_urls)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                      (rec_id, eid, now.isoformat(), "football", ev.league, ev.kickoff_utc, ev.home, ev.away,
+                       c.market, c.selection, c.line, c.bookmaker, c.odds, odds_ts, c.model_q, c.market_q,
+                       c.final_q, c.fair_odds, c.ev, c.ev_lower, c.prob_sd, config.RULES.stake_units,
+                       model_version, rank, json.dumps(evidence, default=str), json.dumps(list(dict.fromkeys(list(urls) + [ev.source_url])))))
+    return cur.rowcount
 
 
 def analyse(con, now: datetime | None = None, horizon_h: float = 48) -> dict:
@@ -193,31 +218,11 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 48) -> dict:
     already = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
     pool = {k: v for k, v in cands_by_event.items() if k not in already}
     picks = select(pool, rules, hist_ok)
-    published_at = now.isoformat()
     for rank, (eid, c) in enumerate(picks, 1):
         m = meta[eid]
-        ev = m["ev"]
-        evidence = dict(m["evidence"])
-        evidence.update({
-            "consensus_source": c.consensus_src, "n_bookmakers": c.n_books,
-            "model_q_p10": round(c.model_q_lo, 4), "net_odds": round(c.net_odds, 4),
-            "stake_share_active": round(c.active, 4),
-            "outcome_split": {k: round(getattr(c.outcome, k), 4) for k in ("pw", "phw", "pp", "phl", "pl")},
-            "all_prices": {bk: q for bk, q in m["books"].get((c.market, c.line), {}).items()},
-            "risks": _risks(c, m["model"], ev.home, ev.away, rules),
-            "blend_weight": config.MODEL.blend_weight.get(c.market, 0.0),
-        })
-        rec_id = hashlib.sha1(f"{eid}|{c.market}|{c.selection}|{c.line}".encode()).hexdigest()[:16]
-        cur = con.execute("""INSERT OR IGNORE INTO recommendations(rec_id,event_id,published_at,sport,league,kickoff_utc,
-                home,away,market,selection,line,bookmaker,odds,odds_retrieved_at,model_prob,market_prob,final_prob,
-                fair_odds,ev,ev_lower,prob_sd,stake_units,model_version,rank,evidence_json,source_urls)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                          (rec_id, eid, published_at, "football", ev.league, ev.kickoff_utc, ev.home, ev.away,
-                           c.market, c.selection, c.line, c.bookmaker, c.odds, m["odds_ts"], c.model_q, c.market_q,
-                           c.final_q, c.fair_odds, c.ev, c.ev_lower, c.prob_sd, rules.stake_units,
-                           config.MODEL.model_version, rank, json.dumps(evidence, default=str),
-                           json.dumps(m["urls"] + [ev.source_url])))
-        summary["published"] += cur.rowcount
+        summary["published"] += publish_pick(con, now, eid, c, m["ev"], m["evidence"], m["books"], m["urls"],
+                                             m["odds_ts"], rank, config.MODEL.model_version,
+                                             _risks(c, m["model"], m["ev"].home, m["ev"].away, rules))
     con.commit()
     # candidate table for the report (top near-misses, transparency)
     near = []
@@ -255,6 +260,17 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             d.update(info)
         except Exception as e:  # noqa: BLE001 - one source failing must not stop the run
             db.provider_err(con, "espn:international", str(e))
+            d["error"] = str(e)
+            d["_status"] = "partial"
+    with db.job(con, "ingest-odds-api") as d:
+        from .sources import odds_api
+        try:
+            info = odds_api.ingest(con, now)
+            d.update(info)
+            if "skipped" not in info:
+                db.provider_ok(con, "the-odds-api", info.get("odds_rows", 0))
+        except Exception as e:  # noqa: BLE001
+            db.provider_err(con, "the-odds-api", str(e))
             d["error"] = str(e)
             d["_status"] = "partial"
     with db.job(con, "analyse") as d:

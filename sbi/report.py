@@ -83,8 +83,8 @@ parameter uncertainty), so that thinly estimated edges rank below robust ones.
 | Bookmakers quoting | {{ r.ev_d.n_bookmakers }} |
 | Odds snapshot | {{ r.odds_ts }} |
 
-**Statistical evidence.** Expected goals {{ r.ev_d.expected_goals.home }}–{{ r.ev_d.expected_goals.away }};
-model strength rank {{ r.ev_d.strength_rank.home }} vs {{ r.ev_d.strength_rank.away }} (of {{ r.ev_d.strength_rank.of }}).
+**Statistical evidence.** Expected goals {{ r.ev_d.expected_goals.home }}–{{ r.ev_d.expected_goals.away }}{% if r.ev_d.strength_rank %};
+model strength rank {{ r.ev_d.strength_rank.home }} vs {{ r.ev_d.strength_rank.away }} (of {{ r.ev_d.strength_rank.of }}){% endif %}{% if r.ev_d.neutral_venue %}; neutral venue{% endif %}.
 Recent form — {{ r.home }}: {{ r.form_h.last }} (GF {{ r.form_h.gf }}, GA {{ r.form_h.ga }}{% if r.form_h.xg_for_avg is defined %}, xG {{ r.form_h.xg_for_avg }}/{{ r.form_h.xg_against_avg }}{% endif %});
 {{ r.away }}: {{ r.form_a.last }} (GF {{ r.form_a.gf }}, GA {{ r.form_a.ga }}{% if r.form_a.xg_for_avg is defined %}, xG {{ r.form_a.xg_for_avg }}/{{ r.form_a.xg_against_avg }}{% endif %}).
 Model 1X2: {{ "%.0f"|format(r.ev_d.model_markets["1X2:H"]*100) }}/{{ "%.0f"|format(r.ev_d.model_markets["1X2:D"]*100) }}/{{ "%.0f"|format(r.ev_d.model_markets["1X2:A"]*100) }}%,
@@ -117,10 +117,11 @@ Sources: {% for u in r.urls %}<{{ u }}> {% endfor %}
 ## International fixtures — model monitoring (not recommendations)
 
 {% if intl.rows %}{{ intl.analysed }} national-team matches analysed in the next 48h (model `dc-intl-0.1`,
-trained on {{ intl.train_matches }} internationals). Odds come from a **single bookmaker** (DraftKings via ESPN),
-and no free historical international odds exist to validate the model against the market. These are
-therefore **monitoring signals, not selections**: they are tracked and scored, and the model earns weight
-only once live out-of-sample evidence supports it.
+trained on {{ intl.train_matches }} internationals; {{ intl.multi_book_events or 0 }} with multi-bookmaker odds).
+The model's gaps against bookmakers are **monitoring signals, not selections**: no free historical international
+odds exist to validate the model against the market, so it has weight 0. Real (paper) international selections
+appear in *Ranked selections* only when The Odds API supplies 3+ bookmakers and a price beats the sharp
+de-vigged consensus under the standard rules.
 
 | Kick-off | Competition | Match | Model H/D/A | Book H/D/A (no-vig) | Largest model–book gap |
 |---|---|---|---|---|---|
@@ -163,7 +164,7 @@ def write_daily(con, now: datetime, s: dict):
         d = dict(r)
         e = json.loads(r["evidence_json"] or "{}")
         d.update(desc=describe(r), ko=local(r["kickoff_utc"]), ev_d=e,
-                 league_name=config.FOOTBALL_LEAGUES.get(r["league"], r["league"]),
+                 league_name=e.get("competition") or config.FOOTBALL_LEAGUES.get(r["league"], r["league"]),
                  net_odds=e.get("net_odds", r["odds"]), odds_ts=local(r["odds_retrieved_at"]),
                  form_h=e["form"][r["home"]], form_a=e["form"][r["away"]],
                  urls=json.loads(r["source_urls"] or "[]"),

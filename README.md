@@ -46,7 +46,8 @@ Other commands: `ingest`, `settle`, `analyse`, `report`, `dashboard`, `brief`, `
 ## Automation
 1. Merge to the default branch. `.github/workflows/daily.yml` then runs at 06:15 and 16:15 UTC and commits results.
 2. Optional: create a Claude Code scheduled task with `automation/claude_research_routine.md` to add evidence-graded team-news flags.
-3. Optional: set the repository variable `SBI_TIMEZONE` (IANA name, default `America/New_York` = US Eastern).
+3. Optional: add a free The Odds API key as the Actions secret `ODDS_API_KEY` (multi-bookmaker odds; enables international selections).
+4. Optional: set the repository variable `SBI_TIMEZONE` (IANA name, default `America/New_York` = US Eastern).
 
 ## Docs
 [Feasibility](docs/FEASIBILITY.md) · [Architecture & DB](docs/ARCHITECTURE.md) ·

@@ -33,7 +33,7 @@ BOOKMAKERS = {
     "P": "Pinnacle",
 }
 AGGREGATES = {"Max", "Avg"}
-EXCHANGES = {"Betfair Exchange"}
+EXCHANGES = {"Betfair Exchange", "Matchbook"}
 _BK = "|".join(sorted(map(re.escape, BOOKMAKERS), key=len, reverse=True))
 RE_1X2 = re.compile(rf"^({_BK})(C?)([HDA])$")
 RE_OU = re.compile(rf"^({_BK})(C?)([<>])2\.5$")

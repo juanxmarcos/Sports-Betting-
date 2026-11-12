@@ -32,6 +32,7 @@ jobs:
       - name: Daily pipeline
         env:
           SBI_TIMEZONE: ${{ vars.SBI_TIMEZONE || 'America/New_York' }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}   # optional; connector skips itself if empty
         run: python -m sbi daily
       - name: Commit results
         run: |

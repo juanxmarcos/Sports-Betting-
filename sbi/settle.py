@@ -17,6 +17,17 @@ def _closing(con, rec) -> tuple[float | None, float | None]:
                           WHERE event_id=? AND kind='closing' AND market=? AND IFNULL(line,-999)=IFNULL(?, -999)""",
                        (rec["event_id"], rec["market"], rec["line"])).fetchall()
     if not rows:
+        # No published closing line (e.g. internationals): use the last pre-match snapshot per bookmaker
+        # taken after publication and before kick-off as the closing proxy.
+        rows = con.execute("""SELECT o.market,o.line,o.bookmaker,o.selection,o.price FROM odds o
+                              JOIN (SELECT bookmaker, selection, MAX(retrieved_at) mr FROM odds
+                                    WHERE event_id=? AND kind='pre' AND market=? AND IFNULL(line,-999)=IFNULL(?,-999)
+                                      AND retrieved_at > ? AND retrieved_at < ? GROUP BY bookmaker, selection) x
+                                ON o.bookmaker=x.bookmaker AND o.selection=x.selection AND o.retrieved_at=x.mr
+                              WHERE o.event_id=? AND o.kind='pre' AND o.market=? AND IFNULL(o.line,-999)=IFNULL(?,-999)""",
+                           (rec["event_id"], rec["market"], rec["line"], rec["published_at"], rec["kickoff_utc"],
+                            rec["event_id"], rec["market"], rec["line"])).fetchall()
+    if not rows:
         return None, None
     book = books_from_rows([tuple(r) for r in rows]).get((rec["market"], rec["line"]), {})
     cons, _ = evm.consensus(book, SELECTIONS[rec["market"]])
