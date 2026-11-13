@@ -229,10 +229,14 @@ Scottish and Spanish divisions) and history for validation.
    stored as context only. Any model use needs a walk-forward test first.
 2. **Lower divisions from football-data.co.uk** (free, already downloaded): ingest fixtures and odds
    for E2, E3, EC, SP2 and SC1–SC3; publish nothing until each division passes its own backtest.
-3. **Operator verification:** confirm owner and pricing platform for the 15 bookmakers of unknown
-   ownership, with a dated source for each, and re-check the existing map. Until then the lower bound is
-   the figure to rely on. Note that the pick rule in `sbi/ev.py` still counts an unmapped bookmaker as
-   its own operator; changing that is a rule change and is left for a separate, reviewed PR.
+3. **Operator verification:** done on 2026-11-13 (issue #19). `sbi/sources/books.py` now holds a registry
+   with a cited owner and price origin for each bookmaker. At the same 12:17 UTC snapshot the stored
+   bookmakers are **15 verified operators and 8 unverified names** (1xBet, BetAnything, BetOnline.ag,
+   Codere (IT), Everygame, GTbets, Marathon Bet, MyBookie.ag); the baseline above had 10 and 15. The
+   coverage audit's lower bound now counts verified operators. Tennis events with 3+ operators: lower
+   bound 2 (unchanged), upper bound 4 (was 6, because PMU is now counted with Kambi). The pick rule that
+   uses this (rule v2) is **staged, not live**: see `docs/METHODOLOGY.md` section 15 and
+   `reports/independence_audit.md`. Entries are dated and need periodic re-checking.
 4. **The Odds API visibility:** record which mapped competitions the API lists as active but the budget
    skipped, so gaps like AFCON qualifying can be explained rather than guessed.
 5. **Housekeeping:** events stuck in `scheduled` after kick-off; the leftover `espn:golf` row.

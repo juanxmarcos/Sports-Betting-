@@ -29,12 +29,12 @@ def path(tmp_path):
     for b in ("Paddy Power", "Sky Bet", "FanDuel"):
         _odds(con, "a", b, 1)
     _ev(con, "b", "nba", "NBA", 6)       # three independent operators incl. a sharp reference
-    for b in ("Pinnacle", "DraftKings", "Unibet (SE)", "Unibet"):
+    for b in ("Pinnacle", "GTbets", "Unibet (SE)", "Unibet"):
         _odds(con, "b", b, 2)
     _odds(con, "b", "Avg", 2)            # aggregate: never a bookmaker
     _odds(con, "b", "Bet365 Live", 2)    # in-play feed: excluded
     _ev(con, "c", "nba", "NBA", 7)       # stale quotes only
-    for b in ("Pinnacle", "DraftKings", "Bet365"):
+    for b in ("Pinnacle", "GTbets", "Bet365"):
         _odds(con, "c", b, 30)
     _ev(con, "d", "nba", "NBA", 8)       # no quotes
     _ev(con, "e", "nba", "NBA", 400)     # beyond the 7-day horizon
@@ -55,10 +55,10 @@ def path(tmp_path):
 
 
 def test_operator_bounds_never_assume_unknown_is_independent():
-    # known: Flutter (two brands), Pinnacle. unknown ownership: DraftKings, Tipico
+    # known: Flutter (two brands), Pinnacle. unknown ownership: GTbets, 1xBet
     assert coverage.operator_bounds({"Paddy Power", "Sky Bet", "Pinnacle"}) == (2, 2)
-    assert coverage.operator_bounds({"Paddy Power", "Pinnacle", "DraftKings", "Tipico"}) == (2, 4)
-    assert coverage.operator_bounds({"DraftKings", "Tipico", "Betfred"}) == (1, 3)   # could all be one operator
+    assert coverage.operator_bounds({"Paddy Power", "Pinnacle", "GTbets", "1xBet"}) == (2, 4)
+    assert coverage.operator_bounds({"GTbets", "1xBet", "MyBookie.ag"}) == (1, 3)   # could all be one operator
     assert coverage.operator_bounds(set()) == (0, 0)
 
 
@@ -66,13 +66,13 @@ def test_summary_reports_operator_range(path):
     s = coverage.summary(coverage.connect_ro(path), NOW)["nba"]
     assert s["scheduled_events"] == 4                 # e is beyond the horizon, g is finished
     assert s["with_any_quote"] == 3 and s["with_fresh_quote_observed"] == 2      # c only has stale quotes
-    # a: three Flutter brands are ONE operator. b: Pinnacle + Kambi known, DraftKings unknown ->
-    # two known operators (lower bound, below 3) and three if DraftKings is separate (upper bound).
+    # a: three Flutter brands are ONE operator. b: Pinnacle + Kambi known, GTbets unknown ->
+    # two known operators (lower bound, below 3) and three if GTbets is separate (upper bound).
     assert s["with_3plus_operators_lower"] == 0
     assert s["with_3plus_operators_upper"] == 1
     assert s["with_sharp_reference"] == 1             # c's Pinnacle quote is stale
     assert s["bookmaker_names"] == 8
-    assert s["known_operators"] == 4 and s["unknown_bookmakers"] == 1    # Flutter, Pinnacle, Kambi, Bet365 | DraftKings
+    assert s["known_operators"] == 4 and s["unknown_bookmakers"] == 1    # Flutter, Pinnacle, Kambi, Bet365 | GTbets
 
 
 def test_observed_fresh_is_not_bookmaker_timed_fresh(tmp_path):
@@ -80,7 +80,7 @@ def test_observed_fresh_is_not_bookmaker_timed_fresh(tmp_path):
     p = tmp_path / "t.sqlite"
     con = db.connect(p)
     _ev(con, "x", "nba", "NBA", 5)
-    _odds(con, "x", "DraftKings", 0.02, source="espn.com (public scoreboard)")
+    _odds(con, "x", "GTbets", 0.02, source="espn.com (public scoreboard)")
     _ev(con, "y", "nba", "NBA", 5)
     _odds(con, "y", "Pinnacle", 0.02, source="the-odds-api.com")
     _ev(con, "z", "football", "E0", 5)
@@ -113,8 +113,8 @@ def test_book_audit_separates_known_from_unknown(path):
     b = coverage.book_audit(coverage.connect_ro(path))
     assert b["name_variants_merged"] == {"Unibet (SE)": "Unibet"}
     assert b["known_operator_brands"]["Flutter"] == ["FanDuel", "Paddy Power", "Sky Bet"]
-    assert b["unknown_ownership"] == ["DraftKings"]
-    assert "DraftKings" not in json.dumps(b["known_operator_brands"])
+    assert b["unknown_ownership"] == ["GTbets"]
+    assert "GTbets" not in json.dumps(b["known_operator_brands"])
     assert (b["known_operators"], b["operators_lower"], b["operators_upper"]) == (4, 4, 5)
     assert set(b["excluded_not_bookmakers"]) == {"Avg", "Bet365 Live"}
 

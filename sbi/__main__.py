@@ -36,6 +36,10 @@ def main(argv=None) -> int:
     c = sub.add_parser("coverage", help="source coverage audit (read-only); writes reports/source_coverage.md")
     c.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
     c.add_argument("--baseline", action="store_true", help="also freeze this run as data/coverage/baseline_<date>.json")
+    i = sub.add_parser("independence", help="bookmaker-independence audit (read-only); writes reports/independence_audit.md")
+    i.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
+    i.add_argument("--history", action="store_true",
+                   help="also replay the backtest test seasons under both rules (network, several minutes)")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -46,6 +50,14 @@ def main(argv=None) -> int:
         rep = coverage.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc), baseline=args.baseline)
         print(json.dumps(rep["summary"], indent=1))
         print(config.REPORTS_DIR / "source_coverage.md")
+        return 0
+    if args.cmd == "independence":  # read-only: must not open the database for writing
+        from . import independence
+        at = datetime.fromisoformat(args.as_of) if args.as_of else now
+        rep = independence.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc), with_history=args.history)
+        print(json.dumps({"deployed_policy": rep["deployed_policy"], "registry": rep["registry_summary"],
+                          "blocked_share": rep["upcoming"]["blocked_share"]}, indent=1))
+        print(config.REPORTS_DIR / "independence_audit.md")
         return 0
     con = db.connect()
 

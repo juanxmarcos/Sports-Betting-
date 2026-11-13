@@ -89,7 +89,8 @@ def best_price(book: dict[str, dict[str, float]], selection: str, commission: fl
 
 
 def n_books(book, selections) -> int:
-    """Number of INDEPENDENT bookmakers (same-owner / same-platform brands count once)."""
+    """Rule v1 ("legacy") count: same-owner / same-platform brands in the best-effort map count
+    once, and a bookmaker that is NOT in the map counts as its own independent operator."""
     from .sources.books import group_of
     return len({group_of(b) for b, q in book.items() if b not in AGGREGATES and all(s in q for s in selections)})
 
@@ -100,6 +101,65 @@ def consensus_excluding(book, selections, exclude_bookmaker, priority=CONSENSUS_
     from .sources.books import group_of
     g = group_of(exclude_bookmaker)
     return consensus({b: q for b, q in book.items() if group_of(b) != g}, selections, priority)
+
+
+# ---------- rule v2 ("verified"): only verified operators are independent evidence ----------
+SHARP_REFERENCES = ("Betfair Exchange", "Pinnacle")     # no aggregate: "Avg" contains the tested price
+MEDIAN_VERIFIED = "median (verified operators)"
+
+
+def _quoting(book, selections) -> list[str]:
+    return [b for b, q in book.items() if b not in AGGREGATES and all(s in q for s in selections)]
+
+
+def verified_operators(book, selections) -> set[str]:
+    """Verified operator groups quoting this market. A bookmaker whose owner and price origin
+    are not verified in sources/books.py REGISTRY is never counted here."""
+    from .sources.books import verified_group
+    return {g for g in map(verified_group, _quoting(book, selections)) if g}
+
+
+def n_books_verified(book, selections) -> int:
+    return len(verified_operators(book, selections))
+
+
+def unverified_books(book, selections) -> list[str]:
+    from .sources.books import verified_group
+    return sorted(b for b in _quoting(book, selections) if not verified_group(b))
+
+
+def consensus_verified_excluding(book, selections, exclude_bookmaker):
+    """Leave-one-out fair value from VERIFIED operators only, one vote per operator.
+
+    * The tested bookmaker is removed together with every brand of its verified operator AND of
+      its legacy group, so neither map can leak its price into the reference.
+    * Unverified bookmakers and aggregates ("Avg" includes the tested price) are not used.
+    * A sharp reference (Betfair Exchange, Pinnacle) is used alone if present, as before.
+    * Otherwise the median is taken over operators, not brands: three skins of one operator are
+      one vote (their de-vigged prices are averaged first), so syndicated prices cannot outvote
+      independent ones."""
+    from .sources.books import group_of, verified_group
+    book = clean(book, selections)
+    ex_legacy, ex_verified = group_of(exclude_bookmaker), verified_group(exclude_bookmaker)
+    votes: dict[str, list] = {}
+    for b in _quoting(book, selections):
+        g = verified_group(b)
+        if not g or g == ex_verified or group_of(b) == ex_legacy or b == exclude_bookmaker:
+            continue
+        votes.setdefault(g, []).append(b)
+    for bk in SHARP_REFERENCES:
+        if any(bk in members for members in votes.values()):
+            fair = devig_power([book[bk][s] for s in selections])
+            return dict(zip(selections, fair)), bk
+    fairs = {g: np.mean([devig_power([book[b][s] for s in selections]) for b in members], axis=0)
+             for g, members in votes.items()}
+    if len(fairs) >= 2:
+        med = np.median(np.array(list(fairs.values())), axis=0)
+        return dict(zip(selections, med / med.sum())), MEDIAN_VERIFIED
+    if len(fairs) == 1:
+        g, f = next(iter(fairs.items()))
+        return dict(zip(selections, f / f.sum())), f"single:{g}"
+    return None, None
 
 
 def blend(model_q: float, market_q: float | None, w: float) -> float:

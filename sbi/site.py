@@ -157,6 +157,8 @@ def _watch_short(row: dict) -> str:
         return f"Waiting for better odds ({q:.2f}+)." if q else "Waiting for a better price."
     if reason == "too few bookmakers":
         return "Waiting for more bookmakers to price it."
+    if reason == "too few verified independent bookmakers":
+        return "Waiting for more verified bookmakers to price it."
     if reason == "odds outside range":
         return "Value only at long odds, outside Doyen's range."
     if reason == "no market consensus":
@@ -245,7 +247,7 @@ def build(con, now: datetime | None = None):
                  and not any("known model bias" in n.lower() for n in r.get("notes", []))]
 
     # CLOSE TO VALUE: a real, fresh price within 4 points of the EV threshold, blocked by a fixable rule.
-    fixable = ("EV below threshold", "too few bookmakers", "no market consensus", "extreme disagreement (review)",
+    fixable = ("EV below threshold", "too few bookmakers", "too few verified independent bookmakers", "no market consensus", "extreme disagreement (review)",
                "model uncertainty too high", "pessimistic EV not positive")
     close = [r for r in upcoming7 if not r["has_pick"] and r.get("closest") and fresh(r)
              and r["closest"].get("reason") in fixable and (r["closest"].get("ev") or -1) >= min_ev - 0.04]

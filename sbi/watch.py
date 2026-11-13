@@ -32,6 +32,9 @@ def waiting_for(reason: str | None, c, hours_to_start: float, sport: str, n_book
         return "bookmaker prices for this event"
     if reason == "too few bookmakers":
         return (f"prices from more bookmakers (only {c.n_books} quoting this market) to form a reliable consensus")
+    if reason == "too few verified independent bookmakers":
+        return (f"prices from more verified bookmakers (only {c.n_books} verified operator(s) quote this market; "
+                "bookmakers whose ownership is unverified do not count)")
     if reason == "EV below threshold":
         q = qualifying_odds(c, rules.min_ev)
         return (f"a better price: {c.odds:.2f} is available, about {q:.2f} would qualify" if q

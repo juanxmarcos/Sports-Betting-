@@ -7,8 +7,8 @@
 It answers, per sport x competition x market x source:
   * how many upcoming events are priced, and how old the newest quote is;
   * how many bookmaker NAMES there are versus how many independent OPERATORS. Only bookmakers
-    with an entry in the ownership map (sources/books.py GROUPS) are counted as known operators.
-    A bookmaker with no entry is UNKNOWN: it is never assumed independent, so operator counts
+    verified in the registry (sources/books.py REGISTRY: owner and price origin both cited) are
+    counted as known operators. Any other bookmaker is UNKNOWN: it is never assumed independent, so operator counts
     are a range (lower bound: known operators only; upper bound: every unknown one is separate);
   * what a quote's age actually measures: the bookmaker's own update time, the publication
     time of a file, or merely when Doyen first saw the price (see TIMESTAMP_BASIS);
@@ -30,7 +30,7 @@ from pathlib import Path
 from statistics import median
 
 from . import config
-from .sources.books import GROUPS, normalize_book
+from .sources.books import normalize_book, verified_group
 from .sources.football_data import AGGREGATES
 
 SHARP = ("Pinnacle", "Betfair Exchange")       # the references ev.CONSENSUS_PRIORITY trusts
@@ -58,11 +58,11 @@ def timestamp_basis(source: str) -> str:
 def operator_bounds(books) -> tuple[int, int]:
     """(lower, upper) number of independent operators behind a set of normalised bookmaker names.
 
-    Known = has an entry in the ownership map. Unknown bookmakers are never assumed independent:
+    Known = verified in the registry (sources/books.py REGISTRY). Unknown bookmakers are never assumed independent:
     each could be a separate operator (upper bound) or a brand of one already counted (lower bound)."""
     books = set(books)
-    known = {GROUPS[b] for b in books if b in GROUPS}
-    unknown = {b for b in books if b not in GROUPS}
+    known = {verified_group(b) for b in books if verified_group(b)}
+    unknown = {b for b in books if not verified_group(b)}
     lower = len(known) if known else (1 if unknown else 0)
     return lower, len(known) + len(unknown)
 
@@ -177,8 +177,8 @@ def summary(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = 
             "with_3plus_operators_upper": len({e for (e, _), b in mine.items() if operator_bounds(b)[1] >= 3}),
             "with_sharp_reference": len({e for (e, _), b in mine.items() if any(x in SHARP for x in b)}),
             "bookmaker_names": len(names[sport]),
-            "known_operators": len({GROUPS[b] for b in books[sport] if b in GROUPS}),
-            "unknown_bookmakers": len({b for b in books[sport] if b not in GROUPS}),
+            "known_operators": len({verified_group(b) for b in books[sport] if verified_group(b)}),
+            "unknown_bookmakers": len({b for b in books[sport] if not verified_group(b)}),
         }
     return out
 
@@ -192,8 +192,8 @@ def book_audit(con) -> dict:
         book = normalize_book(name)
         if not book or book in AGGREGATES:
             excluded.append(name)
-        elif book in GROUPS:
-            groups[GROUPS[book]].add(book)
+        elif verified_group(book):
+            groups[verified_group(book)].add(book)
         else:
             unknown.add(book)
         if book and book != name:
@@ -321,7 +321,7 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
          "depends on the source (see *Age basis* in the matrix). For ESPN it is only when Doyen first saw the price, "
          "so a small age shows the price was recently *observed*, not that the bookmaker recently *repriced* it.",
          f"- **Bookmaker-timed fresh** counts only quotes whose timestamp is the bookmaker's own update time (at most {fh:g}h old).",
-         "- **Operators** are a range. *Lower* counts only bookmakers whose owner or pricing platform is recorded in the map in "
+         "- **Operators** are a range. *Lower* counts only bookmakers whose owner and price origin are verified in the registry in "
          "`sbi/sources/books.py`. *Upper* also treats every bookmaker of unknown ownership as a separate operator. "
          "Unknown ownership is never assumed independent, so anything above the lower bound is provisional.", "",
          "## Per sport", "",
@@ -348,7 +348,7 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
     b = rep["bookmakers"]
     L += ["", "## Bookmaker independence", "",
           f"- {b['stored_names']} stored names are {b['bookmakers']} bookmakers after merging name variants.",
-          f"- **Known operators: {b['known_operators']}** (owner or pricing platform recorded in the map): "
+          f"- **Known operators: {b['known_operators']}** (owner and price origin verified in the registry): "
           + ("; ".join(f"{g} ({', '.join(v)})" if v != [g] else g for g, v in b["known_operator_brands"].items()) or "none") + ".",
           f"- **Unknown ownership: {len(b['unknown_ownership'])}** (not verified, not counted as independent): "
           + (", ".join(b["unknown_ownership"]) or "none") + ".",

@@ -57,6 +57,14 @@ class SelectionRules:
     stake_units: float = 1.0        # fixed-unit staking only
     max_daily_units: float = 10.0
     markets: tuple = ("1X2", "OU", "AH", "BTTS")
+    # Which bookmakers count as independent evidence for the min_bookmakers gate (docs/METHODOLOGY.md):
+    #   "legacy"   rule v1: a bookmaker missing from the ownership map counts as its own operator.
+    #   "verified" rule v2: only operators verified in sbi/sources/books.py REGISTRY count, the
+    #              leave-one-out reference uses them only, and the v1 checks must still pass.
+    # Default stays "legacy" (v2 is STAGED: computed and reported for every candidate, not enforced).
+    # Going live is an owner decision: set SBI_INDEPENDENCE_POLICY=verified or change this default
+    # in a reviewed PR. It only ever applies to picks published after the switch.
+    independence_policy: str = field(default_factory=lambda: os.environ.get("SBI_INDEPENDENCE_POLICY", "legacy"))
 
 
 @dataclass
@@ -77,7 +85,12 @@ class Simulator:
     bankroll_units: float = 100.0
 
 
+INDEPENDENCE_POLICIES = ("legacy", "verified")
+INDEPENDENCE_RULE_VERSION = {"legacy": "indep-v1", "verified": "indep-v2"}   # stored with every new pick
+
 RULES = SelectionRules()
+if RULES.independence_policy not in INDEPENDENCE_POLICIES:
+    raise ValueError(f"SBI_INDEPENDENCE_POLICY must be one of {INDEPENDENCE_POLICIES}, got {RULES.independence_policy!r}")
 MODEL = ModelConfig()
 SIM = Simulator()
 
