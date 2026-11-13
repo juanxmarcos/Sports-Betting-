@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
@@ -327,6 +328,17 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             db.provider_err(con, "espn:context", str(e))
             d["error"] = f"{type(e).__name__}: {e}"
             d["_status"] = "partial"
+    if os.environ.get("SBI_NFL_REPORTS") == "1":      # opt-in: off unless the owner sets it (docs/DATA_SOURCES.md)
+        with db.job(con, "ingest-nfl-reports") as d:
+            from . import nfl_reports
+            try:
+                info = nfl_reports.run(con, now)
+                d.update({"ingest": info["ingest"], "summary": info["summary"]})
+                if any("error" in i for i in info["ingest"]):
+                    d["_status"] = "partial"
+            except Exception as e:  # noqa: BLE001 - context only: must never stop the run
+                d["error"] = f"{type(e).__name__}: {e}"
+                d["_status"] = "partial"
     with db.job(con, "ingest-tennis") as d:
         from . import tennis
         try:

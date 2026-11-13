@@ -1,0 +1,5 @@
+game_id,season,game_type,week,gameday,weekday,gametime,away_team,away_score,home_team,home_score,location,espn,away_qb_id,home_qb_id,away_qb_name,home_qb_name
+2026_09_KC_SEA,2026,REG,9,2026-11-08,Sunday,13:00,KC,24,SEA,21,Home,401000001,00-0000001,00-0000005,Fixture Quarterback One,Fixture Quarterback Five
+2026_09_ATL_NO,2026,REG,9,2026-11-08,Sunday,13:00,ATL,17,NO,20,Home,401000002,00-0000003,00-0000020,Fixture Quarterback Three,Fixture Quarterback Twenty
+2026_10_KC_ATL,2026,REG,10,2026-11-15,Sunday,13:00,KC,,ATL,,Home,401000003,00-0000001,00-0000009,Fixture Quarterback One,Fixture Quarterback Nine
+2026_10_SEA_LV,2026,REG,10,2026-11-15,Sunday,16:05,SEA,,LV,,Home,401000004,00-0000005,00-0000021,Fixture Quarterback Five,Fixture Quarterback Twentyone

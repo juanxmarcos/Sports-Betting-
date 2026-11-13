@@ -1,0 +1,6 @@
+season,season_type,game_type,team,week,gsis_id,position,full_name,first_name,last_name,report_primary_injury,report_secondary_injury,report_status,practice_primary_injury,practice_secondary_injury,practice_status
+2026,REG,REG,KC,10,00-0000001,QB,Fixture Quarterback One,Fixture,One,,,,Elbow,Knee,Did Not Participate In Practice
+2026,REG,REG,KC,10,00-0000002,WR,Fixture Receiver Two,Fixture,Two,,,,Hamstring,,Limited Participation in Practice
+2026,REG,REG,ATL,10,00-0000003,QB,Fixture Quarterback Three,Fixture,Three,,,,Thumb,,Full Participation in Practice
+2026,REG,REG,ATL,10,00-0000004,T,Fixture Tackle Four Jr.,Fixture,Four,,,,Not injury related - resting player,,Did Not Participate In Practice
+2026,REG,REG,SEA,10,00-0000005,QB,Fixture Quarterback Five,Fixture,Five,,,,Ribs,,Did Not Participate In Practice

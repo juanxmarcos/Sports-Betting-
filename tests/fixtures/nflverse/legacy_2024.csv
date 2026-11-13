@@ -1,0 +1,10 @@
+season,game_type,team,week,gsis_id,position,full_name,first_name,last_name,report_primary_injury,report_secondary_injury,report_status,practice_primary_injury,practice_secondary_injury,practice_status,date_modified
+2024,REG,HOU,15,00-0000011,TE,Fixture Tight End Eleven,Fixture,Eleven,Illness,,Out,,,"
+    ",2024-12-15T14:17:06Z
+2024,REG,HOU,15,00-0000011,TE,Fixture Tight End Eleven,Fixture,Eleven,Illness,,Questionable,,,"
+    ",2024-12-15T03:34:33Z
+2024,REG,NO,2,00-0000012,QB,Fixture Quarterback Twelve,Fixture,Twelve,Player was ill this morning. No game status.,,Note,,,"
+    ",2024-09-14T18:00:23Z
+2024,REG,NYJ,15,00-0000013,TE,Fixture Tight End Thirteen,Fixture,Thirteen,Knee,,Out,Knee,,Did Not Participate In Practice,
+2024,REG,NYJ,15,00-0000013,TE,Fixture Tight End Thirteen,Fixture,Thirteen,Knee,,Questionable,Knee,,Limited Participation in Practice,
+2024,REG,ARI,1,00-0000014,WR,Fixture Receiver Fourteen,Fixture,Fourteen,Knee,,Probable,Knee,,Out (Definitely Will Not Play),2024-09-06T19:05:30Z
