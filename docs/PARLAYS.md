@@ -45,8 +45,9 @@ a three-leg joint probability is about 9% too high.
    (local calendar day), with a quote inside the freshness limit in `sbi/odds_policy.py`.
    No leg is added, and no threshold is lowered, to make a parlay possible.
 2. **No known link between legs:** different games, no shared team or player, different
-   competitions. Same-game parlays are excluded outright. Passing this screen means "no known
-   link", which is weaker than proof of independence.
+   competitions. Same-game parlays are excluded outright. This is a temporary safety filter.
+   Passing it means "no known link", not that the legs are independent: outcomes in different
+   competitions can still be related, and the screen is no evidence that they are not.
 3. **One bookmaker:** the same bookmaker (not just the same owner group) quotes every leg's exact
    selection. Legs priced at different bookmakers are never combined.
 4. **A real combined price:** that bookmaker's own quote for the combination. *Not available.*
@@ -76,13 +77,14 @@ parlay card renderer, so nothing in the data file can make a recommendation appe
 | Stage | What | Needs | Status |
 |---|---|---|---|
 | 0 | Honest empty state, audit counts, tested arithmetic and leg screens, this document | — | **Done** (issue #7) |
-| 1 | **Shadow ledger.** Store every combination that passes the leg screens in an append-only table, unpublished, at the product of one bookmaker's leg prices. Settle them. Measure hit rate against the multiplied probabilities. | Owner approval; enough straight picks to produce combinations | Proposed |
+| 1 | **Shadow ledger.** Store every combination that passes the leg screens in an append-only table, unpublished, at the product of one bookmaker's leg prices. Settle them. Measure hit rate against the multiplied probabilities. | First, a written evaluation plan (how calibration will be estimated, the sample size needed, what result would count as support); owner approval; no added cost | Proposed, not started |
 | 2 | **Combined-price source.** A zero-cost, permitted way to confirm a bookmaker's quote for the combination. | A data source. None of the current free feeds has one; scraping bet slips is not acceptable | Blocked |
 | 3 | **Publication.** Cards, expanded details and immutable snapshots, only for combinations that meet every rule in §3. | Stages 1 and 2, with evidence reviewed by the owner | Not started |
 
-Stage 2 may never be possible at zero cost. If so, the alternative is an owner decision to show
-combinations as **"illustrative, not a bookmaker quote"** once stage 1 has evidence. That is a
-product decision, not something this code should assume.
+Stage 2 may never be possible at zero cost. **Owner decision (PR #14 review, 2026-11-13):**
+Doyen does not publish illustrative parlays as recommendations, and never presents a computed
+product of leg prices as an executable bookmaker quote. A product-of-legs price may be used
+only inside an unpublished shadow ledger, labelled as computed.
 
 ## 5. Snapshot design for stage 3 (not built)
 

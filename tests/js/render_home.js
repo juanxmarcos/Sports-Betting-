@@ -1,6 +1,6 @@
 // Test harness: runs docs/assets/doyen.js against a JSON fixture with a minimal DOM stub and a fixed
-// clock, then prints the rendered HTML of one route.
-// Input (stdin): {"data": {...}, "now": ISO, "hash": "#/parlays", "range": "today|tomorrow|week"}.
+// clock, then prints the rendered HTML (the homepage unless "hash" names another route).
+// Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays"}.
 "use strict";
 const fs = require("fs");
 const path = require("path");

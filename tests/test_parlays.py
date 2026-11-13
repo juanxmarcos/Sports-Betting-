@@ -13,7 +13,7 @@ import pytest
 from sbi import config, db, parlays, site
 
 ROOT = Path(__file__).resolve().parent.parent
-HARNESS = ROOT / "tests" / "js" / "render_route.js"
+HARNESS = ROOT / "tests" / "js" / "render_home.js"
 NOW = datetime(2026, 11, 13, 15, 0, tzinfo=timezone.utc)          # 10:00 in New York
 TZ = "America/New_York"
 

@@ -7,8 +7,7 @@ An autonomous sports betting research assistant for **soccer, NFL, NBA and tenni
 > Research and paper trading only. Doyen never places bets. Picks are estimates, never guarantees. Most bets lose, including good ones.
 
 ## What you see
-- **Doyen's Pick of the Day:** the single strongest qualifying opportunity, or an honest "nothing qualifies".
-- **Today's Picks:** cards with selection, best price, Doyen's probability, expected value in plain English, the reasoning, and the main risk.
+- **Picks of the Day:** every pick that currently qualifies today, shown as equal cards with selection, best price, Doyen's probability, expected value, the reasoning, and the main risk. Zero, one or several are all normal; when nothing qualifies the page says so. Tomorrow and This Week have their own headings.
 - **Recommended Parlays of the Day:** currently always "No verified parlays today". Doyen has no bookmaker-quoted parlay price and no tested joint probability, so it recommends none. See [docs/PARLAYS.md](docs/PARLAYS.md).
 - **Matches Doyen Is Watching:** near-misses and interesting fixtures, clearly *not* recommendations, with what Doyen is waiting for.
 - **Upcoming**, **Pick History** (immutable, at original odds), **Watchlist** (stored in your browser), and **Ask Doyen** (opens Claude with your question plus Doyen's data; no embedded AI, no secrets).
