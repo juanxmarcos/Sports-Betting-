@@ -258,3 +258,14 @@ Unexplained or technically suspect gaps are **held for review** (stored in `disa
 - One period definition everywhere. Today and Tomorrow are local calendar days; This Week is the next 7 × 24h.
 - The daily report reads its numbers from `data/diagnostics.json`, which is built first, so the report, diagnostics and website agree.
 - Funnel stages: discovered → complete history → valid forecast → fresh odds → 3+ independent bookmakers → **fully evaluated** → markets evaluated → positive-EV markets/events → passing all rules → published.
+
+
+## 14. Parlays: staged, none published
+
+The homepage has a "Recommended Parlays of the Day" section that currently always reads "No verified parlays today".
+
+- **Arithmetic** (independent legs at one bookmaker only): combined odds and joint probability are products of the leg values, and `EV = P(all legs win) × parlay odds − 1`. Leg EVs are never multiplied or added.
+- **Screens** (`sbi/parlays.py`): legs must be active straight picks starting today with fresh quotes; no same game, shared team or same competition; one bookmaker must price every leg.
+- **Not published because** no feed gives a bookmaker-quoted parlay price, and there is no validated joint-probability estimate. Each run exports the audit counts with an empty recommendation list.
+
+Audit, rules and the staged plan: [PARLAYS.md](PARLAYS.md).

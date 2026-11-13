@@ -243,3 +243,6 @@ details.sec[open] summary::after{content:"–"}
 .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
 .cc.close{border-color:rgba(221,184,114,.22)}
 .cc-why.close-r{color:var(--warn)}
+.parlay-empty{cursor:pointer;border-style:dashed}
+.parlay-empty h3{margin-top:0}
+#parlays .section-h .link{white-space:nowrap}

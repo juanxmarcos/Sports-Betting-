@@ -170,6 +170,7 @@
     if (featured) h += `<section class="section first">${pickCard(featured, true)}</section>`;
     else h += `<section class="section first"><div class="card empty-cc"><div class="crown"><span>${S.range === "week" ? "This Week's Picks" : "Doyen's Pick of the Day"}</span><i></i></div><h3>No verified pick ${esc({ today: "today", tomorrow: "for tomorrow", week: "this week" }[S.range])} yet.</h3><p>Every priced market is checked against the sharp consensus; none clears the bar right now.</p></div></section>`;
     if (rest.length) h += `<section class="section"><div class="section-h"><h2>More picks</h2><span class="count">${rest.length}</span></div><div class="grid">${rest.map((p) => pickCard(p)).join("")}</div></section>`;
+    if (S.range === "today") h += parlaysSection();
     const closeAll = (D.close_to_value || []).map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
     const closeIn = closeAll.filter((r) => inRange(r.start_utc, r.end_utc, S.range));
     const closeShown = (closeIn.length ? closeIn : closeAll).slice(0, 3);
@@ -181,6 +182,58 @@
     h += shown.length ? `${!watching.length ? `<p class="muted small">Nothing left ${esc({ today: "today", tomorrow: "tomorrow", week: "this week" }[S.range])}. Coming up next:</p>` : ""}<div class="grid">${shown.map(watchCard).join("")}</div>`
       : `<div class="card empty-cc"><h3>Nothing on the radar</h3><p>No matches are close to qualifying. See <a href="#/upcoming">Upcoming</a> for everything Doyen tracks.</p></div>`;
     return h + `</section>`;
+  }
+  // ---------- parlays (issue #7, stage 0) ----------
+  // Doyen publishes no parlays yet: it has no bookmaker-quoted parlay price and no validated joint
+  // probability (docs/PARLAYS.md). There is deliberately NO parlay card renderer here, so nothing
+  // in the data file can make a recommendation appear until that work is done and reviewed.
+  const PARLAY_URL = "https://github.com/juanxmarcos/Sports-Betting-/blob/main/docs/PARLAYS.md";
+  const PARLAY_BLOCKERS = [
+    { text: "No bookmaker-quoted parlay price. Doyen's odds feeds return single-market prices only, so it cannot verify that any bookmaker offers a given combination, or at what price." },
+    { text: "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs are independent and each leg is well calibrated; Doyen has no settled multi-leg record to support that." },
+  ];
+  function parlaysSection() {
+    return `<section class="section" id="parlays"><div class="section-h"><h2>Recommended Parlays of the Day</h2><a class="link" href="#/parlays">Details →</a></div>
+      <div class="card empty-cc parlay-empty" data-go="#/parlays" role="link" tabindex="0"><h3>No verified parlays today</h3>
+      <p>Doyen can't yet confirm a bookmaker's combined price or a reliable joint probability, so it recommends none rather than guess.</p></div></section>`;
+  }
+  function parlaysDetail() {
+    const P = S.data.parlays || {};
+    const a = P.audit;
+    const today = dkey(new Date());
+    const current = a && P.date === today;
+    const n = (x, one, many) => `${esc(x)} ${x === 1 ? one : many}`;
+    const check = current
+      ? `<div class="kv">
+          <div class="stat"><div class="k">Straight picks open</div><div class="v">${esc(a.straight_picks_seen)}</div></div>
+          <div class="stat"><div class="k">Usable as legs today</div><div class="v">${esc(a.usable_legs_today)}</div></div>
+          <div class="stat"><div class="k">Combinations checked</div><div class="v">${esc(a.combinations_checked)}</div></div>
+          <div class="stat"><div class="k">Published</div><div class="v">0</div></div></div>
+        ${Object.keys(a.excluded || {}).length ? `<div class="k" style="margin-top:12px">Excluded</div><ul class="small muted">${Object.entries(a.excluded).map(([why, c]) => `<li>${n(c, "time", "times")}: ${esc(why.replace(/^(leg|combination): /, ""))}</li>`).join("")}</ul>` : ""}
+        ${a.passed_leg_screens ? `<p class="small muted">${n(a.passed_leg_screens, "combination", "combinations")} passed the leg checks but ${a.passed_leg_screens === 1 ? "is" : "are"} not published, for the reasons below.</p>` : ""}
+        <p class="note">Checked ${esc(ago(P.generated))} for ${esc(fmtDay(P.date))}.</p>`
+      : `<p class="small muted">No parlay check has been recorded for ${esc(fmtDay(today))} yet. Nothing is published either way.</p>`;
+    const why = `<ul class="small">${(P.blockers && P.blockers.length ? P.blockers : PARLAY_BLOCKERS).map((b) => `<li>${esc(b.text)}</li>`).join("")}</ul>
+      <p class="small muted">Until both exist, any parlay card would show a price nobody quoted and a probability nobody tested.</p>`;
+    const needs = `<ul class="small">
+        <li>Two or three legs, each already a published, active straight pick starting today. No extra or weaker legs are added to build one.</li>
+        <li>Different games, no shared team or player, and different competitions. Same-game parlays are out.</li>
+        <li>One bookmaker pricing every leg with fresh quotes, and that bookmaker's own price for the combination.</li>
+        <li>A joint probability with evidence behind it, not just leg probabilities multiplied on trust.</li>
+        <li>A permanent snapshot at publication: legs, bookmaker, each quote, the parlay quote, times and method. Later changes are added to the record, never written over it.</li></ul>`;
+    const math = `<ul class="small">
+        <li>Combined odds = the leg odds multiplied together, only for unrelated legs at one bookmaker.</li>
+        <li>Chance all legs win = the leg chances multiplied together, only if the legs are truly independent.</li>
+        <li>Expected value = chance all legs win × parlay odds − 1. The expected values of the legs are never multiplied or added.</li></ul>
+      <p class="small muted">High combined odds are not a reason to recommend anything.</p>`;
+    const risk = `<div class="risk">${WARN}<span>${esc(P.disclosure || "Parlays are higher-variance and win less often than single picks. Any parlay shown here would be paper-traded research, never a guarantee.")}</span></div>
+      <p class="small muted">Every leg has to win. A small error in each leg's probability compounds across legs, and the bookmaker's margin is paid on every leg.</p>`;
+    return `<div class="sheet"><button class="back" data-go="#/">← Back</button>
+      <div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>
+      <div style="margin:10px 0 4px"><span class="pill monitor">No verified parlays today</span></div>
+      ${sec("Today's check", check)}${sec("Why none is published", why)}${sec("What a parlay would need", needs)}
+      ${sec("How the numbers work", math, false)}${sec("Risk", risk)}
+      <p class="note"><a href="${PARLAY_URL}" target="_blank" rel="noopener">Full parlay methodology and staged plan</a></p></div>`;
   }
   function closeAllView() {
     const D = S.data;
@@ -389,12 +442,12 @@
   }
 
   // ---------- router ----------
-  const TITLES = { close: "Close to Value", upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching" };
+  const TITLES = { close: "Close to Value", upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching", parlays: "Parlays" };
   function render() {
     if (!S.data) return;
     const parts = (location.hash.replace(/^#\/?/, "") || "").split("/");
     const r = parts[0] || "home";
-    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "watching" || r === "close" ? "home" : (r === "pick" || r === "event" ? "" : r))));
+    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "watching" || r === "close" || r === "parlays" ? "home" : (r === "pick" || r === "event" ? "" : r))));
     let html;
     if (r === "upcoming") html = upcoming();
     else if (r === "history") html = history();
@@ -402,6 +455,7 @@
     else if (r === "ask") html = ask(parts[1], parts[2]);
     else if (r === "watching") html = watchingAll();
     else if (r === "close") html = closeAllView();
+    else if (r === "parlays") html = parlaysDetail();
     else if (r === "pick") html = pickDetail(parts[1]);
     else if (r === "event") html = eventDetail(parts[1]);
     else html = home();

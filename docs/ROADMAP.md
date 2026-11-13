@@ -52,3 +52,11 @@ never used to tune rules.
 | Weather, walkovers, market-movement notes | **Done** |
 | Consistent report/diagnostics/site counts | **Done** |
 | Next | Move the SQLite DB out of main's git history (data branch) to stop repo growth; validate ESPN Analytics forecasts; tennis games markets |
+
+## Parlays (issue #7, 2026-11-13)
+| Item | Status |
+|---|---|
+| Feasibility audit, homepage empty state, audit export, tested arithmetic and leg screens | **Done** (stage 0; no parlays published) |
+| Shadow ledger of screened combinations, settled, to measure joint calibration | Proposed (owner approval) |
+| Zero-cost source for a bookmaker-quoted parlay price | Blocked (no such feed today) |
+| Published parlay cards with immutable snapshots | Not started (needs both rows above) |
