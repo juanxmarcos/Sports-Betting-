@@ -1,5 +1,6 @@
 // Test harness: runs docs/assets/doyen.js against a JSON fixture with a minimal DOM stub and a fixed
-// clock, then prints the rendered homepage HTML. Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week"}.
+// clock, then prints the rendered HTML (the homepage unless "hash" names another route).
+// Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays"}.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -18,7 +19,7 @@ const stub = () => ({ innerHTML: "", textContent: "", addEventListener() {} });
 const els = { app, tz: stub(), updated: stub() };
 global.document = { getElementById: (id) => els[id] || stub(), querySelectorAll: () => [], title: "" };
 global.window = { addEventListener() {}, scrollTo() {} };
-global.location = { hash: "" };
+global.location = { hash: input.hash || "" };
 global.localStorage = { getItem: () => null, setItem() {} };
 global.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve(input.data) });
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 
-from . import config, db
+from . import config, db, parlays
 from types import SimpleNamespace
 
 from .explain import ev_plain, explain, market_label, selection_label
@@ -193,8 +193,9 @@ def _sel_text(row: dict, c: dict) -> str:
 def build(con, now: datetime | None = None):
     now = now or datetime.now(timezone.utc)
     config.load_tuned()
-    picks_all = [_pick(con, r, now) for r in con.execute(
-        "SELECT * FROM recommendations ORDER BY published_at DESC, rank")]
+    rec_rows = [dict(r) for r in con.execute("SELECT * FROM recommendations ORDER BY published_at DESC, rank")]
+    picks_all = [_pick(con, r, now) for r in rec_rows]
+    rec_by_id = {r["rec_id"]: r for r in rec_rows}
     current = [p for p in picks_all if p["status"]["state"] in ("active", "updated")
                and datetime.fromisoformat(p["start_utc"]) > now]
     current.sort(key=lambda p: (p["status"]["state"] != "active", -(p["ev"] or 0)))
@@ -291,6 +292,7 @@ def build(con, now: datetime | None = None):
     diag = diagnostics.build(con, now)
     data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
+            "parlays": parlays.build([parlays.leg_from_pick(p, rec_by_id[p["id"]]) for p in current], now),
             "events": events, "watching": watching, "close_to_value": close_ids, "sports": sports,
             "funnel_7d": {k: v["funnel"] for k, v in diag["funnel_7d"].items()},
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,

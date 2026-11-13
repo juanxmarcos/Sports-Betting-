@@ -145,10 +145,10 @@ def test_week_heading_and_context_match_the_selection():
     assert "No picks qualify this week yet." in render([], "week")
 
 
-def test_parlay_section_is_reserved_below_picks_without_any_suggestions():
+def test_parlay_section_sits_below_picks_without_any_suggestions():
     html = render([_pick("a", TODAY_1)])
     par = section(html, "parlays")
-    assert par and "Recommended Parlays of the Day" in par and "Not available yet" in par
+    assert par and "Recommended Parlays of the Day" in par and "No verified parlays today" in par
     assert "<article" not in par and not re.search(r"\d\.\d\d", par)     # no cards, no odds
     assert html.index('id="picks"') < html.index('id="parlays"') < html.index("Close to Value")
     assert section(render([], "tomorrow"), "parlays") is None            # today only
