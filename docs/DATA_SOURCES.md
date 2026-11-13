@@ -3,6 +3,9 @@
 > **Latest audit: 2026-11-13** (issue #15, phase 1). The measured baseline, the provider checks and the
 > prioritised next steps are in [Source audit 2026-11-13](#source-audit-2026-11-13) at the end of this
 > file. The numbers come from `python -m sbi coverage` (`reports/source_coverage.md`).
+>
+> **Soccer league expansion: 2026-11-13** (issue #18, phase 2 of #15). Seven lower divisions are now
+> stored as *monitoring only*. See [Soccer league expansion 2026-11-13](#soccer-league-expansion-2026-11-13).
 
 Every stored row carries `source`, `source_url` and a timestamp (`retrieved_at` for odds is
 the HTTP `Last-Modified` time of the file, i.e. when football-data published that snapshot).
@@ -10,11 +13,11 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 ## Implemented
 
 ### football-data.co.uk (primary)
-- **Access:** free CSV downloads; no key; robots/terms do not prohibit downloading the published files. We fetch about 11 small files per run with a descriptive User-Agent, cache them, and back off on errors. A 401, 403 or 429 aborts that source; we never circumvent it.
+- **Access:** free CSV downloads; no key; robots/terms do not prohibit downloading the published files. We fetch at most 18 small files with a descriptive User-Agent (`fixtures.csv` every 2h, 10 active season files every 6h, 7 monitoring season files once a day), cache them, and back off on errors. A 401, 403 or 429 aborts that source; we never circumvent it.
 - **Files:** `mmz4281/{season}/{div}.csv` (results + stats + odds); `fixtures.csv` (upcoming matches with current odds).
 - **Fields used:** Div, Date, Time (UK local, converted to UTC), Home/AwayTeam, FTHG/FTAG, HxG/AxG (2026-27 onwards, all 10 configured leagues), and odds for 1X2, O/U 2.5 and Asian handicap (`AHh` line). Pre-match odds come from up to 7–10 bookmakers plus Betfair Exchange, with Max/Avg aggregates; closing odds are the `C` columns.
 - **Cadence:** results typically Sun/Mon and after midweek rounds; `fixtures.csv` typically Tue and Fri. **Implication:** odds snapshots can be one to three days old by kick-off. The pipeline excludes snapshots older than 96h and reports their timestamp.
-- **Coverage:** E0, E1, SP1, D1, I1, F1, N1, P1, B1 and SC0 configured; more divisions are available. History goes back to the 1990s. Pinnacle odds stopped partway through 2025-26 and are absent in 2026-27, so the live consensus uses Betfair Exchange, then Pinnacle, then the market average.
+- **Coverage:** two explicit tiers in `sbi/leagues.py`. *Active* (analysed, may produce picks): E0, E1, SP1, D1, I1, F1, N1, P1, B1 and SC0. *Monitoring* (stored and measured, never priced or published): E2, E3, EC, SC1, SC2, SC3 and SP2. A division on neither list is counted in the ingest log and not stored. History goes back to the 1990s. Pinnacle odds stopped partway through 2025-26 and are absent in 2026-27, so the live consensus uses Betfair Exchange, then Pinnacle, then the market average.
 - **Quality issues found:** illiquid exchange quotes (for example 1.02/1.12 on a two-way O/U market). These are handled by an overround sanity filter (0.97–1.20) before any book is used.
 
 ### National teams: martj42/international_results + ESPN scoreboard
@@ -188,7 +191,7 @@ One polite request per URL with the project User-Agent. A 401, 403 or 429 ends t
 | Source | URL checked | Result | Free tier | Decision |
 |---|---|---|---|---|
 | nflverse injuries | `github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv` | 200, updated 2026-11-13 15:18 GMT | Open data, repository lists CC-BY-4.0; no key | **Next adapter.** Official report status plus practice participation, which ESPN does not give |
-| football-data.co.uk lower divisions | `football-data.co.uk/fixtures.csv` | 200, updated 2026-11-13 14:16 GMT; 51 fixtures in E2, E3, EC, SC1–SC3, SP2 | Free, no key | **Candidate.** Same file already fetched: 6 bookmakers (5 operators) plus Betfair Exchange. Each division needs its own backtest before any pick |
+| football-data.co.uk lower divisions | `football-data.co.uk/fixtures.csv` | 200, updated 2026-11-13 14:16 GMT; 51 fixtures in E2, E3, EC, SC1–SC3, SP2 | Free, no key | **Stored as monitoring only since issue #18.** Same file already fetched. Each division needs its own backtest before any pick; see [Soccer league expansion](#soccer-league-expansion-2026-11-13) |
 | football-data.co.uk extra leagues | `football-data.co.uk/new/ARG.csv` (16 countries) | 200, updated 2026-11-10 | Free, no key | History only: closing odds, no pre-match prices. Useful for validation, not for picks |
 | football-data.org | `football-data.org/pricing` | 200 | 12 competitions, 10 calls/min, delayed scores; **no odds, lineups or statistics**; free token | Rejected for now: adds fixtures we already have |
 | BALLDONTLIE | `docs.balldontlie.io` | 200 | Teams, players and games only, 5 requests/min, key required. Stats and injuries from $9.99/month, odds from $39.99/month | Rejected: the free tier adds nothing over ESPN. Do not start the 7-day trial |
@@ -227,8 +230,9 @@ Scottish and Spanish divisions) and history for validation.
 
 1. **NFL practice and injury reports from nflverse** (free, no key): adapter with recorded fixtures,
    stored as context only. Any model use needs a walk-forward test first.
-2. **Lower divisions from football-data.co.uk** (free, already downloaded): ingest fixtures and odds
-   for E2, E3, EC, SP2 and SC1–SC3; publish nothing until each division passes its own backtest.
+2. **Lower divisions from football-data.co.uk** (free, already downloaded): **done as monitoring only**
+   (issue #18). Fixtures, odds and results for E2, E3, EC, SP2 and SC1–SC3 are stored and measured;
+   nothing is priced or published from them. See [Soccer league expansion](#soccer-league-expansion-2026-11-13).
 3. **Operator verification:** confirm owner and pricing platform for the 15 bookmakers of unknown
    ownership, with a dated source for each, and re-check the existing map. Until then the lower bound is
    the figure to rely on. Note that the pick rule in `sbi/ev.py` still counts an unmapped bookmaker as
@@ -246,3 +250,119 @@ Scottish and Spanish divisions) and history for validation.
   archives, an adapter can follow. The licence was non-commercial.
 - **Public database (review item):** whether raw third-party quotes may stay in the public
   `data/sbi.sqlite`. Unresolved; not confirmed as permitted.
+
+## Soccer league expansion 2026-11-13
+
+Issue #18 (phase 2 of #15). Seven lower divisions that were already inside a file Doyen downloads are
+now **stored and measured**. None is priced, shown on the public site or able to produce a pick.
+Evidence: `reports/league_validation.md` (walk-forward, per league) and the *Soccer by league* block
+in `reports/source_coverage.md`.
+
+### What was verified
+
+| Check | Finding (2026-11-13) |
+|---|---|
+| Which extra divisions are in `fixtures.csv` | E2, E3, EC, SC1, SC2, SC3, SP2: 51 fixtures in the snapshot published 14:16 GMT. No other division was in that snapshot (international break: none of the ten active leagues either) |
+| Other football-data divisions (D2, I2, F2, G1, T1 and the 16 "extra" countries) | Not in the fetched snapshot, so **not added**. The extra-country files carry closing odds only |
+| Access | `robots.txt`: `User-agent: *` is allowed everywhere. Named AI-training crawlers and scraping tools are disallowed (GPTBot, ChatGPT-User, Google-Extended, Anthropic-AI, Claude-Web, ClaudeBot, PerplexityBot, Applebot-Extended, CCBot, Meta-ExternalAgent, Diffbot, Omgilibot). Doyen's job is a Python script with its own User-Agent and trains nothing. See *Open points* below |
+| Licence | The site says "My data is free" and offers the files "for quantitative testing of betting systems". **No licence or redistribution terms were found** on the data pages, `notes.txt` or the disclaimer. Personal research use is the only use claimed here. The open question about republishing quotes (see the 2026-11-13 audit) is unchanged |
+| Identifiers | Division code in `Div`, season from the kick-off date (July to June). Event id `football:{div}:{UK date}:{home}:{away}`, unchanged for existing leagues |
+| Shape and history | Ten seasons (2017-18 to 2026-27) for each division: 70 files, 23,978 matches, no unparseable date, no duplicate match, no near-duplicate team spelling. Columns grew from 54–65 to 112–133; 2019-20 and 2020-21 are short seasons (Covid) |
+| Kick-off times | `notes.txt` says only "Time of match kick off". Doyen reads it as UK local time for every country; Leganes v Burgos is listed at 19:30, which matches a 20:30 Spanish kick-off. There is no `Time` column before 2019-20, so those matches are stored at 15:00 UK |
+| xG | Present in 2026-27 for E2, E3 and SP2 only. **Absent for EC, SC1, SC2 and SC3** and for every earlier season; stored as missing, never filled |
+| Bookmakers | Pre-match 1X2: Bet365, Betfred, BetVictor, Bwin, Paddy Power, Sky Bet and Betfair Exchange (plus Max/Avg, which are not bookmakers). O/U 2.5 and Asian handicap: Bet365 and Betfair Exchange only. Pinnacle left the files during 2025-26 |
+| Quote time | `notes.txt`: weekend odds are collected on Friday afternoon and midweek odds on Tuesday afternoon. The stored time is the file's publication time, so every quote is older than its timestamp and none is bookmaker-timed |
+
+### Measured before and after
+
+Same database copy, same moment (2026-11-13 16:55 UTC), ingest run with the old allowlist and then the
+new one. Measured on a scratch copy: the committed database is unchanged by this PR and fills in on the
+next scheduled run.
+
+| Soccer, next 7 days | Before | After | Change |
+|---|---|---|---|
+| Scheduled events | 132 | 183 | +51 |
+| Events with any quote | 43 | 94 | +51 |
+| Observed fresh | 43 | 94 | +51 |
+| **Bookmaker-timed fresh** | 26 | 26 | **0** |
+| 3+ known operators | 26 | 76 | +50 |
+| Sharp reference (Betfair Exchange) | 26 | 75 | +49 |
+| Known operators quoting soccer | 7 | 10 | +3 (Bet365, Entain, Flutter) |
+| Bookmakers of unknown ownership | 8 | 10 | +2 (Betfred, BetVictor) |
+| **Known operators in the whole database** | 10 | 10 | **0** |
+| Finished soccer matches stored | 1,114 | 1,968 | +854 |
+| Events that can produce a pick | 0 club | 0 club | 0 |
+
+| League | Events | Priced | Markets priced | Usable markets | Known operators | Unknown | Bookmaker-timed | Observed only | Sharp reference | Results stored |
+|---|---|---|---|---|---|---|---|---|---|---|
+| E2 England League One | 5 | 5 | 15 | 5 | 4 | 2 | 0 | 5 | 5 | 158 |
+| E3 England League Two | 10 | 10 | 30 | 10 | 4 | 2 | 0 | 10 | 10 | 164 |
+| EC England National League | 11 | 11 | 33 | 11 | 4 | 2 | 0 | 11 | 11 | 189 |
+| SC1 Scotland Championship | 4 | 4 | 12 | 4 | 4 | 2 | 0 | 4 | 4 | 69 |
+| SC2 Scotland League One | 5 | 5 | 15 | 5 | 4 | 2 | 0 | 5 | 5 | 69 |
+| SC3 Scotland League Two | 5 | 5 | 15 | 5 | 4 | 2 | 0 | 5 | 5 | 65 |
+| SP2 Spain Segunda Division | 11 | 11 | 31 | 10 | 4 | 2 | 0 | 11 | 9 | 140 |
+
+What this does and does not show:
+- **More events, not more independent prices.** The four known operators (Bet365, Entain, Flutter,
+  Betfair Exchange) were all in the database already. No new operator was added.
+- **Only 1X2 is usable.** A usable market needs fresh quotes for every selection from three known
+  operators. 50 of 51 events reach that on 1X2. No O/U or handicap market does: two operators quote them.
+- **No quote is bookmaker-timed.** All 51 events are "observed only": a snapshot collected the afternoon
+  before publication. That is weaker than The Odds API quotes used for internationals.
+- **One sharp reference.** With Pinnacle gone, Betfair Exchange is the only one, and lower-division
+  exchange markets are thin (2 of 11 SP2 matches had no exchange price).
+
+### Out-of-sample evidence per league
+
+`python -m sbi league-eval`, each league on its own data. Tune 2020-22, validate 2022-24, test 2024-25 to
+Nov 2026. Hyperparameters were chosen per league; the setting tuned on the six big leagues was scored
+for comparison only.
+
+| League | Test matches | Model log loss | Market log loss | Model − market (95%) | Blend weight | Simulated selections | Return per unit (95%) | Mean CLV (95%) |
+|---|---|---|---|---|---|---|---|---|
+| E2 | 1,246 | 1.0385 | 1.0183 | +0.011 to +0.030 | 0.06 | 50 | −0.48 to +0.33 | −0.001 to +0.059 |
+| E3 | 1,254 | 1.0628 | 1.0465 | +0.007 to +0.027 | 0.05 | 59 | **−0.70 to −0.11** | −0.019 to +0.013 |
+| EC | 1,269 | 1.0210 | 1.0021 | +0.010 to +0.028 | 0.22 | 67 | −0.20 to +0.52 | −0.005 to +0.050 |
+| SC1 | 422 | 1.0451 | 1.0254 | −0.002 to +0.041 | 0.06 | 29 | −0.53 to +0.43 | −0.051 to +0.056 |
+| SC2 | 423 | 1.0576 | 1.0236 | +0.011 to +0.057 | 0.00 | 26 | −0.54 to +0.49 | −0.058 to +0.019 |
+| SC3 | 423 | 1.0655 | 1.0529 | −0.008 to +0.034 | 0.12 | 33 | −0.27 to +0.83 | −0.008 to +0.069 |
+| SP2 | 1,053 | 1.0457 | 1.0207 | +0.015 to +0.036 | 0.06 | 56 | −0.46 to +0.34 | −0.032 to +0.011 |
+
+- **The market beats the model in every league.** The interval excludes zero in five of seven; in SC1
+  and SC3 it includes zero on about 420 matches, which is too few to conclude anything.
+- **The deployed rules show no edge anywhere.** Every closing-line-value interval includes zero, and in
+  E3 the simulated return was reliably negative.
+- **Hyperparameters do not matter much** (test log loss moves by 0.002 to 0.007 across the grid), and the
+  big-league setting would have been neither clearly better nor worse. That is a finding about these
+  seven leagues, not a licence to reuse it.
+- **Verdict: all seven stay monitoring.** Blockers per league are listed in `reports/league_validation.md`.
+
+### What changed in the code
+
+- `sbi/leagues.py`: the allowlist (active and monitoring tiers) and exact, per-division team aliases.
+- `sbi/pipeline.py`: ingest stores both tiers; `analyse` reads the active tier only.
+- `sbi/sources/football_data.py`: malformed rows are dropped and counted (bad date, blank or repeated
+  team, duplicate match); zero, negative and absurd odds are not prices; an empty file is empty; a
+  changed schema raises a clear error that the job records against that provider.
+- **Repeat ingestion fix.** Re-reading the same snapshot used to insert every 1X2 price again, because
+  SQLite's unique key does not match rows whose `line` is empty. The committed database holds 57,753
+  football-data 1X2 rows, of which 2,511 are distinct. New reads no longer add repeats. Existing rows
+  are left alone: they are duplicates of real quotes, and removing them is a data change for the owner
+  to approve.
+- `sbi/coverage.py`: the per-league block and a per-league comparison with the frozen baseline.
+  `data/coverage/baseline_2026-11-13.json` is untouched; measures it did not record are shown as `n/r`.
+- Load: 7 more season files, fetched at most once a day (about 7 extra requests a day).
+
+### Open points for the owner
+
+1. **robots.txt and AI agents.** The history used for validation (70 season files) was downloaded from a
+   Claude Code session with the project User-Agent. The file disallows Anthropic's crawlers by name. If
+   you read that as covering agent sessions, re-run `python -m sbi league-eval` from GitHub Actions or
+   your own machine and keep agent sessions off that site.
+2. **Promotion.** Nothing here supports promoting a league. A future case needs bookmaker-timed quotes
+   from at least three known operators and a closing-line-value interval above zero on more selections.
+3. **Old duplicate rows** (55,242) can be removed in a separate, reviewed change if you want a smaller database.
+4. **O/U and handicap freshness.** For those markets an unchanged price in a newer snapshot keeps its
+   old timestamp (the unique key does apply there), so it can look stale when it is not. Existing
+   behaviour, not changed here because it affects which quotes the pick rules accept.

@@ -23,6 +23,8 @@ def brief(con, now: datetime) -> dict:
         "SELECT event_id,league,kickoff_utc,home,away FROM events WHERE status='scheduled' "
         "AND kickoff_utc BETWEEN ? AND ? ORDER BY kickoff_utc",
         (now.isoformat(), (now + timedelta(hours=48)).isoformat()))]
+    from . import leagues
+    upcoming = [u for u in upcoming if leagues.status(u["league"]) != leagues.MONITORING]   # stored, never analysed
     return {
         "generated": db.utcnow(),
         "instructions": (

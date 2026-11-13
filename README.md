@@ -26,6 +26,7 @@ python -m sbi daily        # ingest all sports → settle → model → EV → r
 ```bash
 python -m sbi serve        # diagnostics view (docs/dev) on http://localhost:8000
 python -m sbi coverage     # source coverage audit (read-only) → reports/source_coverage.md
+python -m sbi league-eval  # walk-forward evidence for monitoring soccer leagues → reports/league_validation.md
 ```
 ```bash
 python -m pytest -q

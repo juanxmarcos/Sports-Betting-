@@ -29,7 +29,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from statistics import median
 
-from . import config
+from . import config, leagues
 from .sources.books import GROUPS, normalize_book
 from .sources.football_data import AGGREGATES
 
@@ -183,6 +183,127 @@ def summary(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = 
     return out
 
 
+SELECTIONS = {"1X2": {"H", "D", "A"}, "OU": {"over", "under"}, "AH": {"home", "away"}}
+LEAGUE_KEYS = ("scheduled_events", "events_priced", "markets_priced", "usable_markets", "events_with_usable_market",
+               "known_operators", "unknown_bookmakers", "events_fresh_bookmaker_timed", "events_fresh_observed_only",
+               "events_with_sharp_reference", "finished_events_stored")
+
+
+def soccer_leagues(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = None,
+                   min_operators: int | None = None) -> dict:
+    """Per soccer competition: events, markets that could actually be compared, operators and quote freshness.
+
+    Counted separately, because one does not imply the next:
+      scheduled_events             upcoming events stored for the competition
+      events_priced                of those, events with any stored pre-match quote
+      markets_priced               (event, market) pairs with any quote
+      usable_markets               (event, market, line) with observed-fresh quotes for EVERY selection from at
+                                   least `min_operators` independent operators (known operators only: the lower bound)
+      known_operators / unknown_bookmakers   as everywhere in this report; unknown is never counted as independent
+      events_fresh_bookmaker_timed events with a fresh quote stamped by the bookmaker itself
+      events_fresh_observed_only   events whose only fresh timestamps are a file's publication time or Doyen's
+                                   own first sight of the price, i.e. no evidence of a recent reprice
+      finished_events_stored       results held in the database for the competition (all seasons stored)
+    `tier` is active / monitoring / unlisted (sbi/leagues.py); `historical_only` marks a competition with stored
+    results and no upcoming event. A usable market is raw material for comparison, not a price that can be bet."""
+    fresh_h = config.RULES.max_odds_age_hours if fresh_h is None else fresh_h
+    min_operators = config.RULES.min_bookmakers if min_operators is None else min_operators
+    lo, hi = now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat()
+    out: dict[str, dict] = {}
+
+    def cell(code: str) -> dict:
+        return out.setdefault(code, {"name": leagues.name(code), "tier": leagues.status(code),
+                                     **{k: 0 for k in LEAGUE_KEYS}, "first_result": None, "last_result": None,
+                                     "newest_quote": None, "timestamp_basis": []})
+
+    for code in leagues.stored():
+        cell(code)
+    for r in con.execute("""SELECT league, COUNT(*) n, MIN(kickoff_utc) a, MAX(kickoff_utc) b FROM events
+                            WHERE sport='football' AND status='finished' GROUP BY 1"""):
+        cell(r["league"]).update(finished_events_stored=r["n"], first_result=r["a"][:10], last_result=r["b"][:10])
+    events = {r["event_id"]: r["league"] for r in con.execute(
+        "SELECT event_id, league FROM events WHERE sport='football' AND status='scheduled' AND kickoff_utc > ? "
+        "AND kickoff_utc <= ?", (lo, hi))}
+    for code in events.values():
+        cell(code)["scheduled_events"] += 1
+    # newest quote per (event, market, line, bookmaker, selection, source)
+    quotes: dict[tuple, dict] = defaultdict(dict)      # (event, market, line) -> {book: {selection: (ts, source)}}
+    for r in con.execute("""SELECT o.event_id, o.market, o.line, o.bookmaker, o.selection, o.source, MAX(o.retrieved_at) m
+                            FROM odds o JOIN events e ON e.event_id=o.event_id
+                            WHERE o.kind='pre' AND e.sport='football' AND e.status='scheduled'
+                              AND e.kickoff_utc > ? AND e.kickoff_utc <= ?
+                            GROUP BY 1,2,3,4,5,6""", (lo, hi)):
+        book = normalize_book(r["bookmaker"])
+        if not book or book in AGGREGATES:
+            continue
+        sel = quotes[(r["event_id"], r["market"], r["line"])].setdefault(book, {})
+        if r["selection"] not in sel or r["m"] > sel[r["selection"]][0]:
+            sel[r["selection"]] = (r["m"], r["source"])
+    priced, mk_priced, usable_ev = defaultdict(set), defaultdict(set), defaultdict(set)
+    timed, observed, sharp = defaultdict(set), defaultdict(set), defaultdict(set)
+    books, basis = defaultdict(set), defaultdict(set)
+    for (eid, market, line), by_book in quotes.items():
+        code = events[eid]
+        c = cell(code)
+        priced[code].add(eid)
+        mk_priced[code].add((eid, market))
+        complete = set()
+        for book, sel in by_book.items():
+            books[code].add(book)
+            for ts, source in sel.values():
+                basis[code].add(timestamp_basis(source))
+                c["newest_quote"] = max(c["newest_quote"] or ts, ts)
+                if _age_h(now, ts) <= fresh_h:
+                    (timed if timestamp_basis(source) == "bookmaker_update" else observed)[code].add(eid)
+                    if book in SHARP:
+                        sharp[code].add(eid)
+            need = SELECTIONS.get(market)
+            if need and need <= {s for s, (ts, _) in sel.items() if _age_h(now, ts) <= fresh_h}:
+                complete.add(book)
+        if len({GROUPS[b] for b in complete if b in GROUPS}) >= min_operators:      # unknown ownership never counts
+            c["usable_markets"] += 1
+            usable_ev[code].add(eid)
+    for code, c in out.items():
+        c.update(events_priced=len(priced[code]), markets_priced=len(mk_priced[code]),
+                 events_with_usable_market=len(usable_ev[code]),
+                 known_operators=len({GROUPS[b] for b in books[code] if b in GROUPS}),
+                 unknown_bookmakers=len({b for b in books[code] if b not in GROUPS}),
+                 events_fresh_bookmaker_timed=len(timed[code]),
+                 events_fresh_observed_only=len(observed[code] - timed[code]),
+                 events_with_sharp_reference=len(sharp[code]), timestamp_basis=sorted(basis[code]))
+        c["historical_only"] = c["scheduled_events"] == 0 and c["finished_events_stored"] > 0
+    return dict(sorted(out.items(), key=lambda kv: ({"active": 0, "monitoring": 1, "international": 2}.get(kv[1]["tier"], 3), kv[0])))
+
+
+def league_delta(report: dict, baseline: dict) -> dict:
+    """Per competition and measure: (baseline, now, change).
+
+    A baseline frozen before this section existed (baseline_2026-11-13.json) has no per-league block. For it,
+    scheduled and priced events are recovered from its coverage matrix; the other measures were not recorded
+    then and are reported as None rather than guessed."""
+    now_l = report.get("soccer_leagues", {})
+    base_l = baseline.get("soccer_leagues")
+    derived: dict[str, dict] = {}
+    if base_l is None:
+        for r in baseline.get("matrix", []):
+            if r.get("sport") != "soccer":
+                continue
+            d = derived.setdefault(r["competition"], {"scheduled_events": 0, "events_priced": 0})
+            d["scheduled_events"] = max(d["scheduled_events"], r["scheduled_events"])
+            d["events_priced"] = max(d["events_priced"], r["events_priced"])
+    out = {}
+    for code in sorted(set(now_l) | set(base_l or derived)):
+        b, n = (base_l or derived).get(code, {}), now_l.get(code, {})
+        row = {}
+        for k in LEAGUE_KEYS:
+            recorded = base_l is not None or k in ("scheduled_events", "events_priced")
+            bv = b.get(k, 0) if recorded else None
+            nv = n.get(k, 0)
+            row[k] = {"baseline": bv, "now": nv, "change": None if bv is None else nv - bv}
+        out[code] = row
+    return out
+
+
 def book_audit(con) -> dict:
     """Every stored bookmaker name -> normalised name -> operator, split into known and unknown ownership."""
     raw = [r[0] for r in con.execute("SELECT DISTINCT bookmaker FROM odds ORDER BY 1")]
@@ -291,6 +412,7 @@ def build(con, now: datetime, horizon_h: float = 168) -> dict:
     return {"as_of": now.isoformat(), "horizon_hours": horizon_h, "fresh_quote_max_age_hours": config.RULES.max_odds_age_hours,
             "timestamp_basis": {**TIMESTAMP_BASIS, "(any other source)": FIRST_SEEN},
             "summary": summary(con, now, horizon_h), "matrix": matrix(con, now, horizon_h),
+            "soccer_leagues": soccer_leagues(con, now, horizon_h),
             "bookmakers": book_audit(con), "sources": sources(con, now), "credentials": credentials(con),
             "odds_api_usage": odds_api_usage(con), "history": history(con), "context": context(con, now)}
 
@@ -310,7 +432,8 @@ def delta(report: dict, baseline: dict) -> dict:
     return out
 
 
-def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None = None) -> str:
+def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None = None,
+                lcmp: dict | None = None) -> str:
     fh = rep["fresh_quote_max_age_hours"]
     L = [f"# Source coverage audit ({rep['as_of'][:16].replace('T', ' ')} UTC)", "",
          f"Measured from the stored database for events starting in the next {rep['horizon_hours']:g} hours. "
@@ -330,6 +453,10 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
          "|---|---|---|---|---|---|---|---|---|---|---|"]
     for s, v in rep["summary"].items():
         L.append(f"| {s} | " + " | ".join(str(v[k]) for k in SUMMARY_KEYS) + " |")
+    mon = sum(v["scheduled_events"] for v in (rep.get("soccer_leagues") or {}).values() if v["tier"] == "monitoring")
+    if mon:
+        L += ["", f"The soccer row includes **{mon} events in monitoring leagues**. They are stored and measured, "
+              "never priced, and cannot produce a pick, so they add no pick opportunities (see *Soccer by league*)."]
     if cmp:
         L += ["", f"## Change since baseline ({(baseline_as_of or '')[:16].replace('T', ' ')} UTC)", "",
               "| Sport | Measure | Baseline | Now | Change |", "|---|---|---|---|---|"]
@@ -345,6 +472,38 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
                  f"{r['events_priced']} / {r['scheduled_events']} | {r['events_priced_fresh']} | {r['bookmaker_names']} | "
                  f"{r['operators_lower']}–{r['operators_upper']} | {', '.join(r['sharp_references']) or 'none'} | "
                  f"{r['median_quote_age_h']} | {BASIS_TEXT[r['timestamp_basis']]} |")
+    sl = rep.get("soccer_leagues") or {}
+    if sl:
+        L += ["", "## Soccer by league", "",
+              "Events, usable markets, operators and quote freshness are counted separately: more fixtures does not "
+              "mean more independent prices. A *usable market* has observed-fresh quotes for every selection from at "
+              f"least {config.RULES.min_bookmakers} known operators; it is raw material for comparison, not a bettable price. "
+              "*Monitoring* leagues are stored and measured only: they are never priced and cannot produce a pick.", "",
+              "| League | Tier | Scheduled | Priced | Markets priced | Usable markets | Events with a usable market | "
+              "Known operators | Unknown ownership | Bookmaker-timed fresh | Observed-only fresh | Sharp reference | "
+              "Results stored | Age basis |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        for code, v in sl.items():
+            if not (v["scheduled_events"] or v["finished_events_stored"] or v["tier"] != "unlisted"):
+                continue
+            L.append(f"| {code} {v['name'] if v['name'] != code else ''} | {v['tier']}{' (no upcoming fixture stored)' if v['historical_only'] else ''} | "
+                     + " | ".join(str(v[k]) for k in ("scheduled_events", "events_priced", "markets_priced", "usable_markets",
+                                                      "events_with_usable_market", "known_operators", "unknown_bookmakers",
+                                                      "events_fresh_bookmaker_timed", "events_fresh_observed_only",
+                                                      "events_with_sharp_reference", "finished_events_stored"))
+                     + f" | {'; '.join(BASIS_TEXT[b] for b in v['timestamp_basis']) or 'no quotes'} |")
+        if lcmp:
+            L += ["", f"### Change by league since baseline ({(baseline_as_of or '')[:16].replace('T', ' ')} UTC)", "",
+                  "`n/r` = not recorded in that baseline (the per-league block was added later), so no change is claimed.", "",
+                  "| League | Scheduled | Priced | Usable markets | Known operators | Bookmaker-timed fresh | Observed-only fresh |",
+                  "|---|---|---|---|---|---|---|"]
+
+            def _d(v):
+                return f"{v['now']} (n/r)" if v["baseline"] is None else f"{v['baseline']} → {v['now']} ({v['change']:+d})"
+            for code, d in lcmp.items():
+                if any(d[k]["now"] or d[k]["baseline"] for k in LEAGUE_KEYS if k != "finished_events_stored"):
+                    L.append(f"| {code} | " + " | ".join(_d(d[k]) for k in (
+                        "scheduled_events", "events_priced", "usable_markets", "known_operators",
+                        "events_fresh_bookmaker_timed", "events_fresh_observed_only")) + " |")
     b = rep["bookmakers"]
     L += ["", "## Bookmaker independence", "",
           f"- {b['stored_names']} stored names are {b['bookmakers']} bookmakers after merging name variants.",
@@ -390,15 +549,16 @@ def write(now: datetime | None = None, baseline: bool = False, db_path: Path | s
     out_dir = config.DATA_DIR / "coverage"
     out_dir.mkdir(parents=True, exist_ok=True)
     base_p = latest_baseline(out_dir)
-    cmp = base = None
+    cmp = base = lcmp = None
     if base_p and not baseline:
         base = json.loads(base_p.read_text())
         cmp = delta(rep, base)
-        rep["baseline"] = {"file": base_p.name, "as_of": base.get("as_of"), "delta": cmp}
+        lcmp = league_delta(rep, base)
+        rep["baseline"] = {"file": base_p.name, "as_of": base.get("as_of"), "delta": cmp, "soccer_league_delta": lcmp}
     text = json.dumps(rep, indent=1, default=str)
     (out_dir / "latest.json").write_text(text + "\n")
     if baseline:
         (out_dir / f"baseline_{now:%Y-%m-%d}.json").write_text(text + "\n")
     config.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    (config.REPORTS_DIR / "source_coverage.md").write_text(to_markdown(rep, cmp, base.get("as_of") if base else None))
+    (config.REPORTS_DIR / "source_coverage.md").write_text(to_markdown(rep, cmp, base.get("as_of") if base else None, lcmp))
     return rep

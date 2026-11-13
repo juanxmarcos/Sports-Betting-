@@ -57,31 +57,95 @@ def event_id(div: str, ko_utc: datetime, home: str, away: str) -> str:
     return f"football:{div}:{ko_utc.strftime('%Y%m%d')}:{slug(home)}:{slug(away)}"
 
 
+class SchemaError(RuntimeError):
+    """The file is not a football-data match file (columns renamed, or an HTML/error page).
+
+    A RuntimeError, so the ingest job records it against this provider and carries on with the others."""
+
+
+REQUIRED = ("Div", "Date", "HomeTeam", "AwayTeam")
+MAX_PRICE = 1000.0      # decimal odds above this are data errors, not prices
+
+
 def read_csv(content: bytes) -> pd.DataFrame:
+    """Parse a football-data CSV. An empty file gives an empty frame; a changed schema raises SchemaError."""
     text = content.decode("utf-8-sig", errors="replace")
-    df = pd.read_csv(io.StringIO(text), on_bad_lines="skip")
-    df = df.dropna(axis=1, how="all")
-    df = df[df.get("HomeTeam").notna()] if "HomeTeam" in df else df.iloc[0:0]
+    if not text.strip():
+        return pd.DataFrame(columns=list(REQUIRED))
+    try:
+        df = pd.read_csv(io.StringIO(text), on_bad_lines="skip")
+    except pd.errors.ParserError as e:
+        raise SchemaError(f"unreadable football-data file: {e}") from e
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(columns=list(REQUIRED))
+    df.columns = [str(c).strip() for c in df.columns]
+    missing = [c for c in REQUIRED if c not in df.columns]
+    if missing:
+        raise SchemaError(f"football-data file is missing column(s) {missing}; first columns: {list(df.columns)[:6]}")
+    keep = df["HomeTeam"].notna() & df["AwayTeam"].notna() & df["Div"].notna()
+    df = df[keep]
+    df = df.dropna(axis=1, how="all") if len(df) else df
+    for c in REQUIRED:          # dropna(axis=1) must never remove a required column
+        if c not in df.columns:
+            df[c] = np.nan
     return df.reset_index(drop=True)
 
 
+def _time_ok(t) -> bool:
+    m = re.match(r"^(\d{1,2}):(\d{2})$", str(t).strip())
+    return bool(m) and int(m.group(1)) < 24 and int(m.group(2)) < 60
+
+
 def _kickoff_utc(row) -> datetime:
+    """Kick-off in UTC. football-data prints UK local time for every division, including Spain's,
+    so the UK zone (GMT in winter, BST in summer) is applied whatever the country. A missing or
+    malformed time falls back to 15:00 UK."""
     d = pd.to_datetime(row["Date"], dayfirst=True).date()
-    t = str(row.get("Time") or "15:00")
-    if not re.match(r"^\d{1,2}:\d{2}$", t):
+    t = str(row.get("Time") or "").strip()
+    if not _time_ok(t):
         t = "15:00"
     hh, mm = map(int, t.split(":"))
     return datetime(d.year, d.month, d.day, hh, mm, tzinfo=UK).astimezone(timezone.utc)
 
 
+def clean_rows(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Drop rows that cannot be a match, keeping the original index so odds rows still line up.
+
+    Removed: an unparseable date, a blank team, a team playing itself, and any repeat of a
+    (division, UK date, home, away) already seen in the file (the first is kept). Returns the kept
+    rows and a count of each reason, so nothing disappears silently."""
+    if df.empty:
+        return df, {"bad_date": 0, "bad_team": 0, "duplicate": 0, "assumed_kickoff_time": 0}
+    dates = pd.to_datetime(df["Date"].astype(str).str.strip(), format="%d/%m/%Y", errors="coerce")
+    short = dates.isna()
+    if short.any():         # seasons before 2018-19 print two-digit years
+        dates[short] = pd.to_datetime(df.loc[short, "Date"].astype(str).str.strip(), format="%d/%m/%y", errors="coerce")
+    home = df["HomeTeam"].astype(str).str.strip()
+    away = df["AwayTeam"].astype(str).str.strip()
+    bad_date = dates.isna()
+    bad_team = (home == "") | (away == "") | (home.str.lower() == away.str.lower())
+    key = df["Div"].astype(str).str.strip() + "|" + dates.dt.strftime("%Y%m%d").fillna("") + "|" + home.map(slug) + "|" + away.map(slug)
+    dup = key.duplicated(keep="first") & ~bad_date & ~bad_team
+    keep = ~(bad_date | bad_team | dup)
+    times = df["Time"] if "Time" in df.columns else pd.Series("", index=df.index)
+    assumed = int((~times.map(_time_ok))[keep].sum())
+    return df[keep], {"bad_date": int(bad_date.sum()), "bad_team": int((bad_team & ~bad_date).sum()),
+                      "duplicate": int(dup.sum()), "assumed_kickoff_time": assumed}
+
+
 def parse_matches(df: pd.DataFrame) -> pd.DataFrame:
-    """Normalise a football-data frame: kickoff_utc, goals, xG, season."""
+    """Normalise a football-data frame: kickoff_utc, goals, xG, season.
+
+    Rows that cannot be a match are dropped (see clean_rows); the index of the remaining rows is
+    the row position in `df`, which is what parse_odds uses as `idx`."""
+    df, _ = clean_rows(df)
     out = pd.DataFrame({
-        "div": df["Div"],
-        "home": df["HomeTeam"].str.strip(),
-        "away": df["AwayTeam"].str.strip(),
+        "div": df["Div"].astype(str).str.strip(),
+        "home": df["HomeTeam"].astype(str).str.strip(),
+        "away": df["AwayTeam"].astype(str).str.strip(),
     })
-    out["kickoff_utc"] = [_kickoff_utc(r) for _, r in df.iterrows()]
+    out["kickoff_utc"] = pd.Series([_kickoff_utc(r) for _, r in df.iterrows()], index=df.index,
+                                   dtype="datetime64[ns, UTC]")
     out["hg"] = pd.to_numeric(df.get("FTHG"), errors="coerce") if "FTHG" in df else np.nan
     out["ag"] = pd.to_numeric(df.get("FTAG"), errors="coerce") if "FTAG" in df else np.nan
     out["hxg"] = pd.to_numeric(df["HxG"], errors="coerce") if "HxG" in df else np.nan
@@ -119,8 +183,8 @@ def parse_odds(df: pd.DataFrame) -> pd.DataFrame:
         if market == "AH":
             lines = pd.to_numeric(df[line], errors="coerce")
         for i, p in prices.items():
-            if not (isinstance(p, float) and np.isfinite(p) and p > 1.0):
-                continue
+            if not (isinstance(p, float) and np.isfinite(p) and 1.0 < p <= MAX_PRICE):
+                continue        # blank, zero, negative, 1.0 or absurd: not a price
             ln = line if market == "OU" else (float(lines[i]) if market == "AH" else None)
             if market == "AH" and not np.isfinite(ln):
                 continue
@@ -157,9 +221,20 @@ def upsert_events(con, matches: pd.DataFrame, source_url: str, finished: bool) -
 def insert_odds(con, matches: pd.DataFrame, odds: pd.DataFrame, source_url: str,
                 retrieved_at: str, kinds=("pre", "closing"), only_events: set | None = None) -> int:
     n = 0
+    ids = matches["event_id"].to_dict()      # rows dropped by clean_rows have no event
     for r in odds[odds["kind"].isin(kinds)].itertuples():
-        eid = matches.at[r.idx, "event_id"]
+        eid = ids.get(r.idx)
+        if eid is None:
+            continue
         if only_events is not None and eid not in only_events:
+            continue
+        # The table's UNIQUE key cannot stop a repeat when `line` is NULL (1X2): SQLite treats NULLs as
+        # distinct. Re-reading the SAME snapshot must add nothing, so skip a row that is already stored
+        # with this exact timestamp. A newer snapshot repeating a price is still recorded, as before.
+        if pd.isna(r.line) and con.execute(
+                """SELECT 1 FROM odds WHERE event_id=? AND bookmaker=? AND market=? AND selection=? AND line IS NULL
+                   AND kind=? AND price=? AND retrieved_at=? LIMIT 1""",
+                (eid, r.bookmaker, r.market, r.selection, r.kind, r.price, retrieved_at)).fetchone():
             continue
         cur = con.execute("""INSERT OR IGNORE INTO odds(event_id,bookmaker,market,selection,line,price,
                              kind,source,source_url,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
@@ -174,12 +249,13 @@ def load_season_frame(div: str, season: str, max_age_hours: float = 12) -> pd.Da
     return read_csv(content)
 
 
-def ingest_results(con, div: str, season: str) -> dict:
+def ingest_results(con, div: str, season: str, max_age_hours: float = 6) -> dict:
     """Results for a league-season. Stores closing odds only for events we predicted
     (keeps the DB small; full history stays reproducible from the CSVs)."""
     url = season_url(div, season)
-    content, lm = fetch(url, max_age_hours=6)
+    content, lm = fetch(url, max_age_hours=max_age_hours)
     df = read_csv(content)
+    df = df[df["Div"].astype(str).str.strip() == div].reset_index(drop=True)   # a season file holds one division
     if df.empty:
         return {"events": 0, "closing_odds": 0}
     m = parse_matches(df)
@@ -195,11 +271,19 @@ def ingest_fixtures(con, leagues) -> dict:
     url = f"{BASE}/fixtures.csv"
     content, lm = fetch(url, max_age_hours=2)
     df = read_csv(content)
-    df = df[df["Div"].isin(list(leagues))].reset_index(drop=True)
+    divs = df["Div"].astype(str).str.strip()
+    in_file = divs.value_counts().to_dict()
+    allow = list(leagues)
+    # Divisions in the file that are not on the allowlist are counted, never stored.
+    skipped = {d: int(n) for d, n in sorted(in_file.items()) if d not in allow}
+    df = df[divs.isin(allow)].reset_index(drop=True)
     if df.empty:
-        return {"events": 0, "odds": 0, "last_modified": lm}
+        return {"events": 0, "odds": 0, "last_modified": lm, "by_division": {}, "not_on_allowlist": skipped}
+    _, dropped = clean_rows(df)
     m = parse_matches(df)
     n = upsert_events(con, m, url, finished=False)
     o = parse_odds(df)
     k = insert_odds(con, m, o, url, lm or db.utcnow(), kinds=("pre",))
-    return {"events": n, "odds": k, "last_modified": lm}
+    return {"events": n, "odds": k, "last_modified": lm,
+            "by_division": {d: int(c) for d, c in sorted(m["div"].value_counts().items())},
+            "not_on_allowlist": skipped, "rows_dropped": dropped}
