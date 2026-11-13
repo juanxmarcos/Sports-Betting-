@@ -101,19 +101,24 @@
   const vs = (t) => esc(String(t || "").replace(/ at /, " @ ").replace(/ v /, " vs. "));
 
   // ---------- compact cards ----------
-  function pickCard(p, featured) {
+  // Every pick card is a peer: same size, same facts. No card is elevated above another.
+  // A pick that changed since publication ("updated") keeps its original odds and EV, but they are
+  // labelled as publication values and the card says it is not a current recommendation.
+  function pickCard(p) {
     const st = p.status || {};
-    const flag = st.state && st.state !== "active" ? statusPill(st) : (p.stale ? '<span class="pill stale">Price may be stale</span>' : "");
-    return `<article class="card cc ${featured ? "feat" : ""}" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
-      ${featured ? `<div class="crown"><span>Doyen's Pick of the Day</span><i></i></div>` : ""}
+    const changed = st.state && st.state !== "active";
+    const flag = changed ? statusPill(st) : (p.stale ? '<span class="pill stale">Price may be stale</span>' : "");
+    const ev = `${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}`;
+    return `<article class="card cc pick${changed ? " changed" : ""}" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
       <div class="cc-top">${topline(p)}${starBtn(p.event_id)}</div>
       <div class="cc-title">${vs(p.title)}</div>
       <div class="cc-main">
         <div><div class="k">${esc(p.market)}</div><div class="sel">${esc(p.selection)}</div></div>
-        <div class="odds"><div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div>
+        <div class="odds">${changed ? '<div class="k">Odds at publication</div>' : ""}<div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div>
       </div>
-      <div class="cc-facts"><span>Estimated chance <b>${pct(p.prob)}</b></span>${featured ? `<span>Expected value <b class="pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</b></span>` : ""}</div>
+      <div class="cc-facts"><span>Estimated chance <b>${pct(p.prob)}</b></span>${changed ? `<span>EV at publication <b>${ev}</b></span>` : `<span>Expected value <b class="pos">${ev}</b></span>`}</div>
       <div class="cc-why"><span>Why</span> ${esc(p.why_short || "")}</div>
+      ${changed ? `<div class="cc-why wait"><b>Not a current recommendation.</b>${st.note ? " " + esc(st.note) : ""}</div>` : ""}
       <div class="cc-foot"><span>${flag}</span><span class="link">Details →</span></div>
     </article>`;
   }
@@ -151,25 +156,46 @@
     const f = D.funnel_7d || {};
     const sp = S.sport === "all" ? Object.keys(f) : [S.sport];
     const markets = sp.reduce((a, k) => a + ((f[k] || {})["6_markets_evaluated"] || 0), 0);
-    return `<div class="brief"><span><b>${nEvents}</b> events</span><span class="dot"></span><span><b>${markets.toLocaleString()}</b> markets priced this week</span><span class="dot"></span><span><b>${picks.length || "No"}</b> pick${picks.length === 1 ? "" : "s"} ${picks.length ? "qualify" : "qualify yet"}</span>${s.sentence ? `<span class="brief-s">${esc(s.sentence)}</span>` : ""}</div>`;
+    return `<div class="brief"><span><b>${nEvents}</b> events</span><span class="dot"></span><span><b>${markets.toLocaleString()}</b> markets priced this week</span><span class="dot"></span><span><b>${picks.length || "No"}</b> pick${picks.length === 1 ? "" : "s"} ${picks.length ? (picks.length === 1 ? "qualifies" : "qualify") : "qualify yet"}</span>${s.sentence ? `<span class="brief-s">${esc(s.sentence)}</span>` : ""}</div>`;
+  }
+  // Heading and date context for the selected period. Future periods are never called today's picks.
+  const fmtShort = (key) => { const [y, m, d] = key.split("-").map(Number); return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
+  function period(range) {
+    const today = dkey(new Date());
+    if (range === "tomorrow") return { h: "Tomorrow's Picks", when: fmtDay(addDays(today, 1)), none: "for tomorrow" };
+    if (range === "week") return { h: "This Week's Picks", when: `Next 7 days · ${fmtShort(today)} – ${fmtShort(dkey(new Date(Date.now() + 7 * 864e5)))}`, none: "this week" };
+    return { h: "Picks of the Day", when: fmtDay(today), none: "today" };
+  }
+  // Picks for the selected period that are still open and have not started, in start-time order.
+  // "active" = still clears every rule. "updated" = still open, but the price or information changed
+  // since publication. Withdrawn, in-play and settled picks are never listed here (they stay in Pick History).
+  function livePicks(D) {
+    const now = Date.now();
+    const live = D.picks.filter((p) => sportOk(p.sport, S.sport) && inRange(p.start_utc, null, S.range) && new Date(p.start_utc).getTime() > now)
+      .sort((a, b) => new Date(a.start_utc) - new Date(b.start_utc) || String(a.title).localeCompare(String(b.title)));
+    const state = (p) => (p.status || {}).state;
+    return { qualifying: live.filter((p) => state(p) === "active"), changed: live.filter((p) => state(p) === "updated") };
   }
   function home() {
     const D = S.data;
-    const picks = D.picks.filter((p) => sportOk(p.sport, S.sport) && inRange(p.start_utc, null, S.range));
-    let featured = null;
-    if (S.range === "today") featured = picks.find((p) => p.id === D.pick_of_the_day && sportOk(p.sport, S.sport)) || null;
-    if (!featured && picks.length && picks[0].status.state === "active") featured = picks[0];
-    const rest = picks.filter((p) => !featured || p.id !== featured.id);
+    const P = period(S.range);
+    const { qualifying, changed } = livePicks(D);
     const evById = Object.fromEntries(D.events.map((e) => [e.event_id, e]));
     const allWatch = D.watching.map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
     const watching = allWatch.filter((r) => inRange(r.start_utc, r.end_utc, S.range));
     const shown = (watching.length ? watching : allWatch).slice(0, 3);
     const nEvents = D.events.filter((r) => sportOk(r.sport, S.sport) && inRange(r.start_utc, r.end_utc, S.range)).length;
-    let h = `<div class="eyebrow">${esc(fmtDay(dkey(new Date())))}</div><h1 style="margin-top:6px">Today's Picks</h1>
-      ${briefing(D, picks, nEvents)}${filters()}${staleBanner()}${sportNotice(S.sport)}`;
-    if (featured) h += `<section class="section first">${pickCard(featured, true)}</section>`;
-    else h += `<section class="section first"><div class="card empty-cc"><div class="crown"><span>${S.range === "week" ? "This Week's Picks" : "Doyen's Pick of the Day"}</span><i></i></div><h3>No verified pick ${esc({ today: "today", tomorrow: "for tomorrow", week: "this week" }[S.range])} yet.</h3><p>Every priced market is checked against the sharp consensus; none clears the bar right now.</p></div></section>`;
-    if (rest.length) h += `<section class="section"><div class="section-h"><h2>More picks</h2><span class="count">${rest.length}</span></div><div class="grid">${rest.map((p) => pickCard(p)).join("")}</div></section>`;
+    let h = `<div class="eyebrow">${esc(P.when)}</div><h1 style="margin-top:6px">${esc(P.h)}</h1>
+      ${briefing(D, qualifying, nEvents)}${filters()}${staleBanner()}${sportNotice(S.sport)}`;
+    h += `<section class="section first" id="picks">`;
+    if (qualifying.length) h += `<div class="grid picks">${qualifying.map(pickCard).join("")}</div>`;
+    else h += `<div class="card empty-cc"><h3>No picks qualify ${esc(P.none)} ${changed.length ? "right now" : "yet"}.</h3><p>${changed.length
+      ? `${changed.length} published pick${changed.length === 1 ? " has" : "s have"} changed since publication and ${changed.length === 1 ? "is" : "are"} listed below with the latest status.`
+      : "Every priced market is checked against the sharp consensus; none clears the bar right now."}</p></div>`;
+    h += `</section>`;
+    if (changed.length) h += `<section class="section" id="changed"><div class="section-h"><h2>Changed since publication</h2><span class="count">${changed.length}</span></div><p class="muted small" style="margin:-6px 0 12px">Still open, but the price or information has moved. Check the latest status before relying on these.</p><div class="grid picks">${changed.map(pickCard).join("")}</div></section>`;
+    // Reserved for the future "Recommended Parlays of the Day" (separate issue). Deliberately holds no suggestions.
+    if (S.range === "today") h += `<section class="section" id="parlays"><div class="section-h"><h2>Recommended Parlays of the Day</h2></div><div class="reserve">Not available yet. Doyen currently publishes straight picks only.</div></section>`;
     const closeAll = (D.close_to_value || []).map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
     const closeIn = closeAll.filter((r) => inRange(r.start_utc, r.end_utc, S.range));
     const closeShown = (closeIn.length ? closeIn : closeAll).slice(0, 3);
