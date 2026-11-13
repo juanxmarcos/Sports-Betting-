@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-13T07:52:03+00:00",
+  "generated": "2026-11-13T12:17:02+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -46,16 +46,39 @@
       "bookmaker": "1xBet",
       "final_prob": 0.23265707691586143,
       "ev": 0.05858969996716956
+    },
+    {
+      "rec_id": "3d662544c2a4e714",
+      "event_id": "football:INT:uefa.nations:20261116:401861185",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-16T19:45:00+00:00",
+      "home": "Germany",
+      "away": "Netherlands",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 4.12,
+      "bookmaker": "1xBet",
+      "final_prob": 0.2552036360614369,
+      "ev": 0.05143898057312013
+    },
+    {
+      "rec_id": "891ed45cef4e0fe7",
+      "event_id": "football:INT:uefa.nations:20261117:401861194",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-17T19:45:00+00:00",
+      "home": "Denmark",
+      "away": "Norway",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.92,
+      "bookmaker": "1xBet",
+      "final_prob": 0.26718961904730243,
+      "ev": 0.047383306665425444
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "football:INT:fifa.friendly:20261113:401916338",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-13T12:00:00+00:00",
-      "home": "Singapore",
-      "away": "Paraguay"
-    },
     {
       "event_id": "football:INT:caf.nations_qual:20261113:401927206",
       "league": "INT:caf.nations_qual",
@@ -87,7 +110,7 @@
     {
       "event_id": "football:INT:fifa.friendly:20261113:401931957",
       "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-13T14:15:00+00:00",
+      "kickoff_utc": "2026-11-13T14:10:00+00:00",
       "home": "United Arab Emirates",
       "away": "Honduras"
     },
