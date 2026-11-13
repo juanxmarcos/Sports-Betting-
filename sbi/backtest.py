@@ -44,7 +44,7 @@ def load_league(div: str, seasons: list[str]) -> tuple[pd.DataFrame, pd.DataFram
         o = fd.parse_odds(raw)
         m.index = m.index + offset
         o["idx"] = o["idx"] + offset
-        offset += len(m)
+        offset += len(raw)      # raw row positions: rows dropped by the parser leave gaps, never overlaps
         frames.append(m)
         odds.append(o)
     m = pd.concat(frames).sort_values("kickoff_utc")

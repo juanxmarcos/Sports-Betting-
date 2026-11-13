@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 
-from . import config, db
+from . import config, db, leagues
 from . import ev as evm
 from .backtest import load_league
 from .engine import books_from_rows, passes, price_event, select
@@ -22,6 +22,9 @@ from .sources import football_data as fd
 from .sources.http import SourceBlocked
 
 
+MONITORING_RESULTS_MAX_AGE_H = 24.0
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(microsecond=0)
 
@@ -29,18 +32,21 @@ def _now() -> datetime:
 def ingest(con, now: datetime | None = None) -> dict:
     now = now or _now()
     out = {}
+    # Active leagues are analysed; monitoring leagues are only stored and measured (see sbi/leagues.py).
     try:
-        out["fixtures"] = fd.ingest_fixtures(con, config.FOOTBALL_LEAGUES)
+        out["fixtures"] = fd.ingest_fixtures(con, leagues.stored())
         db.provider_ok(con, "football-data:fixtures", out["fixtures"]["events"])
     except (SourceBlocked, RuntimeError) as e:
         db.provider_err(con, "football-data:fixtures", str(e))
         out["fixtures_error"] = str(e)
     season = fd.season_code(now.date())
-    for div in config.FOOTBALL_LEAGUES:
+    for div in leagues.stored():
+        # Monitoring results are fetched at most once a day: nothing is priced from them.
+        age = 6 if leagues.is_analysable(div) else MONITORING_RESULTS_MAX_AGE_H
         try:
-            out[div] = fd.ingest_results(con, div, season)
+            out[div] = fd.ingest_results(con, div, season, max_age_hours=age)
             db.provider_ok(con, f"football-data:{div}", out[div]["events"])
-        except (SourceBlocked, RuntimeError) as e:
+        except (SourceBlocked, RuntimeError) as e:      # one division failing never stops the others
             db.provider_err(con, f"football-data:{div}", str(e))
             out[f"{div}_error"] = str(e)
     con.commit()
@@ -155,7 +161,12 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
         "SELECT * FROM events WHERE sport='football' AND league NOT LIKE 'INT:%' AND status='scheduled' "
         "AND kickoff_utc > ? AND kickoff_utc <= ?",
         con, params=(now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat()))
-    summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0}
+    # Only the active allowlist is ever priced. Monitoring leagues are stored for measurement and
+    # validation; they get no prediction, no candidate and no pick, whatever their odds look like.
+    ok = events["league"].isin(leagues.active())
+    watching, events = events[~ok], events[ok]
+    summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0,
+               "monitoring_only_events": {k: int(v) for k, v in sorted(watching["league"].value_counts().items())}}
     cands_by_event, hist_ok, meta = {}, {}, {}
     rng = np.random.default_rng(int(now.timestamp()) // 86400)
     for div, evs in events.groupby("league"):

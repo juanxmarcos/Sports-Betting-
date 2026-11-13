@@ -36,6 +36,9 @@ def main(argv=None) -> int:
     c = sub.add_parser("coverage", help="source coverage audit (read-only); writes reports/source_coverage.md")
     c.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
     c.add_argument("--baseline", action="store_true", help="also freeze this run as data/coverage/baseline_<date>.json")
+    le = sub.add_parser("league-eval", help="walk-forward validation of monitoring leagues (evidence only; "
+                                            "writes reports/league_validation.md, changes no model or allowlist)")
+    le.add_argument("--leagues", help="comma-separated division codes (default: every monitoring league)")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -46,6 +49,19 @@ def main(argv=None) -> int:
         rep = coverage.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc), baseline=args.baseline)
         print(json.dumps(rep["summary"], indent=1))
         print(config.REPORTS_DIR / "source_coverage.md")
+        return 0
+    if args.cmd == "league-eval":   # evidence only: reads the database read-only, writes two report files
+        from . import coverage, league_eval
+        live = {}
+        if config.DB_PATH.exists():
+            ro = coverage.connect_ro()
+            try:
+                live = coverage.soccer_leagues(ro, now)
+            finally:
+                ro.close()
+        rep = league_eval.run(args.leagues.split(",") if args.leagues else None, live=live)
+        print(json.dumps({k: v["verdict"]["status"] for k, v in rep["leagues"].items()}, indent=1))
+        print(config.REPORTS_DIR / "league_validation.md")
         return 0
     con = db.connect()
 

@@ -11,7 +11,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from statistics import median
 
-from . import config, db
+from . import config, db, leagues
 
 SPORT_FILES = {"soccer": ["soccer_club", "soccer_intl"], "nfl": ["nfl"], "nba": ["nba"], "tennis": ["tennis"]}
 BLOCKER_TEXT = {
@@ -83,8 +83,10 @@ def providers(con, now: datetime) -> dict:
     fresh = {}
     for sport, like in (("soccer", "football"), ("nfl", "nfl"), ("nba", "nba"), ("tennis", "tennis")):
         ages, books = [], []
-        for ev in con.execute("SELECT event_id FROM events WHERE sport=? AND status='scheduled' AND kickoff_utc BETWEEN ? AND ?",
+        for ev in con.execute("SELECT event_id, league FROM events WHERE sport=? AND status='scheduled' AND kickoff_utc BETWEEN ? AND ?",
                               (like, now.isoformat(), (now + timedelta(hours=168)).isoformat())):
+            if like == "football" and leagues.status(ev[1]) == leagues.MONITORING:
+                continue        # stored for measurement only; reported per league by `sbi coverage`
             r = con.execute("SELECT MAX(retrieved_at) m, COUNT(DISTINCT bookmaker) n FROM odds WHERE event_id=? AND kind='pre'",
                             (ev[0],)).fetchone()
             if r["m"]:
