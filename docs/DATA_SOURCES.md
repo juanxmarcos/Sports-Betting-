@@ -1,5 +1,9 @@
 # Sports Betting Doyen — Data source register
 
+> **Latest audit: 2026-11-13** (issue #15, phase 1). The measured baseline, the provider checks and the
+> prioritised next steps are in [Source audit 2026-11-13](#source-audit-2026-11-13) at the end of this
+> file. The numbers come from `python -m sbi coverage` (`reports/source_coverage.md`).
+
 Every stored row carries `source`, `source_url` and a timestamp (`retrieved_at` for odds is
 the HTTP `Last-Modified` time of the file, i.e. when football-data published that snapshot).
 
@@ -20,9 +24,9 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 - **Name matching:** an ESPN→dataset alias table (for example Türkiye→Turkey, Congo DR→DR Congo, Czechia→Czech Republic). Unmatched teams are reported as warnings and never guessed.
 
 ### The Odds API (optional, free key)
-- **Access:** free plan, about 500 credits/month. The key lives in the `ODDS_API_KEY` GitHub Actions secret, is never logged, and is stripped from every stored URL. Without a key the connector skips itself.
+- **Access:** free "Starter" plan, 500 credits/month (re-verified 2026-11-13 on the-odds-api.com, and by the provider's own usage headers in production: 500 → 472 after the first two days). The key lives in the `ODDS_API_KEY` GitHub Actions secret, is never logged, and is stripped from every stored URL. Without a key the connector skips itself.
 - **Requests:** `/v4/sports` and `/v4/sports/{key}/events` are free. `/v4/sports/{key}/odds?regions=eu&markets=h2h,totals` costs 2 credits. The `eu` region includes Pinnacle and Betfair Exchange, which are the sharp consensus references.
-- **Budget:** each run spends at most min(8, (remaining − 20 reserve) / runs left this month) credits. It spends only on competitions with events in the next 36h: internationals first, then club leagues.
+- **Budget:** a daily allowance of (remaining − 20 reserve) / days left in the month, shared by the day's runs and capped at 12 credits per run (`sbi/sources/odds_api.py: budget`). A competition is fetched only when it has events in the next 7 days and its refresh is due (more often close to start time): NFL/NBA, internationals and tennis first, then club leagues.
 - **Matching:** an Odds API event is matched to our event when kick-off is within ±3h and both team names are similar (normalised; difflib ≥ 0.6). Unmatched events are logged, never guessed.
 - **Timestamps:** each bookmaker's own `last_update` is stored as `retrieved_at`.
 
@@ -72,3 +76,173 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 | stats.nba.com | NBA | 403 from cloud IPs | Not used |
 | Jeff Sackmann tennis_atp/wta | tennis | not verifiable here | CC BY-NC-SA. Verify from Actions |
 | tennis-data.co.uk | tennis | 403 here | Has historical tennis odds. Verify from Actions |
+
+## Source audit 2026-11-13
+
+Scope: Soccer (clubs and internationals), NFL, NBA and Tennis only. This is the **baseline before any
+new connector**. Everything below was either measured from the stored database or checked against the
+provider's own pages on 2026-11-13. Where a check failed, it says so; nothing is assumed.
+
+### How to reproduce
+
+```bash
+python -m sbi coverage                      # reads the database read-only; no network calls
+python -m sbi coverage --as-of 2026-11-13T12:17:02+00:00 --baseline   # how the baseline was frozen
+```
+
+- `reports/source_coverage.md`: the full matrix (sport × competition × market × source), providers,
+  credentials by presence only, credit use and stored history.
+- `data/coverage/baseline_2026-11-13.json`: the frozen "before". Later runs print the change against it.
+- The command is not part of the 2-hour job and is not shown on the public site.
+
+### Measured baseline (events starting in the next 7 days, as of the 12:17 UTC run)
+
+These are stored, delayed quotes used for research. None is a live or executable price.
+
+| Sport | Scheduled | Any quote | Observed fresh | Bookmaker-timed fresh | 3+ operators, lower bound | 3+ operators, upper bound (provisional) | Sharp reference |
+|---|---|---|---|---|---|---|---|
+| Soccer | 146 | 57 | 57 | 26 | 26 | 26 | 26 |
+| NBA | 52 | 9 | 9 | 9 | 9 | 9 | 9 |
+| NFL | 14 | 14 | 14 | 14 | 14 | 14 | 13 |
+| Tennis | 51 | 6 | 6 | 6 | 2 | 6 | 2 |
+
+How the two caveats are measured:
+
+- **Operators are a range, not one number.** The *lower bound* counts only bookmakers whose owner or
+  pricing platform is recorded in the map in `sbi/sources/books.py`. The *upper bound* also treats every
+  bookmaker of unknown ownership as a separate operator. Unknown ownership is never assumed
+  independent, so anything above the lower bound is provisional until it is verified.
+  - Stored today: 29 bookmakers, of which **10 are known operators** and **15 have unknown ownership**
+    (1xBet, BetAnything, BetVictor, Betclic, Betfred, Codere, Coolbet, DraftKings, Everygame, GTbets,
+    Marathon Bet, Matchbook, MyBookie.ag, PMU, Tipico). Independent operators overall: between 10 and 25.
+  - The map itself is best-effort and was not re-verified in this audit.
+- **Fresh has two meanings, reported separately.** A quote's stored time (`retrieved_at`) means
+  different things by source:
+
+  | Source | What the stored time is | Evidence of a recent reprice? |
+  |---|---|---|
+  | The Odds API | The bookmaker's own last-update time, as passed on by the API | Yes, as reported by the provider |
+  | football-data.co.uk | Publication time of the file (HTTP `Last-Modified`) | No. Prices were collected before publication |
+  | ESPN | When Doyen first fetched that price | No. It shows the price was recently *observed*; the bookmaker's update time is unknown |
+
+  *Observed fresh* accepts any of these within 24h. *Bookmaker-timed fresh* accepts only the first.
+  An ESPN age of 0.0h therefore means "seen in the last run", not "repriced in the last run".
+- Even bookmaker-timed quotes are delayed copies. The Odds API notes that its Pinnacle odds come
+  "from public website, which may incur a delay".
+
+What the numbers say:
+- **Independent comparison depends on one vendor.** Every event with 3+ operators or a sharp reference
+  gets them from The Odds API. ESPN contributes one bookmaker (DraftKings, ownership not yet in the
+  map). football-data.co.uk contributed nothing to this window: it is an international break, and its
+  last stored fixtures snapshot was dated 2026-11-06.
+- **Soccer internationals outside the UEFA Nations League have one bookmaker.** AFCON qualifying
+  (15 priced of 39), CONCACAF Nations League (6 of 26) and friendlies (10 of 37) have DraftKings
+  only, observed by fetch time. No independent comparison is possible and no value claim can be made.
+- **Soccer shows 57 observed fresh but only 26 bookmaker-timed.** The other 31 are ESPN-only events.
+- **Tennis is thin, and thinner once unknown ownership is excluded.** 6 of 51 scheduled matches are
+  priced, all from the ATP/WTA Finals keys. Only 2 reach 3+ known operators; the 4 ATP matches rely on
+  bookmakers of unknown ownership and have no sharp reference. ESPN supplies no tennis odds.
+- **NBA is priced about a day ahead** (9 of 52). That is how the books post NBA lines, not a fault.
+- **History stored in the database is short.** NBA 20 finished games, NFL 1, tennis 41. Closing odds
+  are stored only for events Doyen predicted (by design), and no closing rows are stored yet.
+- **Lineups:** 124 team rows, none confirmed (11 named starters) at the time of the run.
+- **Housekeeping found:** 2 soccer events still marked `scheduled` more than 6 hours after kick-off,
+  and a leftover `espn:golf` provider row (golf is not a supported sport).
+
+### Configured versus working
+
+| Source | Credential | Status on 2026-11-13 |
+|---|---|---|
+| football-data.co.uk (11 files) | none | Working. All 11 succeeded in the 12:16 UTC run |
+| ESPN scoreboards, injuries, summaries | none | Working (internationals, NFL, NBA, tennis, context) |
+| martj42 international results | none | Reachable (checked directly). Still ends 2026-10-06; ESPN fills the gap |
+| nflverse games.csv | none | Reachable (checked directly). 2026 schedule through week 18 |
+| The Odds API | `ODDS_API_KEY` (GitHub secret) | Working in production. 28 credits used in two days, 472 left. One HTTP 422 on 2026-11-12 (a `btts` market request, since removed) |
+
+Runs that log "ODDS_API_KEY not set" are local or research sessions without the secret. That is
+expected: the connector skips itself.
+
+### The Odds API: what the free plan really allows
+
+Checked on `https://the-odds-api.com/` and `/liveapi/guides/v4/` on 2026-11-13.
+- **Plan:** Starter, $0, 500 credits/month, "most bookmakers", all markets. Paid plans start at $30/month.
+- **Cost:** markets × regions per `/odds` call. `/sports` and `/events` are free, and so are empty responses.
+- **Historical odds:** the pricing table and the historical section disagree. Treat it as paid-only.
+- **Terms** (`/terms-and-conditions.html`): storing, displaying and model training are allowed.
+  Reselling or redistributing the data "as a standalone data product" is not. Attribution is optional.
+- **Open review item: raw quotes in a public file.** `data/sbi.sqlite` is committed to this public
+  repository and contains raw Odds API quotes (7,171 rows at the baseline). This audit does **not**
+  conclude that publishing that copy is permitted. It has not been confirmed with the provider, and the
+  same question applies to the football-data.co.uk and ESPN quotes in the file. It needs a decision.
+- **Overage:** the terms do not say what happens at zero credits. The code keeps a 20-credit reserve.
+- **Headroom:** current use is about 14 credits/day, which is roughly the whole monthly allowance.
+  Adding a region (`uk`: 21 books including Smarkets; `us`: the regulated US books) doubles the cost of
+  each call. **More bookmakers from this API means fewer refreshes, or a paid plan. Neither is done here.**
+- **Same name, different company:** `odds-api.io` is a separate provider. It has no free tier
+  ("New free keys are paused") and starts at £49/month. Not used.
+
+### Candidate sources checked 2026-11-13
+
+One polite request per URL with the project User-Agent. A 401, 403 or 429 ends the check.
+
+| Source | URL checked | Result | Free tier | Decision |
+|---|---|---|---|---|
+| nflverse injuries | `github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv` | 200, updated 2026-11-13 15:18 GMT | Open data, repository lists CC-BY-4.0; no key | **Next adapter.** Official report status plus practice participation, which ESPN does not give |
+| football-data.co.uk lower divisions | `football-data.co.uk/fixtures.csv` | 200, updated 2026-11-13 14:16 GMT; 51 fixtures in E2, E3, EC, SC1–SC3, SP2 | Free, no key | **Candidate.** Same file already fetched: 6 bookmakers (5 operators) plus Betfair Exchange. Each division needs its own backtest before any pick |
+| football-data.co.uk extra leagues | `football-data.co.uk/new/ARG.csv` (16 countries) | 200, updated 2026-11-10 | Free, no key | History only: closing odds, no pre-match prices. Useful for validation, not for picks |
+| football-data.org | `football-data.org/pricing` | 200 | 12 competitions, 10 calls/min, delayed scores; **no odds, lineups or statistics**; free token | Rejected for now: adds fixtures we already have |
+| BALLDONTLIE | `docs.balldontlie.io` | 200 | Teams, players and games only, 5 requests/min, key required. Stats and injuries from $9.99/month, odds from $39.99/month | Rejected: the free tier adds nothing over ESPN. Do not start the 7-day trial |
+| API-Football | `api-football.com/pricing` | 403 | Not verifiable | Not used |
+| Jeff Sackmann tennis_atp / tennis_wta | `raw.githubusercontent.com/JeffSackmann/tennis_atp/master/…` | 404 | Not verifiable (licence was CC BY-NC-SA) | Blocked: cannot confirm the files or licence |
+| tennis-data.co.uk | `tennis-data.co.uk/alldata.php` | 403 | Not verifiable | Not used |
+| pbpstats API | `api.pbpstats.com/docs` | 200 (API docs) | No published terms found | Not integrated until the terms are known |
+| NBA CDN schedule / odds JSON | `cdn.nba.com/static/json/…` | 403 | n/a | Not used |
+| FiveThirtyEight SPI | `projects.fivethirtyeight.com/soccer-api/club/spi_matches.csv` | Redirects to a news page | Dataset no longer served | Rejected |
+| ClubElo | `api.clubelo.com` | 502 / no connection | Not verifiable | Not used |
+| OpenLigaDB | `api.openligadb.de/getmatchdata/bl1/2026` | 200 | Keyless; licence not verified here | Low value: Bundesliga fixtures and results only, no odds |
+| TheSportsDB | `thesportsdb.com/free_sports_api` | 200 | Free tier exists, limits not stated; no odds | Low value |
+| SportsDataIO | `api.sportsdata.io` | 401 | Key and paid plan or trial | Not used |
+
+**No new zero-cost source of fresh, independent bookmaker prices was found.** The realistic free gains
+are context data (NFL practice reports), wider coverage from a file already downloaded (lower English,
+Scottish and Spanish divisions) and history for validation.
+
+### Third-party forecasts and advisers
+
+- Stored today: ESPN Analytics only (15 events), kept in `external_forecasts` as context.
+- Forebet returns 403 and the FiveThirtyEight feed is gone. No other forecast source passed the access check.
+- A forecast is a model, not a price. It never counts toward the "3+ bookmakers" rule, and none is used
+  as an input until it has been scored out of sample against the market.
+
+### Same-book parlay prices: exact blockers
+
+1. No connected source returns a bookmaker's own combined price. The Odds API guide documents single
+   markets only, and ESPN publishes single-market DraftKings lines.
+2. Sportsbook sites that show combined prices sit behind logins, geo-blocks and anti-bot protection.
+   These are not bypassed.
+3. So a combined price can only be the product of single-leg prices, which is **not** a
+   bookmaker-offered price and is never described as one. See `docs/PARLAYS.md`.
+
+### Prioritised next steps (each a separate, reviewable PR)
+
+1. **NFL practice and injury reports from nflverse** (free, no key): adapter with recorded fixtures,
+   stored as context only. Any model use needs a walk-forward test first.
+2. **Lower divisions from football-data.co.uk** (free, already downloaded): ingest fixtures and odds
+   for E2, E3, EC, SP2 and SC1–SC3; publish nothing until each division passes its own backtest.
+3. **Operator verification:** confirm owner and pricing platform for the 15 bookmakers of unknown
+   ownership, with a dated source for each, and re-check the existing map. Until then the lower bound is
+   the figure to rely on. Note that the pick rule in `sbi/ev.py` still counts an unmapped bookmaker as
+   its own operator; changing that is a rule change and is left for a separate, reviewed PR.
+4. **The Odds API visibility:** record which mapped competitions the API lists as active but the budget
+   skipped, so gaps like AFCON qualifying can be explained rather than guessed.
+5. **Housekeeping:** events stuck in `scheduled` after kick-off; the leftover `espn:golf` row.
+
+### Decisions only the owner can make
+
+- **A paid odds plan** (The Odds API from $30/month) is the only verified way to add regions and
+  refresh more often. **Not authorised** (owner review, 2026-11-13). Nothing paid is enabled and no
+  trial is started.
+- **Tennis history:** if the owner can confirm the current location and licence of the Sackmann
+  archives, an adapter can follow. The licence was non-commercial.
+- **Public database (review item):** whether raw third-party quotes may stay in the public
+  `data/sbi.sqlite`. Unresolved; not confirmed as permitted.

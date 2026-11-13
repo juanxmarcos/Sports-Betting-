@@ -33,11 +33,21 @@ def main(argv=None) -> int:
     s = sub.add_parser("serve", help="serve the dashboard locally")
     s.add_argument("--port", type=int, default=8000)
     sub.add_parser("status", help="print system status")
+    c = sub.add_parser("coverage", help="source coverage audit (read-only); writes reports/source_coverage.md")
+    c.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
+    c.add_argument("--baseline", action="store_true", help="also freeze this run as data/coverage/baseline_<date>.json")
     args = ap.parse_args(argv)
 
     from . import config, db
-    con = db.connect()
     now = datetime.now(timezone.utc).replace(microsecond=0)
+    if args.cmd == "coverage":      # read-only: must not open the database for writing
+        from . import coverage
+        at = datetime.fromisoformat(args.as_of) if args.as_of else now
+        rep = coverage.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc), baseline=args.baseline)
+        print(json.dumps(rep["summary"], indent=1))
+        print(config.REPORTS_DIR / "source_coverage.md")
+        return 0
+    con = db.connect()
 
     if args.cmd == "init":
         print(f"database ready at {config.DB_PATH}")
