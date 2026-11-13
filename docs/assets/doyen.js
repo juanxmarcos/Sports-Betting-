@@ -102,20 +102,23 @@
 
   // ---------- compact cards ----------
   // Every pick card is a peer: same size, same facts. No card is elevated above another.
+  // A pick that changed since publication ("updated") keeps its original odds and EV, but they are
+  // labelled as publication values and the card says it is not a current recommendation.
   function pickCard(p) {
     const st = p.status || {};
     const changed = st.state && st.state !== "active";
     const flag = changed ? statusPill(st) : (p.stale ? '<span class="pill stale">Price may be stale</span>' : "");
-    return `<article class="card cc pick" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
+    const ev = `${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}`;
+    return `<article class="card cc pick${changed ? " changed" : ""}" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
       <div class="cc-top">${topline(p)}${starBtn(p.event_id)}</div>
       <div class="cc-title">${vs(p.title)}</div>
       <div class="cc-main">
         <div><div class="k">${esc(p.market)}</div><div class="sel">${esc(p.selection)}</div></div>
-        <div class="odds"><div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div>
+        <div class="odds">${changed ? '<div class="k">Odds at publication</div>' : ""}<div class="o">${dec(p.odds)}</div><div class="bk">${esc(p.bookmaker || "")}</div></div>
       </div>
-      <div class="cc-facts"><span>Estimated chance <b>${pct(p.prob)}</b></span><span>Expected value <b class="pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</b></span></div>
+      <div class="cc-facts"><span>Estimated chance <b>${pct(p.prob)}</b></span>${changed ? `<span>EV at publication <b>${ev}</b></span>` : `<span>Expected value <b class="pos">${ev}</b></span>`}</div>
       <div class="cc-why"><span>Why</span> ${esc(p.why_short || "")}</div>
-      ${changed && st.note ? `<div class="cc-why wait">${esc(st.note)}</div>` : ""}
+      ${changed ? `<div class="cc-why wait"><b>Not a current recommendation.</b>${st.note ? " " + esc(st.note) : ""}</div>` : ""}
       <div class="cc-foot"><span>${flag}</span><span class="link">Details →</span></div>
     </article>`;
   }

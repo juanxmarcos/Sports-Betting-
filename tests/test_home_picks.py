@@ -107,6 +107,20 @@ def test_changed_pick_is_listed_separately_and_not_counted_as_qualifying():
     assert "<b>1</b> pick qualifies" in html
 
 
+def test_changed_card_labels_publication_values_and_is_not_a_current_recommendation():
+    html = render([_pick("ok", TODAY_1), _pick("chg", TODAY_2, state="updated")])
+    chg, ok = section(html, "changed"), section(html, "picks")
+    assert cards(chg) == [("card cc pick changed", "chg")]
+    assert "Odds at publication" in chg and "EV at publication <b>+5.0%</b>" in chg
+    assert "<b>Not a current recommendation.</b> note for chg" in chg
+    assert ">2.10<" in chg                                   # the original quote is still shown, unaltered
+    assert 'class="pos"' not in chg and "Expected value" not in chg   # no green "live value" styling
+    # active cards are unchanged
+    assert cards(ok) == [("card cc pick", "ok")]
+    assert 'Expected value <b class="pos">+5.0%</b>' in ok
+    assert "at publication" not in ok and "Not a current recommendation" not in ok
+
+
 def test_only_changed_picks_does_not_claim_there_are_no_picks_at_all():
     html = render([_pick("chg", TODAY_1, state="updated")])
     assert "No picks qualify today right now." in html
