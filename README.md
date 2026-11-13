@@ -31,5 +31,11 @@ python -m pytest -q
 ```
 Automation: `.github/workflows/daily.yml` runs every 2 hours and commits the data, reports and site. A Claude Code scheduled task (`automation/claude_research_routine.md`) adds evidence-graded team-news notes. Optional: the `ODDS_API_KEY` secret enables multi-bookmaker odds (free tier, budgeted per day).
 
-## Docs
-[Development workflow](docs/DEVELOPMENT_WORKFLOW.md) · [Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)
+## Project documents
+- [Architecture](docs/ARCHITECTURE.md): how the daily pipeline flows from ingest to settle, analyse and publish.
+- [Audit](docs/AUDIT.md): the engineering and statistical audit of 2026-11-12.
+- [Data sources](docs/DATA_SOURCES.md): the data source register, with provenance for every stored row.
+- [Development workflow](docs/DEVELOPMENT_WORKFLOW.md): how issues, pull requests and reviews are used to develop Doyen.
+- [Feasibility](docs/FEASIBILITY.md): Phase 1 feasibility under a zero-additional-cost constraint.
+- [Methodology](docs/METHODOLOGY.md): the quantitative methodology (football, model `dc-0.1`).
+- [Roadmap](docs/ROADMAP.md): the project phases and their status.
