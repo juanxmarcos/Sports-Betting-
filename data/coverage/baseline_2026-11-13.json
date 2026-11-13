@@ -1,0 +1,829 @@
+{
+ "as_of": "2026-11-13T12:17:02+00:00",
+ "horizon_hours": 168,
+ "fresh_quote_max_age_hours": 24,
+ "summary": {
+  "soccer": {
+   "scheduled_events": 146,
+   "with_any_quote": 57,
+   "with_fresh_quote": 57,
+   "with_3plus_operators": 26,
+   "with_sharp_reference": 26,
+   "bookmaker_names": 24,
+   "independent_operators": 15
+  },
+  "nba": {
+   "scheduled_events": 52,
+   "with_any_quote": 9,
+   "with_fresh_quote": 9,
+   "with_3plus_operators": 9,
+   "with_sharp_reference": 9,
+   "bookmaker_names": 21,
+   "independent_operators": 18
+  },
+  "nfl": {
+   "scheduled_events": 14,
+   "with_any_quote": 14,
+   "with_fresh_quote": 14,
+   "with_3plus_operators": 14,
+   "with_sharp_reference": 13,
+   "bookmaker_names": 22,
+   "independent_operators": 19
+  },
+  "tennis": {
+   "scheduled_events": 51,
+   "with_any_quote": 6,
+   "with_fresh_quote": 6,
+   "with_3plus_operators": 6,
+   "with_sharp_reference": 2,
+   "bookmaker_names": 23,
+   "independent_operators": 13
+  }
+ },
+ "matrix": [
+  {
+   "sport": "soccer",
+   "competition": "INT:caf.nations_qual",
+   "market": "1X2",
+   "source": "espn.com (game summary)",
+   "scheduled_events": 39,
+   "events_priced": 15,
+   "events_priced_fresh": 15,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:46+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:caf.nations_qual",
+   "market": "1X2",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 39,
+   "events_priced": 15,
+   "events_priced_fresh": 15,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:caf.nations_qual",
+   "market": "AH",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 39,
+   "events_priced": 15,
+   "events_priced_fresh": 15,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:caf.nations_qual",
+   "market": "OU",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 39,
+   "events_priced": 15,
+   "events_priced_fresh": 15,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:concacaf.nations.league",
+   "market": "1X2",
+   "source": "espn.com (game summary)",
+   "scheduled_events": 26,
+   "events_priced": 5,
+   "events_priced_fresh": 5,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:46+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:concacaf.nations.league",
+   "market": "1X2",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 26,
+   "events_priced": 6,
+   "events_priced_fresh": 6,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:concacaf.nations.league",
+   "market": "AH",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 26,
+   "events_priced": 6,
+   "events_priced_fresh": 6,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:concacaf.nations.league",
+   "market": "OU",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 26,
+   "events_priced": 6,
+   "events_priced_fresh": 6,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:fifa.friendly",
+   "market": "1X2",
+   "source": "espn.com (game summary)",
+   "scheduled_events": 37,
+   "events_priced": 10,
+   "events_priced_fresh": 10,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:46+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:fifa.friendly",
+   "market": "1X2",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 37,
+   "events_priced": 10,
+   "events_priced_fresh": 10,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:fifa.friendly",
+   "market": "AH",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 37,
+   "events_priced": 10,
+   "events_priced_fresh": 10,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:fifa.friendly",
+   "market": "OU",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 37,
+   "events_priced": 10,
+   "events_priced_fresh": 10,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:uefa.nations",
+   "market": "1X2",
+   "source": "espn.com (game summary)",
+   "scheduled_events": 44,
+   "events_priced": 18,
+   "events_priced_fresh": 18,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:46+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:uefa.nations",
+   "market": "1X2",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 44,
+   "events_priced": 22,
+   "events_priced_fresh": 22,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:uefa.nations",
+   "market": "1X2",
+   "source": "the-odds-api.com",
+   "scheduled_events": 44,
+   "events_priced": 26,
+   "events_priced_fresh": 26,
+   "bookmaker_names": 23,
+   "bookmakers": 17,
+   "independent_operators": 14,
+   "sharp_references": [
+    "Betfair Exchange",
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:48+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:uefa.nations",
+   "market": "AH",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 44,
+   "events_priced": 22,
+   "events_priced_fresh": 22,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:uefa.nations",
+   "market": "OU",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 44,
+   "events_priced": 22,
+   "events_priced_fresh": 22,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:44+00:00"
+  },
+  {
+   "sport": "soccer",
+   "competition": "INT:uefa.nations",
+   "market": "OU",
+   "source": "the-odds-api.com",
+   "scheduled_events": 44,
+   "events_priced": 26,
+   "events_priced_fresh": 26,
+   "bookmaker_names": 16,
+   "bookmakers": 13,
+   "independent_operators": 11,
+   "sharp_references": [
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:48+00:00"
+  },
+  {
+   "sport": "nba",
+   "competition": "NBA",
+   "market": "ML",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 52,
+   "events_priced": 9,
+   "events_priced_fresh": 9,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:45+00:00"
+  },
+  {
+   "sport": "nba",
+   "competition": "NBA",
+   "market": "ML",
+   "source": "the-odds-api.com",
+   "scheduled_events": 52,
+   "events_priced": 9,
+   "events_priced_fresh": 9,
+   "bookmaker_names": 20,
+   "bookmakers": 20,
+   "independent_operators": 17,
+   "sharp_references": [
+    "Betfair Exchange",
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:41+00:00"
+  },
+  {
+   "sport": "nba",
+   "competition": "NBA",
+   "market": "SPREAD",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 52,
+   "events_priced": 9,
+   "events_priced_fresh": 9,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:45+00:00"
+  },
+  {
+   "sport": "nba",
+   "competition": "NBA",
+   "market": "SPREAD",
+   "source": "the-odds-api.com",
+   "scheduled_events": 52,
+   "events_priced": 9,
+   "events_priced_fresh": 9,
+   "bookmaker_names": 15,
+   "bookmakers": 15,
+   "independent_operators": 12,
+   "sharp_references": [
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:41+00:00"
+  },
+  {
+   "sport": "nba",
+   "competition": "NBA",
+   "market": "TOTAL",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 52,
+   "events_priced": 9,
+   "events_priced_fresh": 9,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:45+00:00"
+  },
+  {
+   "sport": "nba",
+   "competition": "NBA",
+   "market": "TOTAL",
+   "source": "the-odds-api.com",
+   "scheduled_events": 52,
+   "events_priced": 9,
+   "events_priced_fresh": 9,
+   "bookmaker_names": 16,
+   "bookmakers": 16,
+   "independent_operators": 14,
+   "sharp_references": [
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:41+00:00"
+  },
+  {
+   "sport": "nfl",
+   "competition": "NFL",
+   "market": "ML",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 14,
+   "events_priced": 14,
+   "events_priced_fresh": 14,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:45+00:00"
+  },
+  {
+   "sport": "nfl",
+   "competition": "NFL",
+   "market": "ML",
+   "source": "the-odds-api.com",
+   "scheduled_events": 14,
+   "events_priced": 14,
+   "events_priced_fresh": 14,
+   "bookmaker_names": 20,
+   "bookmakers": 20,
+   "independent_operators": 17,
+   "sharp_references": [
+    "Betfair Exchange",
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 9.6,
+   "newest_quote": "2026-11-13T02:41:05+00:00"
+  },
+  {
+   "sport": "nfl",
+   "competition": "NFL",
+   "market": "SPREAD",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 14,
+   "events_priced": 14,
+   "events_priced_fresh": 14,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 15.6,
+   "newest_quote": "2026-11-13T12:16:45+00:00"
+  },
+  {
+   "sport": "nfl",
+   "competition": "NFL",
+   "market": "SPREAD",
+   "source": "the-odds-api.com",
+   "scheduled_events": 14,
+   "events_priced": 14,
+   "events_priced_fresh": 14,
+   "bookmaker_names": 17,
+   "bookmakers": 17,
+   "independent_operators": 15,
+   "sharp_references": [
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 9.6,
+   "newest_quote": "2026-11-13T02:41:05+00:00"
+  },
+  {
+   "sport": "nfl",
+   "competition": "NFL",
+   "market": "TOTAL",
+   "source": "espn.com (public scoreboard)",
+   "scheduled_events": 14,
+   "events_priced": 14,
+   "events_priced_fresh": 14,
+   "bookmaker_names": 1,
+   "bookmakers": 1,
+   "independent_operators": 1,
+   "sharp_references": [],
+   "median_quote_age_h": 15.6,
+   "newest_quote": "2026-11-13T12:16:45+00:00"
+  },
+  {
+   "sport": "nfl",
+   "competition": "NFL",
+   "market": "TOTAL",
+   "source": "the-odds-api.com",
+   "scheduled_events": 14,
+   "events_priced": 14,
+   "events_priced_fresh": 14,
+   "bookmaker_names": 16,
+   "bookmakers": 16,
+   "independent_operators": 15,
+   "sharp_references": [
+    "Pinnacle"
+   ],
+   "median_quote_age_h": 9.6,
+   "newest_quote": "2026-11-13T02:41:05+00:00"
+  },
+  {
+   "sport": "tennis",
+   "competition": "TENNIS:ATP",
+   "market": "ML",
+   "source": "the-odds-api.com",
+   "scheduled_events": 15,
+   "events_priced": 4,
+   "events_priced_fresh": 4,
+   "bookmaker_names": 5,
+   "bookmakers": 5,
+   "independent_operators": 4,
+   "sharp_references": [],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:35+00:00"
+  },
+  {
+   "sport": "tennis",
+   "competition": "TENNIS:WTA",
+   "market": "ML",
+   "source": "the-odds-api.com",
+   "scheduled_events": 36,
+   "events_priced": 2,
+   "events_priced_fresh": 2,
+   "bookmaker_names": 23,
+   "bookmakers": 16,
+   "independent_operators": 13,
+   "sharp_references": [
+    "Betfair Exchange"
+   ],
+   "median_quote_age_h": 0.0,
+   "newest_quote": "2026-11-13T12:16:39+00:00"
+  }
+ ],
+ "bookmakers": {
+  "stored_names": 39,
+  "bookmakers": 29,
+  "independent_operators": 25,
+  "multi_brand_operators": {
+   "Betsson Group": [
+    "Betsson",
+    "Nordic Bet"
+   ],
+   "Flutter": [
+    "Paddy Power",
+    "Sky Bet"
+   ],
+   "Kambi": [
+    "LeoVegas",
+    "Unibet"
+   ],
+   "evoke": [
+    "888sport",
+    "William Hill"
+   ]
+  },
+  "name_variants_merged": {
+   "Betclic (FR)": "Betclic",
+   "LeoVegas (SE)": "LeoVegas",
+   "PMU (FR)": "PMU",
+   "Unibet (FR)": "Unibet",
+   "Unibet (NL)": "Unibet",
+   "Unibet (SE)": "Unibet",
+   "Winamax (DE)": "Winamax",
+   "Winamax (FR)": "Winamax"
+  },
+  "no_operator_mapping_treated_as_independent": [
+   "1xBet",
+   "BetAnything",
+   "BetVictor",
+   "Betclic",
+   "Betfred",
+   "Codere (IT)",
+   "Coolbet",
+   "DraftKings",
+   "Everygame",
+   "GTbets",
+   "Marathon Bet",
+   "Matchbook",
+   "MyBookie.ag",
+   "PMU",
+   "Tipico"
+  ],
+  "excluded_not_bookmakers": [
+   "Avg",
+   "Max"
+  ]
+ },
+ "sources": {
+  "providers": {
+   "espn:context": {
+    "last_success": "2026-11-13T12:16:50+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 68,
+    "last_error": null
+   },
+   "espn:golf": {
+    "last_success": "2026-11-12T20:55:40+00:00",
+    "hours_since_success": 15.4,
+    "working": false,
+    "rows_last": 2,
+    "last_error": null
+   },
+   "espn:international": {
+    "last_success": "2026-11-13T12:16:44+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 201,
+    "last_error": null
+   },
+   "espn:nba": {
+    "last_success": "2026-11-13T12:16:45+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 75,
+    "last_error": null
+   },
+   "espn:nfl": {
+    "last_success": "2026-11-13T12:16:45+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 15,
+    "last_error": null
+   },
+   "espn:tennis": {
+    "last_success": "2026-11-13T12:17:02+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 51,
+    "last_error": null
+   },
+   "football-data:B1": {
+    "last_success": "2026-11-13T12:16:10+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 99,
+    "last_error": null
+   },
+   "football-data:D1": {
+    "last_success": "2026-11-13T12:16:05+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 81,
+    "last_error": null
+   },
+   "football-data:E0": {
+    "last_success": "2026-11-13T12:16:01+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 100,
+    "last_error": null
+   },
+   "football-data:E1": {
+    "last_success": "2026-11-13T12:16:02+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 180,
+    "last_error": null
+   },
+   "football-data:F1": {
+    "last_success": "2026-11-13T12:16:07+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 90,
+    "last_error": null
+   },
+   "football-data:I1": {
+    "last_success": "2026-11-13T12:16:06+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 110,
+    "last_error": null
+   },
+   "football-data:N1": {
+    "last_success": "2026-11-13T12:16:08+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 108,
+    "last_error": null
+   },
+   "football-data:P1": {
+    "last_success": "2026-11-13T12:16:09+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 98,
+    "last_error": null
+   },
+   "football-data:SC0": {
+    "last_success": "2026-11-13T12:16:10+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 75,
+    "last_error": null
+   },
+   "football-data:SP1": {
+    "last_success": "2026-11-13T12:16:04+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 119,
+    "last_error": null
+   },
+   "football-data:fixtures": {
+    "last_success": "2026-11-13T12:16:00+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 93,
+    "last_error": null
+   },
+   "the-odds-api": {
+    "last_success": "2026-11-13T12:16:52+00:00",
+    "hours_since_success": 0.0,
+    "working": true,
+    "rows_last": 2586,
+    "last_error": "2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED"
+   }
+  },
+  "ingest_job_runs": {
+   "ingest": {
+    "ok": 23
+   },
+   "ingest-espn-context": {
+    "ok": 10
+   },
+   "ingest-international": {
+    "ok": 21
+   },
+   "ingest-nba": {
+    "ok": 13
+   },
+   "ingest-nfl": {
+    "ok": 13
+   },
+   "ingest-odds-api": {
+    "ok": 18,
+    "partial": 1
+   },
+   "ingest-tennis": {
+    "ok": 13
+   }
+  }
+ },
+ "credentials": {
+  "ODDS_API_KEY": {
+   "set_in_this_environment": false,
+   "last_run_that_used_a_working_key": "2026-11-13T12:16:51+00:00"
+  }
+ },
+ "odds_api_usage": {
+  "credits_by_day": {
+   "2026-11-12": {
+    "credits": 18,
+    "runs_that_spent": 4
+   },
+   "2026-11-13": {
+    "credits": 10,
+    "runs_that_spent": 2
+   }
+  },
+  "credits_remaining_after_last_run": 472
+ },
+ "history": {
+  "soccer": {
+   "finished_events": 1114,
+   "first": "2026-07-31",
+   "last": "2026-11-13",
+   "odds_rows_by_kind": {
+    "open": 2714,
+    "pre": 68188
+   }
+  },
+  "nba": {
+   "finished_events": 20,
+   "first": "2026-11-11",
+   "last": "2026-11-13",
+   "odds_rows_by_kind": {
+    "pre": 1917
+   }
+  },
+  "nfl": {
+   "finished_events": 1,
+   "first": "2026-11-13",
+   "last": "2026-11-13",
+   "odds_rows_by_kind": {
+    "pre": 2124
+   }
+  },
+  "tennis": {
+   "finished_events": 41,
+   "first": "2026-11-09",
+   "last": "2026-11-12",
+   "odds_rows_by_kind": {
+    "pre": 348
+   }
+  }
+ },
+ "context": {
+  "scheduled_events_past_start": {
+   "soccer": 2
+  },
+  "injuries_current": {
+   "nba": 102,
+   "nfl": 800
+  },
+  "lineups": {
+   "team_rows": 124,
+   "confirmed": 0
+  },
+  "external_forecasts": {
+   "ESPN Analytics": 15
+  },
+  "odds_event_matching": {
+   "matched_events": 55,
+   "lowest_name_score": 0.71,
+   "player_order_swapped": 6
+  }
+ }
+}
