@@ -45,6 +45,91 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 - **Discrepancies:** when ESPN Analytics differs from the bookmakers or Doyen's model by ≥ 10 points, the gap is flagged on the match's Details page. It is never resolved by picking a side.
 - **Bookmaker normalisation** (`sbi/sources/books.py`): the same bookmaker from two feeds counts once (e.g. "Bet 365" = "Bet365"), and in-play feeds are excluded.
 
+### nflverse injury reports: practice participation and game designations (opt-in, issue #17)
+
+Adapter `sbi/sources/nflverse_injuries.py`, report `sbi/nfl_reports.py`, command `python -m sbi nfl-reports`.
+**Informational risk flags only.** Nothing here feeds model probabilities, calibration, EV thresholds
+or pick selection; that needs its own walk-forward validation first. Nothing is shown on the public site.
+
+**Source checks (2026-11-13, one polite request per URL with the project User-Agent):**
+
+| Question | Finding | Where checked |
+|---|---|---|
+| File | `github.com/nflverse/nflverse-data/releases/download/injuries/injuries_<season>.csv`, one file per season, 2009 onwards. 2026 file: 355 KB, 3,121 rows | HTTP 200 |
+| Licence | CC-BY-4.0. Attribution "nflverse" is given in the report and here | `nflverse-data/LICENSE.md` |
+| Automated use | The repository states it "holds automated data releases" to be downloaded with nflreadr "or manually". No key, no cost, no published rate limit | `nflverse-data/README.md` |
+| Cadence | "Injury Data updates every day at 7AM UTC throughout the season" | nflreadr data schedule article |
+| Conditional requests | `If-None-Match` and `If-Modified-Since` both return 304 with an empty body | measured |
+| Field meanings | `report_status`: "Player's status for game on official injury report". `practice_status`: "Player's participation in practice" | nflreadr injuries data dictionary |
+| Original upstream | Not stated in the dictionary. nflverse is a volunteer project, **not** an official NFL feed; treat it as a faithful copy, not as the league's own publication | not verifiable here |
+
+**What it gives that ESPN does not:** structured practice participation (DNP / Limited / Full) kept
+apart from the official designation (Out / Doubtful / Questionable), keyed by the NFL player id
+(`gsis_id`), with three earlier seasons in the same shape for later validation.
+
+**Limits found (stated, not worked around):**
+- **One practice value per player-week, not one per day.** The day-by-day sequence is only available
+  from the moment Doyen starts logging changes between files (`nfl_report_updates`).
+- **No per-row time from 2025 on.** `date_modified` exists in the 2023 and 2024 files and is absent in
+  2025 and 2026. The only provider time is then the file's HTTP `Last-Modified`
+  (`source_published_at`); Doyen's own retrieval time is stored separately (`first_seen`, `observed_at`).
+- **Slower than ESPN.** A daily file means Friday designations appear the next morning. At 16:39 UTC
+  on Friday 2026-11-13 the file (published 15:18 UTC) had designations for 2 of 28 upcoming teams;
+  ESPN already showed a status for 153 players who were on the nflverse report with practice status
+  only. ESPN's statuses are editorial and are not the official designation, so the two are compared,
+  never merged.
+- **"No rows" is ambiguous.** A team with no rows for a game week either has nothing to report or has
+  not been published yet (Monday-night teams on a Friday, for example). The feed cannot tell these apart.
+- **No confirmed starting quarterback.** The report shows last game's starter (from results in
+  `games.csv`), whether he is on the injury report, and whether the nflverse schedule file lists
+  someone else. That schedule entry is unconfirmed. The nflverse depth-chart file was checked and not
+  used: 75 MB per season, too heavy for the 2-hour job, and a depth chart is not a confirmed starter either.
+- Teams before relocation (OAK, SD, STL) are not in the team table and are skipped and counted.
+
+**Measured coverage (provider files, 2026-11-13).** Team-games are counted against the nflverse schedule.
+
+| Season | Rows | Players | Team-games with rows / scheduled | With a designation | Out | Doubtful | Questionable | DNP | Limited | Full | Rows with provider time |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2023 | 5,599 | 1,413 | 555 / 556 | 545 | 996 | 142 | 1,583 | 1,588 | 1,453 | 2,525 | 5,599 |
+| 2024 | 6,213 | 1,459 | 569 / 570 | 556 | 1,116 | 194 | 1,511 | 1,537 | 1,496 | 3,145 | 6,213 |
+| 2025 | 6,068 | 1,453 | 570 / 570 | 558 | 1,382 | 120 | 1,283 | 1,620 | 1,379 | 3,024 | 0 |
+| 2026 (to week 10) | 3,121 | 1,108 | 298 / 300 | 267 | 596 | 43 | 600 | 802 | 749 | 1,566 | 0 |
+
+Against the phase-1 baseline (`data/coverage/baseline_2026-11-13.json`), which had no practice data
+at all and 800 ESPN NFL rows (215 of them Out, Doubtful or Questionable): one fetch on a copy of the
+database added 3,121 player-weeks for 32 teams over 10 weeks (1,239 with a designation), and for the
+14 upcoming games mapped 14 of 14 to a game week, with 300 week-10 rows for 26 teams (92 DNP, 102
+Limited, 106 Full). A second run returned 304 and wrote no rows. `python -m sbi coverage` lists the
+feed under *Context feeds* once the tables exist.
+
+**How it behaves:**
+- One conditional GET per season file per run. Unchanged file: a 304 and no writes. Cache: one file
+  per URL, overwritten.
+- 401, 403 and 429 stop at once with no retry. Timeouts and 5xx get three attempts with backoff, then
+  the run keeps what is stored and reports its age. A 404 means the season file is not published yet.
+- A file that is not the expected CSV, has no usable rows, is for another season, or would remove
+  more than a fifth of the stored season at once is rejected whole and nothing is written.
+- Rows with an unknown team, a missing or malformed player id, or a non-numeric week are skipped and
+  counted. Duplicates: identical rows collapse; conflicting rows keep the later `date_modified`, and
+  are both dropped when the file gives no time to choose by.
+- Tables (additive): `nfl_report_current` (latest state per player-week), `nfl_report_updates`
+  (append-only log of new, changed, retracted and restored rows) and `nfl_report_fetches` (every
+  attempt and its outcome). A retracted row is kept and marked, never deleted.
+- ESPN comparison pairs players by name inside one team only, because ESPN carries no shared id.
+  A name that is not unique on a team is left unpaired and counted.
+
+**Status: opt-in, not part of the 2-hour job.** The licence and the provider's stated purpose permit
+automated downloads, and the fixture tests cover the failure modes, but the adapter has one live run
+behind it, not weeks. To enable it in production the owner sets `SBI_NFL_REPORTS=1` in the
+`Daily pipeline` step of `.github/workflows/daily.yml`; the step then costs one small conditional
+request per run and can only mark its own job `partial`. Until then, run it by hand:
+
+```bash
+python -m sbi nfl-reports                       # fetch the current season, write reports/nfl_availability.md
+python -m sbi nfl-reports --no-fetch            # report from what is stored
+python -m sbi nfl-reports --history 2023 2024 2025 2026   # also measure coverage of those season files
+```
+
 ### nflverse play-by-play (evaluated feature)
 `github.com/nflverse/nflverse-data/releases` is an open dataset intended for programmatic download. Team EPA/play features were tested in the NFL model and **not adopted**: no out-of-sample gain (see METHODOLOGY §11).
 
@@ -225,8 +310,9 @@ Scottish and Spanish divisions) and history for validation.
 
 ### Prioritised next steps (each a separate, reviewable PR)
 
-1. **NFL practice and injury reports from nflverse** (free, no key): adapter with recorded fixtures,
-   stored as context only. Any model use needs a walk-forward test first.
+1. **NFL practice and injury reports from nflverse** (free, no key): **done as an opt-in adapter in
+   issue #17** (see the nflverse injury reports section above). Stored as context only. Any model use
+   needs a walk-forward test first.
 2. **Lower divisions from football-data.co.uk** (free, already downloaded): ingest fixtures and odds
    for E2, E3, EC, SP2 and SC1–SC3; publish nothing until each division passes its own backtest.
 3. **Operator verification:** confirm owner and pricing platform for the 15 bookmakers of unknown
