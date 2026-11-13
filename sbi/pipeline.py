@@ -135,6 +135,15 @@ def publish_pick(con, now, eid, c, ev, base_evidence: dict, books: dict, urls: l
         "all_prices": {bk: q for bk, q in books.get((c.market, c.line), {}).items()},
         "risks": risks, "blend_weight": c.blend_w,
     })
+    if c.views:   # which independence rule decided this pick, and what the other rule saw (new picks only)
+        v1, v2 = c.views["legacy"], c.views["verified"]
+        evidence["independence"] = {
+            "policy": c.policy, "rule_version": config.INDEPENDENCE_RULE_VERSION[c.policy],
+            "bookmakers_v1": v1["n_books"], "verified_operators_v2": v2["n_books"],
+            "unverified_bookmakers": list(c.unverified_books),
+            "reference_v1": v1["consensus_src"], "reference_v2": v2["consensus_src"],
+            "ev_v1": round(v1["ev"], 4), "ev_v2": None if v2["market_q"] is None else round(v2["ev"], 4),
+        }
     rec_id = hashlib.sha1(f"{eid}|{c.market}|{c.selection}|{c.line}".encode()).hexdigest()[:16]
     cur = con.execute("""INSERT OR IGNORE INTO recommendations(rec_id,event_id,published_at,sport,league,kickoff_utc,
             home,away,market,selection,line,bookmaker,odds,odds_retrieved_at,model_prob,market_prob,final_prob,

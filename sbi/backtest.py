@@ -60,7 +60,7 @@ def _books(o_idx: pd.DataFrame, kind: str) -> dict:
 
 def walk_forward(div: str, m: pd.DataFrame, o: pd.DataFrame, start_season: str, xi: float,
                  ridge: float, blend_w: dict | None = None, rules=None, n_draws: int = 0,
-                 lookback_days: int = 3 * 365) -> tuple[pd.DataFrame, list[dict]]:
+                 lookback_days: int = 3 * 365, policy: str | None = None) -> tuple[pd.DataFrame, list[dict]]:
     """Returns per-match 1X2 prediction rows and (if rules given) simulated bets."""
     m = m.copy()
     elo_d = run_elo(m["home"].values, m["away"].values, m["hg"].values.astype(float), m["ag"].values.astype(float))
@@ -135,7 +135,7 @@ def walk_forward(div: str, m: pd.DataFrame, o: pd.DataFrame, start_season: str, 
                 if rules is not None and pre:
                     cands = price_event(model, r.home, r.away, pre, blend_w or {},
                                         rules.exchange_commission, n_draws=n_draws, rng=rng,
-                                        markets=rules.markets)
+                                        markets=rules.markets, policy=policy)
                     ok = hist_ok >= rules.min_team_matches
                     for eid, c in select({idx: cands}, rules, {idx: ok}):
                         res_v = settle_value(c.market, c.selection, c.line, int(r.hg), int(r.ag))

@@ -238,7 +238,7 @@ Unexplained or technically suspect gaps are **held for review** (stored in `disa
 **Odds integrity.**
 - Source-specific freshness (`sbi/odds_policy.py`). ESPN: 6h. The Odds API: 6h within 10h of the start, 12h within 36h, 24h otherwise. football-data.co.uk: 12h within 10h of the start, 24h otherwise.
 - Bookmaker names are normalised on read, and only the latest quote per bookmaker is used.
-- **Independence**: brands that share an owner or pricing platform (Betsson/NordicBet, Entain brands, Flutter brands, Kambi skins, …) count once toward the 3-bookmaker rule.
+- **Independence**: brands that share an owner or pricing platform (Betsson/NordicBet, Entain brands, Flutter brands, Kambi skins, …) count once toward the 3-bookmaker rule. This is rule v1; section 15 describes its gap and the staged rule v2.
 - **No circularity**: the reference consensus always excludes the bookmaker (and its group) whose price is being tested (leave-one-out).
 - Odds Api event matches are logged with name score and kick-off difference (`odds_match_audit`).
 
@@ -269,3 +269,43 @@ The homepage has a "Recommended Parlays of the Day" section that currently alway
 - **Not published because** no feed gives a bookmaker-quoted parlay price, and there is no validated joint-probability estimate. Each run exports the audit counts with an empty recommendation list.
 
 Audit, rules and the staged plan: [PARLAYS.md](PARLAYS.md).
+
+## 15. Bookmaker independence: rule v1 (live) and rule v2 (staged)
+
+**The gap.** The 3-bookmaker rule exists so that a price is only called value when several independent price-setters disagree with it. Rule v1 merges brands listed in a best-effort ownership map and treats every bookmaker that is *not* in the map as its own operator. An unknown name is therefore counted as independent evidence, although it may be a skin of an operator already counted. Rule v1 also lets each brand vote separately in the median reference, so two skins of one operator count twice there.
+
+**Three different things, kept apart.**
+- *Ownership*: who owns the brand.
+- *Price origin*: who actually sets its prices (its own traders, or a vendor such as Kambi). Brands with different owners can share one price origin.
+- *Quote independence*: whether the prices really are set separately. Neither of the first two proves this. A count of operators is not proof of independently originated prices.
+
+**The registry** (`sbi/sources/books.py`, `REGISTRY`). Each bookmaker has an owner, a price origin, a citation for each, an evidence grade (official, regulator, trade press) and the date checked. A bookmaker is *verified* only when both its owner and its price origin have a citation. Brands that share a price origin, or share an owner while pricing in-house, are one operator; when in doubt they are merged, because merging can only lower the count. A bookmaker without both citations, or not listed at all, is *unverified*. Unverified does not mean dependent; it means Doyen does not know.
+
+**Rule v2 (`verified`)**, for the publication gate only:
+1. Every rule v1 check must pass first, with the same reasons as before. Rule v2 can block a v1 pick and can never create one.
+2. The market needs 3 or more *verified* operators with complete, sane, fresh quotes. Unverified bookmakers do not count. The threshold of 3 is unchanged.
+3. The leave-one-out reference uses verified operators only. A sharp reference (Betfair Exchange, then Pinnacle) is used alone if present; otherwise the median is taken with one vote per operator. The tested bookmaker is removed together with every brand of its operator. The market average ("Avg") is not used, because it contains the tested price.
+4. The value must also clear the EV threshold against that reference.
+
+A pick blocked at step 2 gets the reason "too few verified independent bookmakers".
+
+**What unverified bookmakers still do.** They stay in ingestion, monitoring, the watchlist, the displayed market view and the best-price search under both rules. A pick may be priced at an unverified bookmaker if verified operators support it. They are only refused as *evidence*.
+
+**Status: staged, not live.** `config.RULES.independence_policy` is `legacy` (rule version `indep-v1`). Rule v2 (`indep-v2`) is computed for every candidate and reported, but does not decide what is published. Every new pick stores both rules' counts, references and EVs in its evidence (`independence`). Going live is the owner's decision: set `SBI_INDEPENDENCE_POLICY=verified` in the workflow, or change the default in a reviewed PR. It applies only to picks published after the switch. Published picks, their odds and the ledger are never recomputed.
+
+**Measured impact** (`python -m sbi independence`, `reports/independence_audit.md`; stored data as of 2026-11-13 12:17 UTC, the same snapshot as the source-coverage baseline):
+- *Registry*: 45 bookmaker names, 33 verified in 17 operators, 12 unverified. Of the bookmakers stored today, 15 operators are verified and 8 names are not (the source-coverage baseline of PR #16 had 10 and 15).
+- *Bookmaker-count gate, upcoming 7 days*: 155 markets clear it under v1; **46 of them (29.7%; 95% limits 23.1% to 37.3%) would not under v2**. By event: 4 of 55 (7.3%; 2.9% to 17.3%) lose every qualifying market, all four in tennis (6 events under v1, 2 under v2).
+- *Price-rule candidates, upcoming 7 days*: 2 under v1, both still eligible under v2 (0 of 2 blocked; 95% limits 0% to 65.8%). Two candidates say almost nothing about the long-run share.
+- *Picks already published*: 0 of 5 would have been blocked (95% limits 0% to 43.5%). Three of the five were priced at 1xBet, which is unverified, but each had 5 verified operators and a Betfair Exchange reference. They are not changed either way.
+- *History*: the walk-forward test seasons (six club leagues, 2024-25 to 2026-27, market-only) give the same 272 bets under both rules (0 of 272 removed; 95% limits 0% to 1.4%; ROI +12.8%, limits −6.1% to +32.4%; CLV +4.1%). This data has only large verified bookmakers with a sharp reference, so it shows that rule v2 does not disturb the validated strategy; it cannot show what rule v2 does where unverified bookmakers are common.
+- *Identical prices*: no pair of bookmakers outside a verified operator matched on 10% or more of shared three-way markets. PMU never matched Unibet or LeoVegas (0 of 21), so its Kambi pricing is contracted but not visible in stored prices yet; it stays merged, which is the cautious choice.
+
+In short: rule v2 would have changed no published pick and no historical bet, but it removes about 30% of the markets that currently reach the gate and most tennis events. That is a material change to future coverage, which is why it is staged for the owner's decision.
+
+**Limits of this rule.**
+- Verified means cited, not proven independent. Several citations are trade press, and some pages blocked automated reading and were seen only as search summaries; the report marks these. They should be re-checked by a person before rule v2 goes live.
+- Ownership and platforms change (Unibet and LeoVegas are leaving Kambi market by market; evoke and Tipico changed hands in 2026). Entries are dated and need periodic re-checking.
+- Pinnacle sells its odds to other operators, so a bookmaker can carry Pinnacle-derived prices without any ownership link. No map detects that. The report's identical-price table is the only empirical check, and it can show dependence but cannot prove independence.
+- All multi-bookmaker prices outside club football come from one vendor (The Odds API), which is a single point of failure whatever the operator count.
+- An unverified bookmaker can still supply the best price. An outlier price at an obscure bookmaker is exactly where false value appears; rule v2 makes the reference honest but does not judge whether that price is obtainable.
