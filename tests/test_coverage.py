@@ -54,13 +54,47 @@ def path(tmp_path):
     return p
 
 
-def test_summary_counts_operators_not_names(path):
+def test_operator_bounds_never_assume_unknown_is_independent():
+    # known: Flutter (two brands), Pinnacle. unknown ownership: DraftKings, Tipico
+    assert coverage.operator_bounds({"Paddy Power", "Sky Bet", "Pinnacle"}) == (2, 2)
+    assert coverage.operator_bounds({"Paddy Power", "Pinnacle", "DraftKings", "Tipico"}) == (2, 4)
+    assert coverage.operator_bounds({"DraftKings", "Tipico", "Betfred"}) == (1, 3)   # could all be one operator
+    assert coverage.operator_bounds(set()) == (0, 0)
+
+
+def test_summary_reports_operator_range(path):
     s = coverage.summary(coverage.connect_ro(path), NOW)["nba"]
     assert s["scheduled_events"] == 4                 # e is beyond the horizon, g is finished
-    assert s["with_any_quote"] == 3 and s["with_fresh_quote"] == 2      # c only has stale quotes
-    assert s["with_3plus_operators"] == 1             # a: three Flutter brands are ONE operator
+    assert s["with_any_quote"] == 3 and s["with_fresh_quote_observed"] == 2      # c only has stale quotes
+    # a: three Flutter brands are ONE operator. b: Pinnacle + Kambi known, DraftKings unknown ->
+    # two known operators (lower bound, below 3) and three if DraftKings is separate (upper bound).
+    assert s["with_3plus_operators_lower"] == 0
+    assert s["with_3plus_operators_upper"] == 1
     assert s["with_sharp_reference"] == 1             # c's Pinnacle quote is stale
-    assert s["bookmaker_names"] == 8 and s["independent_operators"] == 5
+    assert s["bookmaker_names"] == 8
+    assert s["known_operators"] == 4 and s["unknown_bookmakers"] == 1    # Flutter, Pinnacle, Kambi, Bet365 | DraftKings
+
+
+def test_observed_fresh_is_not_bookmaker_timed_fresh(tmp_path):
+    """An ESPN quote fetched a minute ago is 'observed fresh' but says nothing about when it was repriced."""
+    p = tmp_path / "t.sqlite"
+    con = db.connect(p)
+    _ev(con, "x", "nba", "NBA", 5)
+    _odds(con, "x", "DraftKings", 0.02, source="espn.com (public scoreboard)")
+    _ev(con, "y", "nba", "NBA", 5)
+    _odds(con, "y", "Pinnacle", 0.02, source="the-odds-api.com")
+    _ev(con, "z", "football", "E0", 5)
+    _odds(con, "z", "Bet365", 0.02, market="1X2", source="football-data.co.uk")
+    con.commit()
+    con.close()
+    ro = coverage.connect_ro(p)
+    s = coverage.summary(ro, NOW)
+    assert s["nba"]["with_fresh_quote_observed"] == 2 and s["nba"]["with_fresh_quote_bookmaker_timed"] == 1
+    assert s["soccer"]["with_fresh_quote_observed"] == 1 and s["soccer"]["with_fresh_quote_bookmaker_timed"] == 0
+    basis = {r["source"]: r["timestamp_basis"] for r in coverage.matrix(ro, NOW)}
+    assert basis == {"espn.com (public scoreboard)": "first_seen", "the-odds-api.com": "bookmaker_update",
+                     "football-data.co.uk": "file_published"}
+    assert coverage.timestamp_basis("some new feed") == "first_seen"     # unknown sources get the weakest claim
 
 
 def test_matrix_row(path):
@@ -70,15 +104,30 @@ def test_matrix_row(path):
     assert (r["sport"], r["competition"], r["market"], r["source"]) == ("nba", "NBA", "ML", "the-odds-api.com")
     assert r["scheduled_events"] == 4 and r["events_priced"] == 3 and r["events_priced_fresh"] == 2
     assert r["sharp_references"] == ["Pinnacle"]
+    assert (r["operators_lower"], r["operators_upper"]) == (4, 5)
+    assert r["timestamp_basis"] == "bookmaker_update"
     assert r["median_quote_age_h"] == 2.0             # newest quote per event: 1h, 2h, 30h
 
 
-def test_book_audit(path):
+def test_book_audit_separates_known_from_unknown(path):
     b = coverage.book_audit(coverage.connect_ro(path))
     assert b["name_variants_merged"] == {"Unibet (SE)": "Unibet"}
-    assert b["multi_brand_operators"]["Flutter"] == ["FanDuel", "Paddy Power", "Sky Bet"]
-    assert "DraftKings" in b["no_operator_mapping_treated_as_independent"]
+    assert b["known_operator_brands"]["Flutter"] == ["FanDuel", "Paddy Power", "Sky Bet"]
+    assert b["unknown_ownership"] == ["DraftKings"]
+    assert "DraftKings" not in json.dumps(b["known_operator_brands"])
+    assert (b["known_operators"], b["operators_lower"], b["operators_upper"]) == (4, 4, 5)
     assert set(b["excluded_not_bookmakers"]) == {"Avg", "Bet365 Live"}
+
+
+def test_report_wording_does_not_overstate(path, tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
+    monkeypatch.setattr(config, "REPORTS_DIR", tmp_path / "reports")
+    coverage.write(NOW, db_path=path)
+    md = (tmp_path / "reports" / "source_coverage.md").read_text()
+    assert "Nothing here is a live or executable price" in md
+    assert "Unknown ownership: 1" in md and "between 4 and 5" in md
+    assert "bookmaker's own update time" in md and "provisional" in md
+    assert "independent operators**." not in md       # the old single unqualified count is gone
 
 
 def test_sources_usage_and_credentials(path, monkeypatch):
@@ -107,7 +156,7 @@ def test_write_is_read_only_and_reports_delta(path, tmp_path, monkeypatch):
     rep = coverage.write(NOW - timedelta(hours=10), db_path=path)     # 10h earlier c's 30h-old quotes were still fresh
     assert path.read_bytes() == before                 # the audit never writes to the database
     d = rep["baseline"]["delta"]["nba"]
-    assert d["with_fresh_quote"] == {"baseline": 2, "now": 3, "change": 1}
+    assert d["with_fresh_quote_observed"] == {"baseline": 2, "now": 3, "change": 1}
     md = (tmp_path / "reports" / "source_coverage.md").read_text()
     assert "Change since baseline" in md and "| nba | NBA | ML |" in md
     assert rep["context"]["scheduled_events_past_start"] == {"tennis": 1}

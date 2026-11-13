@@ -2,42 +2,59 @@
  "as_of": "2026-11-13T12:17:02+00:00",
  "horizon_hours": 168,
  "fresh_quote_max_age_hours": 24,
+ "timestamp_basis": {
+  "the-odds-api.com": "bookmaker_update",
+  "football-data.co.uk": "file_published",
+  "(any other source)": "first_seen"
+ },
  "summary": {
   "soccer": {
    "scheduled_events": 146,
    "with_any_quote": 57,
-   "with_fresh_quote": 57,
-   "with_3plus_operators": 26,
+   "with_fresh_quote_observed": 57,
+   "with_fresh_quote_bookmaker_timed": 26,
+   "with_3plus_operators_lower": 26,
+   "with_3plus_operators_upper": 26,
    "with_sharp_reference": 26,
    "bookmaker_names": 24,
-   "independent_operators": 15
+   "known_operators": 7,
+   "unknown_bookmakers": 8
   },
   "nba": {
    "scheduled_events": 52,
    "with_any_quote": 9,
-   "with_fresh_quote": 9,
-   "with_3plus_operators": 9,
+   "with_fresh_quote_observed": 9,
+   "with_fresh_quote_bookmaker_timed": 9,
+   "with_3plus_operators_lower": 9,
+   "with_3plus_operators_upper": 9,
    "with_sharp_reference": 9,
    "bookmaker_names": 21,
-   "independent_operators": 18
+   "known_operators": 7,
+   "unknown_bookmakers": 11
   },
   "nfl": {
    "scheduled_events": 14,
    "with_any_quote": 14,
-   "with_fresh_quote": 14,
-   "with_3plus_operators": 14,
+   "with_fresh_quote_observed": 14,
+   "with_fresh_quote_bookmaker_timed": 14,
+   "with_3plus_operators_lower": 14,
+   "with_3plus_operators_upper": 14,
    "with_sharp_reference": 13,
    "bookmaker_names": 22,
-   "independent_operators": 19
+   "known_operators": 6,
+   "unknown_bookmakers": 13
   },
   "tennis": {
    "scheduled_events": 51,
    "with_any_quote": 6,
-   "with_fresh_quote": 6,
-   "with_3plus_operators": 6,
+   "with_fresh_quote_observed": 6,
+   "with_fresh_quote_bookmaker_timed": 6,
+   "with_3plus_operators_lower": 2,
+   "with_3plus_operators_upper": 6,
    "with_sharp_reference": 2,
    "bookmaker_names": 23,
-   "independent_operators": 13
+   "known_operators": 6,
+   "unknown_bookmakers": 7
   }
  },
  "matrix": [
@@ -51,7 +68,9 @@
    "events_priced_fresh": 15,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:46+00:00"
@@ -66,7 +85,9 @@
    "events_priced_fresh": 15,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -81,7 +102,9 @@
    "events_priced_fresh": 15,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -96,7 +119,9 @@
    "events_priced_fresh": 15,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -111,7 +136,9 @@
    "events_priced_fresh": 5,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:46+00:00"
@@ -126,7 +153,9 @@
    "events_priced_fresh": 6,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -141,7 +170,9 @@
    "events_priced_fresh": 6,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -156,7 +187,9 @@
    "events_priced_fresh": 6,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -171,7 +204,9 @@
    "events_priced_fresh": 10,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:46+00:00"
@@ -186,7 +221,9 @@
    "events_priced_fresh": 10,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -201,7 +238,9 @@
    "events_priced_fresh": 10,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -216,7 +255,9 @@
    "events_priced_fresh": 10,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -231,7 +272,9 @@
    "events_priced_fresh": 18,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:46+00:00"
@@ -246,7 +289,9 @@
    "events_priced_fresh": 22,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -261,7 +306,9 @@
    "events_priced_fresh": 26,
    "bookmaker_names": 23,
    "bookmakers": 17,
-   "independent_operators": 14,
+   "operators_lower": 7,
+   "operators_upper": 14,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Betfair Exchange",
     "Pinnacle"
@@ -279,7 +326,9 @@
    "events_priced_fresh": 22,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -294,7 +343,9 @@
    "events_priced_fresh": 22,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:44+00:00"
@@ -309,7 +360,9 @@
    "events_priced_fresh": 26,
    "bookmaker_names": 16,
    "bookmakers": 13,
-   "independent_operators": 11,
+   "operators_lower": 5,
+   "operators_upper": 11,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Pinnacle"
    ],
@@ -326,7 +379,9 @@
    "events_priced_fresh": 9,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:45+00:00"
@@ -341,7 +396,9 @@
    "events_priced_fresh": 9,
    "bookmaker_names": 20,
    "bookmakers": 20,
-   "independent_operators": 17,
+   "operators_lower": 7,
+   "operators_upper": 17,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Betfair Exchange",
     "Pinnacle"
@@ -359,7 +416,9 @@
    "events_priced_fresh": 9,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:45+00:00"
@@ -374,7 +433,9 @@
    "events_priced_fresh": 9,
    "bookmaker_names": 15,
    "bookmakers": 15,
-   "independent_operators": 12,
+   "operators_lower": 5,
+   "operators_upper": 12,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Pinnacle"
    ],
@@ -391,7 +452,9 @@
    "events_priced_fresh": 9,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:45+00:00"
@@ -406,7 +469,9 @@
    "events_priced_fresh": 9,
    "bookmaker_names": 16,
    "bookmakers": 16,
-   "independent_operators": 14,
+   "operators_lower": 5,
+   "operators_upper": 14,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Pinnacle"
    ],
@@ -423,7 +488,9 @@
    "events_priced_fresh": 14,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:45+00:00"
@@ -438,7 +505,9 @@
    "events_priced_fresh": 14,
    "bookmaker_names": 20,
    "bookmakers": 20,
-   "independent_operators": 17,
+   "operators_lower": 6,
+   "operators_upper": 17,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Betfair Exchange",
     "Pinnacle"
@@ -456,7 +525,9 @@
    "events_priced_fresh": 14,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 15.6,
    "newest_quote": "2026-11-13T12:16:45+00:00"
@@ -471,7 +542,9 @@
    "events_priced_fresh": 14,
    "bookmaker_names": 17,
    "bookmakers": 17,
-   "independent_operators": 15,
+   "operators_lower": 5,
+   "operators_upper": 15,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Pinnacle"
    ],
@@ -488,7 +561,9 @@
    "events_priced_fresh": 14,
    "bookmaker_names": 1,
    "bookmakers": 1,
-   "independent_operators": 1,
+   "operators_lower": 1,
+   "operators_upper": 1,
+   "timestamp_basis": "first_seen",
    "sharp_references": [],
    "median_quote_age_h": 15.6,
    "newest_quote": "2026-11-13T12:16:45+00:00"
@@ -503,7 +578,9 @@
    "events_priced_fresh": 14,
    "bookmaker_names": 16,
    "bookmakers": 16,
-   "independent_operators": 15,
+   "operators_lower": 5,
+   "operators_upper": 15,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Pinnacle"
    ],
@@ -520,7 +597,9 @@
    "events_priced_fresh": 4,
    "bookmaker_names": 5,
    "bookmakers": 5,
-   "independent_operators": 4,
+   "operators_lower": 2,
+   "operators_upper": 4,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [],
    "median_quote_age_h": 0.0,
    "newest_quote": "2026-11-13T12:16:35+00:00"
@@ -535,7 +614,9 @@
    "events_priced_fresh": 2,
    "bookmaker_names": 23,
    "bookmakers": 16,
-   "independent_operators": 13,
+   "operators_lower": 6,
+   "operators_upper": 13,
+   "timestamp_basis": "bookmaker_update",
    "sharp_references": [
     "Betfair Exchange"
    ],
@@ -546,36 +627,8 @@
  "bookmakers": {
   "stored_names": 39,
   "bookmakers": 29,
-  "independent_operators": 25,
-  "multi_brand_operators": {
-   "Betsson Group": [
-    "Betsson",
-    "Nordic Bet"
-   ],
-   "Flutter": [
-    "Paddy Power",
-    "Sky Bet"
-   ],
-   "Kambi": [
-    "LeoVegas",
-    "Unibet"
-   ],
-   "evoke": [
-    "888sport",
-    "William Hill"
-   ]
-  },
-  "name_variants_merged": {
-   "Betclic (FR)": "Betclic",
-   "LeoVegas (SE)": "LeoVegas",
-   "PMU (FR)": "PMU",
-   "Unibet (FR)": "Unibet",
-   "Unibet (NL)": "Unibet",
-   "Unibet (SE)": "Unibet",
-   "Winamax (DE)": "Winamax",
-   "Winamax (FR)": "Winamax"
-  },
-  "no_operator_mapping_treated_as_independent": [
+  "known_operators": 10,
+  "unknown_ownership": [
    "1xBet",
    "BetAnything",
    "BetVictor",
@@ -592,6 +645,54 @@
    "PMU",
    "Tipico"
   ],
+  "operators_lower": 10,
+  "operators_upper": 25,
+  "known_operator_brands": {
+   "Bet365": [
+    "Bet365"
+   ],
+   "BetOnline": [
+    "BetOnline.ag"
+   ],
+   "Betfair Exchange": [
+    "Betfair Exchange"
+   ],
+   "Betsson Group": [
+    "Betsson",
+    "Nordic Bet"
+   ],
+   "Entain": [
+    "Bwin"
+   ],
+   "Flutter": [
+    "Paddy Power",
+    "Sky Bet"
+   ],
+   "Kambi": [
+    "LeoVegas",
+    "Unibet"
+   ],
+   "Pinnacle": [
+    "Pinnacle"
+   ],
+   "Winamax": [
+    "Winamax"
+   ],
+   "evoke": [
+    "888sport",
+    "William Hill"
+   ]
+  },
+  "name_variants_merged": {
+   "Betclic (FR)": "Betclic",
+   "LeoVegas (SE)": "LeoVegas",
+   "PMU (FR)": "PMU",
+   "Unibet (FR)": "Unibet",
+   "Unibet (NL)": "Unibet",
+   "Unibet (SE)": "Unibet",
+   "Winamax (DE)": "Winamax",
+   "Winamax (FR)": "Winamax"
+  },
   "excluded_not_bookmakers": [
    "Avg",
    "Max"

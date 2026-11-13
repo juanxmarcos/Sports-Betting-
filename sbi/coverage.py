@@ -6,8 +6,12 @@
 
 It answers, per sport x competition x market x source:
   * how many upcoming events are priced, and how old the newest quote is;
-  * how many bookmaker NAMES there are versus how many independent OPERATORS
-    (brand aliases and same-owner / same-platform books count once);
+  * how many bookmaker NAMES there are versus how many independent OPERATORS. Only bookmakers
+    with an entry in the ownership map (sources/books.py GROUPS) are counted as known operators.
+    A bookmaker with no entry is UNKNOWN: it is never assumed independent, so operator counts
+    are a range (lower bound: known operators only; upper bound: every unknown one is separate);
+  * what a quote's age actually measures: the bookmaker's own update time, the publication
+    time of a file, or merely when Doyen first saw the price (see TIMESTAMP_BASIS);
   * whether a sharp reference price (Pinnacle / Betfair Exchange) is present;
 and separately: which providers are configured versus actually succeeding, credentials by
 presence only (never values), The Odds API credit use per day, and stored history.
@@ -26,14 +30,41 @@ from pathlib import Path
 from statistics import median
 
 from . import config
-from .sources.books import GROUPS, group_of, normalize_book
+from .sources.books import GROUPS, normalize_book
 from .sources.football_data import AGGREGATES
 
 SHARP = ("Pinnacle", "Betfair Exchange")       # the references ev.CONSENSUS_PRIORITY trusts
 CREDENTIALS = ("ODDS_API_KEY",)                # reported by presence only
 SPORT_NAMES = {"football": "soccer", "nfl": "nfl", "nba": "nba", "tennis": "tennis"}
-SUMMARY_KEYS = ("scheduled_events", "with_any_quote", "with_fresh_quote", "with_3plus_operators",
-                "with_sharp_reference", "bookmaker_names", "independent_operators")
+SUMMARY_KEYS = ("scheduled_events", "with_any_quote", "with_fresh_quote_observed", "with_fresh_quote_bookmaker_timed",
+                "with_3plus_operators_lower", "with_3plus_operators_upper", "with_sharp_reference",
+                "bookmaker_names", "known_operators", "unknown_bookmakers")
+
+# What `odds.retrieved_at` means differs by source. Only the first is evidence of a recent REPRICE.
+#   bookmaker_update : the bookmaker's own last-update time, as passed on by the provider
+#   file_published   : HTTP Last-Modified of the file (when the snapshot was published; prices are older)
+#   first_seen       : when Doyen first fetched this price. The bookmaker's update time is unknown,
+#                      so a small age means "recently observed", not "recently repriced".
+TIMESTAMP_BASIS = {"the-odds-api.com": "bookmaker_update", "football-data.co.uk": "file_published"}
+FIRST_SEEN = "first_seen"        # the weakest claim, and the default for any source not listed above
+BASIS_TEXT = {"bookmaker_update": "bookmaker's own update time", "file_published": "file publication time",
+              FIRST_SEEN: "first seen by Doyen (reprice time unknown)"}
+
+
+def timestamp_basis(source: str) -> str:
+    return TIMESTAMP_BASIS.get(source, FIRST_SEEN)
+
+
+def operator_bounds(books) -> tuple[int, int]:
+    """(lower, upper) number of independent operators behind a set of normalised bookmaker names.
+
+    Known = has an entry in the ownership map. Unknown bookmakers are never assumed independent:
+    each could be a separate operator (upper bound) or a brand of one already counted (lower bound)."""
+    books = set(books)
+    known = {GROUPS[b] for b in books if b in GROUPS}
+    unknown = {b for b in books if b not in GROUPS}
+    lower = len(known) if known else (1 if unknown else 0)
+    return lower, len(known) + len(unknown)
 
 
 def connect_ro(path: Path | str | None = None) -> sqlite3.Connection:
@@ -103,7 +134,8 @@ def matrix(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = N
             "scheduled_events": scheduled[(sport, league)], "events_priced": len(c["events"]),
             "events_priced_fresh": len(c["fresh_events"]),
             "bookmaker_names": len(c["names"]), "bookmakers": len(c["books"]),
-            "independent_operators": len({group_of(b) for b in c["books"]}),
+            "operators_lower": operator_bounds(c["books"])[0], "operators_upper": operator_bounds(c["books"])[1],
+            "timestamp_basis": timestamp_basis(source),
             "sharp_references": sorted(b for b in c["books"] if b in SHARP),
             "median_quote_age_h": round(median(ages), 1), "newest_quote": max(c["newest"].values()),
         })
@@ -111,15 +143,19 @@ def matrix(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = N
 
 
 def summary(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = None) -> dict:
-    """Per sport: how many upcoming events can actually be compared across independent books.
+    """Per sport: how many upcoming events can be compared across independent books, as a range.
 
-    An event counts as "3+ operators" when at least one market has fresh quotes from three or more
-    independent operator groups. This is an audit measure of raw material; the pick rules in sbi.ev
-    are stricter (complete selections, sanity filters) and are not changed by this module."""
+    * observed fresh: some quote has a timestamp within `fresh_h`, whatever that timestamp means;
+    * bookmaker-timed fresh: a quote whose timestamp is the bookmaker's own update time is within `fresh_h`;
+    * 3+ operators (lower / upper): at least one market has observed-fresh quotes from three or more
+      operators, counting only known operators (lower) or treating every unknown bookmaker as separate (upper).
+
+    These are audit measures of raw material, not of prices that can be bet now. The pick rules in
+    sbi.ev are stricter (complete selections, sanity filters) and are not changed by this module."""
     fresh_h = config.RULES.max_odds_age_hours if fresh_h is None else fresh_h
     events, latest, raw_names = _upcoming_quotes(con, now, horizon_h)
-    per_market: dict[tuple, set] = defaultdict(set)     # (event, market) -> fresh books
-    any_quote, names, books = defaultdict(set), defaultdict(set), defaultdict(set)
+    per_market: dict[tuple, set] = defaultdict(set)     # (event, market) -> observed-fresh books
+    any_quote, names, books, timed = defaultdict(set), defaultdict(set), defaultdict(set), defaultdict(set)
     for (eid, market, source, book), ts in latest.items():
         sport = events[eid][0]
         any_quote[sport].add(eid)
@@ -127,41 +163,47 @@ def summary(con, now: datetime, horizon_h: float = 168, fresh_h: float | None = 
         names[sport] |= raw_names[(eid, market, source)]
         if _age_h(now, ts) <= fresh_h:
             per_market[(eid, market)].add(book)
+            if timestamp_basis(source) == "bookmaker_update":
+                timed[sport].add(eid)
     out = {}
     for sport in sorted({s for s, _ in events.values()}):
         ids = {e for e, (s, _) in events.items() if s == sport}
-        fresh = {e for (e, _), b in per_market.items() if e in ids and b}
-        three = {e for (e, _), b in per_market.items() if e in ids and len({group_of(x) for x in b}) >= 3}
-        sharp = {e for (e, _), b in per_market.items() if e in ids and any(x in SHARP for x in b)}
+        mine = {k: b for k, b in per_market.items() if k[0] in ids and b}
         out[SPORT_NAMES.get(sport, sport)] = {
-            "scheduled_events": len(ids), "with_any_quote": len(any_quote[sport]), "with_fresh_quote": len(fresh),
-            "with_3plus_operators": len(three), "with_sharp_reference": len(sharp),
-            "bookmaker_names": len(names[sport]), "independent_operators": len({group_of(b) for b in books[sport]}),
+            "scheduled_events": len(ids), "with_any_quote": len(any_quote[sport]),
+            "with_fresh_quote_observed": len({e for e, _ in mine}),
+            "with_fresh_quote_bookmaker_timed": len(timed[sport]),
+            "with_3plus_operators_lower": len({e for (e, _), b in mine.items() if operator_bounds(b)[0] >= 3}),
+            "with_3plus_operators_upper": len({e for (e, _), b in mine.items() if operator_bounds(b)[1] >= 3}),
+            "with_sharp_reference": len({e for (e, _), b in mine.items() if any(x in SHARP for x in b)}),
+            "bookmaker_names": len(names[sport]),
+            "known_operators": len({GROUPS[b] for b in books[sport] if b in GROUPS}),
+            "unknown_bookmakers": len({b for b in books[sport] if b not in GROUPS}),
         }
     return out
 
 
 def book_audit(con) -> dict:
-    """Every stored bookmaker name -> normalised name -> operator group, with the weak spots listed."""
+    """Every stored bookmaker name -> normalised name -> operator, split into known and unknown ownership."""
     raw = [r[0] for r in con.execute("SELECT DISTINCT bookmaker FROM odds ORDER BY 1")]
     groups: dict[str, set] = defaultdict(set)
-    variants, unmapped, excluded = {}, set(), []
+    variants, unknown, excluded = {}, set(), []
     for name in raw:
         book = normalize_book(name)
         if not book or book in AGGREGATES:
             excluded.append(name)
-            continue
-        if book != name:
+        elif book in GROUPS:
+            groups[GROUPS[book]].add(book)
+        else:
+            unknown.add(book)
+        if book and book != name:
             variants[name] = book
-        if book not in GROUPS:
-            unmapped.add(book)
-        groups[group_of(book)].add(book)
-    return {"stored_names": len(raw), "bookmakers": sum(len(v) for v in groups.values()),
-            "independent_operators": len(groups),
-            "multi_brand_operators": {g: sorted(b) for g, b in sorted(groups.items()) if len(b) > 1},
-            "name_variants_merged": variants,
-            "no_operator_mapping_treated_as_independent": sorted(unmapped),
-            "excluded_not_bookmakers": excluded}
+    lower, upper = operator_bounds({b for v in groups.values() for b in v} | unknown)
+    return {"stored_names": len(raw), "bookmakers": sum(len(v) for v in groups.values()) + len(unknown),
+            "known_operators": len(groups), "unknown_ownership": sorted(unknown),
+            "operators_lower": lower, "operators_upper": upper,
+            "known_operator_brands": {g: sorted(b) for g, b in sorted(groups.items())},
+            "name_variants_merged": variants, "excluded_not_bookmakers": excluded}
 
 
 def sources(con, now: datetime, working_h: float = 6.0) -> dict:
@@ -247,6 +289,7 @@ def context(con, now: datetime) -> dict:
 
 def build(con, now: datetime, horizon_h: float = 168) -> dict:
     return {"as_of": now.isoformat(), "horizon_hours": horizon_h, "fresh_quote_max_age_hours": config.RULES.max_odds_age_hours,
+            "timestamp_basis": {**TIMESTAMP_BASIS, "(any other source)": FIRST_SEEN},
             "summary": summary(con, now, horizon_h), "matrix": matrix(con, now, horizon_h),
             "bookmakers": book_audit(con), "sources": sources(con, now), "credentials": credentials(con),
             "odds_api_usage": odds_api_usage(con), "history": history(con), "context": context(con, now)}
@@ -268,14 +311,23 @@ def delta(report: dict, baseline: dict) -> dict:
 
 
 def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None = None) -> str:
+    fh = rep["fresh_quote_max_age_hours"]
     L = [f"# Source coverage audit ({rep['as_of'][:16].replace('T', ' ')} UTC)", "",
          f"Measured from the stored database for events starting in the next {rep['horizon_hours']:g} hours. "
-         f"A quote is *fresh* when it is at most {rep['fresh_quote_max_age_hours']:g}h old. "
-         "*Operators* merges brand aliases and books that share an owner or pricing platform, so it is the "
-         "honest count of independent opinions. Generated by `python -m sbi coverage`; see docs/DATA_SOURCES.md.", "",
+         "Generated by `python -m sbi coverage`; see docs/DATA_SOURCES.md.", "",
+         "**How to read this.** These are stored, delayed quotes used for research. Nothing here is a live or "
+         "executable price.", "",
+         f"- **Observed fresh** means a stored quote carries a timestamp at most {fh:g}h old. What that timestamp is "
+         "depends on the source (see *Age basis* in the matrix). For ESPN it is only when Doyen first saw the price, "
+         "so a small age shows the price was recently *observed*, not that the bookmaker recently *repriced* it.",
+         f"- **Bookmaker-timed fresh** counts only quotes whose timestamp is the bookmaker's own update time (at most {fh:g}h old).",
+         "- **Operators** are a range. *Lower* counts only bookmakers whose owner or pricing platform is recorded in the map in "
+         "`sbi/sources/books.py`. *Upper* also treats every bookmaker of unknown ownership as a separate operator. "
+         "Unknown ownership is never assumed independent, so anything above the lower bound is provisional.", "",
          "## Per sport", "",
-         "| Sport | Scheduled | Any quote | Fresh quote | 3+ operators | Sharp reference | Names | Operators |",
-         "|---|---|---|---|---|---|---|---|"]
+         "| Sport | Scheduled | Any quote | Observed fresh | Bookmaker-timed fresh | 3+ operators (lower) | "
+         "3+ operators (upper, provisional) | Sharp reference | Names | Known operators | Unknown ownership |",
+         "|---|---|---|---|---|---|---|---|---|---|---|"]
     for s, v in rep["summary"].items():
         L.append(f"| {s} | " + " | ".join(str(v[k]) for k in SUMMARY_KEYS) + " |")
     if cmp:
@@ -285,19 +337,24 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
             for k, v in d.items():
                 L.append(f"| {s} | {k.replace('_', ' ')} | {v['baseline']} | {v['now']} | {v['change']:+d} |")
     L += ["", "## Coverage matrix", "",
-          "| Sport | Competition | Market | Source | Events priced / scheduled | Fresh | Names | Operators | Sharp | Median age h |",
-          "|---|---|---|---|---|---|---|---|---|---|"]
+          "| Sport | Competition | Market | Source | Events priced / scheduled | Observed fresh | Names | "
+          "Operators (lower–upper) | Sharp | Median age h | Age basis |",
+          "|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rep["matrix"]:
         L.append(f"| {r['sport']} | {r['competition']} | {r['market']} | {r['source']} | "
                  f"{r['events_priced']} / {r['scheduled_events']} | {r['events_priced_fresh']} | {r['bookmaker_names']} | "
-                 f"{r['independent_operators']} | {', '.join(r['sharp_references']) or 'none'} | {r['median_quote_age_h']} |")
+                 f"{r['operators_lower']}–{r['operators_upper']} | {', '.join(r['sharp_references']) or 'none'} | "
+                 f"{r['median_quote_age_h']} | {BASIS_TEXT[r['timestamp_basis']]} |")
     b = rep["bookmakers"]
     L += ["", "## Bookmaker independence", "",
-          f"- {b['stored_names']} stored names → {b['bookmakers']} bookmakers → **{b['independent_operators']} independent operators**.",
-          "- Operators with several brands: " + ("; ".join(f"{g} ({', '.join(v)})" for g, v in b["multi_brand_operators"].items()) or "none") + ".",
+          f"- {b['stored_names']} stored names are {b['bookmakers']} bookmakers after merging name variants.",
+          f"- **Known operators: {b['known_operators']}** (owner or pricing platform recorded in the map): "
+          + ("; ".join(f"{g} ({', '.join(v)})" if v != [g] else g for g, v in b["known_operator_brands"].items()) or "none") + ".",
+          f"- **Unknown ownership: {len(b['unknown_ownership'])}** (not verified, not counted as independent): "
+          + (", ".join(b["unknown_ownership"]) or "none") + ".",
+          f"- Independent operators overall: **between {b['operators_lower']} and {b['operators_upper']}**. "
+          "The upper figure is provisional until ownership and pricing-platform independence are verified.",
           "- Name variants merged: " + (", ".join(f"{k} → {v}" for k, v in b["name_variants_merged"].items()) or "none") + ".",
-          "- No operator mapping, so treated as independent (unverified): "
-          + (", ".join(b["no_operator_mapping_treated_as_independent"]) or "none") + ".",
           "- Excluded (aggregates or in-play feeds, not bookmakers): " + (", ".join(b["excluded_not_bookmakers"]) or "none") + ".",
           "", "## Providers: configured versus working", "",
           "| Provider | Working | Hours since success | Rows last run | Last error |", "|---|---|---|---|---|"]

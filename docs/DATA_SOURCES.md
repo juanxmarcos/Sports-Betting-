@@ -97,28 +97,52 @@ python -m sbi coverage --as-of 2026-11-13T12:17:02+00:00 --baseline   # how the 
 
 ### Measured baseline (events starting in the next 7 days, as of the 12:17 UTC run)
 
-| Sport | Scheduled | With any quote | With 3+ independent operators | With a sharp reference (Pinnacle / Betfair Exchange) |
-|---|---|---|---|---|
-| Soccer | 146 | 57 | 26 | 26 |
-| NBA | 52 | 9 | 9 | 9 |
-| NFL | 14 | 14 | 14 | 13 |
-| Tennis | 51 | 6 | 6 | 2 |
+These are stored, delayed quotes used for research. None is a live or executable price.
 
-*Operators* counts brand aliases and books with a shared owner or pricing platform once.
+| Sport | Scheduled | Any quote | Observed fresh | Bookmaker-timed fresh | 3+ operators, lower bound | 3+ operators, upper bound (provisional) | Sharp reference |
+|---|---|---|---|---|---|---|---|
+| Soccer | 146 | 57 | 57 | 26 | 26 | 26 | 26 |
+| NBA | 52 | 9 | 9 | 9 | 9 | 9 | 9 |
+| NFL | 14 | 14 | 14 | 14 | 14 | 14 | 13 |
+| Tennis | 51 | 6 | 6 | 6 | 2 | 6 | 2 |
+
+How the two caveats are measured:
+
+- **Operators are a range, not one number.** The *lower bound* counts only bookmakers whose owner or
+  pricing platform is recorded in the map in `sbi/sources/books.py`. The *upper bound* also treats every
+  bookmaker of unknown ownership as a separate operator. Unknown ownership is never assumed
+  independent, so anything above the lower bound is provisional until it is verified.
+  - Stored today: 29 bookmakers, of which **10 are known operators** and **15 have unknown ownership**
+    (1xBet, BetAnything, BetVictor, Betclic, Betfred, Codere, Coolbet, DraftKings, Everygame, GTbets,
+    Marathon Bet, Matchbook, MyBookie.ag, PMU, Tipico). Independent operators overall: between 10 and 25.
+  - The map itself is best-effort and was not re-verified in this audit.
+- **Fresh has two meanings, reported separately.** A quote's stored time (`retrieved_at`) means
+  different things by source:
+
+  | Source | What the stored time is | Evidence of a recent reprice? |
+  |---|---|---|
+  | The Odds API | The bookmaker's own last-update time, as passed on by the API | Yes, as reported by the provider |
+  | football-data.co.uk | Publication time of the file (HTTP `Last-Modified`) | No. Prices were collected before publication |
+  | ESPN | When Doyen first fetched that price | No. It shows the price was recently *observed*; the bookmaker's update time is unknown |
+
+  *Observed fresh* accepts any of these within 24h. *Bookmaker-timed fresh* accepts only the first.
+  An ESPN age of 0.0h therefore means "seen in the last run", not "repriced in the last run".
+- Even bookmaker-timed quotes are delayed copies. The Odds API notes that its Pinnacle odds come
+  "from public website, which may incur a delay".
 
 What the numbers say:
 - **Independent comparison depends on one vendor.** Every event with 3+ operators or a sharp reference
-  gets them from The Odds API. ESPN contributes one bookmaker (DraftKings). football-data.co.uk
-  contributed nothing to this window: it is an international break, and its last stored fixtures
-  snapshot was dated 2026-11-06.
-- **Soccer internationals outside the UEFA Nations League have one operator.** AFCON qualifying
+  gets them from The Odds API. ESPN contributes one bookmaker (DraftKings, ownership not yet in the
+  map). football-data.co.uk contributed nothing to this window: it is an international break, and its
+  last stored fixtures snapshot was dated 2026-11-06.
+- **Soccer internationals outside the UEFA Nations League have one bookmaker.** AFCON qualifying
   (15 priced of 39), CONCACAF Nations League (6 of 26) and friendlies (10 of 37) have DraftKings
-  only, so no independent comparison is possible and no value claim can be made.
-- **Tennis is thin.** 6 of 51 scheduled matches are priced, all from the ATP/WTA Finals keys.
-  The ATP matches have 4 operators and no sharp reference. ESPN supplies no tennis odds.
+  only, observed by fetch time. No independent comparison is possible and no value claim can be made.
+- **Soccer shows 57 observed fresh but only 26 bookmaker-timed.** The other 31 are ESPN-only events.
+- **Tennis is thin, and thinner once unknown ownership is excluded.** 6 of 51 scheduled matches are
+  priced, all from the ATP/WTA Finals keys. Only 2 reach 3+ known operators; the 4 ATP matches rely on
+  bookmakers of unknown ownership and have no sharp reference. ESPN supplies no tennis odds.
 - **NBA is priced about a day ahead** (9 of 52). That is how the books post NBA lines, not a fault.
-- **39 stored bookmaker names are 29 bookmakers and 25 operators.** 15 of them have no operator
-  mapping and are treated as independent without verification (list in the report).
 - **History stored in the database is short.** NBA 20 finished games, NFL 1, tennis 41. Closing odds
   are stored only for events Doyen predicted (by design), and no closing rows are stored yet.
 - **Lineups:** 124 team rows, none confirmed (11 named starters) at the time of the run.
@@ -146,8 +170,10 @@ Checked on `https://the-odds-api.com/` and `/liveapi/guides/v4/` on 2026-11-13.
 - **Historical odds:** the pricing table and the historical section disagree. Treat it as paid-only.
 - **Terms** (`/terms-and-conditions.html`): storing, displaying and model training are allowed.
   Reselling or redistributing the data "as a standalone data product" is not. Attribution is optional.
-  **Owner to note:** `data/sbi.sqlite` in this public repository contains raw Odds API quotes. It is a
-  research database, not a data product, but the owner should decide whether that is comfortable.
+- **Open review item: raw quotes in a public file.** `data/sbi.sqlite` is committed to this public
+  repository and contains raw Odds API quotes (7,171 rows at the baseline). This audit does **not**
+  conclude that publishing that copy is permitted. It has not been confirmed with the provider, and the
+  same question applies to the football-data.co.uk and ESPN quotes in the file. It needs a decision.
 - **Overage:** the terms do not say what happens at zero credits. The code keeps a 20-credit reserve.
 - **Headroom:** current use is about 14 credits/day, which is roughly the whole monthly allowance.
   Adding a region (`uk`: 21 books including Smarkets; `us`: the regulated US books) doubles the cost of
@@ -203,8 +229,10 @@ Scottish and Spanish divisions) and history for validation.
    stored as context only. Any model use needs a walk-forward test first.
 2. **Lower divisions from football-data.co.uk** (free, already downloaded): ingest fixtures and odds
    for E2, E3, EC, SP2 and SC1–SC3; publish nothing until each division passes its own backtest.
-3. **Operator mapping:** verify ownership for the 15 unmapped bookmakers so independence counts are not
-   overstated. This can only make the "3+ bookmakers" rule stricter.
+3. **Operator verification:** confirm owner and pricing platform for the 15 bookmakers of unknown
+   ownership, with a dated source for each, and re-check the existing map. Until then the lower bound is
+   the figure to rely on. Note that the pick rule in `sbi/ev.py` still counts an unmapped bookmaker as
+   its own operator; changing that is a rule change and is left for a separate, reviewed PR.
 4. **The Odds API visibility:** record which mapped competitions the API lists as active but the budget
    skipped, so gaps like AFCON qualifying can be explained rather than guessed.
 5. **Housekeeping:** events stuck in `scheduled` after kick-off; the leftover `espn:golf` row.
@@ -212,7 +240,9 @@ Scottish and Spanish divisions) and history for validation.
 ### Decisions only the owner can make
 
 - **A paid odds plan** (The Odds API from $30/month) is the only verified way to add regions and
-  refresh more often. Nothing paid is enabled and no trial is started.
+  refresh more often. **Not authorised** (owner review, 2026-11-13). Nothing paid is enabled and no
+  trial is started.
 - **Tennis history:** if the owner can confirm the current location and licence of the Sackmann
   archives, an adapter can follow. The licence was non-commercial.
-- **Public database:** whether raw Odds API quotes should stay in the public `data/sbi.sqlite`.
+- **Public database (review item):** whether raw third-party quotes may stay in the public
+  `data/sbi.sqlite`. Unresolved; not confirmed as permitted.
