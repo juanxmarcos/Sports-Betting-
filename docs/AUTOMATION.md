@@ -1,8 +1,10 @@
 # Event-driven Claude Code pickup (issue #8)
 
-**Status: designed, not active.** Activating it is a one-time owner step in the Claude web
-app (below). Nothing in this repository turns it on by itself, and no secret is added to
-GitHub.
+**Status: active and verified (2026-11-13).** The owner created the GitHub-triggered task in
+claude.ai on 2026-11-13. Dry-run issue #11 was created with the `ready-for-claude` label at
+00:47 UTC. The triggered agent claimed it at 00:47:31 UTC and opened PR #12 ("Closes #11") at
+00:48:23 UTC, and the PR's `tests` check passed. That is about one minute from label to PR,
+with no manual step. No secret was added to GitHub.
 
 ## 1. Feasibility and compliance finding
 
@@ -88,9 +90,10 @@ You don't need to paste any secret anywhere.
 3. **Create the task.** Open claude.ai/code/routines → New:
    - Repository: `juanxmarcos/Sports-Betting-`, in the same cloud environment as the
      existing Doyen tasks.
-   - Trigger: **GitHub → Issue → `labeled`**. Optionally add **Issue → `opened`** too, so an
-     issue created with the label already on it also fires. The gate and the claim check
-     absorb the double event.
+   - Trigger: **GitHub event → Issue: Labeled**. Don't add an `opened` trigger: the dry run
+     showed that an issue created with the label already on it still fires `labeled`.
+   - Filters (recommended, to save runs): **Labels** contains `ready-for-claude`, and
+     **Author** equals `juanxmarcos`. The prompt's gate re-checks both as a second layer.
    - Prompt: everything below the line in
      [`automation/github_issue_trigger_prompt.md`](../automation/github_issue_trigger_prompt.md).
    - If asked, confirm the Claude GitHub App is installed on this repository. Cloud sessions
