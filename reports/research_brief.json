@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-13T20:56:12+00:00",
+  "generated": "2026-11-14T02:29:29+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -79,104 +79,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261113:187379",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-13T21:30:00+00:00",
-      "home": "Elina Svitolina",
-      "away": "Aryna Sabalenka"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261113:401930876",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-13T23:00:00+00:00",
-      "home": "Argentina",
-      "away": "Uruguay"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261113:401929712",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-13T23:00:00+00:00",
-      "home": "Saint Martin",
-      "away": "El Salvador"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261114:401921325",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-14T00:00:00+00:00",
-      "home": "Colombia",
-      "away": "Chile"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261114:401930898",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-14T00:00:00+00:00",
-      "home": "Ecuador",
-      "away": "Costa Rica"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261114:401929775",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-14T00:00:00+00:00",
-      "home": "Montserrat",
-      "away": "Nicaragua"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909296",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T00:00:00+00:00",
-      "home": "Indiana Pacers",
-      "away": "New York Knicks"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909297",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T00:00:00+00:00",
-      "home": "Orlando Magic",
-      "away": "Milwaukee Bucks"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261114:401930878",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-14T01:00:00+00:00",
-      "home": "Peru",
-      "away": "Bolivia"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909298",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T01:00:00+00:00",
-      "home": "Miami Heat",
-      "away": "Cleveland Cavaliers"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909299",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T01:00:00+00:00",
-      "home": "Chicago Bulls",
-      "away": "Atlanta Hawks"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909300",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T01:00:00+00:00",
-      "home": "New Orleans Pelicans",
-      "away": "Memphis Grizzlies"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909301",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T01:30:00+00:00",
-      "home": "Houston Rockets",
-      "away": "Utah Jazz"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261114:401929711",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-14T02:00:00+00:00",
-      "home": "Guatemala",
-      "away": "Canada"
-    },
     {
       "event_id": "nba:NBA:20261114:401909302",
       "league": "NBA",
@@ -561,6 +463,97 @@
       "kickoff_utc": "2026-11-15T19:45:00+00:00",
       "home": "Spain",
       "away": "England"
+    },
+    {
+      "event_id": "nba:NBA:20261115:401909986",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-15T21:00:00+00:00",
+      "home": "Phoenix Suns",
+      "away": "Los Angeles Lakers"
+    },
+    {
+      "event_id": "nfl:NFL:20261115:401873062",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-15T21:05:00+00:00",
+      "home": "Las Vegas Raiders",
+      "away": "Seattle Seahawks"
+    },
+    {
+      "event_id": "nfl:NFL:20261115:401873061",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-15T21:05:00+00:00",
+      "home": "Arizona Cardinals",
+      "away": "Los Angeles Rams"
+    },
+    {
+      "event_id": "nfl:NFL:20261115:401873063",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-15T21:25:00+00:00",
+      "home": "Dallas Cowboys",
+      "away": "San Francisco 49ers"
+    },
+    {
+      "event_id": "nba:NBA:20261115:401909987",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-15T21:30:00+00:00",
+      "home": "LA Clippers",
+      "away": "Charlotte Hornets"
+    },
+    {
+      "event_id": "nba:NBA:20261115:401909988",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-15T22:00:00+00:00",
+      "home": "Utah Jazz",
+      "away": "San Antonio Spurs"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261115:401929709",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-15T23:00:00+00:00",
+      "home": "Panama",
+      "away": "Cura\u00e7ao"
+    },
+    {
+      "event_id": "nba:NBA:20261115:401909989",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-15T23:00:00+00:00",
+      "home": "Boston Celtics",
+      "away": "Dallas Mavericks"
+    },
+    {
+      "event_id": "nba:NBA:20261115:401909990",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-15T23:00:00+00:00",
+      "home": "Toronto Raptors",
+      "away": "New York Knicks"
+    },
+    {
+      "event_id": "nba:NBA:20261116:401909991",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-16T00:00:00+00:00",
+      "home": "Washington Wizards",
+      "away": "Houston Rockets"
+    },
+    {
+      "event_id": "nba:NBA:20261116:401909992",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-16T01:00:00+00:00",
+      "home": "Milwaukee Bucks",
+      "away": "Atlanta Hawks"
+    },
+    {
+      "event_id": "nfl:NFL:20261116:401873064",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-16T01:20:00+00:00",
+      "home": "Cincinnati Bengals",
+      "away": "Pittsburgh Steelers"
+    },
+    {
+      "event_id": "nba:NBA:20261116:401909993",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-16T02:00:00+00:00",
+      "home": "Sacramento Kings",
+      "away": "Oklahoma City Thunder"
     }
   ]
 }
