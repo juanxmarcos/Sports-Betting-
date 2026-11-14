@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-14T07:48:27+00:00",
+  "generated": "2026-11-14T11:32:37+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -33,6 +33,21 @@
       "ev": 0.05858969996716956
     },
     {
+      "rec_id": "df8ca8e1c76c68cd",
+      "event_id": "football:INT:uefa.nations:20261116:401861180",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-16T15:00:00+00:00",
+      "home": "Faroe Islands",
+      "away": "Moldova",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.76,
+      "bookmaker": "1xBet",
+      "final_prob": 0.27502379219468776,
+      "ev": 0.03408945865202595
+    },
+    {
       "rec_id": "3d662544c2a4e714",
       "event_id": "football:INT:uefa.nations:20261116:401861185",
       "league": "INT:uefa.nations",
@@ -46,6 +61,51 @@
       "bookmaker": "1xBet",
       "final_prob": 0.2552036360614369,
       "ev": 0.05143898057312013
+    },
+    {
+      "rec_id": "82bc3c383ff5c42d",
+      "event_id": "football:INT:uefa.nations:20261116:401861186",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-16T19:45:00+00:00",
+      "home": "Switzerland",
+      "away": "Scotland",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 5.8,
+      "bookmaker": "Unibet",
+      "final_prob": 0.18208477427031008,
+      "ev": 0.056091690767798394
+    },
+    {
+      "rec_id": "f9af04cc6c63d943",
+      "event_id": "football:INT:uefa.nations:20261116:401861179",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-16T19:45:00+00:00",
+      "home": "Gibraltar",
+      "away": "Malta",
+      "market": "OU",
+      "selection": "under",
+      "line": 2.5,
+      "odds": 1.69,
+      "bookmaker": "1xBet",
+      "final_prob": 0.6162581493235687,
+      "ev": 0.041476272356831156
+    },
+    {
+      "rec_id": "9174faba476df526",
+      "event_id": "football:INT:uefa.nations:20261116:401861187",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-16T19:45:00+00:00",
+      "home": "North Macedonia",
+      "away": "Slovenia",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 1.68,
+      "bookmaker": "LeoVegas",
+      "final_prob": 0.616567038865961,
+      "ev": 0.035832625294814464
     },
     {
       "rec_id": "891ed45cef4e0fe7",
@@ -79,13 +139,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "football:INT:fifa.friendly:20261114:401916337",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-14T10:15:00+00:00",
-      "home": "Japan",
-      "away": "Brazil"
-    },
     {
       "event_id": "football:INT:fifa.friendly:20261114:401930236",
       "league": "INT:fifa.friendly",
@@ -250,7 +303,7 @@
     {
       "event_id": "football:INT:fifa.friendly:20261115:401906463",
       "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-15T03:00:00+00:00",
+      "kickoff_utc": "2026-11-15T03:10:00+00:00",
       "home": "New Zealand",
       "away": "India"
     },
