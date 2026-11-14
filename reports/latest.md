@@ -1,7 +1,7 @@
-# Sports Betting Doyen — Daily Report, 2026-11-13
+# Sports Betting Doyen — Daily Report, 2026-11-14
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Fri 13 Nov 21:28 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Sat 14 Nov 02:49 EST. Model `dc-0.1`.*
 
 ## Daily overview
 

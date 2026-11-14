@@ -1,29 +1,28 @@
-# Sports Betting Doyen — diagnostics (2026-11-14 02:28 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-14 07:49 UTC)
 
 ## Opportunity funnel (next 7 days)
 
-**SOCCER**: events discovered 108 → complete history 105 → valid forecast 108 → fresh odds available 38 → stale odds only 0 → three plus bookmakers 28 → fully evaluated 28 → markets evaluated 252 → markets positive ev 20 → events positive ev 16 → events passing all rules 3 → final recommendations 5
-  - market rejections: too few bookmakers (126), EV below threshold (106), odds outside range (16)
-  - primary blocker per event: no bookmaker prices yet (70), prices are in line with the sharp market (19), too few bookmakers price these markets (10), value only at long odds outside the allowed range (6), qualified (3)
+**SOCCER**: events discovered 106 → complete history 104 → valid forecast 106 → fresh odds available 37 → stale odds only 0 → three plus bookmakers 28 → fully evaluated 28 → markets evaluated 245 → markets positive ev 20 → events positive ev 16 → events passing all rules 3 → final recommendations 5
+  - market rejections: too few bookmakers (119), EV below threshold (106), odds outside range (16)
+  - primary blocker per event: no bookmaker prices yet (69), prices are in line with the sharp market (19), too few bookmakers price these markets (9), value only at long odds outside the allowed range (6), qualified (3)
 
 **NFL**: events discovered 14 → complete history 14 → valid forecast 14 → fresh odds available 14 → stale odds only 0 → three plus bookmakers 14 → fully evaluated 14 → markets evaluated 192 → markets positive ev 10 → events positive ev 7 → events passing all rules 0 → final recommendations 0
   - market rejections: EV below threshold (132), too few bookmakers (56), odds outside range (4)
   - primary blocker per event: prices are in line with the sharp market (11), value only at long odds outside the allowed range (3)
 
-**NBA**: events discovered 52 → complete history 52 → valid forecast 52 → fresh odds available 3 → stale odds only 0 → three plus bookmakers 3 → fully evaluated 3 → markets evaluated 54 → markets positive ev 4 → events positive ev 3 → events passing all rules 0 → final recommendations 0
-  - market rejections: EV below threshold (31), too few bookmakers (20), odds outside range (3)
-  - primary blocker per event: no bookmaker prices yet (49), prices are in line with the sharp market (3)
+**NBA**: events discovered 49 → complete history 49 → valid forecast 49 → fresh odds available 0 → stale odds only 0 → three plus bookmakers 0 → fully evaluated 0 → markets evaluated 0 → markets positive ev 0 → events positive ev 0 → events passing all rules 0 → final recommendations 0
+  - primary blocker per event: no bookmaker prices yet (49)
 
-**TENNIS**: events discovered 45 → complete history 12 → valid forecast 45 → fresh odds available 4 → stale odds only 0 → three plus bookmakers 4 → fully evaluated 4 → markets evaluated 8 → markets positive ev 1 → events positive ev 1 → events passing all rules 0 → final recommendations 0
+**TENNIS**: events discovered 41 → complete history 12 → valid forecast 41 → fresh odds available 4 → stale odds only 0 → three plus bookmakers 4 → fully evaluated 4 → markets evaluated 8 → markets positive ev 1 → events positive ev 1 → events passing all rules 0 → final recommendations 0
   - market rejections: EV below threshold (5), odds outside range (3)
-  - primary blocker per event: no bookmaker prices yet (41), prices are in line with the sharp market (2), value only at long odds outside the allowed range (2)
+  - primary blocker per event: no bookmaker prices yet (37), prices are in line with the sharp market (2), value only at long odds outside the allowed range (2)
 
 ## Odds freshness (events in next 48h)
 
-- soccer: {'events_with_odds': 38, 'median_odds_age_h': 0.0, 'median_bookmakers': 11.5, 'share_3plus_books': 0.74}
-- nfl: {'events_with_odds': 14, 'median_odds_age_h': 0.0, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
-- nba: {'events_with_odds': 3, 'median_odds_age_h': 0.0, 'median_bookmakers': 21, 'share_3plus_books': 1.0}
-- tennis: {'events_with_odds': 4, 'median_odds_age_h': 0.0, 'median_bookmakers': 6.5, 'share_3plus_books': 1.0}
+- soccer: {'events_with_odds': 37, 'median_odds_age_h': 5.3, 'median_bookmakers': 12, 'share_3plus_books': 0.76}
+- nfl: {'events_with_odds': 14, 'median_odds_age_h': 5.3, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
+- nba: {'events_with_odds': 0, 'median_odds_age_h': None, 'median_bookmakers': None, 'share_3plus_books': None}
+- tennis: {'events_with_odds': 4, 'median_odds_age_h': 5.3, 'median_bookmakers': 6.5, 'share_3plus_books': 1.0}
 
 ## The Odds API
 

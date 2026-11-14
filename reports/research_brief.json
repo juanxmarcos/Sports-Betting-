@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-14T02:29:29+00:00",
+  "generated": "2026-11-14T07:48:27+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -79,69 +79,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "nba:NBA:20261114:401909302",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T02:30:00+00:00",
-      "home": "San Antonio Spurs",
-      "away": "Golden State Warriors"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909303",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T03:00:00+00:00",
-      "home": "Sacramento Kings",
-      "away": "Portland Trail Blazers"
-    },
-    {
-      "event_id": "nba:NBA:20261114:401909304",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-14T03:30:00+00:00",
-      "home": "LA Clippers",
-      "away": "Oklahoma City Thunder"
-    },
-    {
-      "event_id": "tennis:ATP:20261114:186552",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-14T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261114:187440",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-14T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261114:187441",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-14T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261114:186772",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-14T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261114:401933864",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-14T05:30:00+00:00",
-      "home": "Tahiti",
-      "away": "Cook Islands"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261114:401930879",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-14T06:00:00+00:00",
-      "home": "Bahrain",
-      "away": "Yemen"
-    },
     {
       "event_id": "football:INT:fifa.friendly:20261114:401916337",
       "league": "INT:fifa.friendly",
@@ -554,6 +491,132 @@
       "kickoff_utc": "2026-11-16T02:00:00+00:00",
       "home": "Sacramento Kings",
       "away": "Oklahoma City Thunder"
+    },
+    {
+      "event_id": "tennis:ATP:20261116:187510",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "Flavio Cobolli",
+      "away": "Carlos Alcaraz"
+    },
+    {
+      "event_id": "tennis:ATP:20261116:187514",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "Frances Tiafoe",
+      "away": "Flavio Cobolli"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186783",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186782",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186797",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186796",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186795",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186794",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186793",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186792",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186791",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186789",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186788",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186787",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186786",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186785",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186784",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261116:186790",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-16T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     }
   ]
 }
