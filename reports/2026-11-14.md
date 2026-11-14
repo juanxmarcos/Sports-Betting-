@@ -1,18 +1,18 @@
 # Sports Betting Doyen — Daily Report, 2026-11-14
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Sat 14 Nov 13:07 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Sat 14 Nov 17:27 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 210 |
-| Events with fresh odds | 62 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 49 |
-| Markets evaluated | 459 |
-| Events passing all rules | 6 |
+| Events discovered | 205 |
+| Events with fresh odds | 53 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 44 |
+| Markets evaluated | 406 |
+| Events passing all rules | 5 |
 | Published today | **6** |
 | Highest estimated EV | +5.6% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
@@ -254,8 +254,8 @@ Sources: <https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds
 
 ## International fixtures — model monitoring (not recommendations)
 
-98 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
-trained on 50015 internationals; 31 with multi-bookmaker odds).
+89 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
+trained on 50025 internationals; 26 with multi-bookmaker odds).
 The model's gaps against bookmakers are **monitoring signals, not selections**: no free historical international
 odds exist to validate the model against the market, so it has weight 0. Real (paper) international selections
 appear in *Ranked selections* only when The Odds API supplies 3+ bookmakers and a price beats the sharp
@@ -263,46 +263,46 @@ de-vigged consensus under the standard rules.
 
 | Kick-off | Competition | Match | Model H/D/A | Book H/D/A (no-vig) | Largest model–book gap |
 |---|---|---|---|---|---|
-| Mon 16 Nov 12:00 EST | UEFA Nations League | Lithuania v Liechtenstein | 77/20/3 | 89/9/3 | 1X2 D @ 9.90: model EV +96.4% ⚠ bias |
-| Mon 16 Nov 14:45 EST | UEFA Nations League | Greece v Serbia | 50/28/22 | 67/20/13 | 1X2 A @ 7.60: model EV +59.9% |
-| Sat 14 Nov 14:45 EST | UEFA Nations League | Romania v Poland | 29/27/44 | 18/22/59 | 1X2 H @ 5.30: model EV +52.5% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Bosnia and Herzegovina v Romania | 43/29/29 | 56/25/19 | 1X2 A @ 4.96: model EV +42.6% |
-| Mon 16 Nov 14:45 EST | UEFA Nations League | Gibraltar v Malta | 16/29/55 | 10/23/68 | 1X2 H @ 9.00: model EV +40.6% |
-| Mon 16 Nov 14:45 EST | UEFA Nations League | North Macedonia v Slovenia | 20/33/47 | 13/25/62 | 1X2 H @ 7.00: model EV +33.4% |
-| Sat 14 Nov 14:00 EST | AFCON Qualifying | Angola v South Sudan | 80/16/5 | 89/8/3 | 1X2 D @ 8.00: model EV +27.0% ⚠ bias |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Wales v Portugal | 13/23/65 | 11/18/71 | 1X2 D @ 5.50: model EV +24.8% ⚠ bias |
-| Sat 14 Nov 16:30 EST | CONCACAF Nations League | Haiti v United States (N) | 13/19/68 | 8/13/79 | 1X2 H @ 9.50: model EV +24.5% ⚠ bias |
-| Mon 16 Nov 14:45 EST | UEFA Nations League | Germany v Netherlands | 44/23/33 | 51/23/26 | 1X2 A @ 3.74: model EV +23.6% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Republic of Ireland v Kosovo | 39/33/28 | 50/29/22 | 1X2 A @ 4.38: model EV +22.7% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Hungary v Northern Ireland | 42/33/25 | 51/27/22 | 1X2 D @ 3.60: model EV +20.1% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Denmark v Norway | 44/24/31 | 38/25/37 | 1X2 H @ 2.70: model EV +20.0% |
-| Sat 14 Nov 14:45 EST | UEFA Nations League | Northern Ireland v Ukraine | 35/31/34 | 38/33/30 | 1X2 A @ 3.50: model EV +19.6% |
+| Mon 16 Nov 12:00 EST | UEFA Nations League | Lithuania v Liechtenstein | 77/20/3 | 89/9/3 | 1X2 D @ 9.90: model EV +96.7% ⚠ bias |
+| Mon 16 Nov 14:45 EST | UEFA Nations League | Greece v Serbia | 50/28/22 | 67/20/13 | 1X2 A @ 7.60: model EV +60.0% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Bosnia and Herzegovina v Romania | 42/28/30 | 56/25/19 | 1X2 A @ 4.96: model EV +46.4% |
+| Mon 16 Nov 14:45 EST | UEFA Nations League | Gibraltar v Malta | 16/29/55 | 10/23/68 | 1X2 H @ 9.00: model EV +40.2% |
+| Mon 16 Nov 14:45 EST | UEFA Nations League | North Macedonia v Slovenia | 20/33/48 | 13/25/62 | 1X2 H @ 7.00: model EV +32.6% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Wales v Portugal | 14/23/63 | 11/18/71 | 1X2 H @ 9.50: model EV +31.4% ⚠ bias |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Denmark v Norway | 47/24/29 | 38/25/37 | 1X2 H @ 2.70: model EV +27.1% |
+| Mon 16 Nov 14:45 EST | UEFA Nations League | Germany v Netherlands | 44/23/33 | 51/23/26 | 1X2 A @ 3.74: model EV +23.5% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Republic of Ireland v Kosovo | 38/33/28 | 50/29/22 | 1X2 A @ 4.38: model EV +23.4% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Hungary v Northern Ireland | 42/34/24 | 51/27/22 | 1X2 D @ 3.60: model EV +21.6% |
 | Sun 15 Nov 12:00 EST | UEFA Nations League | Belarus v Albania (N) | 24/34/42 | 22/28/50 | 1X2 D @ 3.44: model EV +18.0% |
-| Sat 14 Nov 14:45 EST | UEFA Nations League | Sweden v Bosnia and Herzegovina | 63/21/16 | 65/20/15 | 1X2 A @ 7.25: model EV +17.9% |
-| Mon 16 Nov 12:00 EST | UEFA Nations League | Iceland v Luxembourg | 69/21/9 | 75/17/8 | 1X2 D @ 5.46: model EV +16.1% ⚠ bias |
-| Sun 15 Nov 14:45 EST | UEFA Nations League | France v Turkey | 76/15/9 | 80/12/8 | 1X2 A @ 12.50: model EV +15.3% ⚠ bias |
-| Sun 15 Nov 14:45 EST | UEFA Nations League | Croatia v Czech Republic | 58/22/19 | 61/22/17 | 1X2 A @ 5.92: model EV +14.8% |
-| Mon 16 Nov 12:00 EST | UEFA Nations League | Estonia v Bulgaria | 41/31/29 | 47/30/23 | 1X2 A @ 3.95: model EV +13.4% |
+| Mon 16 Nov 12:00 EST | UEFA Nations League | Iceland v Luxembourg | 69/21/9 | 75/17/8 | 1X2 D @ 5.46: model EV +16.3% ⚠ bias |
+| Sun 15 Nov 14:45 EST | UEFA Nations League | Croatia v Czech Republic | 58/22/20 | 61/22/17 | 1X2 A @ 5.92: model EV +15.6% |
+| Sun 15 Nov 14:45 EST | UEFA Nations League | France v Turkey | 76/15/9 | 80/12/8 | 1X2 A @ 12.50: model EV +15.6% ⚠ bias |
+| Mon 16 Nov 12:00 EST | UEFA Nations League | Estonia v Bulgaria | 41/31/29 | 47/30/23 | 1X2 A @ 3.95: model EV +13.3% |
 | Mon 16 Nov 14:45 EST | UEFA Nations League | Switzerland v Scotland | 66/21/13 | 57/25/18 | 1X2 H @ 1.72: model EV +13.1% |
-| Sat 14 Nov 14:45 EST | UEFA Nations League | Austria v Republic of Ireland | 55/27/18 | 61/24/15 | 1X2 A @ 6.60: model EV +12.9% |
-| Sun 15 Nov 09:00 EST | UEFA Nations League | Cyprus v Montenegro | 33/28/39 | 29/28/43 | 1X2 H @ 3.35: model EV +10.7% |
-| Sun 15 Nov 09:00 EST | UEFA Nations League | Latvia v Armenia | 34/30/35 | 31/29/40 | 1X2 H @ 3.19: model EV +9.5% |
-| Sun 15 Nov 14:45 EST | UEFA Nations League | Spain v England | 54/26/21 | 55/22/22 | 1X2 D @ 4.40: model EV +8.0% |
-| Sat 14 Nov 14:45 EST | UEFA Nations League | Portugal v Denmark | 59/23/18 | 63/21/16 | 1X2 D @ 4.80: model EV +7.4% |
-| Sun 15 Nov 14:45 EST | UEFA Nations League | Belgium v Italy | 48/26/26 | 43/25/32 | 1X2 H @ 2.30: model EV +7.2% |
-| Sat 14 Nov 14:00 EST | CONCACAF Nations League | Sint Maarten v French Guiana | 14/21/65 | 19/22/58 | 1X2 A @ 1.65: model EV +6.6% |
+| Sun 15 Nov 09:00 EST | UEFA Nations League | Cyprus v Montenegro | 33/28/39 | 29/28/43 | 1X2 H @ 3.35: model EV +10.9% |
+| Sun 15 Nov 09:00 EST | UEFA Nations League | Latvia v Armenia | 34/30/35 | 31/29/40 | 1X2 H @ 3.19: model EV +9.7% |
+| Sun 15 Nov 14:45 EST | UEFA Nations League | Spain v England | 53/26/21 | 55/22/22 | 1X2 D @ 4.40: model EV +8.3% |
+| Sat 14 Nov 20:00 EST | CONCACAF Nations League | Jamaica v Mexico | 12/24/64 | 10/19/71 | 1X2 D @ 4.40: model EV +6.9% ⚠ bias |
+| Sun 15 Nov 14:45 EST | UEFA Nations League | Belgium v Italy | 48/26/26 | 43/25/32 | 1X2 H @ 2.30: model EV +6.9% |
 | Mon 16 Nov 10:00 EST | UEFA Nations League | Kazakhstan v Slovakia | 18/25/57 | 22/26/52 | 1X2 A @ 1.90: model EV +5.3% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Ukraine v Georgia (N) | 42/30/29 | 45/27/28 | 1X2 D @ 3.52: model EV +4.3% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Ukraine v Georgia (N) | 42/30/28 | 45/27/28 | 1X2 D @ 3.52: model EV +4.8% |
 | Mon 16 Nov 10:00 EST | UEFA Nations League | Faroe Islands v Moldova | 54/27/19 | 55/28/17 | 1X2 D @ 3.76: model EV +2.3% |
-| Sat 14 Nov 19:00 EST | CONCACAF Nations League | Saint Vincent and the Grenadines v Belize | 62/22/16 | 58/22/20 | 1X2 H @ 1.65: model EV +2.3% |
-| Sat 14 Nov 20:00 EST | CONCACAF Nations League | Jamaica v Mexico | 12/24/64 | 11/20/68 | 1X2 D @ 4.20: model EV +2.2% |
-| Sun 15 Nov 12:00 EST | UEFA Nations League | Finland v San Marino | 96/3/1 | 95/3/2 | 1X2 H @ 1.06: model EV +2.0% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Poland v Sweden | 41/24/34 | 39/30/30 | 1X2 H @ 2.45: model EV +1.5% |
-| Tue 17 Nov 14:45 EST | UEFA Nations League | Israel v Austria (N) | 18/23/60 | 18/22/59 | 1X2 A @ 1.68: model EV -0.0% |
-| Sat 14 Nov 22:10 EST | International Friendly | New Zealand v India | 86/11/3 | 84/11/5 | 1X2 H @ 1.17: model EV -0.2% |
-| Sun 15 Nov 18:00 EST | CONCACAF Nations League | Panama v Curaçao | 62/22/16 | 64/22/14 | 1X2 A @ 6.00: model EV -3.5% |
-| Sat 14 Nov 14:00 EST | AFCON Qualifying | Algeria v Togo | 79/15/6 | 81/13/5 | 1X2 H @ 1.20: model EV -5.0% |
+| Sun 15 Nov 12:00 EST | UEFA Nations League | Finland v San Marino | 96/3/1 | 95/3/2 | 1X2 H @ 1.06: model EV +1.9% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Poland v Sweden | 41/24/35 | 39/30/30 | 1X2 A @ 2.85: model EV +0.5% |
+| Tue 17 Nov 14:45 EST | UEFA Nations League | Israel v Austria (N) | 18/23/60 | 18/22/59 | 1X2 A @ 1.68: model EV +0.5% |
+| Sat 14 Nov 22:10 EST | International Friendly | New Zealand v India | 85/11/3 | 84/11/5 | 1X2 H @ 1.17: model EV +0.4% |
+| Sat 14 Nov 19:00 EST | CONCACAF Nations League | Saint Vincent and the Grenadines v Belize | 61/23/16 | 59/22/19 | 1X2 H @ 1.62: model EV -0.9% |
+| Sun 15 Nov 18:00 EST | CONCACAF Nations League | Panama v Curaçao | 62/22/16 | 64/22/14 | 1X2 A @ 6.00: model EV -3.3% |
 | Sun 15 Nov 12:00 EST | International Friendly | Suriname v Eswatini (N) | 46/32/22 | — |  |
+| Mon 16 Nov 08:00 EST | AFCON Qualifying | Namibia v Cameroon (N) | 7/24/68 | — |  |
+| Mon 16 Nov 08:00 EST | AFCON Qualifying | Sudan v Senegal (N) | 5/16/79 | — |  |
+| Mon 16 Nov 08:00 EST | AFCON Qualifying | Zimbabwe v Equatorial Guinea | 46/32/22 | — |  |
+| Mon 16 Nov 10:00 EST | AFCON Qualifying | Somalia v Ghana (N) | 5/24/71 | — |  |
+| Mon 16 Nov 11:00 EST | AFCON Qualifying | Central African Republic v Benin (N) | 14/21/64 | — |  |
+| Mon 16 Nov 12:00 EST | AFCON Qualifying | Eritrea v Guinea (N) | 15/22/63 | — |  |
+| Mon 16 Nov 13:00 EST | International Friendly | Andorra v Azerbaijan | 18/38/44 | — |  |
+| Mon 16 Nov 14:00 EST | CONCACAF Nations League | Guadeloupe v Bermuda | 64/19/16 | — |  |
+| Mon 16 Nov 14:00 EST | CONCACAF Nations League | Guyana v Puerto Rico | 61/20/18 | — |  |
 
 ⚠ bias = the model is backing an underdog against a heavy bookmaker favourite (>70%). Out of sample the model
 is underconfident on heavy favourites, so these gaps are most likely model error, not value.
