@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-15
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Sun 15 Nov 01:38 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Sun 15 Nov 02:49 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -53,7 +53,9 @@ O2.5 47%, BTTS 52%.
 price (4.20). The
 model rates this outcome 5.7 pp above the de-vigged consensus.
 
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+**Context / research flags.** 
+- [verified_fact · motivation · neutral] UEFA (updated 14 Nov 2026) says Bosnia and Herzegovina will enter the A/B play-offs; Romania drop to the B/C play-offs if they do not win or if Poland beat Sweden. ([source](https://uefa.com/uefanationsleague/news/02ab-2209792f2fda-6a523d4500bb-1000--nations-league-latest-on-quarter-final-qualification-prom), 2026-11-15T07:49:11+00:00)
+
 
 **Reasons this could be wrong.**
 - International selection: the model has weight 0. The edge is the price versus the sharp de-vigged consensus (validated on club data: +4.5% CLV), not a model opinion.
@@ -90,7 +92,9 @@ O2.5 58%, BTTS 55%.
 price (1.59). The edge
 comes mainly from the price being out of line with the consensus of other bookmakers.
 
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+**Context / research flags.** 
+- [verified_fact · motivation · neutral] UEFA (updated 14 Nov 2026) says Austria will be promoted to League A; Israel enter the B/C play-offs if they do not beat Austria. ([source](https://uefa.com/uefanationsleague/news/02ab-2209792f2fda-6a523d4500bb-1000--nations-league-latest-on-quarter-final-qualification-prom), 2026-11-15T07:49:11+00:00)
+
 
 **Reasons this could be wrong.**
 - International selection: the model has weight 0. The edge is the price versus the sharp de-vigged consensus (validated on club data: +4.5% CLV), not a model opinion.
