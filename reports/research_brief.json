@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-14T22:28:58+00:00",
+  "generated": "2026-11-15T06:39:18+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -151,72 +151,39 @@
       "bookmaker": "1xBet",
       "final_prob": 0.3023546550556471,
       "ev": 0.11568867715533784
+    },
+    {
+      "rec_id": "2333482afbdf91f9",
+      "event_id": "football:INT:uefa.nations:20261117:401861196",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-17T19:45:00+00:00",
+      "home": "Bosnia and Herzegovina",
+      "away": "Romania",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 4.6,
+      "bookmaker": "Unibet",
+      "final_prob": 0.2379044482417326,
+      "ev": 0.09436046191196981
+    },
+    {
+      "rec_id": "9e77c1bc0eacc79e",
+      "event_id": "football:INT:uefa.nations:20261117:401861193",
+      "league": "INT:uefa.nations",
+      "kickoff_utc": "2026-11-17T19:45:00+00:00",
+      "home": "Israel",
+      "away": "Austria",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 1.65,
+      "bookmaker": "Unibet",
+      "final_prob": 0.6288918678935723,
+      "ev": 0.03767158202439424
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261115:401929773",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-15T00:00:00+00:00",
-      "home": "Saint Vincent and the Grenadines",
-      "away": "Belize"
-    },
-    {
-      "event_id": "nba:NBA:20261115:401909980",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-15T00:00:00+00:00",
-      "home": "New Orleans Pelicans",
-      "away": "Denver Nuggets"
-    },
-    {
-      "event_id": "nba:NBA:20261115:401909981",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-15T00:30:00+00:00",
-      "home": "Cleveland Cavaliers",
-      "away": "Dallas Mavericks"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261115:401929772",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-15T01:00:00+00:00",
-      "home": "Jamaica",
-      "away": "Mexico"
-    },
-    {
-      "event_id": "nba:NBA:20261115:401909982",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-15T01:00:00+00:00",
-      "home": "Miami Heat",
-      "away": "Detroit Pistons"
-    },
-    {
-      "event_id": "nba:NBA:20261115:401909983",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-15T01:00:00+00:00",
-      "home": "Memphis Grizzlies",
-      "away": "Brooklyn Nets"
-    },
-    {
-      "event_id": "nba:NBA:20261115:401909984",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-15T01:00:00+00:00",
-      "home": "Minnesota Timberwolves",
-      "away": "Chicago Bulls"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261115:401906463",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-15T03:10:00+00:00",
-      "home": "New Zealand",
-      "away": "India"
-    },
-    {
-      "event_id": "tennis:WTA:20261115:187442",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-15T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
     {
       "event_id": "tennis:ATP:20261115:187505",
       "league": "TENNIS:ATP",
@@ -755,6 +722,146 @@
       "kickoff_utc": "2026-11-16T19:45:00+00:00",
       "home": "Switzerland",
       "away": "Scotland"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261117:401929706",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-17T00:00:00+00:00",
+      "home": "Martinique",
+      "away": "Aruba"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261117:401929705",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-17T00:00:00+00:00",
+      "home": "Trinidad and Tobago",
+      "away": "Antigua and Barbuda"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401909994",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T00:00:00+00:00",
+      "home": "Boston Celtics",
+      "away": "Orlando Magic"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401909995",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T00:00:00+00:00",
+      "home": "Cleveland Cavaliers",
+      "away": "Chicago Bulls"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401909996",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T00:00:00+00:00",
+      "home": "Washington Wizards",
+      "away": "Memphis Grizzlies"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401909997",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T00:30:00+00:00",
+      "home": "Brooklyn Nets",
+      "away": "Philadelphia 76ers"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401909998",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T00:30:00+00:00",
+      "home": "Miami Heat",
+      "away": "Houston Rockets"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261117:401929770",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-17T01:00:00+00:00",
+      "home": "Canada",
+      "away": "Guatemala"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401909999",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T01:00:00+00:00",
+      "home": "Minnesota Timberwolves",
+      "away": "Portland Trail Blazers"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401910000",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T01:00:00+00:00",
+      "home": "New Orleans Pelicans",
+      "away": "Golden State Warriors"
+    },
+    {
+      "event_id": "nfl:NFL:20261117:401873065",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-17T01:15:00+00:00",
+      "home": "Baltimore Ravens",
+      "away": "Los Angeles Chargers"
+    },
+    {
+      "event_id": "nba:NBA:20261117:401910001",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-17T02:00:00+00:00",
+      "home": "Denver Nuggets",
+      "away": "Phoenix Suns"
+    },
+    {
+      "event_id": "tennis:ATP:20261117:187504",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-17T05:00:00+00:00",
+      "home": "Arthur Fils",
+      "away": "Alexander Zverev"
+    },
+    {
+      "event_id": "tennis:ATP:20261117:187513",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-17T05:00:00+00:00",
+      "home": "Frances Tiafoe",
+      "away": "Daniil Medvedev"
+    },
+    {
+      "event_id": "tennis:ATP:20261117:187509",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-17T05:00:00+00:00",
+      "home": "Daniil Medvedev",
+      "away": "Carlos Alcaraz"
+    },
+    {
+      "event_id": "tennis:ATP:20261117:187508",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-17T05:00:00+00:00",
+      "home": "Rafael Jodar",
+      "away": "Arthur Fils"
+    },
+    {
+      "event_id": "tennis:ATP:20261117:187507",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-17T05:00:00+00:00",
+      "home": "Rafael Jodar",
+      "away": "Ben Shelton"
+    },
+    {
+      "event_id": "tennis:ATP:20261117:187503",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-17T05:00:00+00:00",
+      "home": "Ben Shelton",
+      "away": "Alexander Zverev"
+    },
+    {
+      "event_id": "football:INT:fifa.friendly:20261117:401933879",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-17T05:30:00+00:00",
+      "home": "Tahiti",
+      "away": "Cook Islands"
+    },
+    {
+      "event_id": "football:INT:fifa.friendly:20261117:401930237",
+      "league": "INT:fifa.friendly",
+      "kickoff_utc": "2026-11-17T06:00:00+00:00",
+      "home": "Malaysia",
+      "away": "Yemen"
     }
   ]
 }
