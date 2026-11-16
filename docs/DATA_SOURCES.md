@@ -322,7 +322,9 @@ Scottish and Spanish divisions) and history for validation.
    coverage audit's lower bound now counts verified operators. Tennis events with 3+ operators: lower
    bound 2 (unchanged), upper bound 4 (was 6, because PMU is now counted with Kambi). The pick rule that
    uses this (rule v2) is **staged, not live**: see `docs/METHODOLOGY.md` section 15 and
-   `reports/independence_audit.md`. Entries are dated and need periodic re-checking.
+   `reports/independence_audit.md`. Entries are dated and need periodic re-checking. Most rows are only
+   **weakly verified** (a search-result snippet of a blocked page, or trade press): only 6 operators rest on
+   an official or regulator page that was read. The report labels every weak row.
 4. **The Odds API visibility:** record which mapped competitions the API lists as active but the budget
    skipped, so gaps like AFCON qualifying can be explained rather than guessed.
 5. **Housekeeping:** events stuck in `scheduled` after kick-off; the leftover `espn:golf` row.

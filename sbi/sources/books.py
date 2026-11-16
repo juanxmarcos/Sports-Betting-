@@ -73,8 +73,11 @@ def _b(group, verified, owner, pricing, source, owner_source, evidence, opened=F
 # How to read this table.
 # * verified=True means BOTH the owner and the price origin have a citation below. It does not
 #   mean the prices were shown to be independently originated: see reports/independence_audit.md
-#   for the measured identical-price shares, and treat "trade press" / opened=False rows as the
-#   weakest verified rows, to be re-checked by a person before rule v2 goes live.
+#   for the measured identical-price shares.
+# * MOST VERIFIED ROWS ARE WEAKLY VERIFIED. opened=False means the cited page blocked automated
+#   reading and only a search-result snippet was seen; "trade press" is not a primary source.
+#   citation_strength() labels every row. Weak rows include the sharp reference Pinnacle, Bet365,
+#   Winamax and DraftKings. Do not switch rule v2 on until a person has re-checked them.
 # * group merges brands that share a price origin, or share an owner while pricing in-house.
 #   When in doubt brands are merged (merging can only lower the count).
 # * verified=False rows are listed so the gap is visible. They never count under rule v2.
@@ -201,6 +204,32 @@ REGISTRY: dict[str, Book] = {
     "BetUS": _b("", False, "named 'Milvus' in a Florida regulator letter (via press)", "not found", "",
                 "https://cdcgaming.com/florida-gaming-commission-sends-cease-and-desist-letter-to-three-overseas-operators/", "trade press"),
 }
+
+
+STRONG_EVIDENCE = ("official", "regulator")
+
+
+def citation_strength(bookmaker: str) -> str | None:
+    """How far a VERIFIED row can be trusted: "strong", or "weak: <why>". None if not verified.
+
+    strong = an official or regulator source that was actually opened and read.
+    weak   = everything else that is still counted under rule v2: a page seen only as a
+             search-result snippet (it blocked automated reading), or trade press.
+    A weak row is a lead, not a finding. It must be re-checked by a person before rule v2 is
+    switched on, and it is labelled wherever the registry is shown."""
+    b = REGISTRY.get(bookmaker)
+    if not b or not b.verified:
+        return None
+    if not b.opened:
+        return "weak: source snippet only" + (", trade press" if b.evidence not in STRONG_EVIDENCE else "")
+    if b.evidence not in STRONG_EVIDENCE:
+        return "weak: trade press"
+    return "strong"
+
+
+def strongly_verified_group(bookmaker: str) -> str | None:
+    """The operator, but only if its row rests on a strong citation (sensitivity check for rule v2)."""
+    return verified_group(bookmaker) if citation_strength(bookmaker) == "strong" else None
 
 
 def verified_group(bookmaker: str) -> str | None:

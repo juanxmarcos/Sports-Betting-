@@ -294,8 +294,9 @@ A pick blocked at step 2 gets the reason "too few verified independent bookmaker
 **Status: staged, not live.** `config.RULES.independence_policy` is `legacy` (rule version `indep-v1`). Rule v2 (`indep-v2`) is computed for every candidate and reported, but does not decide what is published. Every new pick stores both rules' counts, references and EVs in its evidence (`independence`). Going live is the owner's decision: set `SBI_INDEPENDENCE_POLICY=verified` in the workflow, or change the default in a reviewed PR. It applies only to picks published after the switch. Published picks, their odds and the ledger are never recomputed.
 
 **Measured impact** (`python -m sbi independence`, `reports/independence_audit.md`; stored data as of 2026-11-13 12:17 UTC, the same snapshot as the source-coverage baseline):
-- *Registry*: 45 bookmaker names, 33 verified in 17 operators, 12 unverified. Of the bookmakers stored today, 15 operators are verified and 8 names are not (the source-coverage baseline of PR #16 had 10 and 15).
+- *Registry*: 45 bookmaker names, 33 verified in 17 operators, 12 unverified. **Only 15 of the 33 (6 operators) are strongly verified**, meaning an official or regulator page that was actually read. The other 18 are weakly verified (see "Weak citations" below). Of the bookmakers stored today, 15 operators are verified and 8 names are not (the source-coverage baseline of PR #16 had 10 and 15).
 - *Bookmaker-count gate, upcoming 7 days*: 155 markets clear it under v1; **46 of them (29.7%; 95% limits 23.1% to 37.3%) would not under v2**. By event: 4 of 55 (7.3%; 2.9% to 17.3%) lose every qualifying market, all four in tennis (6 events under v1, 2 under v2).
+- *The same gate if only strongly verified operators counted*: 86 of 155 blocked (55.5%; 47.6% to 63.1%). So roughly half of what rule v2 lets through rests on weak citations.
 - *Price-rule candidates, upcoming 7 days*: 2 under v1, both still eligible under v2 (0 of 2 blocked; 95% limits 0% to 65.8%). Two candidates say almost nothing about the long-run share.
 - *Picks already published*: 0 of 5 would have been blocked (95% limits 0% to 43.5%). Three of the five were priced at 1xBet, which is unverified, but each had 5 verified operators and a Betfair Exchange reference. They are not changed either way.
 - *History*: the walk-forward test seasons (six club leagues, 2024-25 to 2026-27, market-only) give the same 272 bets under both rules (0 of 272 removed; 95% limits 0% to 1.4%; ROI +12.8%, limits −6.1% to +32.4%; CLV +4.1%). This data has only large verified bookmakers with a sharp reference, so it shows that rule v2 does not disturb the validated strategy; it cannot show what rule v2 does where unverified bookmakers are common.
@@ -303,8 +304,15 @@ A pick blocked at step 2 gets the reason "too few verified independent bookmaker
 
 In short: rule v2 would have changed no published pick and no historical bet, but it removes about 30% of the markets that currently reach the gate and most tennis events. That is a material change to future coverage, which is why it is staged for the owner's decision.
 
+**Weak citations (read this before activating rule v2).** "Verified" means *cited*, not *confirmed*. Every verified row carries a citation strength (`books.citation_strength`):
+- **strong**: an official or regulator page that was opened and read.
+- **weak: source snippet only**: the cited page refused automated reading, so only a search engine's summary of it was seen. The page may not say what the summary suggests.
+- **weak: trade press**: an industry news article, not a primary source.
+
+18 of the 33 verified names are weak, including Pinnacle (the sharp reference), Bet365, Winamax, DraftKings, BetVictor, Betfred, Betclic, Tipico, Coolbet, the Entain brands, BetMGM, FanDuel, Caesars and Unibet. The report marks each one **WEAK**, lists them in a section of their own with the citation to open, and shows what the gate would do if they did not count. New picks also store the weakly verified bookmakers that priced their market. Before rule v2 is switched on, a person should open each weak citation and either confirm the row (set `opened=True`) or mark it unverified.
+
 **Limits of this rule.**
-- Verified means cited, not proven independent. Several citations are trade press, and some pages blocked automated reading and were seen only as search summaries; the report marks these. They should be re-checked by a person before rule v2 goes live.
+- Verified means cited, not proven independent, and most rows are weakly cited (above).
 - Ownership and platforms change (Unibet and LeoVegas are leaving Kambi market by market; evoke and Tipico changed hands in 2026). Entries are dated and need periodic re-checking.
 - Pinnacle sells its odds to other operators, so a bookmaker can carry Pinnacle-derived prices without any ownership link. No map detects that. The report's identical-price table is the only empirical check, and it can show dependence but cannot prove independence.
 - All multi-bookmaker prices outside club football come from one vendor (The Odds API), which is a single point of failure whatever the operator count.

@@ -55,7 +55,8 @@ def _share(k: int, n: int) -> dict:
 def registry() -> list[dict]:
     return [{"bookmaker": name, "operator": b.group, "verified": b.verified, "owner": b.owner,
              "price_origin": b.pricing, "source": b.source, "owner_source": b.owner_source,
-             "evidence": b.evidence, "source_opened": b.opened, "checked": b.checked, "note": b.note}
+             "evidence": b.evidence, "source_opened": b.opened,
+             "citation_strength": bk.citation_strength(name), "checked": b.checked, "note": b.note}
             for name, b in sorted(bk.REGISTRY.items())]
 
 
@@ -80,7 +81,7 @@ def upcoming_impact(con, now: datetime, horizon_h: float = 168) -> dict:
     from .pipeline import _latest_books            # the same freshness filter the live pipeline uses
     rules = config.RULES
     flat = Outcome(pw=0.5, pl=0.5)                 # active = 1; with weight 0 the model share is unused
-    per: dict = defaultdict(lambda: {"markets": 0, "markets_v1_3plus": 0, "markets_v2_3plus": 0,
+    per: dict = defaultdict(lambda: {"markets": 0, "markets_v1_3plus": 0, "markets_v2_3plus": 0, "markets_v2_strong_3plus": 0,
                                      "events_priced": 0, "events_v1_3plus": 0, "events_v2_3plus": 0,
                                      "cand_v1": 0, "cand_v2": 0, "cand_v1_no_push": 0, "cand_v2_no_push": 0,
                                      "events_v1": 0, "events_v2": 0})
@@ -100,6 +101,8 @@ def upcoming_impact(con, now: datetime, horizon_h: float = 168) -> dict:
             n1, n2 = max(n1, a), max(n2, b)
             s["markets_v1_3plus"] += a >= rules.min_bookmakers
             s["markets_v2_3plus"] += a >= rules.min_bookmakers and b >= rules.min_bookmakers
+            s["markets_v2_strong_3plus"] += (a >= rules.min_bookmakers and evm.n_books_verified(
+                book, SELECTIONS[market], strong_only=True) >= rules.min_bookmakers)
         if books:
             s["events_priced"] += 1
             s["events_v1_3plus"] += n1 >= rules.min_bookmakers
@@ -135,6 +138,8 @@ def upcoming_impact(con, now: datetime, horizon_h: float = 168) -> dict:
     out = {"by_sport": {k: dict(v) for k, v in sorted(per.items())}, "total": dict(tot)}
     out["blocked_share"] = {
         "markets_at_gate": _share(tot["markets_v1_3plus"] - tot["markets_v2_3plus"], tot["markets_v1_3plus"]),
+        "markets_at_gate_strong_citations_only": _share(tot["markets_v1_3plus"] - tot["markets_v2_strong_3plus"],
+                                                        tot["markets_v1_3plus"]),
         "events_at_gate": _share(tot["events_v1_3plus"] - tot["events_v2_3plus"], tot["events_v1_3plus"]),
         "price_rule_candidates": _share(tot["cand_v1"] - tot["cand_v2"], tot["cand_v1"]),
         "price_rule_candidates_no_push": _share(tot["cand_v1_no_push"] - tot["cand_v2_no_push"], tot["cand_v1_no_push"]),
@@ -183,7 +188,8 @@ def published_review(con) -> list[dict]:
                     "names_stored": len(raw), "books_v1": evm.n_books(book, sels), "operators_v2": n2,
                     "bookmakers_recorded_at_publication": ev_.get("n_bookmakers"),
                     "unverified_books": evm.unverified_books(book, sels),
-                    "reference_v2": src, "ev_published": round(r["ev"], 4),
+                    "operators_v2_strong_citations_only": evm.n_books_verified(book, sels, strong_only=True),
+                    "reference_v2": src, "reference_v2_citation": bk.citation_strength(src) if src else None, "ev_published": round(r["ev"], 4),
                     "ev_v2": None if ev2 is None else round(ev2, 4), "v2_verdict": verdict})
     return out
 
@@ -279,6 +285,10 @@ def build(con, now: datetime, horizon_h: float = 168) -> dict:
         "rule_versions": config.INDEPENDENCE_RULE_VERSION, "min_bookmakers": config.RULES.min_bookmakers,
         "registry": reg,
         "registry_summary": {"bookmakers": len(reg), "verified": sum(r["verified"] for r in reg),
+                             "strongly_verified": sum(r["citation_strength"] == "strong" for r in reg),
+                             "weakly_verified": sum((r["citation_strength"] or "").startswith("weak") for r in reg),
+                             "strongly_verified_operators": len({r["operator"] for r in reg
+                                                                 if r["citation_strength"] == "strong"}),
                              "unverified": sum(not r["verified"] for r in reg),
                              "verified_operators": len({r["operator"] for r in reg if r["verified"]})},
         "upcoming": upcoming_impact(con, now, horizon_h),
@@ -313,6 +323,13 @@ def render(rep: dict) -> str:
          f"{rep['min_bookmakers']}-bookmaker gate, the leave-one-out reference uses only them (one vote per "
          "operator), and every v1 check must still pass. It can block a v1 pick and can never add one.",
          "- Unverified bookmakers stay in monitoring, the watchlist and the best-price search under both rules.", "",
+         f"> **Caution: most of the registry is WEAKLY verified.** Of {rs['verified']} verified names, only "
+         f"**{rs['strongly_verified']}** ({rs['strongly_verified_operators']} operators) rest on an official or "
+         f"regulator page that was actually read. The other **{rs['weakly_verified']}** rest on a search-result "
+         "snippet of a page that blocked automated reading, or on trade press. They include the sharp reference "
+         "Pinnacle. \"Verified\" below therefore means *cited*, not *confirmed*, and never *proven independent*. "
+         "Each weak row is marked **WEAK** in the registry and listed under *Weakly verified* below. "
+         "Rule v2 should not be switched on until a person has re-checked them.", "",
          "## Impact on upcoming markets", "",
          f"Fresh stored quotes for events starting in the next {rep['horizon_hours']:.0f} hours.", "",
          "| Sport | Events priced | Events with 3+ (v1) | Events with 3+ (v2) | Markets | Markets 3+ (v1) | Markets 3+ (v2) | "
@@ -323,6 +340,8 @@ def render(rep: dict) -> str:
     b = up["blocked_share"]
     L += ["",
           f"- Markets that clear the bookmaker-count gate under v1 but not under v2: {_ci(b['markets_at_gate'])}.",
+          f"- **If only strongly cited operators counted**, v2 would block {_ci(b['markets_at_gate_strong_citations_only'])}. "
+          "The gap between this line and the one above is how much rule v2 leans on weak citations.",
           f"- Events with at least one such market under v1 but none under v2: {_ci(b['events_at_gate'])}.",
           f"- Price-rule candidates v1 would let through that v2 blocks: {_ci(b['price_rule_candidates'])}.",
           f"- The same, counting only markets that cannot push (exact without a model): {_ci(b['price_rule_candidates_no_push'])}.",
@@ -351,12 +370,12 @@ def render(rep: dict) -> str:
     pub = [p for p in rep["published"] if p.get("reviewable")]
     if pub:
         n_block = sum(p["v2_verdict"] != "ok" for p in pub)
-        L += ["| Published | Event | Pick | Price at | Books v1 | Operators v2 | EV published | EV v2 | Under v2 |",
-              "|---|---|---|---|---|---|---|---|---|"]
+        L += ["| Published | Event | Pick | Price at | Books v1 | Operators v2 | Of which strongly cited | EV published | EV v2 | Under v2 |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
         for p in pub:
             L.append(f"| {p['published_at'][:16].replace('T', ' ')} | {p['event']} | {p['market']} {p['selection']} @ {p['odds']:.2f} | "
                      f"{p['bookmaker']}{'' if p['price_book_verified'] else ' (unverified)'} | {p['books_v1']} | "
-                     f"{p['operators_v2']} | {_pct(p['ev_published'])} | {_pct(p['ev_v2'])} | {p['v2_verdict']} |")
+                     f"{p['operators_v2']} | {p['operators_v2_strong_citations_only']} | {_pct(p['ev_published'])} | {_pct(p['ev_v2'])} | {p['v2_verdict']} |")
         L += ["", f"Rule v2 would not have published {_ci(_share(n_block, len(pub)))} of these. "
                   "With so few picks the interval is very wide; treat it as a description, not an estimate.", ""]
     else:
@@ -402,18 +421,31 @@ def render(rep: dict) -> str:
                  f"{_pct(p['ci95'][0])} to {_pct(p['ci95'][1])} | {'yes' if p['same_verified_operator'] else 'no'} |")
     if not top:
         L.append("| (no pair reaches a 10% identical share) | | | | | | |")
-    L += ["", f"## Bookmaker registry ({rs['bookmakers']} names: {rs['verified']} verified in "
-              f"{rs['verified_operators']} operators, {rs['unverified']} unverified)", "",
+    weak = [r for r in rep["registry"] if (r["citation_strength"] or "").startswith("weak")]
+    L += ["", f"## Weakly verified: re-check before rule v2 goes live ({len(weak)} of {rs['verified']} verified names)", "",
+          "These rows are counted as verified operators by rule v2, on evidence that is **not** strong:", "",
+          "- **source snippet only**: the cited page refused automated reading. Only the search engine's summary of "
+          "it was seen, so the page may not say what the summary suggests.",
+          "- **trade press**: an industry news article, not the company, a filing or a regulator.", "",
+          "| Bookmaker | Operator | Why it is weak | What the citation is claimed to show | Citation to open and read |",
+          "|---|---|---|---|---|"]
+    for r in weak:
+        L.append(f"| {r['bookmaker']} | {r['operator']} | {r['citation_strength'][6:]} | owner: {r['owner']}; "
+                 f"price origin: {r['price_origin']} | {r['source']} |")
+    L += ["", f"## Bookmaker registry ({rs['bookmakers']} names: {rs['strongly_verified']} strongly verified, "
+              f"{rs['weakly_verified']} weakly verified, {rs['unverified']} unverified)", "",
           "*Operator* is the unit that counts once under rule v2: brands sharing an owner or a price origin are "
           "merged. A bookmaker that is not listed here at all is treated as unverified.", "",
-          "*Evidence* is the best grade among the citations. *Read* says whether the cited page was opened "
-          "and read, or blocked automated reading and was seen only as a search-result summary: those rows are "
-          "the weakest and should be re-checked by a person before rule v2 goes live.", "",
-          "| Bookmaker | Verified | Operator (counts once) | Owner | Price origin | Evidence | Read | Checked | Source |",
+          "*Status*: **strong** = an official or regulator page that was read. **WEAK** = counted, but on a source "
+          "snippet or trade press (see above). **NOT VERIFIED** = never counted.", "",
+          "| Bookmaker | Status | Operator (counts once) | Owner | Price origin | Evidence | Read | Checked | Source |",
           "|---|---|---|---|---|---|---|---|---|"]
     for r in rep["registry"]:
-        L.append(f"| {r['bookmaker']} | {'yes' if r['verified'] else 'NO'} | {r['operator'] if r['verified'] else '(not counted)'} | "
-                 f"{r['owner']} | {r['price_origin']} | {r['evidence']} | {'opened' if r['source_opened'] else 'summary only'} | "
+        cs = r["citation_strength"]
+        status = "NOT VERIFIED" if cs is None else ("strong" if cs == "strong" else f"**WEAK** ({cs[6:]})")
+        L.append(f"| {r['bookmaker']} | {status} | {r['operator'] if r['verified'] else '(not counted)'} | "
+                 f"{r['owner']} | {r['price_origin']} | {r['evidence']} | "
+                 f"{'opened' if r['source_opened'] else 'SNIPPET ONLY'} | "
                  f"{r['checked']} | {r['source'] or r['owner_source'] or 'none found'} |")
     notes = [r for r in rep["registry"] if r["note"]]
     if notes:

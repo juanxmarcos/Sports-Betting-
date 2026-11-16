@@ -333,3 +333,31 @@ def test_registry_is_what_the_coverage_audit_calls_known():
     assert coverage.operator_bounds({"Paddy Power", "Sky Bet", "Pinnacle"}) == (2, 2)
     assert coverage.operator_bounds({"Pinnacle", "Mystery A", "Mystery B"}) == (1, 3)
     assert books.CHECKED >= "2026-11-13"
+
+
+# ---------- weak citations are labelled, never passed off as confirmed ----------
+def test_citation_strength_labels_every_verified_row():
+    from sbi.sources.books import citation_strength, strongly_verified_group
+    assert citation_strength("Betsson") == "strong"                       # official page, opened
+    assert citation_strength("Pinnacle").startswith("weak: source snippet only")
+    assert citation_strength("Unibet") == "weak: trade press"             # opened, but not a primary source
+    assert citation_strength("1xBet") is None and citation_strength("Some New Book") is None
+    assert strongly_verified_group("Pinnacle") is None and strongly_verified_group("Betsson") == "Betsson Group"
+    for name, b in REGISTRY.items():
+        cs = citation_strength(name)
+        assert (cs is None) == (not b.verified)
+        assert cs != "strong" or (b.opened and b.evidence in ("official", "regulator"))
+    q = {"home": 1.9, "away": 1.95}
+    book = {"Pinnacle": q, "Bet365": q, "Betsson": q, "William Hill": q}
+    assert evm.n_books_verified(book, HA) == 4 and evm.n_books_verified(book, HA, strong_only=True) == 2
+
+
+def test_report_labels_weak_citations_prominently(audit):
+    md = independence.render(audit)
+    top = md.split("## Impact on upcoming markets")[0]
+    assert "most of the registry is WEAKLY verified" in top and "Pinnacle" in top
+    assert "## Weakly verified: re-check before rule v2 goes live" in md
+    assert "| Pinnacle | **WEAK** (source snippet only, trade press) |" in md and "SNIPPET ONLY" in md
+    assert "If only strongly cited operators counted" in md
+    rs = audit["registry_summary"]
+    assert rs["strongly_verified"] + rs["weakly_verified"] == rs["verified"] and rs["weakly_verified"] > 0

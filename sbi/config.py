@@ -64,6 +64,8 @@ class SelectionRules:
     # Default stays "legacy" (v2 is STAGED: computed and reported for every candidate, not enforced).
     # Going live is an owner decision: set SBI_INDEPENDENCE_POLICY=verified or change this default
     # in a reviewed PR. It only ever applies to picks published after the switch.
+    # BEFORE switching: most "verified" registry rows are weakly verified (source snippet only, or
+    # trade press). Read the "Weakly verified" section of reports/independence_audit.md first.
     independence_policy: str = field(default_factory=lambda: os.environ.get("SBI_INDEPENDENCE_POLICY", "legacy"))
 
 

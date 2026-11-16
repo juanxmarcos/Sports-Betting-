@@ -119,7 +119,12 @@ def verified_operators(book, selections) -> set[str]:
     return {g for g in map(verified_group, _quoting(book, selections)) if g}
 
 
-def n_books_verified(book, selections) -> int:
+def n_books_verified(book, selections, strong_only: bool = False) -> int:
+    """strong_only: count only operators whose registry row rests on a strong citation (an
+    official or regulator page that was read). Used to show how much of rule v2 leans on weak rows."""
+    if strong_only:
+        from .sources.books import strongly_verified_group
+        return len({g for g in map(strongly_verified_group, _quoting(book, selections)) if g})
     return len(verified_operators(book, selections))
 
 
