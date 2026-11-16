@@ -1,97 +1,7 @@
 {
-  "generated": "2026-11-16T09:51:53+00:00",
+  "generated": "2026-11-16T21:40:33+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
-    {
-      "rec_id": "df8ca8e1c76c68cd",
-      "event_id": "football:INT:uefa.nations:20261116:401861180",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T15:00:00+00:00",
-      "home": "Faroe Islands",
-      "away": "Moldova",
-      "market": "1X2",
-      "selection": "D",
-      "line": null,
-      "odds": 3.76,
-      "bookmaker": "1xBet",
-      "final_prob": 0.27502379219468776,
-      "ev": 0.03408945865202595
-    },
-    {
-      "rec_id": "7e283d971add8291",
-      "event_id": "football:INT:uefa.nations:20261116:401861181",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T15:00:00+00:00",
-      "home": "Kazakhstan",
-      "away": "Slovakia",
-      "market": "1X2",
-      "selection": "H",
-      "line": null,
-      "odds": 4.25,
-      "bookmaker": "Unibet",
-      "final_prob": 0.24969917201834801,
-      "ev": 0.06122148107797898
-    },
-    {
-      "rec_id": "3d662544c2a4e714",
-      "event_id": "football:INT:uefa.nations:20261116:401861185",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Germany",
-      "away": "Netherlands",
-      "market": "1X2",
-      "selection": "D",
-      "line": null,
-      "odds": 4.12,
-      "bookmaker": "1xBet",
-      "final_prob": 0.2552036360614369,
-      "ev": 0.05143898057312013
-    },
-    {
-      "rec_id": "82bc3c383ff5c42d",
-      "event_id": "football:INT:uefa.nations:20261116:401861186",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Switzerland",
-      "away": "Scotland",
-      "market": "1X2",
-      "selection": "A",
-      "line": null,
-      "odds": 5.8,
-      "bookmaker": "Unibet",
-      "final_prob": 0.18208477427031008,
-      "ev": 0.056091690767798394
-    },
-    {
-      "rec_id": "f9af04cc6c63d943",
-      "event_id": "football:INT:uefa.nations:20261116:401861179",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Gibraltar",
-      "away": "Malta",
-      "market": "OU",
-      "selection": "under",
-      "line": 2.5,
-      "odds": 1.69,
-      "bookmaker": "1xBet",
-      "final_prob": 0.6162581493235687,
-      "ev": 0.041476272356831156
-    },
-    {
-      "rec_id": "9174faba476df526",
-      "event_id": "football:INT:uefa.nations:20261116:401861187",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "North Macedonia",
-      "away": "Slovenia",
-      "market": "1X2",
-      "selection": "A",
-      "line": null,
-      "odds": 1.68,
-      "bookmaker": "LeoVegas",
-      "final_prob": 0.616567038865961,
-      "ev": 0.035832625294814464
-    },
     {
       "rec_id": "891ed45cef4e0fe7",
       "event_id": "football:INT:uefa.nations:20261117:401861194",
@@ -151,212 +61,24 @@
       "bookmaker": "Unibet",
       "final_prob": 0.6288918678935723,
       "ev": 0.03767158202439424
+    },
+    {
+      "rec_id": "0795fb50263195c7",
+      "event_id": "nfl:NFL:20261122:401873071",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-22T18:00:00+00:00",
+      "home": "Chicago Bears",
+      "away": "New Orleans Saints",
+      "market": "ML",
+      "selection": "away",
+      "line": null,
+      "odds": 5.9,
+      "bookmaker": "DraftKings",
+      "final_prob": 0.17934550800273213,
+      "ev": 0.05813849721611963
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "football:INT:caf.nations_qual:20261116:401927170",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-16T13:00:00+00:00",
-      "home": "Namibia",
-      "away": "Cameroon"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261116:401927135",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-16T13:00:00+00:00",
-      "home": "Sudan",
-      "away": "Senegal"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261116:401927173",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-16T13:00:00+00:00",
-      "home": "Zimbabwe",
-      "away": "Equatorial Guinea"
-    },
-    {
-      "event_id": "tennis:ATP:20261116:187511",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-16T13:00:00+00:00",
-      "home": "Frances Tiafoe",
-      "away": "Carlos Alcaraz"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186792",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T14:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186789",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T14:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861180",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T15:00:00+00:00",
-      "home": "Faroe Islands",
-      "away": "Moldova"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861181",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T15:00:00+00:00",
-      "home": "Kazakhstan",
-      "away": "Slovakia"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261116:401927177",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-16T15:00:00+00:00",
-      "home": "Somalia",
-      "away": "Ghana"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186797",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T15:30:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186796",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T15:30:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261116:401927172",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-16T16:00:00+00:00",
-      "home": "Central African Republic",
-      "away": "Benin"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861183",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-      "home": "Estonia",
-      "away": "Bulgaria"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861182",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-      "home": "Iceland",
-      "away": "Luxembourg"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861184",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-      "home": "Lithuania",
-      "away": "Liechtenstein"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261116:401927176",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-      "home": "Eritrea",
-      "away": "Guinea"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186793",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186784",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T17:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261116:401914292",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-16T18:00:00+00:00",
-      "home": "Andorra",
-      "away": "Azerbaijan"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261116:401929771",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-16T19:00:00+00:00",
-      "home": "Guadeloupe",
-      "away": "Bermuda"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261116:401929708",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-16T19:00:00+00:00",
-      "home": "Guyana",
-      "away": "Puerto Rico"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261116:401929707",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-16T19:00:00+00:00",
-      "home": "Cuba",
-      "away": "Grenada"
-    },
-    {
-      "event_id": "tennis:ATP:20261116:187512",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-16T19:30:00+00:00",
-      "home": "Flavio Cobolli",
-      "away": "Daniil Medvedev"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861185",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Germany",
-      "away": "Netherlands"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861179",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Gibraltar",
-      "away": "Malta"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861188",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Greece",
-      "away": "Serbia"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861187",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "North Macedonia",
-      "away": "Slovenia"
-    },
-    {
-      "event_id": "football:INT:uefa.nations:20261116:401861186",
-      "league": "INT:uefa.nations",
-      "kickoff_utc": "2026-11-16T19:45:00+00:00",
-      "home": "Switzerland",
-      "away": "Scotland"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186783",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T21:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
     {
       "event_id": "tennis:WTA:20261116:186788",
       "league": "TENNIS:WTA",
@@ -491,62 +213,6 @@
       "away": "Carlos Alcaraz"
     },
     {
-      "event_id": "tennis:WTA:20261117:186794",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Andrea Lazaro Garcia",
-      "away": "Barbara Gatica"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186782",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Veronika Erjavec",
-      "away": "Maria Lourdes Carle"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186785",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Alicia Herrero Linana",
-      "away": "Lucia Bronzetti"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186786",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Laura Samson",
-      "away": "Despina Papamichail"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186787",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Darja Semenistaja",
-      "away": "Irene Burillo"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186791",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Varvara Lepchenko",
-      "away": "Nadia Podoroska"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186795",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Antonia Vergara Rivera",
-      "away": "Fernanda Labrana"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186790",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T05:00:00+00:00",
-      "home": "Miriam Bulgaru",
-      "away": "Polona Hercog"
-    },
-    {
       "event_id": "football:INT:fifa.friendly:20261117:401933879",
       "league": "INT:fifa.friendly",
       "kickoff_utc": "2026-11-17T05:30:00+00:00",
@@ -652,6 +318,20 @@
       "away": "South Korea"
     },
     {
+      "event_id": "tennis:WTA:20261117:186787",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T14:00:00+00:00",
+      "home": "Darja Semenistaja",
+      "away": "Irene Burillo"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186791",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T14:00:00+00:00",
+      "home": "Varvara Lepchenko",
+      "away": "Nadia Podoroska"
+    },
+    {
       "event_id": "football:INT:fifa.friendly:20261117:401932718",
       "league": "INT:fifa.friendly",
       "kickoff_utc": "2026-11-17T14:10:00+00:00",
@@ -664,6 +344,20 @@
       "kickoff_utc": "2026-11-17T15:30:00+00:00",
       "home": "Saudi Arabia",
       "away": "Uzbekistan"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186785",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T15:30:00+00:00",
+      "home": "Alicia Herrero Linana",
+      "away": "Lucia Bronzetti"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186790",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T15:30:00+00:00",
+      "home": "Miriam Bulgaru",
+      "away": "Polona Hercog"
     },
     {
       "event_id": "football:INT:fifa.friendly:20261117:401919974",
@@ -734,6 +428,13 @@
       "kickoff_utc": "2026-11-17T16:30:00+00:00",
       "home": "Kuwait",
       "away": "Honduras"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186782",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T17:00:00+00:00",
+      "home": "Veronika Erjavec",
+      "away": "Maria Lourdes Carle"
     },
     {
       "event_id": "football:INT:caf.nations_qual:20261117:401927138",
@@ -867,6 +568,27 @@
       "kickoff_utc": "2026-11-17T20:00:00+00:00",
       "home": "Niger",
       "away": "Morocco"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186786",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T20:00:00+00:00",
+      "home": "Laura Samson",
+      "away": "Despina Papamichail"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186794",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T20:30:00+00:00",
+      "home": "Andrea Lazaro Garcia",
+      "away": "Barbara Gatica"
+    },
+    {
+      "event_id": "tennis:WTA:20261117:186795",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-17T22:00:00+00:00",
+      "home": "Antonia Vergara Rivera",
+      "away": "Fernanda Labrana"
     },
     {
       "event_id": "football:INT:fifa.friendly:20261117:401930895",
@@ -1049,6 +771,20 @@
       "kickoff_utc": "2026-11-18T05:00:00+00:00",
       "home": "Rafael Jodar",
       "away": "Ben Shelton"
+    },
+    {
+      "event_id": "tennis:ATP:20261118:187514",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "Frances Tiafoe",
+      "away": "Flavio Cobolli"
+    },
+    {
+      "event_id": "tennis:ATP:20261118:187513",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "Frances Tiafoe",
+      "away": "Daniil Medvedev"
     }
   ]
 }
