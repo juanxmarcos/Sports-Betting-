@@ -36,6 +36,11 @@ def main(argv=None) -> int:
     c = sub.add_parser("coverage", help="source coverage audit (read-only); writes reports/source_coverage.md")
     c.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
     c.add_argument("--baseline", action="store_true", help="also freeze this run as data/coverage/baseline_<date>.json")
+    nr = sub.add_parser("nfl-reports", help="NFL practice/injury/QB availability (nflverse, informational); "
+                                            "writes reports/nfl_availability.md")
+    nr.add_argument("--season", type=int, action="append", help="season to fetch (default: the current one)")
+    nr.add_argument("--no-fetch", action="store_true", help="report from what is stored; do not fetch injury files")
+    nr.add_argument("--history", type=int, nargs="*", default=[], help="also measure coverage of these season files")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -110,6 +115,11 @@ def main(argv=None) -> int:
         h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(config.SITE_DIR))
         print(f"dashboard: http://localhost:{args.port}/")
         http.server.ThreadingHTTPServer(("127.0.0.1", args.port), h).serve_forever()
+    elif args.cmd == "nfl-reports":
+        from . import nfl_reports
+        r = nfl_reports.run(con, now, seasons=args.season, fetch=not args.no_fetch, history=args.history)
+        print(json.dumps({k: r[k] for k in ("ingest", "summary", "source")}, indent=1, default=str))
+        print(r["report"])
     elif args.cmd == "status":
         for r in con.execute("SELECT job,started_at,status FROM job_runs ORDER BY id DESC LIMIT 10"):
             print(dict(r))
