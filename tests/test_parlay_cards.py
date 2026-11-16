@@ -158,7 +158,7 @@ def test_stage0_build_still_publishes_nothing_with_two_to_six_leg_limits():
     assert b["recommendations"] == [] and b["status"] == "not_published" and b["leg_limits"] == [2, 6]
     assert {x["key"] for x in b["blockers"]} == {"combined_quote", "joint_calibration"}
     assert parlays.shown_cards(b, NOW) == []
-    assert all(v is None for v in parlays.PREREQUISITES.values())
+    assert parlays.PREREQUISITES == ("combined_quote", "joint_calibration")
 
 
 def test_committed_parlay_file_has_the_homepage_shape_and_shows_nothing():

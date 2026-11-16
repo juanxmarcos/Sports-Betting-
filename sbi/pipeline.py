@@ -397,7 +397,7 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
         d["integrity"] = audit_open(con, now)
     with db.job(con, "publish") as d:
         from . import site
-        d["site"] = str(site.build(con, now))          # builds diagnostics first ...
+        d["site"] = str(site.build(con, now, write_shadow=True))          # builds diagnostics first ...
         d["report"] = str(report.write_daily(con, now, result["analyse"]))   # ... so the report uses the same numbers
         d["dashboard"] = str(dashboard.build(con))
         result["publish"] = d["report"]
