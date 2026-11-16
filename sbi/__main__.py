@@ -41,6 +41,10 @@ def main(argv=None) -> int:
     nr.add_argument("--season", type=int, action="append", help="season to fetch (default: the current one)")
     nr.add_argument("--no-fetch", action="store_true", help="report from what is stored; do not fetch injury files")
     nr.add_argument("--history", type=int, nargs="*", default=[], help="also measure coverage of these season files")
+    fb = sub.add_parser("forecast-bench", help="shadow benchmark of third-party soccer forecasts (research only); "
+                                               "writes reports/forecast_benchmark.md")
+    fb.add_argument("--openmodel-repo", help="local clone of github.com/Hicruben/theopenmodel")
+    fb.add_argument("--football-analytics-repo", help="local clone of github.com/serayd61/football-predictions-open-data")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -51,6 +55,14 @@ def main(argv=None) -> int:
         rep = coverage.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc), baseline=args.baseline)
         print(json.dumps(rep["summary"], indent=1))
         print(config.REPORTS_DIR / "source_coverage.md")
+        return 0
+    if args.cmd == "forecast-bench":   # research only: never opens the database
+        from . import forecast_bench
+        rep = forecast_bench.write({"openmodel": args.openmodel_repo,
+                                    "football-analytics": args.football_analytics_repo}, now=now)
+        print(json.dumps({k: {"rows": v.get("rows"), "match_status": v.get("match_status")}
+                          for k, v in rep["sources"].items()}, indent=1))
+        print(config.REPORTS_DIR / "forecast_benchmark.md")
         return 0
     con = db.connect()
 

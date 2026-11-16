@@ -26,6 +26,8 @@ python -m sbi daily        # ingest all sports → settle → model → EV → r
 ```bash
 python -m sbi serve        # diagnostics view (docs/dev) on http://localhost:8000
 python -m sbi coverage     # source coverage audit (read-only) → reports/source_coverage.md
+python -m sbi forecast-bench --openmodel-repo DIR --football-analytics-repo DIR
+                           # third-party forecast shadow benchmark (research only) → reports/forecast_benchmark.md
 ```
 ```bash
 python -m pytest -q
@@ -33,4 +35,4 @@ python -m pytest -q
 Automation: `.github/workflows/daily.yml` runs every 2 hours and commits the data, reports and site. A Claude Code scheduled task (`automation/claude_research_routine.md`) adds evidence-graded team-news notes. Optional: the `ODDS_API_KEY` secret enables multi-bookmaker odds (free tier, budgeted per day).
 
 ## Docs
-[Development workflow](docs/DEVELOPMENT_WORKFLOW.md) · [Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)
+[Development workflow](docs/DEVELOPMENT_WORKFLOW.md) · [Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Forecast sources](docs/FORECAST_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)

@@ -4,6 +4,9 @@
 > prioritised next steps are in [Source audit 2026-11-13](#source-audit-2026-11-13) at the end of this
 > file. The numbers come from `python -m sbi coverage` (`reports/source_coverage.md`).
 
+> **Third-party forecast sites** (The Open Model, Football Analytics, Skorbot) were audited on
+> 2026-11-16 (issue #23). None is ingested. See [FORECAST_SOURCES.md](FORECAST_SOURCES.md).
+
 Every stored row carries `source`, `source_url` and a timestamp (`retrieved_at` for odds is
 the HTTP `Last-Modified` time of the file, i.e. when football-data published that snapshot).
 
