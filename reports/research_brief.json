@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-16T02:13:12+00:00",
+  "generated": "2026-11-16T07:52:14+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -154,76 +154,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:ATP:20261116:187510",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "Flavio Cobolli",
-      "away": "Carlos Alcaraz"
-    },
-    {
-      "event_id": "tennis:ATP:20261116:187514",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "Frances Tiafoe",
-      "away": "Flavio Cobolli"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186782",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186795",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186794",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186791",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186787",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186786",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186785",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261116:186790",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-16T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
     {
       "event_id": "football:INT:caf.nations_qual:20261116:401927170",
       "league": "INT:caf.nations_qual",
@@ -1007,6 +937,118 @@
       "kickoff_utc": "2026-11-18T01:00:00+00:00",
       "home": "San Antonio Spurs",
       "away": "Detroit Pistons"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261118:401929763",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-18T02:30:00+00:00",
+      "home": "Mexico",
+      "away": "Jamaica"
+    },
+    {
+      "event_id": "football:INT:concacaf.nations.league:20261118:401929703",
+      "league": "INT:concacaf.nations.league",
+      "kickoff_utc": "2026-11-18T03:00:00+00:00",
+      "home": "Nicaragua",
+      "away": "Montserrat"
+    },
+    {
+      "event_id": "nba:NBA:20261118:401910006",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-18T03:30:00+00:00",
+      "home": "LA Clippers",
+      "away": "Utah Jazz"
+    },
+    {
+      "event_id": "nba:NBA:20261118:401910005",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-18T04:00:00+00:00",
+      "home": "Los Angeles Lakers",
+      "away": "Charlotte Hornets"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186807",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186806",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186805",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186804",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186803",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186802",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186808",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186809",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:ATP:20261118:187504",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "Arthur Fils",
+      "away": "Alexander Zverev"
+    },
+    {
+      "event_id": "tennis:ATP:20261118:187510",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "Flavio Cobolli",
+      "away": "Carlos Alcaraz"
+    },
+    {
+      "event_id": "tennis:ATP:20261118:187509",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "Daniil Medvedev",
+      "away": "Carlos Alcaraz"
+    },
+    {
+      "event_id": "tennis:ATP:20261118:187507",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-18T05:00:00+00:00",
+      "home": "Rafael Jodar",
+      "away": "Ben Shelton"
     }
   ]
 }
