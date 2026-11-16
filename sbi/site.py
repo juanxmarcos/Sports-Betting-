@@ -301,4 +301,9 @@ def build(con, now: datetime | None = None):
     out = config.ROOT / "docs" / "data"
     out.mkdir(parents=True, exist_ok=True)
     (out / "doyen.json").write_text(json.dumps(data, default=str))
+    # Small file for the daily homepage (issue #27), so a phone loads a few KB instead of the full
+    # research file. Same parlay block, nothing added.
+    (out / "parlays.json").write_text(json.dumps(
+        {"generated": data["generated"], "default_timezone": data["default_timezone"], "parlays": data["parlays"]},
+        default=str))
     return out / "doyen.json"

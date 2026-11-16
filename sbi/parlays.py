@@ -21,6 +21,7 @@ on verified parts. Nothing in this module changes a pick, a threshold or the led
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from itertools import combinations
 from math import prod
 from zoneinfo import ZoneInfo
@@ -30,7 +31,8 @@ from .sources.books import normalize_book
 from .sources.football_data import AGGREGATES
 
 METHOD = "parlay-stage0-audit"
-MIN_LEGS, MAX_LEGS = 2, 3
+# 2-6 legs (issue #27; was 2-3). A leg limit is not a reason to add legs: never force more legs for payout.
+MIN_LEGS, MAX_LEGS = 2, 6
 
 # Capabilities a published parlay needs. None = not available. Do not set these to make cards
 # appear: each needs its own data source or evidence, reviewed by the owner (docs/PARLAYS.md).
@@ -182,3 +184,132 @@ def build(legs: list[dict], now: datetime, tz: str | None = None) -> dict:
         "leg_limits": [MIN_LEGS, MAX_LEGS],
         "disclosure": DISCLOSURE,
     }
+
+
+# ---------- card contract (issue #27): what a homepage parlay card may show ----------
+# The homepage renders a parlay card ONLY for a recommendation that passes every check below.
+# docs/assets/doyen.js applies the same rules again in the browser. In stage 0 `build()` never
+# produces a recommendation, so these checks guard the future backend and reject injected data.
+CARD_SPORTS = ("soccer", "nfl", "nba", "tennis")
+CARD_TIMEZONE = "America/New_York"      # the site's authoritative publishing day
+CARD_MAX_CARDS = 5                      # a cap, not a target: 0 is a normal result
+DEFAULT_STAKE = 10                      # illustrative display amount, in dollars; never a request to bet
+MAX_QUOTE_AGE_MINUTES = 30              # a combined quote older than this is not shown as current
+QUOTE_KIND = "bookmaker_combined"       # one bookmaker's own price for the whole combination
+
+
+def _money(x) -> Decimal:
+    return Decimal(str(x)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def gross_payout(stake, decimal_odds) -> Decimal:
+    """Gross potential payout INCLUDING the stake = stake x quoted combined decimal odds, to the cent.
+    This is what the slip returns if every leg wins. It is not expected value."""
+    try:
+        s, o = Decimal(str(stake)), Decimal(str(decimal_odds))
+    except InvalidOperation as e:
+        raise ValueError("stake and odds must be numbers") from e
+    if not s.is_finite() or not o.is_finite() or s < 0 or o <= 1:
+        raise ValueError("stake must be >= 0 and decimal odds > 1")
+    return _money(s * o)
+
+
+def net_profit(stake, decimal_odds) -> Decimal:
+    """Net profit if every leg wins = stake x (odds - 1). Always labelled separately from payout."""
+    return gross_payout(stake, decimal_odds) - _money(stake)
+
+
+def _ts(x) -> datetime | None:
+    try:
+        t = datetime.fromisoformat(str(x).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return t if t.tzinfo else None
+
+
+def _num(x) -> float | None:
+    if isinstance(x, bool) or not isinstance(x, (int, float)):
+        return None
+    x = float(x)
+    return x if x == x and x not in (float("inf"), float("-inf")) else None
+
+
+def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
+    """Why `rec` must NOT be shown as a recommended parlay card. None = it may be shown.
+    Unknown or missing data is always a rejection."""
+    tz = ZoneInfo(CARD_TIMEZONE)
+    day = day or now.astimezone(tz).date().isoformat()
+    if not isinstance(rec, dict):
+        return "not an object"
+    if rec.get("mock") or rec.get("test"):
+        return "mock or test data"
+    if not isinstance(rec.get("parlay_id"), str) or not rec["parlay_id"].strip():
+        return "missing parlay_id"
+    if rec.get("date") != day:
+        return "not today's parlay"
+    if rec.get("status") != "active":
+        return "parlay is not active"
+    if not isinstance(rec.get("bookmaker"), str) or not rec["bookmaker"].strip():
+        return "missing bookmaker"
+    legs = rec.get("legs")
+    if not isinstance(legs, list) or not MIN_LEGS <= len(legs) <= MAX_LEGS:
+        return f"needs {MIN_LEGS}-{MAX_LEGS} legs"
+    seen = set()
+    for leg in legs:
+        if not isinstance(leg, dict):
+            return "leg is not an object"
+        for k in ("event_id", "title", "selection"):
+            if not isinstance(leg.get(k), str) or not leg[k].strip():
+                return f"leg missing {k}"
+        if leg["event_id"] in seen:
+            return "two legs on the same event"
+        seen.add(leg["event_id"])
+        if leg.get("sport") not in CARD_SPORTS:
+            return "unsupported sport"
+        if leg.get("status") != "active":
+            return "leg is not active"
+        start = _ts(leg.get("start_utc"))
+        if start is None:
+            return "leg has no valid start time"
+        if start.astimezone(tz).date().isoformat() != day:
+            return "leg is not on today's date"
+        if start <= now:
+            return "leg has started"
+    q = rec.get("quote")
+    if not isinstance(q, dict) or q.get("kind") != QUOTE_KIND:
+        return "no single-bookmaker combined quote"
+    if q.get("bookmaker") != rec["bookmaker"]:
+        return "quote is from a different bookmaker"
+    if not isinstance(q.get("source"), str) or not q["source"].strip():
+        return "quote has no provenance"
+    odds = _num(q.get("decimal_odds"))
+    if odds is None or odds <= 1.0:
+        return "invalid combined odds"
+    at = _ts(q.get("quoted_at"))
+    if at is None or at > now:
+        return "quote has no valid time"
+    if (now - at).total_seconds() > MAX_QUOTE_AGE_MINUTES * 60:
+        return "quote is stale"
+    return None
+
+
+def card_view(rec: dict, stake=DEFAULT_STAKE) -> dict:
+    """Display values for a card that passed `card_problem`: odds and gross payout at the stake."""
+    odds = rec["quote"]["decimal_odds"]
+    return {"parlay_id": rec["parlay_id"], "bookmaker": rec["bookmaker"], "decimal_odds": odds, "stake": stake,
+            "gross_payout": str(gross_payout(stake, odds)), "net_profit": str(net_profit(stake, odds)),
+            "legs": [{"title": leg["title"], "selection": leg["selection"], "start_utc": leg["start_utc"]}
+                     for leg in rec["legs"]]}
+
+
+def shown_cards(block: dict | None, now: datetime) -> list[dict]:
+    """The recommendations the homepage may show: nothing while any blocker is open or the block is
+    not published, otherwise every valid card for today, earliest first, at most CARD_MAX_CARDS."""
+    if not isinstance(block, dict) or block.get("status") != "published" or block.get("blockers") != []:
+        return []
+    day = now.astimezone(ZoneInfo(CARD_TIMEZONE)).date().isoformat()
+    if block.get("date") != day:
+        return []
+    ok = [r for r in block.get("recommendations") or [] if card_problem(r, now, day) is None]
+    ok.sort(key=lambda r: (min(_ts(leg["start_utc"]) for leg in r["legs"]), r["parlay_id"]))
+    return ok[:CARD_MAX_CARDS]
