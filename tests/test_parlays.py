@@ -129,9 +129,11 @@ def test_even_perfect_legs_are_not_published_without_the_prerequisites():
     assert "Home 1" not in text and "p1" not in text and "BookA" not in text        # no legs, ids or books leak out
 
 
-def test_prerequisites_are_not_met():
-    """Guard: enabling either capability is a deliberate, reviewed change (docs/PARLAYS.md)."""
-    assert parlays.PREREQUISITES == {"combined_quote": None, "joint_calibration": None}
+def test_prerequisites_are_not_met_by_default():
+    """Without a verified quote and passing calibration evidence, both gates stay closed."""
+    assert parlays.PREREQUISITES == ("combined_quote", "joint_calibration")
+    b = parlays.build([_leg(1, prob=0.55), _leg(2, prob=0.55)], NOW, TZ, quotes=[], calibration=None)
+    assert {x["key"] for x in b["blockers"]} == {"combined_quote", "joint_calibration"}
 
 
 def test_audit_counts_exclusions_and_each_combination_once():

@@ -1,6 +1,11 @@
-# Sports Betting Doyen — Recommended Parlays of the Day (staged; nothing published yet)
+# Sports Betting Doyen — Recommended Parlays of the Day (gated; nothing published yet)
 
-**Status: stage 0.** Since issue #27 the homepage *is* "Recommended Parlays of the Day" (single picks
+**Status: stage 1 (issue #33).** The backend can now publish a real parlay, but only when every
+gate in section 7 passes for that exact combination. Today two gates are closed (no free source of
+combined bookmaker prices; joint-calibration evidence too small), so the homepage still says
+"No verified parlays today". Sections 1–6 are the stage-0 record (#7, #27) and still apply.
+
+**Stage 0 record.** Since issue #27 the homepage *is* "Recommended Parlays of the Day" (single picks
 moved to `#/picks`), and it says **"No verified parlays today."** Doyen publishes no parlays, because two things a trustworthy
 parlay needs do not exist yet. This document records the audit behind that, the rules a parlay
 would have to meet, and the plan for getting there.
@@ -133,3 +138,79 @@ and not a probability; net profit, if ever shown, is stake × (odds − 1) and l
 
 The homepage loads only `docs/data/parlays.json` (about 1 KB, written by `site.build` with the
 same block as `doyen.json`); other routes load the full research file on demand.
+
+
+## 7. Stage 1: gates, fallback path and freshness (issue #33)
+
+Run `python -m sbi parlay-research` for the current numbers (writes `reports/parlay_research.md`
+and `data/analysis/parlay_calibration.json`; read-only, no network).
+
+### 7.1 Combined-price sources (pages read 2026-11-16)
+
+| Source | Combined price? | Cost / status |
+|---|---|---|
+| The Odds API (in use) | No. Single-market endpoints only; no parlay or bet-builder endpoint | free plan in use |
+| ESPN, football-data.co.uk (in use) | No | free |
+| OpticOdds Parlay API (`POST /parlay/odds`) | Yes, across sportsbooks | licence via sales; no public price or free tier found. **Not enabled** |
+| OddsBlaze same-game-parlay endpoint | Yes, per sportsbook (US books) | from $299/month per a third-party review, "no free tier". **Not enabled** |
+| SportsGameOdds | No (client multiplies leg odds) | n/a |
+| A bookmaker's own bet slip | Yes | free, **manual owner entry only**; never scraped |
+
+No legally usable, no-cost source qualifies. The paid options are listed for the owner's
+information; enabling one needs the owner's separate approval and is not done here.
+
+### 7.2 Gates (all must pass, per combination)
+
+1. **Leg screens** (unchanged, section 3): 2–6 active published picks starting later today, fresh
+   prices, different events, competitions and teams, one bookmaker prices every leg, positive value.
+2. **Verified combined quote** (`sbi/parlay_quotes.py`): the owner records the price shown on that
+   bookmaker's bet slip with
+   `python -m sbi parlay-quote --bookmaker Unibet --odds 5.10 --legs <id>,<id> --source "Unibet bet slip"`
+   (`--dry-run` verifies without recording; pick ids are listed in `reports/parlay_research.md`).
+   It is accepted only if every leg is a current usable pick, the bookmaker quotes every leg in
+   Doyen's stored prices, the combined odds are within 0.85–1.02 × the product of that bookmaker's
+   leg prices (outside that band: wrong legs, a boost or correlation pricing, so it is rejected for
+   review), and `quoted_at` is timezone-aware and at most 30 minutes old. Records in
+   `data/parlay_quotes.json` are append-only.
+3. **Joint calibration** (`sbi/parlay_calibration.py`, criteria fixed in code before any result):
+   at least 200 disjoint settled two-leg combinations, observed joint wins within the 95% band of the
+   multiplied probabilities (|z| ≤ 1.96), legs calibrated too, and the evidence must cover each leg's
+   competition and the number of legs. **Current evidence:** walk-forward test-season selections
+   (`data/backtest/bets_test.csv`) give 66 combinations, 6 joint wins against 6.52 predicted
+   (z = −0.22, phi = −0.04): consistent with independence, far too few, six club leagues only,
+   two legs only. Live picks so far are all UEFA Nations League, which it does not cover.
+4. **Positive value at the quoted price**, and the card contract (section 5 of #27).
+5. **Exposure:** a straight pick appears in at most one published parlay (best value first); at most 5.
+
+When a gate is closed, `blockers` names it and `audit.excluded` counts where each combination stopped.
+
+### 7.3 Shadow ledger
+
+Every combination that passes the leg screens is appended by the scheduled run to
+`ledger/parlay_shadow.csv` (first sighting per day, legs and bookmaker; never edited), with the
+product of that bookmaker's leg prices labelled `computed_product_not_a_quote`. It is not shown on
+the site. Its settled rows are the live record that can, over time, add to the calibration evidence.
+
+**Evaluation plan.** Shadow and backtest combinations are scored with the same test as gate 3. The
+gate opens only when the pre-registered criteria pass on settled combinations that cover the leagues
+and leg counts being published. Changing a criterion needs new out-of-sample evidence and owner review.
+
+### 7.4 Freshness
+
+- The scheduled job runs every 2 hours; a combined quote counts for 30 minutes. These are
+  consistent only because the job does not invent combined quotes: an owner-recorded quote is used
+  if a site build happens within 30 minutes of `quoted_at`. `parlay-quote` rebuilds `docs/data`
+  immediately so the owner can commit it; the browser hides the card once the quote is 30 minutes
+  old. A quote is never re-stamped or relabelled as fresh.
+- Leg prices keep their source-specific limits in `sbi/odds_policy.py` (up to 6 hours near the start
+  for The Odds API). They are used only to check the quote's consistency, never displayed as the
+  combined price.
+
+### 7.5 Scarcity (measured 2026-11-16)
+
+All 16 published straight picks to date are UEFA Nations League, so the same-competition screen
+leaves zero eligible pairs every day (the report also shows the counterfactual if that screen were
+relaxed: 15 pairs on 2026-11-16). The 3–5 daily target is structurally out of reach until picks come
+from several competitions on the same day. Options needing an owner decision, not enabled here:
+relax the same-competition screen for international fixtures (needs its own evidence); a paid
+combined-price source (7.1); recording slip prices manually each day.

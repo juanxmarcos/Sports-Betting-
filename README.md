@@ -8,7 +8,7 @@ An autonomous sports betting research assistant for **soccer, NFL, NBA and tenni
 
 ## What you see
 - **Picks of the Day:** every pick that currently qualifies today, shown as equal cards with selection, best price, Doyen's probability, expected value, the reasoning, and the main risk. Zero, one or several are all normal; when nothing qualifies the page says so. Tomorrow and This Week have their own headings.
-- **Recommended Parlays of the Day:** currently always "No verified parlays today". Doyen has no bookmaker-quoted parlay price and no tested joint probability, so it recommends none. See [docs/PARLAYS.md](docs/PARLAYS.md).
+- **Recommended Parlays of the Day:** gated (issue #33). A parlay is published only with a verified single-bookmaker combined quote (recorded by the owner from a bet slip, `python -m sbi parlay-quote`) and joint-calibration evidence that meets pre-registered criteria. Neither is available today, so the page says "No verified parlays today". `python -m sbi parlay-research` reports why. See [docs/PARLAYS.md](docs/PARLAYS.md).
 - **Matches Doyen Is Watching:** near-misses and interesting fixtures, clearly *not* recommendations, with what Doyen is waiting for.
 - **Upcoming**, **Pick History** (immutable, at original odds), **Watchlist** (stored in your browser), and **Ask Doyen** (opens Claude with your question plus Doyen's data; no embedded AI, no secrets).
 - Sport filters (All / Soccer / NFL / NBA / Tennis), date filters (Today / Tomorrow / This Week), and a timezone picker (DST-aware).

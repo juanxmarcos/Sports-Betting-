@@ -1,22 +1,22 @@
-"""Recommended Parlays of the Day: staged, audit-only (issue #7).
+"""Recommended Parlays of the Day (issues #7, #27, #33).
 
-Stage 0 (this module): Doyen publishes NO parlays. Every run screens the day's straight picks,
-counts what was checked and why it was excluded, and exports that audit with an empty
-recommendation list so the site can say "No verified parlays today" from data, not from a
-hard-coded card.
+Stage 1 (this module). Every run screens the day's straight picks, counts what was checked and
+why it was excluded, and exports that audit. A parlay is PUBLISHED only when every gate passes
+for that exact combination:
 
-A parlay may only ever be published when ALL prerequisites below are met. Two of them are
-capabilities Doyen does not have (see docs/PARLAYS.md), so `recommendations` is always empty:
+1. combined_quote: a price for the parlay itself, quoted by one bookmaker. No free data source
+   provides one (docs/PARLAYS.md section 1), so the only qualifying quote is one the owner read
+   off that bookmaker's bet slip and recorded with `python -m sbi parlay-quote`, verified by
+   `sbi.parlay_quotes.quote_problem` and no older than MAX_QUOTE_AGE_MINUTES. A product of leg
+   prices is never a quote.
+2. joint_calibration: settled evidence that multiplied leg probabilities are calibrated for
+   these competitions and this number of legs (`sbi.parlay_calibration`, pre-registered
+   criteria). Today the evidence is too small, so this gate is closed.
+3. Positive value at the QUOTED combined price, and every card-contract check.
 
-1. combined_quote: a price for the parlay itself, quoted by one bookmaker. Doyen's feeds return
-   single-market prices only. Multiplying leg prices is how a bookmaker *usually* prices
-   unrelated legs, but it is not evidence that this bookmaker accepts this combination at
-   that price (market rules, limits, related-event restrictions).
-2. joint_calibration: evidence that Doyen's leg probabilities, multiplied, give calibrated joint
-   probabilities. There is no settled multi-leg record, and leg-level errors compound.
-
-The arithmetic and the leg screens are implemented and tested here so the later stages build
-on verified parts. Nothing in this module changes a pick, a threshold or the ledger.
+Combinations that pass the leg screens but not the gates go to an unpublished, append-only
+shadow ledger (`ledger/parlay_shadow.csv`), labelled as computed, never as a bookmaker quote.
+Nothing in this module changes a pick, a threshold or the straight-pick ledger.
 """
 from __future__ import annotations
 
@@ -26,24 +26,29 @@ from itertools import combinations
 from math import prod
 from zoneinfo import ZoneInfo
 
-from . import config, odds_policy
+import csv
+import json
+
+from . import config, odds_policy, parlay_calibration, parlay_quotes
 from .sources.books import normalize_book
 from .sources.football_data import AGGREGATES
 
-METHOD = "parlay-stage0-audit"
+METHOD = "parlay-stage1-gated"
 # 2-6 legs (issue #27; was 2-3). A leg limit is not a reason to add legs: never force more legs for payout.
 MIN_LEGS, MAX_LEGS = 2, 6
 
-# Capabilities a published parlay needs. None = not available. Do not set these to make cards
-# appear: each needs its own data source or evidence, reviewed by the owner (docs/PARLAYS.md).
-PREREQUISITES = {"combined_quote": None, "joint_calibration": None}
+# The two capabilities a published parlay needs. They are evaluated per combination from real
+# inputs (an owner-recorded, verified bookmaker quote; calibration evidence that meets the
+# pre-registered criteria). Never hard-code them to True to make cards appear.
+PREREQUISITES = ("combined_quote", "joint_calibration")
 
 BLOCKERS = {
-    "combined_quote": "No bookmaker-quoted parlay price. Doyen's odds feeds return single-market prices only, "
-                      "so it cannot verify that any bookmaker offers a given combination, or at what price.",
+    "combined_quote": "No bookmaker-quoted parlay price. No free data source returns a bookmaker's own price "
+                      "for a combination, so a parlay needs a quote recorded from that bookmaker's bet slip in the "
+                      "last 30 minutes. A product of leg prices is never shown as a quote.",
     "joint_calibration": "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs "
-                         "are independent and each leg is well calibrated; Doyen has no settled multi-leg record "
-                         "to support that.",
+                         "are independent and each leg is well calibrated; the settled evidence does not yet meet "
+                         "the pre-registered criteria.",
 }
 
 HEADLINE = "No verified parlays today"
@@ -132,12 +137,16 @@ def leg_from_pick(pick: dict, row: dict) -> dict:
             "participants": [row["home"], row["away"]], "start_utc": pick["start_utc"],
             "state": pick["status"]["state"], "prob": pick["prob"], "odds_updated": pick.get("odds_updated"),
             "source": " ".join(sources), "selection_key": row["selection"],
-            "prices": (pick.get("detail") or {}).get("prices") or {}}
+            "prices": (pick.get("detail") or {}).get("prices") or {},
+            "league": row.get("league"), "title": pick.get("title"), "selection_label": pick.get("selection"),
+            "market": pick.get("market")}
 
 
-def build(legs: list[dict], now: datetime, tz: str | None = None) -> dict:
-    """The `parlays` block of docs/data/doyen.json. `recommendations` stays empty until every
-    prerequisite is met; the audit says what was checked."""
+def build(legs: list[dict], now: datetime, tz: str | None = None, quotes: list[dict] | None = None,
+          calibration: dict | None = None, shadow: list | None = None) -> dict:
+    """The `parlays` block of docs/data/doyen.json. A recommendation appears only when every gate
+    passes for that combination; otherwise the audit says what was checked and why it stopped.
+    `shadow`, if given, collects the combinations that passed the leg screens (unpublished)."""
     tz = tz or config.TIMEZONE
     day = now.astimezone(ZoneInfo(tz)).date().isoformat()
     excluded: dict[str, int] = {}
@@ -152,8 +161,12 @@ def build(legs: list[dict], now: datetime, tz: str | None = None) -> dict:
             count("leg: " + why)
         else:
             usable.append(leg)
+    by_id = {leg["id"]: leg for leg in usable}
+    verified = [q for q in quotes or []
+                if parlay_quotes.quote_problem(q, by_id, now, MAX_QUOTE_AGE_MINUTES) is None]
 
     checked = passing = 0
+    candidates = []
     for n in range(MIN_LEGS, MAX_LEGS + 1):
         for combo in combinations(usable, n):
             checked += 1
@@ -161,29 +174,120 @@ def build(legs: list[dict], now: datetime, tz: str | None = None) -> dict:
             if links:
                 count("combination: " + links[0])
                 continue
-            quotes = single_book_quotes(list(combo))
-            if not quotes:
+            book_prices = single_book_quotes(list(combo))
+            if not book_prices:
                 count("combination: no single bookmaker prices every leg")
                 continue
             joint = joint_prob_independent([leg["prob"] for leg in combo])
-            if not any(parlay_ev(joint, combined_odds(q)) > 0 for q in quotes.values()):
+            if not any(parlay_ev(joint, combined_odds(q)) > 0 for q in book_prices.values()):
                 count("combination: no positive value at any single bookmaker")
                 continue
             passing += 1
+            ids = sorted(leg["id"] for leg in combo)
+            if shadow is not None:
+                for bk, q in book_prices.items():
+                    shadow.append({"date": day, "legs": ids, "bookmaker": bk,
+                                   "computed_product_odds": round(combined_odds(q), 4),
+                                   "joint_prob_independent": round(joint, 6),
+                                   "computed_ev": round(parlay_ev(joint, combined_odds(q)), 6)})
+            matches = [q for q in verified if sorted(q["legs"]) == ids]
+            if not matches:
+                count("combination: no verified bookmaker combined quote")
+                continue
+            cov = parlay_calibration.coverage_problem(calibration, list(combo))
+            if cov:
+                count("combination: " + cov)
+                continue
+            best = max(matches, key=lambda q: (q["decimal_odds"], q["quoted_at"]))
+            ev = parlay_ev(joint, best["decimal_odds"])
+            if ev <= 0:
+                count("combination: no positive value at the quoted combined price")
+                continue
+            candidates.append((ev, combo, best, joint))
 
-    missing = [k for k, v in PREREQUISITES.items() if not v]
+    # Exposure: a straight pick appears in at most one published parlay; best value first.
+    recs, used = [], set()
+    for ev, combo, q, joint in sorted(candidates, key=lambda c: (-c[0], c[2]["quote_id"])):
+        if len(recs) >= CARD_MAX_CARDS:
+            break
+        if used & {leg["id"] for leg in combo}:
+            count("combination: shares a leg with a better published parlay")
+            continue
+        rec = _recommendation(combo, q, joint, ev, day)
+        why = card_problem(rec, now)
+        if why:
+            count("combination: " + why)
+            continue
+        used.update(leg["id"] for leg in combo)
+        recs.append(rec)
+
+    missing = []
+    if not recs:
+        if not verified:
+            missing.append("combined_quote")
+        if not (calibration or {}).get("passed"):
+            missing.append("joint_calibration")
+        if not missing:                          # gates open in principle, but nothing qualified today
+            missing.append("combined_quote")
+    cal = calibration or {}
     return {
         "date": day, "timezone": tz, "generated": now.isoformat(), "method": METHOD,
-        "status": "not_published",
-        "headline": HEADLINE,
-        "recommendations": [],          # stage 0: never populated, whatever the screens find
+        "status": "published" if recs else "not_published",
+        "headline": f"{len(recs)} verified parlay{'s' if len(recs) != 1 else ''} today" if recs else HEADLINE,
+        "recommendations": recs,
         "blockers": [{"key": k, "text": BLOCKERS[k]} for k in missing],
         "audit": {"straight_picks_seen": len(legs), "usable_legs_today": len(usable),
                   "combinations_checked": checked, "passed_leg_screens": passing,
+                  "verified_quotes": len(verified),
+                  "joint_calibration": {"combinations": cal.get("combinations", 0), "passed": bool(cal.get("passed")),
+                                        "required": parlay_calibration.MIN_COMBINATIONS},
                   "excluded": dict(sorted(excluded.items()))},
         "leg_limits": [MIN_LEGS, MAX_LEGS],
         "disclosure": DISCLOSURE,
     }
+
+
+def _recommendation(combo, q: dict, joint: float, ev: float, day: str) -> dict:
+    return {"parlay_id": q["quote_id"], "date": day, "status": "active", "bookmaker": q["bookmaker"],
+            "legs": [{"event_id": leg["event_id"], "title": leg.get("title") or " v ".join(leg["participants"]),
+                      "selection": leg.get("selection_label") or leg["selection_key"],
+                      "market": leg.get("market"), "sport": leg["sport"], "status": "active",
+                      "start_utc": leg["start_utc"]} for leg in sorted(combo, key=lambda x: x["start_utc"])],
+            "quote": {"kind": parlay_quotes.KIND, "bookmaker": q["bookmaker"], "source": q["source"],
+                      "origin": q["origin"], "decimal_odds": q["decimal_odds"], "quoted_at": q["quoted_at"]},
+            "joint_prob": round(joint, 6), "joint_method": parlay_calibration.METHOD, "ev": round(ev, 6)}
+
+
+SHADOW_FIELDS = ("first_seen", "date", "legs", "bookmaker", "price_kind", "computed_product_odds",
+                 "joint_prob_independent", "computed_ev")
+
+
+def record_shadow(rows: list[dict], now: datetime, path=None) -> int:
+    """Append unseen (date, legs, bookmaker) rows to the unpublished shadow ledger. Existing rows are
+    never edited or removed. Returns the number of rows added."""
+    path = path or config.ROOT / "ledger" / "parlay_shadow.csv"
+    seen = set()
+    if path.exists():
+        with path.open(newline="") as f:
+            seen = {(r["date"], r["legs"], r["bookmaker"]) for r in csv.DictReader(f)}
+    new = []
+    for r in rows:
+        key = (r["date"], json.dumps(r["legs"]), r["bookmaker"])
+        if key not in seen:
+            seen.add(key)
+            new.append({"first_seen": now.isoformat(), "date": r["date"], "legs": key[1], "bookmaker": r["bookmaker"],
+                        "price_kind": "computed_product_not_a_quote",
+                        "computed_product_odds": r["computed_product_odds"],
+                        "joint_prob_independent": r["joint_prob_independent"], "computed_ev": r["computed_ev"]})
+    if new:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        header = not path.exists()
+        with path.open("a", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=SHADOW_FIELDS)
+            if header:
+                w.writeheader()
+            w.writerows(new)
+    return len(new)
 
 
 # ---------- card contract (issue #27): what a homepage parlay card may show ----------
