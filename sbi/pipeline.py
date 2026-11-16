@@ -395,6 +395,17 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
         from .integrity import audit_open
         d.update(reassess_open(con, now))
         d["integrity"] = audit_open(con, now)
+    with db.job(con, "parlay-candidates") as d:
+        # Issue #35: full-slate parlay research. Shadow only (developer report + append-only ledger);
+        # reads stored data, makes no network request, never touches the homepage.
+        from . import parlay_engine
+        try:
+            pr = parlay_engine.write(con, now, record_ledger=True)
+            d.update({"events_today": pr["coverage"]["events_today"], "pool_legs": pr["coverage"]["pool_legs"],
+                      "evaluated": pr["search"]["evaluated"], "shortlist": len(pr["shortlist"])})
+        except Exception as e:  # noqa: BLE001 - research only: must never stop the run
+            d["error"] = f"{type(e).__name__}: {e}"
+            d["_status"] = "partial"
     with db.job(con, "publish") as d:
         from . import site
         d["site"] = str(site.build(con, now, write_shadow=True))          # builds diagnostics first ...

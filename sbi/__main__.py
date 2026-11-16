@@ -53,6 +53,10 @@ def main(argv=None) -> int:
     pq.add_argument("--quoted-at", help="ISO-8601 time the slip showed this price, with timezone (default: now)")
     pq.add_argument("--source", required=True, help="where the price was seen, e.g. 'Unibet bet slip, desktop'")
     pq.add_argument("--dry-run", action="store_true", help="verify only; do not record")
+    pc = sub.add_parser("parlay-candidates", help="full-slate parlay candidate research, shadow only (no network); "
+                                                  "writes reports/parlay_candidates.md")
+    pc.add_argument("--as-of", help="ISO timestamp to evaluate at (default: now)")
+    pc.add_argument("--record", action="store_true", help="also append the shortlist to ledger/parlay_candidates_shadow.csv")
     sub.add_parser("parlay-research", help="parlay calibration, scarcity and shadow-ledger report (read-only); "
                                            "writes reports/parlay_research.md")
     args = ap.parse_args(argv)
@@ -159,6 +163,14 @@ def main(argv=None) -> int:
         print(site.build(con, now))       # refresh docs/data now: the quote only counts for 30 minutes
         print("Commit and push data/parlay_quotes.json and docs/data/ to update the site. The quote stops "
               "counting 30 minutes after --quoted-at, and the page hides it then; it is never relabelled fresh.")
+    elif args.cmd == "parlay-candidates":
+        from . import parlay_engine
+        at = datetime.fromisoformat(args.as_of) if args.as_of else now
+        at = at if at.tzinfo else at.replace(tzinfo=timezone.utc)
+        r = parlay_engine.write(con, at, record_ledger=args.record)
+        print(f"events today {r['coverage']['events_today']}, pool legs {r['coverage']['pool_legs']}, "
+              f"combinations evaluated {r['search']['evaluated']}, shadow shortlist {len(r['shortlist'])}")
+        print(config.REPORTS_DIR / "parlay_candidates.md")
     elif args.cmd == "parlay-research":
         from . import parlay_research
         print(parlay_research.write(con, now))
