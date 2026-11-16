@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Recommended Parlays of the Day (staged; nothing published yet)
 
-**Status: stage 0.** The homepage has a "Recommended Parlays of the Day" section, and it says
-**"No verified parlays today"**. Doyen publishes no parlays, because two things a trustworthy
+**Status: stage 0.** Since issue #27 the homepage *is* "Recommended Parlays of the Day" (single picks
+moved to `#/picks`), and it says **"No verified parlays today."** Doyen publishes no parlays, because two things a trustworthy
 parlay needs do not exist yet. This document records the audit behind that, the rules a parlay
 would have to meet, and the plan for getting there.
 
@@ -41,7 +41,7 @@ a three-leg joint probability is about 9% too high.
 
 ## 3. What a published parlay would have to satisfy
 
-1. **Legs:** 2 or 3. Each is already a published straight pick, status `active`, starting today
+1. **Legs:** 2 to 6 (issue #27; was 2 or 3). Each is already a published straight pick, status `active`, starting today
    (local calendar day), with a quote inside the freshness limit in `sbi/odds_policy.py`.
    No leg is added, and no threshold is lowered, to make a parlay possible.
 2. **No known link between legs:** different games, no shared team or player, different
@@ -106,3 +106,30 @@ Parlays are higher-variance and win less often than single picks. Every leg has 
 bookmaker's margin is paid on every leg, and a small error in each probability compounds. Any
 parlay Doyen ever shows would be paper-traded research, never a guarantee and never a reason
 to stake more.
+
+
+## 5. Homepage card contract (issue #27)
+
+The homepage shows at most 5 parlay cards for the current **America/New_York** day. A card is
+rendered only when **all** of the following hold. The rules live in `sbi/parlays.py`
+(`card_problem`, `shown_cards`) and are applied again in the browser (`parlayProblem` in
+`docs/assets/doyen.js`); `tests/test_parlay_cards.py` checks that both sides agree case by case.
+
+- The `parlays` block has `status: "published"`, `blockers: []` and today's date. In stage 0 the
+  block always has blockers, so the homepage shows the one-line empty state.
+- Each recommendation: `parlay_id`, `date` (today), `status: "active"`, `bookmaker`, 2–6 `legs`.
+- Each leg: unique `event_id`, `title`, `selection`, sport in Soccer/NFL/NBA/Tennis,
+  `status: "active"`, a timezone-aware `start_utc` on today's date that has not started yet.
+- `quote`: `kind: "bookmaker_combined"` (one bookmaker's own price for the whole combination, never a
+  product of best prices from different books), the same `bookmaker`, a non-empty `source`,
+  `decimal_odds > 1` and a timezone-aware `quoted_at` no more than 30 minutes old.
+- Anything missing, unknown, or flagged `mock`/`test` is rejected. Mock fixtures render only in tests
+  that set `window.__DOYEN_ALLOW_MOCK`, and each such card is labelled "Mock data · testing only".
+
+Each card shows the legs (game, market, selection, start time), the bookmaker, the combined odds,
+a **$10 illustrative bet amount** (editable; nothing is placed or paid) and the **potential payout =
+stake × combined decimal odds, including the stake**, rounded to the cent. It is not expected value
+and not a probability; net profit, if ever shown, is stake × (odds − 1) and labelled separately.
+
+The homepage loads only `docs/data/parlays.json` (about 1 KB, written by `site.build` with the
+same block as `doyen.json`); other routes load the full research file on demand.
