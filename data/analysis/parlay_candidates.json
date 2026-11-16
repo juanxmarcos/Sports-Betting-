@@ -1,0 +1,93 @@
+{
+ "generated": "2026-11-16T22:04:16+00:00",
+ "date": "2026-11-16",
+ "timezone": "America/New_York",
+ "method": "parlay-fullslate-shadow-v1",
+ "price_kind": "computed_product_not_a_quote",
+ "publication": "shadow_only",
+ "screens": {
+  "min_leg_prob": 0.3,
+  "max_leg_prob": 0.85,
+  "max_model_disagreement": 0.12,
+  "min_independent_bookmakers": 3,
+  "pool_max": 30,
+  "beam": 150,
+  "max_evaluations": 250000
+ },
+ "coverage": {
+  "events_today": 12,
+  "by_sport": {
+   "nba": {
+    "events": 8,
+    "fresh_prices": 8,
+    "stored_model": 8
+   },
+   "nfl": {
+    "events": 1,
+    "fresh_prices": 1,
+    "stored_model": 1
+   },
+   "soccer": {
+    "events": 3,
+    "stored_model": 3,
+    "fresh_prices": 1
+   }
+  },
+  "candidate_legs": 0,
+  "events_with_candidate_legs": 0,
+  "pool_legs": 0,
+  "excluded": {
+   "event: no fresh result-market prices": 2,
+   "event: too few independent bookmakers": 10,
+   "leg: no bookmaker at or above fair value": 0
+  }
+ },
+ "search": {
+  "evaluated": 0,
+  "by_size": {
+   "2": 0,
+   "3": 0,
+   "4": 0,
+   "5": 0,
+   "6": 0
+  },
+  "passing_by_size": {
+   "2": 0,
+   "3": 0,
+   "4": 0,
+   "5": 0,
+   "6": 0
+  },
+  "rejected_linked": 0,
+  "truncated": false,
+  "bookmakers": 0
+ },
+ "candidates_found": 0,
+ "shortlist": [],
+ "baseline_straight_picks": {
+  "straight_picks_seen": 2,
+  "usable_legs_today": 0,
+  "combinations_checked": 0,
+  "passed_leg_screens": 0
+ },
+ "quota": {
+  "at": "2026-11-16T21:40:21+00:00",
+  "credits_spent_last_run": 1,
+  "credits_remaining": "375"
+ },
+ "shadow_settlement": {
+  "rows": 0,
+  "won": 0,
+  "lost": 0,
+  "void": 0,
+  "open": 0,
+  "expected_wins_settled": 0.0,
+  "by_legs": {}
+ },
+ "why_not_3_to_5": [
+  "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
+  "Only 0 leg(s) are at or above fair value at any bookmaker.",
+  "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
+  "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
+ ]
+}

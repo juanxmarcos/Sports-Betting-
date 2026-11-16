@@ -214,3 +214,52 @@ relaxed: 15 pairs on 2026-11-16). The 3–5 daily target is structurally out of 
 from several competitions on the same day. Options needing an owner decision, not enabled here:
 relax the same-competition screen for international fixtures (needs its own evidence); a paid
 combined-price source (7.1); recording slip prices manually each day.
+
+## 8. Full-slate candidate engine, shadow only (issue #35, PR A)
+
+`sbi/parlay_engine.py` (`python -m sbi parlay-candidates`, and the `parlay-candidates` job in the
+daily run) widens the leg pool from published straight picks to **every scheduled, same-day
+(America/New_York) event** in Soccer, NFL, NBA and Tennis. It reads only stored events, stored
+predictions and fresh stored quotes. It makes no network request and spends no API credit.
+
+**Leg screens** (research screens, not betting thresholds; no straight-pick rule changes):
+
+| Screen | Rule |
+|---|---|
+| Market | Result market only: 1X2 (soccer), moneyline (NFL, NBA, tennis). Totals and handicaps are out until their calibration is measured |
+| Freshness | Same source- and time-specific limits as straight picks (`odds_policy`) |
+| Independent bookmakers | At least `RULES.min_bookmakers` (3) owner groups. Same-owner brands count once |
+| Consensus probability | 0.30 to 0.85: no long shots and no blind heavy favourites |
+| Model check | If Doyen stored a model probability in the last 36 h, it must be within 0.12 of the market consensus. Tennis stores none, so no check applies |
+| Availability | No open `injury` or `lineup` research note on the event |
+| Value at the slip | Each bookmaker B is valued against a leave-one-out consensus that excludes B and its owner group. A leg joins a combination at B only if B's price is at or above that fair value. Exchanges count toward consensus but are never parlay bookmakers |
+
+**Combinations.** One selection per event (the one with the best value), at most 30 legs, then a beam
+search for each bookmaker: 2 to 6 legs, top 150 per size, at most 250,000 evaluations. The stage-1
+link screens apply unchanged: no same game, no shared team or player, and no two legs from one
+competition. Different names are not taken as proof of independence. The shortlist holds at most 5
+combinations. Each event appears in at most one, and an identical leg set is kept only at its best
+bookmaker. **0 is a normal result.**
+
+**Output, developer-only.** `reports/parlay_candidates.md` and `data/analysis/parlay_candidates.json`
+show coverage by sport, combinations evaluated and kept by leg count, quota use read from the job log,
+the shortlist and a plain "why not 3–5 today" list. The baseline column is the stage-1 straight-pick
+view. The daily run appends the shortlist to `ledger/parlay_candidates_shadow.csv`. That file is
+append-only, and it is settled read-only from final scores (a void leg makes the row void).
+
+**Never published by this engine.** Every price is `computed_product_not_a_quote`. Each shortlisted
+row lists its production blockers: no verified bookmaker combined quote, and joint calibration not
+met. The homepage still comes only from `sbi.parlays.build` and its stage-1 gates (section 7).
+
+**First real-data reading (2026-11-16).** At 14:00 UTC: 15 events today, 8 with candidate legs,
+4 legs at or above fair value at some bookmaker, 1 combination evaluated, 0 kept. At 22:04 UTC:
+12 events and 0 legs, because 10 events had too few fresh independent bookmakers. The Odds API quotes
+from the 09:51 run were more than 6 hours old for games within 10 hours, so only one ESPN price was
+left. The binding constraints are therefore (a) the timing of the multi-bookmaker refresh relative
+to evening games, (b) the one-leg-per-competition screen on an NBA-heavy slate and (c) no bookmaker
+offering value on two unlinked legs at once. Thresholds were not relaxed to change this.
+
+**Still open (PR B and later):** walk-forward validation of multi-leg candidates (log loss, Brier,
+calibration, confidence intervals by sport, market, league and leg count) from permitted historical
+data. A source for real single-bookmaker combined quotes (see section 7 and `reports/parlay_research.md`).
+Aligning a free-quota The Odds API refresh with evening start times without exceeding the budget.
