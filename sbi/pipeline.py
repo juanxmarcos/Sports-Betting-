@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
@@ -22,9 +23,6 @@ from .sources import football_data as fd
 from .sources.http import SourceBlocked
 
 
-MONITORING_RESULTS_MAX_AGE_H = 24.0
-
-
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(microsecond=0)
 
@@ -32,19 +30,18 @@ def _now() -> datetime:
 def ingest(con, now: datetime | None = None) -> dict:
     now = now or _now()
     out = {}
-    # Active leagues are analysed; monitoring leagues are only stored and measured (see sbi/leagues.py).
+    # The public database holds the active leagues only. Monitoring leagues are fetched solely by the
+    # opt-in, local-only `python -m sbi monitor-leagues` (sbi/monitoring.py), never by this job.
     try:
-        out["fixtures"] = fd.ingest_fixtures(con, leagues.stored())
+        out["fixtures"] = fd.ingest_fixtures(con, leagues.active())
         db.provider_ok(con, "football-data:fixtures", out["fixtures"]["events"])
     except (SourceBlocked, RuntimeError) as e:
         db.provider_err(con, "football-data:fixtures", str(e))
         out["fixtures_error"] = str(e)
     season = fd.season_code(now.date())
-    for div in leagues.stored():
-        # Monitoring results are fetched at most once a day: nothing is priced from them.
-        age = 6 if leagues.is_analysable(div) else MONITORING_RESULTS_MAX_AGE_H
+    for div in leagues.active():
         try:
-            out[div] = fd.ingest_results(con, div, season, max_age_hours=age)
+            out[div] = fd.ingest_results(con, div, season)
             db.provider_ok(con, f"football-data:{div}", out[div]["events"])
         except (SourceBlocked, RuntimeError) as e:      # one division failing never stops the others
             db.provider_err(con, f"football-data:{div}", str(e))
@@ -161,8 +158,8 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
         "SELECT * FROM events WHERE sport='football' AND league NOT LIKE 'INT:%' AND status='scheduled' "
         "AND kickoff_utc > ? AND kickoff_utc <= ?",
         con, params=(now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat()))
-    # Only the active allowlist is ever priced. Monitoring leagues are stored for measurement and
-    # validation; they get no prediction, no candidate and no pick, whatever their odds look like.
+    # Only the active allowlist is ever priced. Monitoring leagues live in a separate local file; even if
+    # one reached this database by mistake it would get no prediction, no candidate and no pick.
     ok = events["league"].isin(leagues.active())
     watching, events = events[~ok], events[ok]
     summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0,
@@ -338,6 +335,17 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             db.provider_err(con, "espn:context", str(e))
             d["error"] = f"{type(e).__name__}: {e}"
             d["_status"] = "partial"
+    if os.environ.get("SBI_NFL_REPORTS") == "1":      # opt-in: off unless the owner sets it (docs/DATA_SOURCES.md)
+        with db.job(con, "ingest-nfl-reports") as d:
+            from . import nfl_reports
+            try:
+                info = nfl_reports.run(con, now)
+                d.update({"ingest": info["ingest"], "summary": info["summary"]})
+                if any("error" in i for i in info["ingest"]):
+                    d["_status"] = "partial"
+            except Exception as e:  # noqa: BLE001 - context only: must never stop the run
+                d["error"] = f"{type(e).__name__}: {e}"
+                d["_status"] = "partial"
     with db.job(con, "ingest-tennis") as d:
         from . import tennis
         try:

@@ -274,11 +274,11 @@ def ingest_fixtures(con, leagues) -> dict:
     divs = df["Div"].astype(str).str.strip()
     in_file = divs.value_counts().to_dict()
     allow = list(leagues)
-    # Divisions in the file that are not on the allowlist are counted, never stored.
+    # Divisions in the file that were not asked for are counted, never stored.
     skipped = {d: int(n) for d, n in sorted(in_file.items()) if d not in allow}
     df = df[divs.isin(allow)].reset_index(drop=True)
     if df.empty:
-        return {"events": 0, "odds": 0, "last_modified": lm, "by_division": {}, "not_on_allowlist": skipped}
+        return {"events": 0, "odds": 0, "last_modified": lm, "by_division": {}, "not_stored": skipped}
     _, dropped = clean_rows(df)
     m = parse_matches(df)
     n = upsert_events(con, m, url, finished=False)
@@ -286,4 +286,4 @@ def ingest_fixtures(con, leagues) -> dict:
     k = insert_odds(con, m, o, url, lm or db.utcnow(), kinds=("pre",))
     return {"events": n, "odds": k, "last_modified": lm,
             "by_division": {d: int(c) for d, c in sorted(m["div"].value_counts().items())},
-            "not_on_allowlist": skipped, "rows_dropped": dropped}
+            "not_stored": skipped, "rows_dropped": dropped}

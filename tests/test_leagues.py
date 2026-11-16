@@ -1,7 +1,8 @@
 """Soccer league allowlist, football-data parsing edge cases and per-league coverage.
 
-Network-free: the fixtures file is a recorded slice of football-data.co.uk/fixtures.csv
-(published 2026-11-13 14:16 GMT); every HTTP call is replaced."""
+Network-free: every HTTP call is replaced. The fixtures file has the real column layout of
+football-data.co.uk/fixtures.csv (2026-11-13) with SYNTHETIC prices: no source odds are redistributed
+(tests/fixtures/football_data/README.md)."""
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sbi import config, coverage, db, league_eval, leagues, pipeline
+from sbi import config, coverage, db, league_eval, leagues, monitoring, pipeline
 from sbi.sources import football_data as fd
 from sbi.sources import http
 
@@ -18,6 +19,24 @@ FIXTURES = (Path(__file__).parent / "fixtures" / "football_data" / "fixtures_202
 LM = "2026-11-13T14:16:25+00:00"
 NOW = datetime(2026, 11, 13, 17, 0, tzinfo=timezone.utc)
 HEADER, *ROWS = FIXTURES.decode().strip().split("\n")
+
+
+COLS = HEADER.split(",")
+
+
+def _set(row: str, **cells) -> str:
+    """A copy of a CSV row with the named columns replaced."""
+    c = row.split(",")
+    for k, v in cells.items():
+        c[COLS.index(k)] = str(v)
+    return ",".join(c)
+
+
+def _cell(row: str, col: str) -> float:
+    return float(row.split(",")[COLS.index(col)])
+
+
+DUP = _set(ROWS[0], B365H=9.9, B365D=9.9, B365A=9.9)      # the first match again, with different prices
 
 
 def _csv(*rows, header=HEADER) -> bytes:
@@ -30,6 +49,7 @@ def con(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATA_DIR", tmp_path)
     monkeypatch.setattr(config, "CACHE_DIR", tmp_path / "cache")
     monkeypatch.setattr(config, "REPORTS_DIR", tmp_path / "reports")
+    monkeypatch.delenv("SBI_MONITORING_DB", raising=False)
     return db.connect(tmp_path / "t.sqlite")
 
 
@@ -108,7 +128,7 @@ def test_kickoff_summer_time_and_missing_time():
 
 
 def test_duplicate_and_malformed_rows_are_dropped_and_counted():
-    dup = ROWS[0].replace("2.5,3.4,2.5", "9.9,9.9,9.9", 1)       # same match again with different prices
+    dup = DUP
     cells = ROWS[1].split(",")
     bad_date = ",".join(["E2", "not a date"] + cells[2:])
     itself = ",".join(cells[:4] + [cells[3]] + cells[5:])        # a team "playing" itself
@@ -122,14 +142,14 @@ def test_duplicate_and_malformed_rows_are_dropped_and_counted():
 
 
 def test_duplicate_rows_never_attach_odds_to_the_wrong_event(con, monkeypatch):
-    dup = ROWS[0].replace("2.5,3.4,2.5", "9.9,9.9,9.9", 1)
+    dup = DUP
     _serve(monkeypatch, {"fixtures.csv": _csv(ROWS[0], dup, ROWS[2])})
     out = fd.ingest_fixtures(con, leagues.stored())
     assert out["events"] == 2 and out["rows_dropped"]["duplicate"] == 1
     assert con.execute("SELECT COUNT(*) FROM odds WHERE price=9.9").fetchone()[0] == 0     # the first row wins
     exeter = con.execute("""SELECT price FROM odds WHERE event_id LIKE '%exeter%' AND bookmaker='Bet365'
                             AND market='1X2' AND selection='H'""").fetchone()[0]
-    assert exeter == 1.86
+    assert exeter == _cell(ROWS[2], "B365H")
 
 
 def test_zero_and_absurd_odds_are_not_prices():
@@ -173,13 +193,13 @@ def test_schema_change_is_a_clear_error_not_a_crash(con, monkeypatch):
     with pytest.raises(fd.SchemaError):
         fd.read_csv(b"<html><body>Service unavailable</body></html>")
     # the job records it against the provider and still ingests the season files
-    season = "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG\nE2,07/11/2026,15:00,Wigan,Barnsley,1,1\n".encode()
-    _serve(monkeypatch, {"fixtures.csv": renamed, "E2.csv": season})
+    season = "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG\nE1,07/11/2026,15:00,Wigan,Barnsley,1,1\n".encode()
+    _serve(monkeypatch, {"fixtures.csv": renamed, "E1.csv": season})
     out = pipeline.ingest(con, NOW)
-    assert "missing column" in out["fixtures_error"] and out["E2"]["events"] == 1
+    assert "missing column" in out["fixtures_error"] and out["E1"]["events"] == 1
     st = {r["provider"]: r for r in con.execute("SELECT * FROM provider_status")}
     assert "missing column" in st["football-data:fixtures"]["last_error"]
-    assert st["football-data:E2"]["last_success"]
+    assert st["football-data:E1"]["last_success"]
 
 
 # ---------------------------------------------------------------- ingestion
@@ -190,7 +210,7 @@ def test_only_allowlisted_divisions_are_stored(con, monkeypatch):
     _serve(monkeypatch, {"fixtures.csv": _csv(*ROWS, unlisted)})
     out = fd.ingest_fixtures(con, leagues.stored())
     assert out["by_division"] == {"E2": 2, "E3": 1, "SC1": 1, "SP2": 2}
-    assert out["not_on_allowlist"] == {"D2": 1}                    # seen, counted, not stored
+    assert out["not_stored"] == {"D2": 1}                          # seen, counted, not stored
     assert con.execute("SELECT COUNT(*) FROM events WHERE league='D2'").fetchone()[0] == 0
     # the old allowlist stores none of these: the gain is measured, not assumed
     assert fd.ingest_fixtures(db.connect(config.DB_PATH.with_name("old.sqlite")), config.FOOTBALL_LEAGUES)["events"] == 0
@@ -243,23 +263,94 @@ def test_blocked_source_is_not_retried_or_bypassed(tmp_path, monkeypatch, code):
 
 
 def test_one_blocked_division_does_not_stop_the_others(con, monkeypatch):
-    season = "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG\nE3,07/11/2026,15:00,Exeter,Crewe,0,0\n".encode()
-    calls = _serve(monkeypatch, {"fixtures.csv": FIXTURES, "E2.csv": http.SourceBlocked("E2.csv -> HTTP 429"),
-                                 "E3.csv": season, "E0.csv": RuntimeError("fetch failed: timeout")})
+    season = "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG\nE1,07/11/2026,15:00,Wigan,Barnsley,0,0\n".encode()
+    calls = _serve(monkeypatch, {"fixtures.csv": _csv(_set(ROWS[0], Div="E1")),
+                                 "E0.csv": http.SourceBlocked("E0.csv -> HTTP 429"),
+                                 "E1.csv": season, "SP1.csv": RuntimeError("fetch failed: timeout")})
     out = pipeline.ingest(con, NOW)
-    assert "429" in out["E2_error"] and "timeout" in out["E0_error"]
-    assert out["E3"]["events"] == 1 and out["fixtures"]["events"] == 6
-    assert sum(u.endswith("E2.csv") for u in calls) == 1           # no retry loop
+    assert "429" in out["E0_error"] and "timeout" in out["SP1_error"]
+    assert out["E1"]["events"] == 1 and out["fixtures"]["events"] == 1
+    assert sum(u.endswith("E0.csv") for u in calls) == 1           # no retry loop
     st = {r["provider"]: r for r in con.execute("SELECT * FROM provider_status")}
-    assert "429" in st["football-data:E2"]["last_error"] and st["football-data:E3"]["last_success"]
+    assert "429" in st["football-data:E0"]["last_error"] and st["football-data:E1"]["last_success"]
 
 
-def test_monitoring_results_are_fetched_at_most_daily(con, monkeypatch):
+# ---------------------------------------------------------------- monitoring leagues stay out of the public database
+
+def test_scheduled_ingest_never_fetches_or_stores_monitoring_leagues(con, monkeypatch):
+    """The daily job (public, committed database) asks for the ten active leagues only, as before this change."""
+    calls = _serve(monkeypatch, {"fixtures.csv": FIXTURES})        # a file full of monitoring-league fixtures
+    out = pipeline.ingest(con, NOW)
+    assert sorted(u.rsplit("/", 1)[-1] for u in calls) == sorted(["fixtures.csv"] + [f"{d}.csv" for d in config.FOOTBALL_LEAGUES])
+    assert out["fixtures"]["events"] == 0
+    assert out["fixtures"]["not_stored"] == {"E2": 2, "E3": 1, "SC1": 1, "SP2": 2}      # seen and counted only
+    assert con.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0
+    assert con.execute("SELECT COUNT(*) FROM odds").fetchone()[0] == 0
+    assert not monitoring.db_path().exists()                       # and no local file appears by itself
+
+
+def test_opt_in_ingest_writes_only_to_the_local_file(con, monkeypatch):
+    season = "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG\nE2,07/11/2026,15:00,Wigan,Barnsley,1,1\n".encode()
     ages = {}
-    monkeypatch.setattr(fd, "fetch", lambda url, max_age_hours=6.0, **_: (ages.__setitem__(url.rsplit("/", 1)[-1], max_age_hours), (b"", LM))[1])
-    pipeline.ingest(con, NOW)
-    assert ages["E0.csv"] == 6 and ages["E2.csv"] == pipeline.MONITORING_RESULTS_MAX_AGE_H == 24
-    assert ages["fixtures.csv"] == 2 and len(ages) == 1 + len(leagues.stored())
+
+    def fake(url, max_age_hours=6.0, **_):
+        name = url.rsplit("/", 1)[-1]
+        ages[name] = max_age_hours
+        return {"fixtures.csv": FIXTURES, "E2.csv": season}.get(name, b""), LM
+    monkeypatch.setattr(fd, "fetch", fake)
+    out = monitoring.ingest(NOW)
+    assert out["local_only"] is True and out["quote_basis"] == "file_published"
+    assert "not bookmaker-timed" in out["quotes_are"] and "not executable" in out["quotes_are"]
+    assert out["fixtures"]["by_division"] == {"E2": 2, "E3": 1, "SC1": 1, "SP2": 2} and out["E2"]["events"] == 1
+    assert sorted(ages) == sorted(["fixtures.csv"] + [f"{d}.csv" for d in leagues.monitoring()])   # no active-league file
+    assert ages["E2.csv"] == monitoring.RESULTS_MAX_AGE_H == 24    # results at most once a day
+    local = monitoring.db_path()
+    assert local == config.DATA_DIR / "local" / "monitoring.sqlite" and local.exists()
+    ro = monitoring.connect_ro()
+    assert ro.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 7
+    assert {r[0] for r in ro.execute("SELECT DISTINCT source FROM odds")} == {"football-data.co.uk"}
+    assert {r[0] for r in ro.execute("SELECT DISTINCT retrieved_at FROM odds")} == {LM}        # the file's publication time
+    assert coverage.timestamp_basis("football-data.co.uk") == "file_published"
+    notice = ro.execute("SELECT notice, quote_basis FROM local_notice").fetchone()
+    assert "Not for redistribution" in notice[0] and "not executable" in notice[0] and notice[1] == "file_published"
+    # the public database was never touched
+    assert con.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0
+    assert con.execute("SELECT COUNT(*) FROM odds").fetchone()[0] == 0
+    assert monitoring.ingest(NOW)["fixtures"]["odds"] == 0         # repeat run adds nothing
+
+
+def test_local_store_refuses_the_public_database_path(con, monkeypatch):
+    calls = _serve(monkeypatch, {"fixtures.csv": FIXTURES})
+    monkeypatch.setenv("SBI_MONITORING_DB", str(config.DB_PATH))
+    with pytest.raises(monitoring.NotLocalOnly, match="public database"):
+        monitoring.ingest(NOW)
+    assert calls == [] and con.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0     # refused before any request
+
+
+def test_local_store_refuses_a_path_git_would_track(tmp_path, monkeypatch):
+    import subprocess
+    repo = tmp_path / "repo"
+    (repo / "data" / "local").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    monkeypatch.setattr(config, "DB_PATH", repo / "data" / "sbi.sqlite")
+    target = repo / "data" / "local" / "monitoring.sqlite"
+    with pytest.raises(monitoring.NotLocalOnly, match="not ignored"):
+        monitoring.check_local_only(target)
+    (repo / ".gitignore").write_text("data/local/\n")
+    assert monitoring.check_local_only(target) == target.resolve()
+    assert monitoring.check_local_only(tmp_path / "elsewhere" / "m.sqlite")       # outside any repository: fine
+
+
+def test_this_repository_ignores_the_local_store():
+    import subprocess
+    root = Path(__file__).resolve().parent.parent
+    if subprocess.run(["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"], capture_output=True).returncode != 0:
+        pytest.skip("not a git checkout")
+    r = subprocess.run(["git", "-C", str(root), "check-ignore", "-q", "data/local/monitoring.sqlite"])
+    assert r.returncode == 0
+    assert "data/local/" in (root / ".gitignore").read_text()
+    wf = (root / ".github" / "workflows" / "daily.yml").read_text()
+    assert "monitor-leagues" not in wf and "data/local" not in wf      # the scheduled job never runs or commits it
 
 
 # ---------------------------------------------------------------- no picks from monitoring leagues
@@ -363,9 +454,12 @@ def _q(con, eid, book, sels, market="1X2", line=None, age_h=1, source="football-
 
 
 @pytest.fixture
-def cov(tmp_path):
-    p = tmp_path / "c.sqlite"
-    con = db.connect(p)
+def cov(tmp_path, monkeypatch):
+    """(public database, local-only monitoring database), as the two are kept in production."""
+    local = tmp_path / "local" / "monitoring.sqlite"
+    local.parent.mkdir()
+    monkeypatch.setenv("SBI_MONITORING_DB", str(local))
+    con = db.connect(local)
     _ev(con, "a", "E2", 20)                              # usable 1X2: three known operators, all selections
     for b in ("Bet365", "Bwin", "Paddy Power", "Sky Bet", "Betfred", "Betfair Exchange"):
         _q(con, "a", b, "HDA")
@@ -383,20 +477,24 @@ def cov(tmp_path):
     for b in ("Bet365", "Bwin", "Paddy Power"):
         _q(con, "d", b, "HDA", age_h=40)
     _ev(con, "e", "E2", 24)                              # no quotes at all
+    for i in range(3):
+        _ev(con, f"h{i}", "SC3", -200 - i, status="finished")     # results only, no upcoming fixture
+    con.commit()
+    con.close()
+    p = tmp_path / "c.sqlite"
+    con = db.connect(p)
     _ev(con, "f", "E0", 20)                              # active league, bookmaker-timed quotes
     for b in ("Pinnacle", "Bet365", "Bwin"):
         _q(con, "f", b, "HDA", source="the-odds-api.com")
-    for i in range(3):
-        _ev(con, f"h{i}", "SC3", -200 - i, status="finished")     # results only, no upcoming fixture
     _ev(con, "g", "INT:uefa.nations", 30)
     con.commit()
     con.close()
-    return p
+    return p, local
 
 
 def test_league_coverage_counts_events_markets_and_operators_separately(cov):
-    sl = coverage.soccer_leagues(coverage.connect_ro(cov), NOW)
-    e2 = sl["E2"]
+    public, local = cov
+    e2 = coverage.soccer_leagues(coverage.connect_ro(local), NOW)["E2"]
     assert e2["tier"] == "monitoring" and e2["scheduled_events"] == 5 and e2["events_priced"] == 4
     assert e2["markets_priced"] == 5                       # a: 1X2 + OU; b, c, d: 1X2
     assert e2["usable_markets"] == 1 and e2["events_with_usable_market"] == 1     # only a's 1X2
@@ -404,22 +502,37 @@ def test_league_coverage_counts_events_markets_and_operators_separately(cov):
     # football-data timestamps are a file's publication time: observed, never bookmaker-timed
     assert e2["events_fresh_bookmaker_timed"] == 0 and e2["events_fresh_observed_only"] == 3
     assert e2["events_with_sharp_reference"] == 1 and e2["timestamp_basis"] == ["file_published"]
+    sl = coverage.soccer_leagues(coverage.connect_ro(public), NOW)
     e0 = sl["E0"]
     assert e0["tier"] == "active" and e0["events_fresh_bookmaker_timed"] == 1 and e0["events_fresh_observed_only"] == 0
     assert e0["usable_markets"] == 1
     assert list(sl)[: len(leagues.active())] == sorted(leagues.active())    # active first, then monitoring
     assert sl["INT:uefa.nations"]["tier"] == "international"
+    assert sl["E2"]["scheduled_events"] == 0               # nothing about E2 is in the public database
+
+
+def test_every_league_row_says_where_its_data_lives(cov, monkeypatch):
+    public, local = cov
+    sl = coverage.soccer_leagues_all(coverage.connect_ro(public), NOW)
+    assert sl["E0"]["storage"] == "public database" and sl["INT:uefa.nations"]["storage"] == "public database"
+    assert sl["E2"]["storage"] == "local file only" and sl["E2"]["scheduled_events"] == 5
+    assert sl["E2"]["rows_in_public_database"] == 0
+    # the sport-level totals come from the public database alone: monitoring events never inflate them
+    assert coverage.summary(coverage.connect_ro(public), NOW)["soccer"]["scheduled_events"] == 2
+    monkeypatch.setenv("SBI_MONITORING_DB", str(local.with_name("absent.sqlite")))      # owner never opted in
+    off = coverage.soccer_leagues_all(coverage.connect_ro(public), NOW)["E2"]
+    assert off["storage"] == "not stored (opt-in)" and off["scheduled_events"] == 0 and off["known_operators"] == 0
 
 
 def test_historical_only_competition_is_flagged_not_counted_as_coverage(cov):
-    sc3 = coverage.soccer_leagues(coverage.connect_ro(cov), NOW)["SC3"]
+    sc3 = coverage.soccer_leagues(coverage.connect_ro(cov[1]), NOW)["SC3"]
     assert sc3["historical_only"] is True and sc3["finished_events_stored"] == 3
     assert sc3["scheduled_events"] == 0 and sc3["usable_markets"] == 0 and sc3["known_operators"] == 0
     assert sc3["first_result"] <= sc3["last_result"]
 
 
 def test_league_delta_against_a_baseline_without_the_league_block(cov):
-    rep = {"soccer_leagues": coverage.soccer_leagues(coverage.connect_ro(cov), NOW)}
+    rep = {"soccer_leagues": coverage.soccer_leagues_all(coverage.connect_ro(cov[0]), NOW)}
     old = {"matrix": [{"sport": "soccer", "competition": "INT:uefa.nations", "scheduled_events": 44, "events_priced": 26},
                       {"sport": "soccer", "competition": "INT:uefa.nations", "scheduled_events": 44, "events_priced": 22},
                       {"sport": "nba", "competition": "NBA", "scheduled_events": 52, "events_priced": 9}]}
@@ -433,20 +546,36 @@ def test_league_delta_against_a_baseline_without_the_league_block(cov):
     assert new["E2"]["usable_markets"] == {"baseline": 0, "now": 1, "change": 1}
 
 
-def test_report_keeps_the_frozen_baseline_and_explains_monitoring(cov, tmp_path, monkeypatch):
+def test_report_keeps_the_frozen_baseline_and_labels_monitoring_quotes(cov, tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
     monkeypatch.setattr(config, "REPORTS_DIR", tmp_path / "reports")
     base_dir = tmp_path / "data" / "coverage"
     base_dir.mkdir(parents=True)
     frozen = json.dumps({"as_of": "2026-11-13T12:17:00+00:00", "summary": {}, "matrix": []})
     (base_dir / "baseline_2026-11-13.json").write_text(frozen)
-    rep = coverage.write(NOW, db_path=cov)
+    before = cov[1].read_bytes()
+    rep = coverage.write(NOW, db_path=cov[0])
     assert (base_dir / "baseline_2026-11-13.json").read_text() == frozen      # never rewritten
+    assert cov[1].read_bytes() == before                                      # the local file is only read
     assert rep["baseline"]["soccer_league_delta"]["E2"]["scheduled_events"]["change"] == 5
     md = (tmp_path / "reports" / "source_coverage.md").read_text()
-    assert "## Soccer by league" in md and "| E2 England League One | monitoring |" in md
-    assert "never priced" in md and "5 events in monitoring leagues" in md
-    assert "(n/r)" in md and "not a bettable price" in md
+    assert "## Soccer by league" in md and "| E2 England League One | monitoring | local file only |" in md
+    assert "| E0 England Premier League | active | public database |" in md
+    assert "never priced" in md and "not in the public database" in md
+    assert "file-published and observed" in md and "not bookmaker-timed and not executable" in md
+    assert "(n/r)" in md and "not a bettable price" in md and "Warning" not in md
+
+
+def test_report_warns_if_a_monitoring_league_reaches_the_public_database(cov, tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
+    monkeypatch.setattr(config, "REPORTS_DIR", tmp_path / "reports")
+    con = db.connect(cov[0])
+    _ev(con, "leak", "SP2", 12)
+    con.commit()
+    con.close()
+    rep = coverage.write(NOW, db_path=cov[0])
+    assert rep["soccer_leagues"]["SP2"]["rows_in_public_database"] == 1
+    assert "Warning: 1 monitoring-league events are in the public database" in (tmp_path / "reports" / "source_coverage.md").read_text()
 
 
 # ---------------------------------------------------------------- validation verdict

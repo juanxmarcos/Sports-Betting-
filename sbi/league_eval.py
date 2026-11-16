@@ -171,6 +171,9 @@ def to_markdown(rep: dict) -> str:
          f"test {', '.join(rep['seasons']['test'])}. Hyperparameters are chosen per league on its tune seasons. "
          "Parameters tuned on other leagues are scored for comparison and never adopted. "
          "**Nothing here changes what Doyen analyses or publishes.**", "",
+         "History files from football-data.co.uk were used for local research only. This report holds aggregate "
+         "statistics and no bookmaker quotes. The monitoring leagues are not in the public database, and any "
+         "current quote for them is file-published and observed: not bookmaker-timed and not executable.", "",
          "## Verdict", "", "| League | Status | Blockers |", "|---|---|---|"]
     for code, r in rep["leagues"].items():
         L.append(f"| {code} {r['name']} | {r['verdict']['status'].replace('_', ' ')} | "

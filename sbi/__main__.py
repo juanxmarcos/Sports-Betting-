@@ -39,6 +39,13 @@ def main(argv=None) -> int:
     le = sub.add_parser("league-eval", help="walk-forward validation of monitoring leagues (evidence only; "
                                             "writes reports/league_validation.md, changes no model or allowlist)")
     le.add_argument("--leagues", help="comma-separated division codes (default: every monitoring league)")
+    sub.add_parser("monitor-leagues", help="opt-in, LOCAL ONLY: fetch monitoring soccer leagues into "
+                                           "data/local/monitoring.sqlite (gitignored; never the public database)")
+    nr = sub.add_parser("nfl-reports", help="NFL practice/injury/QB availability (nflverse, informational); "
+                                            "writes reports/nfl_availability.md")
+    nr.add_argument("--season", type=int, action="append", help="season to fetch (default: the current one)")
+    nr.add_argument("--no-fetch", action="store_true", help="report from what is stored; do not fetch injury files")
+    nr.add_argument("--history", type=int, nargs="*", default=[], help="also measure coverage of these season files")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -56,12 +63,22 @@ def main(argv=None) -> int:
         if config.DB_PATH.exists():
             ro = coverage.connect_ro()
             try:
-                live = coverage.soccer_leagues(ro, now)
+                live = coverage.soccer_leagues_all(ro, now)      # adds the local monitoring file when it exists
             finally:
                 ro.close()
         rep = league_eval.run(args.leagues.split(",") if args.leagues else None, live=live)
         print(json.dumps({k: v["verdict"]["status"] for k, v in rep["leagues"].items()}, indent=1))
         print(config.REPORTS_DIR / "league_validation.md")
+        return 0
+    if args.cmd == "monitor-leagues":   # never opens the public database
+        from . import monitoring
+        try:
+            out = monitoring.ingest(now)
+        except monitoring.NotLocalOnly as e:
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
+        print(json.dumps(out, indent=1, default=str))
+        print("Local research copy only. Do not commit or publish this file.")
         return 0
     con = db.connect()
 
@@ -126,6 +143,11 @@ def main(argv=None) -> int:
         h = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(config.SITE_DIR))
         print(f"dashboard: http://localhost:{args.port}/")
         http.server.ThreadingHTTPServer(("127.0.0.1", args.port), h).serve_forever()
+    elif args.cmd == "nfl-reports":
+        from . import nfl_reports
+        r = nfl_reports.run(con, now, seasons=args.season, fetch=not args.no_fetch, history=args.history)
+        print(json.dumps({k: r[k] for k in ("ingest", "summary", "source")}, indent=1, default=str))
+        print(r["report"])
     elif args.cmd == "status":
         for r in con.execute("SELECT job,started_at,status FROM job_runs ORDER BY id DESC LIMIT 10"):
             print(dict(r))

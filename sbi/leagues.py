@@ -3,10 +3,12 @@
 Two tiers, both explicit. A division that is not listed here is never ingested, even when it
 appears in a file Doyen already downloads.
 
-  active      Analysed and eligible for picks. Exactly `config.FOOTBALL_LEAGUES` (unchanged).
-  monitoring  Fixtures, pre-match odds and results are STORED and measured by `python -m sbi coverage`,
-              but the division is never priced, never shown on the public site and can never produce
-              a pick. `pipeline.analyse` reads only the active tier.
+  active      Analysed and eligible for picks. Exactly `config.FOOTBALL_LEAGUES` (unchanged). The only
+              tier the scheduled job fetches and the only one in the public database.
+  monitoring  Never priced, never shown on the public site, never able to produce a pick, and NOT in the
+              public database. Fixtures, snapshot odds and results are fetched only by the opt-in
+              `python -m sbi monitor-leagues` into a gitignored local file (sbi/monitoring.py), because
+              permission to republish football-data.co.uk odds has not been verified.
 
 Moving a division from monitoring to active is a deliberate code change that needs its own
 walk-forward evidence (`python -m sbi league-eval`, docs/DATA_SOURCES.md) and the owner's approval.
@@ -61,7 +63,7 @@ def monitoring() -> list[str]:
 
 
 def stored() -> list[str]:
-    """Every division Doyen ingests: active first, then monitoring."""
+    """Every division on the allowlist: active (public database) first, then monitoring (local file only)."""
     return active() + monitoring()
 
 

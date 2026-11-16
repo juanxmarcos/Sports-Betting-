@@ -15,3 +15,6 @@ nba_bt.log
 tennis_bt.log
 sens.log
 data/coverage/latest.json
+data/coverage/nfl_reports_latest.json
+# local-only research copies (e.g. monitoring leagues); never published
+data/local/

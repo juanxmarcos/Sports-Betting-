@@ -23,7 +23,8 @@ season CSVs   ──►│   ▼          ▼            ▼                    
 | `db.py` | SQLite schema, immutability triggers, job and provider logging |
 | `sources/http.py` | Polite fetch: cache, retry/backoff, stale-cache fallback, stop on 401/403/429 |
 | `sources/football_data.py` | CSV parsing (results, xG, odds in long format), event/odds upserts |
-| `leagues.py` | Soccer league allowlist: *active* divisions (analysed) and *monitoring* divisions (stored and measured, never priced); exact team aliases |
+| `leagues.py` | Soccer league allowlist: *active* divisions (analysed, public database) and *monitoring* divisions (never priced, never in the public database); exact team aliases |
+| `monitoring.py` | Opt-in, local-only store for monitoring divisions (`sbi monitor-leagues` → gitignored `data/local/monitoring.sqlite`); refuses any path that could be published |
 | `league_eval.py` | Per-league walk-forward validation of monitoring divisions (`sbi league-eval`); evidence only, never changes the allowlist |
 | `models/dixon_coles.py` | Time-weighted Dixon-Coles MLE with analytic gradient and a Fisher-information covariance |
 | `models/elo.py` | Elo + ordered-logit baseline (benchmark only) |

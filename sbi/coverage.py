@@ -275,6 +275,35 @@ def soccer_leagues(con, now: datetime, horizon_h: float = 168, fresh_h: float | 
     return dict(sorted(out.items(), key=lambda kv: ({"active": 0, "monitoring": 1, "international": 2}.get(kv[1]["tier"], 3), kv[0])))
 
 
+STORAGE_PUBLIC, STORAGE_LOCAL, STORAGE_NONE = "public database", "local file only", "not stored (opt-in)"
+
+
+def soccer_leagues_all(con, now: datetime, horizon_h: float = 168, monitoring_db=None) -> dict:
+    """soccer_leagues for the public database, with the monitoring rows taken from the local-only file.
+
+    Monitoring leagues are never in the public database (sbi/monitoring.py). Their row comes from the local
+    file when the owner has created it, and is otherwise empty and marked 'not stored (opt-in)'. Every row
+    says where its data lives, so a count can never be mistaken for something that was published."""
+    from . import monitoring
+    out = soccer_leagues(con, now, horizon_h)
+    mon = monitoring.connect_ro(monitoring_db)
+    local = {}
+    if mon is not None:
+        try:
+            local = soccer_leagues(mon, now, horizon_h)
+        finally:
+            mon.close()
+    for code, row in out.items():
+        row["storage"] = STORAGE_PUBLIC
+        if row["tier"] == leagues.MONITORING:
+            leaked = row["scheduled_events"] + row["finished_events_stored"]     # should always be zero
+            if code in local:
+                row.update(local[code])
+            row["storage"] = STORAGE_LOCAL if code in local else STORAGE_NONE
+            row["rows_in_public_database"] = leaked
+    return out
+
+
 def league_delta(report: dict, baseline: dict) -> dict:
     """Per competition and measure: (baseline, now, change).
 
@@ -397,6 +426,13 @@ def context(con, now: datetime) -> dict:
         ((now - timedelta(hours=6)).isoformat(),))}}
     if _has(con, "injuries_current"):
         out["injuries_current"] = {r[0]: r[1] for r in con.execute("SELECT sport, COUNT(*) FROM injuries_current GROUP BY 1")}
+    if _has(con, "nfl_report_current"):      # nflverse practice/injury reports (opt-in adapter, issue #17)
+        r = con.execute("""SELECT COUNT(*), COUNT(DISTINCT team), COUNT(DISTINCT season || '-' || week),
+                           COALESCE(SUM(report_status IS NOT NULL),0), COALESCE(SUM(practice_status IS NOT NULL),0)
+                           FROM nfl_report_current WHERE retracted_at IS NULL""").fetchone()
+        out["nfl_reports"] = {"player_weeks": r[0], "teams": r[1], "weeks": r[2], "with_designation": r[3],
+                              "with_practice_status": r[4],
+                              "updates_logged": con.execute("SELECT COUNT(*) FROM nfl_report_updates").fetchone()[0]}
     if _has(con, "lineups"):
         r = con.execute("SELECT COUNT(*), COALESCE(SUM(confirmed),0) FROM lineups").fetchone()
         out["lineups"] = {"team_rows": r[0], "confirmed": r[1]}
@@ -412,7 +448,7 @@ def build(con, now: datetime, horizon_h: float = 168) -> dict:
     return {"as_of": now.isoformat(), "horizon_hours": horizon_h, "fresh_quote_max_age_hours": config.RULES.max_odds_age_hours,
             "timestamp_basis": {**TIMESTAMP_BASIS, "(any other source)": FIRST_SEEN},
             "summary": summary(con, now, horizon_h), "matrix": matrix(con, now, horizon_h),
-            "soccer_leagues": soccer_leagues(con, now, horizon_h),
+            "soccer_leagues": soccer_leagues_all(con, now, horizon_h),
             "bookmakers": book_audit(con), "sources": sources(con, now), "credentials": credentials(con),
             "odds_api_usage": odds_api_usage(con), "history": history(con), "context": context(con, now)}
 
@@ -453,10 +489,10 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
          "|---|---|---|---|---|---|---|---|---|---|---|"]
     for s, v in rep["summary"].items():
         L.append(f"| {s} | " + " | ".join(str(v[k]) for k in SUMMARY_KEYS) + " |")
-    mon = sum(v["scheduled_events"] for v in (rep.get("soccer_leagues") or {}).values() if v["tier"] == "monitoring")
-    if mon:
-        L += ["", f"The soccer row includes **{mon} events in monitoring leagues**. They are stored and measured, "
-              "never priced, and cannot produce a pick, so they add no pick opportunities (see *Soccer by league*)."]
+    leaked = sum(v.get("rows_in_public_database", 0) for v in (rep.get("soccer_leagues") or {}).values())
+    if leaked:
+        L += ["", f"**Warning: {leaked} monitoring-league events are in the public database.** They belong in the "
+              "local-only file (`sbi/monitoring.py`). They are never priced, but they should not be published."]
     if cmp:
         L += ["", f"## Change since baseline ({(baseline_as_of or '')[:16].replace('T', ' ')} UTC)", "",
               "| Sport | Measure | Baseline | Now | Change |", "|---|---|---|---|---|"]
@@ -477,15 +513,20 @@ def to_markdown(rep: dict, cmp: dict | None = None, baseline_as_of: str | None =
         L += ["", "## Soccer by league", "",
               "Events, usable markets, operators and quote freshness are counted separately: more fixtures does not "
               "mean more independent prices. A *usable market* has observed-fresh quotes for every selection from at "
-              f"least {config.RULES.min_bookmakers} known operators; it is raw material for comparison, not a bettable price. "
-              "*Monitoring* leagues are stored and measured only: they are never priced and cannot produce a pick.", "",
-              "| League | Tier | Scheduled | Priced | Markets priced | Usable markets | Events with a usable market | "
+              f"least {config.RULES.min_bookmakers} known operators; it is raw material for comparison, not a bettable price.", "",
+              "**Monitoring leagues** are never priced and cannot produce a pick. Their data is **not in the public "
+              "database**: it exists only in a gitignored local file, and only if the owner ran "
+              "`python -m sbi monitor-leagues`. Their quotes are **file-published and observed**: a snapshot "
+              "stamped with the file's publication time, collected earlier, **not bookmaker-timed and not executable**. "
+              "The sport totals above do not include them.", "",
+              "| League | Tier | Stored in | Scheduled | Priced | Markets priced | Usable markets | Events with a usable market | "
               "Known operators | Unknown ownership | Bookmaker-timed fresh | Observed-only fresh | Sharp reference | "
-              "Results stored | Age basis |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+              "Results stored | Age basis |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
         for code, v in sl.items():
             if not (v["scheduled_events"] or v["finished_events_stored"] or v["tier"] != "unlisted"):
                 continue
             L.append(f"| {code} {v['name'] if v['name'] != code else ''} | {v['tier']}{' (no upcoming fixture stored)' if v['historical_only'] else ''} | "
+                     f"{v.get('storage', STORAGE_PUBLIC)} | "
                      + " | ".join(str(v[k]) for k in ("scheduled_events", "events_priced", "markets_priced", "usable_markets",
                                                       "events_with_usable_market", "known_operators", "unknown_bookmakers",
                                                       "events_fresh_bookmaker_timed", "events_fresh_observed_only",
