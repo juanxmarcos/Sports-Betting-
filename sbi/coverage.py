@@ -276,6 +276,13 @@ def context(con, now: datetime) -> dict:
         ((now - timedelta(hours=6)).isoformat(),))}}
     if _has(con, "injuries_current"):
         out["injuries_current"] = {r[0]: r[1] for r in con.execute("SELECT sport, COUNT(*) FROM injuries_current GROUP BY 1")}
+    if _has(con, "nfl_report_current"):      # nflverse practice/injury reports (opt-in adapter, issue #17)
+        r = con.execute("""SELECT COUNT(*), COUNT(DISTINCT team), COUNT(DISTINCT season || '-' || week),
+                           COALESCE(SUM(report_status IS NOT NULL),0), COALESCE(SUM(practice_status IS NOT NULL),0)
+                           FROM nfl_report_current WHERE retracted_at IS NULL""").fetchone()
+        out["nfl_reports"] = {"player_weeks": r[0], "teams": r[1], "weeks": r[2], "with_designation": r[3],
+                              "with_practice_status": r[4],
+                              "updates_logged": con.execute("SELECT COUNT(*) FROM nfl_report_updates").fetchone()[0]}
     if _has(con, "lineups"):
         r = con.execute("SELECT COUNT(*), COALESCE(SUM(confirmed),0) FROM lineups").fetchone()
         out["lineups"] = {"team_rows": r[0], "confirmed": r[1]}
