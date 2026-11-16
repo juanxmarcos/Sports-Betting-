@@ -10,7 +10,9 @@ from jinja2 import Environment
 
 from . import config
 from .performance import rec_metrics
+from .site import sport_of
 
+SPORT_NAMES = {"soccer": "Football", "nfl": "NFL", "nba": "NBA", "tennis": "Tennis"}
 SEL_NAMES = {"H": "Home win", "D": "Draw", "A": "Away win", "over": "Over", "under": "Under"}
 
 
@@ -29,7 +31,11 @@ def describe(r) -> str:
     if m == "AH":
         team, h = (r["home"], ln) if s == "home" else (r["away"], -ln)
         return f"{team} {h:+g} (Asian handicap)"
-    return f"{m} {s} {ln}"
+    from .explain import selection_label   # tennis / NBA / NFL markets (ML, SPREAD, TOTAL)
+    try:
+        return selection_label(dict(r))
+    except (KeyError, TypeError, ValueError):
+        return f"{m} {s} {ln}"
 
 
 TEMPLATE = r"""# Sports Betting Doyen — Daily Report, {{ date }}
@@ -73,7 +79,7 @@ parameter uncertainty), so that thinly estimated edges rank below robust ones.
 
 | Field | Value |
 |---|---|
-| Sport / competition | Football — {{ r.league_name }} |
+| Sport / competition | {{ r.sport_name }} — {{ r.league_name }} |
 | Kick-off | {{ r.ko }} |
 | Market / selection | {{ r.market }} — **{{ r.desc }}** |
 | Best price | **{{ "%.2f"|format(r.odds) }}** @ {{ r.bookmaker }}{% if r.net_odds != r.odds %} (net {{ "%.3f"|format(r.net_odds) }} after commission){% endif %} |
@@ -86,13 +92,14 @@ parameter uncertainty), so that thinly estimated edges rank below robust ones.
 | Bookmakers quoting | {{ r.ev_d.n_bookmakers }} |
 | Odds snapshot | {{ r.odds_ts }} |
 
-**Statistical evidence.** Expected goals {{ r.ev_d.expected_goals.home }}–{{ r.ev_d.expected_goals.away }}{% if r.ev_d.strength_rank %};
+{% if r.soccer_stats %}**Statistical evidence.** Expected goals {{ r.ev_d.expected_goals.home }}–{{ r.ev_d.expected_goals.away }}{% if r.ev_d.strength_rank %};
 model strength rank {{ r.ev_d.strength_rank.home }} vs {{ r.ev_d.strength_rank.away }} (of {{ r.ev_d.strength_rank.of }}){% endif %}{% if r.ev_d.neutral_venue %}; neutral venue{% endif %}.
 Recent form — {{ r.home }}: {{ r.form_h.last }} (GF {{ r.form_h.gf }}, GA {{ r.form_h.ga }}{% if r.form_h.xg_for_avg is defined %}, xG {{ r.form_h.xg_for_avg }}/{{ r.form_h.xg_against_avg }}{% endif %});
 {{ r.away }}: {{ r.form_a.last }} (GF {{ r.form_a.gf }}, GA {{ r.form_a.ga }}{% if r.form_a.xg_for_avg is defined %}, xG {{ r.form_a.xg_for_avg }}/{{ r.form_a.xg_against_avg }}{% endif %}).
 Model 1X2: {{ "%.0f"|format(r.ev_d.model_markets["1X2:H"]*100) }}/{{ "%.0f"|format(r.ev_d.model_markets["1X2:D"]*100) }}/{{ "%.0f"|format(r.ev_d.model_markets["1X2:A"]*100) }}%,
 O2.5 {{ "%.0f"|format(r.ev_d.model_markets["OU:over:2.5"]*100) }}%, BTTS {{ "%.0f"|format(r.ev_d.model_markets["BTTS:yes"]*100) }}%.
-
+{% else %}**Statistical evidence.** {% if r.ev_d.projection %}Projected score {{ r.home }} {{ r.ev_d.projection.home }} – {{ r.away }} {{ r.ev_d.projection.away }}. {% endif %}{{ r.ev_d.context or "No further model detail is stored for this pick." }}
+{% endif %}
 **Why it may be value.** The best available price ({{ "%.2f"|format(r.odds) }}) exceeds the estimated fair
 price ({{ "%.2f"|format(r.fair_odds) }}). {% if r.market_prob is not none and r.model_prob > r.market_prob %}The
 model rates this outcome {{ "%.1f"|format((r.model_prob-r.market_prob)*100) }} pp above the de-vigged consensus.{% else %}The edge
@@ -182,10 +189,17 @@ def write_daily(con, now: datetime, s: dict):
     for r in rows:
         d = dict(r)
         e = json.loads(r["evidence_json"] or "{}")
+        form = e.get("form") or {}
         d.update(desc=describe(r), ko=local(r["kickoff_utc"]), ev_d=e,
                  league_name=e.get("competition") or config.FOOTBALL_LEAGUES.get(r["league"], r["league"]),
                  net_odds=e.get("net_odds", r["odds"]), odds_ts=local(r["odds_retrieved_at"]),
-                 form_h=e["form"][r["home"]], form_a=e["form"][r["away"]],
+                 form_h=form.get(r["home"]), form_a=form.get(r["away"]),
+                 sport_name=SPORT_NAMES[sport_of(r["league"])],
+                 # Only soccer picks carry form / expected goals / 1X2 model markets. Tennis, NBA and NFL
+                 # picks store context instead; indexing e["form"] for them crashed the daily run (#31).
+                 soccer_stats=bool(form.get(r["home"]) and form.get(r["away"]) and e.get("expected_goals")
+                                   and all(k in (e.get("model_markets") or {})
+                                           for k in ("1X2:H", "1X2:D", "1X2:A", "OU:over:2.5", "BTTS:yes"))),
                  urls=json.loads(r["source_urls"] or "[]"),
                  notes=[dict(n) for n in con.execute("SELECT * FROM research_notes WHERE event_id=? ORDER BY id",
                                                      (r["event_id"],))])
