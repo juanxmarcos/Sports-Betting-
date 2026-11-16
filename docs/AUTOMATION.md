@@ -52,7 +52,9 @@ Sources:
    the PR.
 5. ChatGPT reviews the PR. Each review or comment from `juanxmarcos` wakes that session,
    which makes the changes on the same branch and replies.
-6. The owner merges. Nothing merges automatically.
+6. If the PR is zero-cost and every check is green, the GitHub Actions auto-merge gate merges
+   it (once enabled; see [AUTO_MERGE.md](AUTO_MERGE.md)). Otherwise the owner decides. Claude
+   itself never merges.
 
 ## 3. Security model
 
