@@ -1,17 +1,17 @@
 # Sports Betting Doyen — Daily Report, 2026-11-17
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 17 Nov 11:05 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Tue 17 Nov 12:19 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 141 |
-| Events with fresh odds | 42 |
+| Events discovered | 138 |
+| Events with fresh odds | 40 |
 | Events fully evaluated (3+ independent bookmakers, complete history) | 29 |
-| Markets evaluated | 433 |
+| Markets evaluated | 403 |
 | Events passing all rules | 0 |
 | Published today | **1** |
 | Highest estimated EV | +3.7% |
@@ -68,7 +68,7 @@ Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regio
 
 ## International fixtures — model monitoring (not recommendations)
 
-29 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
+27 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
 trained on 50077 internationals; 8 with multi-bookmaker odds).
 The model's gaps against bookmakers are **monitoring signals, not selections**: no free historical international
 odds exist to validate the model against the market, so it has weight 0. Real (paper) international selections
@@ -77,27 +77,25 @@ de-vigged consensus under the standard rules.
 
 | Kick-off | Competition | Match | Model H/D/A | Book H/D/A (no-vig) | Largest model–book gap |
 |---|---|---|---|---|---|
-| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Dominica v Cayman Islands (N) | 43/34/23 | 72/17/11 | 1X2 A @ 7.50: model EV +75.6% ⚠ bias |
+| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Dominica v Cayman Islands (N) | 43/34/23 | 71/17/12 | 1X2 D @ 5.00: model EV +69.6% ⚠ bias |
+| Tue 17 Nov 18:30 EST | International Friendly | Ecuador v Bolivia | 72/21/7 | 84/11/5 | 1X2 D @ 7.50: model EV +58.4% ⚠ bias |
 | Tue 17 Nov 21:30 EST | CONCACAF Nations League | Mexico v Jamaica | 74/18/7 | 88/8/4 | 1X2 D @ 8.50: model EV +55.5% ⚠ bias |
 | Tue 17 Nov 19:00 EST | CONCACAF Nations League | French Guiana v Saint Vincent and the Grenadines | 55/24/21 | 34/26/41 | 1X2 H @ 2.75: model EV +51.5% |
-| Tue 17 Nov 18:30 EST | International Friendly | Ecuador v Bolivia | 72/21/7 | 83/12/5 | 1X2 D @ 7.00: model EV +47.9% ⚠ bias |
-| Tue 17 Nov 11:30 EST | International Friendly | Kuwait v Honduras | 34/27/39 | 22/26/52 | 1X2 H @ 4.10: model EV +38.9% |
-| Tue 17 Nov 19:00 EST | CONCACAF Nations League | United States v Haiti | 82/11/7 | 93/4/2 | 1X2 D @ 12.00: model EV +36.8% ⚠ bias |
-| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Saint Lucia v Barbados (N) | 44/25/31 | 57/22/21 | 1X2 A @ 4.20: model EV +30.1% |
+| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Saint Lucia v Barbados (N) | 44/25/31 | 58/21/21 | 1X2 A @ 4.30: model EV +33.2% |
+| Tue 17 Nov 19:00 EST | CONCACAF Nations League | United States v Haiti | 82/11/7 | 93/5/2 | 1X2 A @ 20.00: model EV +33.0% ⚠ bias |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Republic of Ireland v Kosovo | 38/34/28 | 49/29/22 | 1X2 A @ 4.43: model EV +24.2% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Wales v Portugal | 14/23/63 | 13/18/69 | 1X2 D @ 5.40: model EV +24.2% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Denmark v Norway | 47/24/29 | 37/23/40 | 1X2 H @ 2.60: model EV +22.8% |
+| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Saint Kitts and Nevis v Bonaire (N) | 56/22/22 | 45/19/36 | 1X2 H @ 2.10: model EV +17.3% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Hungary v Northern Ireland | 42/34/24 | 51/29/20 | 1X2 D @ 3.40: model EV +15.3% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Poland v Sweden | 41/24/35 | 44/24/31 | 1X2 A @ 3.25: model EV +14.7% |
-| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Saint Kitts and Nevis v Bonaire (N) | 56/22/22 | 48/20/32 | 1X2 H @ 1.95: model EV +9.1% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Israel v Austria (N) | 18/23/60 | 23/24/53 | 1X2 A @ 1.83: model EV +9.0% |
-| Tue 17 Nov 11:15 EST | International Friendly | Iraq v Iran | 18/26/56 | 22/29/49 | 1X2 A @ 1.95: model EV +8.7% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Ukraine v Georgia (N) | 43/30/28 | 46/29/25 | 1X2 A @ 3.89: model EV +7.2% |
 | Tue 17 Nov 18:00 EST | International Friendly | Chile v Colombia | 21/27/52 | 24/29/47 | 1X2 A @ 2.05: model EV +6.8% |
 | Tue 17 Nov 14:45 EST | UEFA Nations League | Bosnia and Herzegovina v Romania | 42/28/29 | 45/26/29 | 1X2 D @ 3.74: model EV +6.1% |
 | Tue 17 Nov 18:30 EST | International Friendly | Uruguay v Dominican Republic | 96/4/1 | 91/6/3 | 1X2 H @ 1.08: model EV +3.5% |
-| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Belize v Sint Maarten | 54/25/21 | 51/25/24 | 1X2 H @ 1.87: model EV +0.5% |
-| Tue 17 Nov 18:00 EST | International Friendly | Argentina v Costa Rica | 94/5/1 | 92/6/2 | 1X2 H @ 1.07: model EV +0.3% |
+| Tue 17 Nov 14:00 EST | CONCACAF Nations League | Belize v Sint Maarten | 54/25/21 | 50/25/25 | 1X2 H @ 1.91: model EV +2.6% |
+| Tue 17 Nov 18:00 EST | International Friendly | Argentina v Costa Rica | 94/5/1 | 91/6/3 | 1X2 H @ 1.08: model EV +1.4% |
 | Tue 17 Nov 14:00 EST | AFCON Qualifying | Botswana v Uganda | 30/31/40 | — |  |
 | Tue 17 Nov 14:00 EST | AFCON Qualifying | Congo v Comoros | 24/30/45 | — |  |
 | Tue 17 Nov 14:00 EST | AFCON Qualifying | Liberia v Cape Verde | 17/24/58 | — |  |

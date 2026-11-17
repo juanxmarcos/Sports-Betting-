@@ -1,4 +1,4 @@
-# Parlay candidates (shadow) — 2026-11-17 11:05 New York
+# Parlay candidates (shadow) — 2026-11-17 12:19 New York
 
 Developer-only. **Nothing here is published.** Prices are computed products of single-market quotes (`computed_product_not_a_quote`), not bookmaker combined quotes. Method `parlay-fullslate-shadow-v1`; no network request, no API credit.
 
@@ -6,7 +6,7 @@ Developer-only. **Nothing here is published.** Prices are computed products of s
 
 | Measure | Stage-1 (published picks) | Full-slate engine |
 |---|---|---|
-| Legs considered today | 0 picks | 40 events |
+| Legs considered today | 0 picks | 37 events |
 | Usable legs | 0 | 2 (candidate legs 15, events with a leg 11) |
 | Combinations checked | 0 | 0 (bounded; truncated: False) |
 | Passed leg/combination screens | 0 | 0 |
@@ -14,10 +14,10 @@ Developer-only. **Nothing here is published.** Prices are computed products of s
 | Sport | Events today | Fresh prices | Stored model prob | Events with candidate legs |
 |---|---|---|---|---|
 | nba | 5 | 5 | 5 | 4 |
-| soccer | 29 | 21 | 29 | 6 |
-| tennis | 6 | 1 | 0 | 1 |
+| soccer | 27 | 19 | 27 | 6 |
+| tennis | 5 | 1 | 0 | 1 |
 
-Excluded: {"event: model and market disagree strongly": 1, "event: no fresh result-market prices": 13, "event: open injury/lineup research note": 2, "event: too few independent bookmakers": 13, "leg: no bookmaker at or above fair value": 9}
+Excluded: {"event: model and market disagree strongly": 1, "event: no fresh result-market prices": 12, "event: open injury/lineup research note": 2, "event: too few independent bookmakers": 11, "leg: no bookmaker at or above fair value": 9}
 
 | Legs | Combinations evaluated | Kept (positive computed EV, beam-capped) |
 |---|---|---|
@@ -27,7 +27,7 @@ Excluded: {"event: model and market disagree strongly": 1, "event: no fresh resu
 | 5 | 0 | 0 |
 | 6 | 0 | 0 |
 
-The Odds API (read from job log, not called here): last run 2026-11-17T16:06:24+00:00, spent 6, remaining 358.
+The Odds API (read from job log, not called here): last run 2026-11-17T17:20:50+00:00, spent 0, remaining 358.
 
 ## 2. Shadow shortlist (not shown on the homepage)
 

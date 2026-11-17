@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-17T16:06:34+00:00",
+  "generated": "2026-11-17T17:20:57+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -95,30 +95,9 @@
   ],
   "upcoming_events": [
     {
-      "event_id": "tennis:WTA:20261117:186790",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T16:10:00+00:00",
-      "home": "Miriam Bulgaru",
-      "away": "Polona Hercog"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261117:401933615",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T16:15:00+00:00",
-      "home": "Iraq",
-      "away": "Iran"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261117:401931956",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T16:30:00+00:00",
-      "home": "Kuwait",
-      "away": "Honduras"
-    },
-    {
       "event_id": "tennis:WTA:20261117:186782",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T17:00:00+00:00",
+      "kickoff_utc": "2026-11-17T17:30:00+00:00",
       "home": "Veronika Erjavec",
       "away": "Maria Lourdes Carle"
     },
