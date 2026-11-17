@@ -466,7 +466,7 @@ def cov(tmp_path, monkeypatch):
     _q(con, "a", "Avg", "HDA")                           # aggregate: not a bookmaker
     for b in ("Bet365", "Betfair Exchange"):             # O/U from two operators only: priced, not usable
         _q(con, "a", b, ("over", "under"), market="OU", line=2.5)
-    _ev(con, "b", "E2", 21)                              # three names, but Betfred/BetVictor ownership is unknown
+    _ev(con, "b", "E2", 21)                              # Betfred/BetVictor are verified operators since #21: usable
     for b in ("Bet365", "Betfred", "BetVictor"):
         _q(con, "b", b, "HDA")
     _ev(con, "c", "E2", 22)                              # three operators, one missing the draw price
@@ -497,8 +497,8 @@ def test_league_coverage_counts_events_markets_and_operators_separately(cov):
     e2 = coverage.soccer_leagues(coverage.connect_ro(local), NOW)["E2"]
     assert e2["tier"] == "monitoring" and e2["scheduled_events"] == 5 and e2["events_priced"] == 4
     assert e2["markets_priced"] == 5                       # a: 1X2 + OU; b, c, d: 1X2
-    assert e2["usable_markets"] == 1 and e2["events_with_usable_market"] == 1     # only a's 1X2
-    assert e2["known_operators"] == 4 and e2["unknown_bookmakers"] == 2    # Bet365, Entain, Flutter, Betfair | Betfred, BetVictor
+    assert e2["usable_markets"] == 2 and e2["events_with_usable_market"] == 2     # a's 1X2 and b's 1X2 (#21 registry)
+    assert e2["known_operators"] == 6 and e2["unknown_bookmakers"] == 0    # Bet365, Entain, Flutter, Betfair, Betfred, BetVictor (#21 registry)
     # football-data timestamps are a file's publication time: observed, never bookmaker-timed
     assert e2["events_fresh_bookmaker_timed"] == 0 and e2["events_fresh_observed_only"] == 3
     assert e2["events_with_sharp_reference"] == 1 and e2["timestamp_basis"] == ["file_published"]
@@ -539,11 +539,11 @@ def test_league_delta_against_a_baseline_without_the_league_block(cov):
     d = coverage.league_delta(rep, old)
     assert d["E2"]["scheduled_events"] == {"baseline": 0, "now": 5, "change": 5}
     assert d["E2"]["events_priced"] == {"baseline": 0, "now": 4, "change": 4}
-    assert d["E2"]["usable_markets"] == {"baseline": None, "now": 1, "change": None}    # not recorded then: no claim
+    assert d["E2"]["usable_markets"] == {"baseline": None, "now": 2, "change": None}    # not recorded then: no claim
     assert d["INT:uefa.nations"]["events_priced"] == {"baseline": 26, "now": 0, "change": -26}
     assert "NBA" not in d
     new = coverage.league_delta(rep, {"soccer_leagues": {"E2": {**rep["soccer_leagues"]["E2"], "usable_markets": 0}}})
-    assert new["E2"]["usable_markets"] == {"baseline": 0, "now": 1, "change": 1}
+    assert new["E2"]["usable_markets"] == {"baseline": 0, "now": 2, "change": 2}
 
 
 def test_report_keeps_the_frozen_baseline_and_labels_monitoring_quotes(cov, tmp_path, monkeypatch):

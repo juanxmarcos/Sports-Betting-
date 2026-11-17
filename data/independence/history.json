@@ -1,0 +1,167 @@
+{
+ "leagues": [
+  "E0",
+  "E1",
+  "SP1",
+  "D1",
+  "I1",
+  "F1"
+ ],
+ "test_seasons": [
+  "2425",
+  "2526",
+  "2627"
+ ],
+ "xi": 0.0026,
+ "ridge": 2.0,
+ "strategy": "market_only (blend weight 0)",
+ "legacy": {
+  "n_bets": 272,
+  "staked": 272.0,
+  "profit_units": 34.96,
+  "roi": 0.1285,
+  "roi_ci95": [
+   -0.0608,
+   0.3242
+  ],
+  "hit_rate": 0.3456,
+  "avg_odds": 3.569,
+  "avg_ev_claimed": 0.0458,
+  "max_drawdown_units": 11.62,
+  "avg_clv": 0.0407,
+  "clv_ci95": [
+   0.0316,
+   0.0504
+  ],
+  "clv_positive_share": 0.7873,
+  "by_market": {
+   "1X2": {
+    "n": 250,
+    "roi": 0.1009
+   },
+   "AH": {
+    "n": 9,
+    "roi": 0.5722
+   },
+   "OU": {
+    "n": 13,
+    "roi": 0.3527
+   }
+  },
+  "by_league": {
+   "D1": {
+    "n": 39,
+    "roi": 0.0954
+   },
+   "E0": {
+    "n": 25,
+    "roi": 0.3976
+   },
+   "E1": {
+    "n": 29,
+    "roi": 0.046
+   },
+   "F1": {
+    "n": 54,
+    "roi": -0.1466
+   },
+   "I1": {
+    "n": 63,
+    "roi": 0.1469
+   },
+   "SP1": {
+    "n": 62,
+    "roi": 0.3004
+   }
+  }
+ },
+ "verified": {
+  "n_bets": 272,
+  "staked": 272.0,
+  "profit_units": 34.96,
+  "roi": 0.1285,
+  "roi_ci95": [
+   -0.0608,
+   0.3242
+  ],
+  "hit_rate": 0.3456,
+  "avg_odds": 3.569,
+  "avg_ev_claimed": 0.0461,
+  "max_drawdown_units": 11.62,
+  "avg_clv": 0.0407,
+  "clv_ci95": [
+   0.0316,
+   0.0504
+  ],
+  "clv_positive_share": 0.7873,
+  "by_market": {
+   "1X2": {
+    "n": 250,
+    "roi": 0.1009
+   },
+   "AH": {
+    "n": 9,
+    "roi": 0.5722
+   },
+   "OU": {
+    "n": 13,
+    "roi": 0.3527
+   }
+  },
+  "by_league": {
+   "D1": {
+    "n": 39,
+    "roi": 0.0954
+   },
+   "E0": {
+    "n": 25,
+    "roi": 0.3976
+   },
+   "E1": {
+    "n": 29,
+    "roi": 0.046
+   },
+   "F1": {
+    "n": 54,
+    "roi": -0.1466
+   },
+   "I1": {
+    "n": 63,
+    "roi": 0.1469
+   },
+   "SP1": {
+    "n": 62,
+    "roi": 0.3004
+   }
+  }
+ },
+ "comparison": {
+  "bets_v1": 272,
+  "bets_v2": 272,
+  "identical_bets": 272,
+  "v1_bets_not_made_under_v2": {
+   "blocked": 0,
+   "of": 272,
+   "share": 0.0,
+   "ci95": [
+    0.0,
+    0.0139
+   ]
+  },
+  "v1_events_with_no_bet_under_v2": {
+   "blocked": 0,
+   "of": 272,
+   "share": 0.0,
+   "ci95": [
+    0.0,
+    0.0139
+   ]
+  },
+  "v2_bets_not_in_v1": 0,
+  "removed_bets": {
+   "n_bets": 0
+  },
+  "removed_by_price_bookmaker": {}
+ },
+ "generated_at": "2026-11-13T12:17:00+00:00"
+}

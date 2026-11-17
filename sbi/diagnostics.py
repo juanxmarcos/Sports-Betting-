@@ -17,6 +17,7 @@ SPORT_FILES = {"soccer": ["soccer_club", "soccer_intl"], "nfl": ["nfl"], "nba": 
 BLOCKER_TEXT = {
     "EV below threshold": "prices are in line with the sharp market",
     "too few bookmakers": "too few bookmakers price these markets",
+    "too few verified independent bookmakers": "too few verified bookmakers price these markets",
     "no odds": "no bookmaker prices yet",
     "stale odds": "only stale prices available",
     "insufficient team history": "not enough history on one side",
@@ -101,7 +102,8 @@ def providers(con, now: datetime) -> dict:
         "SELECT job, started_at, details FROM job_runs WHERE status IN ('error','partial') ORDER BY id DESC LIMIT 10")]
     return {"providers": prov, "odds_freshness": fresh,
             "odds_api": {k: oad.get(k) for k in ("skipped", "credits_remaining_after", "credits_spent", "fetched",
-                                                   "matched", "unmatched")},
+                                                   "matched", "unmatched", "skipped_no_matching_event",
+                                                   "bookmakers_requested", "bookmakers_ignored", "cost_mismatch")},
             "recent_job_problems": errs}
 
 
@@ -114,7 +116,8 @@ def briefing(fun: dict) -> str:
                 tot[k] += v
     if not tot:
         return "No events in the next 48 hours."
-    waiting = tot["too few bookmakers"] + tot["no odds"] + tot["stale odds"]
+    waiting = (tot["too few bookmakers"] + tot["too few verified independent bookmakers"]
+               + tot["no odds"] + tot["stale odds"])
     priced = tot["EV below threshold"] + tot["odds outside range"]
     if waiting >= priced:
         s = "Waiting for more bookmakers to price most games"

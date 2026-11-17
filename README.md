@@ -8,7 +8,7 @@ An autonomous sports betting research assistant for **soccer, NFL, NBA and tenni
 
 ## What you see
 - **Picks of the Day:** every pick that currently qualifies today, shown as equal cards with selection, best price, Doyen's probability, expected value, the reasoning, and the main risk. Zero, one or several are all normal; when nothing qualifies the page says so. Tomorrow and This Week have their own headings.
-- **Recommended Parlays of the Day:** gated (issue #33). A parlay is published only with a verified single-bookmaker combined quote (recorded by the owner from a bet slip, `python -m sbi parlay-quote`) and joint-calibration evidence that meets pre-registered criteria. Neither is available today, so the page says "No verified parlays today". `python -m sbi parlay-research` reports why. `python -m sbi parlay-candidates` runs the full-slate candidate engine (shadow only, developer report `reports/parlay_candidates.md`; issue #35). See [docs/PARLAYS.md](docs/PARLAYS.md).
+- **Recommended Parlays of the Day:** gated (issue #33). A parlay is published only with a verified single-bookmaker combined quote (recorded by the owner from a bet slip, `python -m sbi parlay-quote`) and joint-calibration evidence that meets pre-registered criteria. Neither is available today, so the page says "No verified parlays today". `python -m sbi parlay-research` reports why. `python -m sbi parlay-candidates` runs the full-slate candidate engine (shadow only, developer report `reports/parlay_candidates.md`; issue #35). `python -m sbi parlay-walkforward` replays that engine on stored history and scores its joint probabilities against pre-registered criteria (shadow only, `reports/parlay_walkforward.md`; issue #38). See [docs/PARLAYS.md](docs/PARLAYS.md).
 - **Matches Doyen Is Watching:** near-misses and interesting fixtures, clearly *not* recommendations, with what Doyen is waiting for.
 - **Upcoming**, **Pick History** (immutable, at original odds), **Watchlist** (stored in your browser), and **Ask Doyen** (opens Claude with your question plus Doyen's data; no embedded AI, no secrets).
 - Sport filters (All / Soccer / NFL / NBA / Tennis), date filters (Today / Tomorrow / This Week), and a timezone picker (DST-aware).
@@ -28,6 +28,8 @@ python -m sbi serve        # diagnostics view (docs/dev) on http://localhost:800
 python -m sbi coverage     # source coverage audit (read-only) → reports/source_coverage.md
 python -m sbi league-eval  # walk-forward evidence for monitoring soccer leagues → reports/league_validation.md
 python -m sbi monitor-leagues  # opt-in, local only: monitoring leagues → data/local/monitoring.sqlite (gitignored)
+python -m sbi independence # bookmaker-independence audit (read-only) → reports/independence_audit.md
+python -m sbi quote-sources  # quote-source audit (read-only): licensing matrix, credit use → reports/quote_sources.md
 python -m sbi forecast-bench --openmodel-repo DIR --football-analytics-repo DIR
                            # third-party forecast shadow benchmark (research only) → reports/forecast_benchmark.md
 ```

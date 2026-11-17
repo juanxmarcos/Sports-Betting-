@@ -1,0 +1,2 @@
+origin,decision_time,date,candidate_id,bookmaker,n_legs,legs,price_kind,computed_product_odds,joint_prob_independent,computed_ev,method
+walk_forward_replay,2026-11-12T21:27:20+00:00,2026-11-12,pc-3e66c83efb34,Coolbet,2,"[{""event_id"": ""nba:NBA:20261113:401909979"", ""market"": ""ML"", ""selection"": ""away"", ""price"": 3.05}, {""event_id"": ""nfl:NFL:20261113:401873052"", ""market"": ""ML"", ""selection"": ""away"", ""price"": 2.14}]",computed_product_not_a_quote,6.527,0.15536,0.014035,parlay-walkforward-v1
