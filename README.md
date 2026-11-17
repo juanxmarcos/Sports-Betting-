@@ -28,6 +28,8 @@ python -m sbi serve        # diagnostics view (docs/dev) on http://localhost:800
 python -m sbi coverage     # source coverage audit (read-only) → reports/source_coverage.md
 python -m sbi forecast-bench --openmodel-repo DIR --football-analytics-repo DIR
                            # third-party forecast shadow benchmark (research only) → reports/forecast_benchmark.md
+python -m sbi tennis-history [--download]
+                           # Sackmann tennis history from an unofficial mirror (research only) → reports/tennis_history.md
 ```
 ```bash
 python -m pytest -q

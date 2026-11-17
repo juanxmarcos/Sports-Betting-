@@ -4,6 +4,9 @@
 > prioritised next steps are in [Source audit 2026-11-13](#source-audit-2026-11-13) at the end of this
 > file. The numbers come from `python -m sbi coverage` (`reports/source_coverage.md`).
 
+> **Tennis history** (issue #45): Jeff Sackmann's ATP/WTA archives from an unofficial mirror, research only.
+> See [Tennis history](#tennis-history-sackmann-archive-from-an-unofficial-mirror-issue-45-owner-decision-on-39).
+
 > **Third-party forecast sites** (The Open Model, Football Analytics, Skorbot) were audited on
 > 2026-11-16 (issue #23). None is ingested. See [FORECAST_SOURCES.md](FORECAST_SOURCES.md).
 
@@ -335,3 +338,75 @@ Scottish and Spanish divisions) and history for validation.
   archives, an adapter can follow. The licence was non-commercial.
 - **Public database (review item):** whether raw third-party quotes may stay in the public
   `data/sbi.sqlite`. Unresolved; not confirmed as permitted.
+
+## Tennis history: Sackmann archive from an unofficial mirror (issue #45, owner decision on #39)
+
+> **Label: unofficial mirror; original repositories withdrawn by the author (404 since about 2026-11-02); integrity not verified against the original.**
+
+- **What:** Jeff Sackmann's tour-level singles match results (`atp_matches_YYYY.csv`, `wta_matches_YYYY.csv`), seasons 2010–2026.
+  The mirror's last match is in the week of 2026-05-25.
+- **Originals (withdrawn):** `github.com/JeffSackmann/tennis_atp` and `github.com/JeffSackmann/tennis_wta`, both 404 since about
+  2026-11-02 (see #39). The author has not named a new location.
+- **Mirror used:** Hugging Face dataset [`Aneeshers/tennis-sackmann-archive`](https://huggingface.co/datasets/Aneeshers/tennis-sackmann-archive), labelled `cc-by-nc-sa-4.0`,
+  pinned to revision `8ac86f7c62889b5d5c4cfec4c6403edcb8c5d993` (dataset last modified 2026-06-25). Files downloaded 2026-11-17T15:23:23+00:00 from
+  `https://huggingface.co/datasets/Aneeshers/tennis-sackmann-archive/resolve/<revision>/<path>`. The mirror's own README says it
+  redistributes Sackmann's data unchanged and keeps his original READMEs as `UPSTREAM_README.md`. The mirror's author is not
+  connected to Sackmann, and nothing shows that Sackmann endorses the mirror.
+- **Licence and attribution:** CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/). Data compiled by
+  **Jeff Sackmann / Tennis Abstract**. Doyen is non-commercial (owner decision on #15). Doyen's derived files from this data
+  (`data/tennis_sackmann/*.csv`, `coverage.json`) carry the same licence and attribution.
+- **What is and is not verified:** the bytes Doyen uses are pinned. Every file must match the SHA-256 below, and
+  `python -m sbi tennis-history --download` refuses any file that does not. That proves the files are the ones recorded here.
+  It does **not** prove they match Sackmann's originals, which can no longer be checked.
+- **Where the files live:** raw CSVs are **not committed**. They are downloaded on request into `data/local/tennis_sackmann/`,
+  which git ignores. Committed: `data/tennis_sackmann/manifest.json` (provenance and checksums), `player_map.csv`
+  (Sackmann player ID ↔ ESPN name), `tournament_map.csv`, `match_links.csv` (Sackmann match ID ↔ ESPN match ID) and
+  `coverage.json`. The report is `reports/tennis_history.md`.
+- **Sanity check against Doyen's ESPN results (2024-01-01 to 2026-05-25):** 12,035 matches linked
+  (85.1% of mirror matches). Winners disagree on 10
+  (0.083%), below the 1% stop threshold. They are listed in the report and were not corrected.
+- **Use:** research only. The walk-forward (log loss 0.63461 → 0.63261 on
+  11,637 matches) gives a small gain over the live model. But only 7 finished tennis events have stored multi-bookmaker odds,
+  so no gain against the market can be shown, and **the live tennis model is unchanged**.
+
+| File | Bytes | SHA-256 |
+|---|---|---|
+| `LICENSE` | 913 | `d128251e9a3725f694c97a6761df96610481f92a6a69ab936174acb0c4be0589` |
+| `README.md` | 2,035 | `56179e411714701330792fed236094cc7634c2e77c37ef0e2a799082b46b23ac` |
+| `atp/UPSTREAM_README.md` | 4,673 | `80fd5a50ba020fd306890d31142187bb737627ba468d3e36faabe92d48ab5083` |
+| `atp/atp_matches_2010.csv` | 614,299 | `135a4a1e2ab69c33318b6e5ad59efc67cc5358629b15bf28fb2f905d48f7aeb0` |
+| `atp/atp_matches_2011.csv` | 611,939 | `8e91e4b680f0b4e9605a3c71b4c676b55e2a102de8544a7d3b2fbaca5977575a` |
+| `atp/atp_matches_2012.csv` | 610,116 | `03f03612691af370c9c47939dde4202d9858e05ea044367388115e627d4d13f3` |
+| `atp/atp_matches_2013.csv` | 596,714 | `9e1e3b124ac22c1b840118f78475a910cb2ea68684289581f70b54a022f2832c` |
+| `atp/atp_matches_2014.csv` | 589,216 | `7c102ee3b0da1fee59edc6a5f280eb0784ac0bad69988583f65791dcb7084177` |
+| `atp/atp_matches_2015.csv` | 594,438 | `20c1f723df86b367f3ec205bbda3d8a7163fa6d4e46dcfda15095e24965bc5ed` |
+| `atp/atp_matches_2016.csv` | 617,660 | `86dda3871cb79d3226a047774c8fc97b86267cfe96709dea832a347dfbf81684` |
+| `atp/atp_matches_2017.csv` | 611,380 | `4bb295788c37487b120cd39171d413cef0ebc6f4c2d9fa40b7261f5143f3719f` |
+| `atp/atp_matches_2018.csv` | 608,903 | `0363dc6012190f337fcf34b4ca443634f192c4670cc6c14c94342a54b9adf7eb` |
+| `atp/atp_matches_2019.csv` | 586,071 | `7f1a21451ff622bb0c6a09690898db46d51e59dcdf08086d369753822e1d5478` |
+| `atp/atp_matches_2020.csv` | 307,277 | `985a917b72d5efb7dd5ef9df8ecc58c637ed6b88561ccad364653af71ac12da0` |
+| `atp/atp_matches_2021.csv` | 573,056 | `b9b1d31a4b0b9273b8f338cbb1347c5a847ad2361334ec760a286f5990fba347` |
+| `atp/atp_matches_2022.csv` | 608,789 | `7190042565ab8400e74f44fda60700acb36ddf3c82d393f331a07589e05b5f52` |
+| `atp/atp_matches_2023.csv` | 625,341 | `9b9671aa7c8156e74c2e4466675b7ed4e762bb8a58b7237a30daefd84ffceff5` |
+| `atp/atp_matches_2024.csv` | 650,136 | `73aec32247a0db68d8aa8fd8003eefea132905177f1cb145502d9215b53311be` |
+| `atp/atp_matches_2025.csv` | 617,154 | `78c356ef9328b89ae58a17564d61c02cdad2a3a007f6b8af5cfc17992b11bb2d` |
+| `atp/atp_matches_2026.csv` | 300,795 | `ceb157ae698f79f4148f7bb6253bbcf6a8c8eb9ff94670dd83aa0428802cfd59` |
+| `atp/matches_data_dictionary.txt` | 3,758 | `b4b525ad8163f9ee2ffde3ab7108924ec1385ef7d2fddf828c1fc096fcaafee4` |
+| `wta/UPSTREAM_README.md` | 3,607 | `f34402380f3c84f7c7d9f6156225603ef917bb2b2d6d18676a234fb5323b13c9` |
+| `wta/wta_matches_2010.csv` | 572,925 | `05b980e28398ae13e6e0edae544a060b59571cf977623ad0db727d6de3527627` |
+| `wta/wta_matches_2011.csv` | 575,703 | `ea0afb5d5e5a1fd230860f722de4f79578f7bd39949358a8b66480f2cae6e101` |
+| `wta/wta_matches_2012.csv` | 584,181 | `a8e7f92534df31293a5574db3406e6a0d1c2d956ba63610c44c7bb6f3f09f52d` |
+| `wta/wta_matches_2013.csv` | 559,834 | `0d31dde39e721a683b158c30ffbe612293b06bd2386dfeec47ae28e9bad8d93c` |
+| `wta/wta_matches_2014.csv` | 574,337 | `4cb59debfa4cbf079c550ee7dfc0ee098237af33376701cd340e112b917f8176` |
+| `wta/wta_matches_2015.csv` | 550,360 | `9332d0d470c378c8d439553ed7d81379eb3596d04babf39bee7021edae316130` |
+| `wta/wta_matches_2016.csv` | 602,004 | `17145270279d6bf5d1abec4038d51d6af3aa71a7b40421b9f175205fafa075f7` |
+| `wta/wta_matches_2017.csv` | 593,130 | `eae2de68b2e87fcac7e2ff1f6168c78d1baba91fb0ffecda455aa329a81437c8` |
+| `wta/wta_matches_2018.csv` | 572,565 | `6ccfc04baabe536e4260083c2e299c8c36668a8e8276dfc309219df23bf9ea38` |
+| `wta/wta_matches_2019.csv` | 567,137 | `da251744c6ece2cab4b94df659ee38a81bb4aa50cf532d48f1a6eb0cc66726d4` |
+| `wta/wta_matches_2020.csv` | 266,525 | `bcbb285ee8a743ce117952bbb99cfe816bfc685412aa3adc7a9913e7799cd70c` |
+| `wta/wta_matches_2021.csv` | 531,828 | `3f4b865fe9f68aedb3d51597740cf658cf805f676bae652f2bc93cbab4f6e99f` |
+| `wta/wta_matches_2022.csv` | 530,984 | `f638cf65efefb01a1a10368c1d5217d5f90981fb76193ca3a9c3773c2abc2ba7` |
+| `wta/wta_matches_2023.csv` | 569,610 | `b73bf74928155b858cdb7045f6334246336cef604286cb361e695df26911ad18` |
+| `wta/wta_matches_2024.csv` | 542,425 | `d9bba2a0b3793f63c737ef62a809b82b56b3ad0ee94e1f95e78cecfac7615ed2` |
+| `wta/wta_matches_2025.csv` | 565,244 | `e4eb002bc6d828b0bd21e04ed286e68722ddc8ccbbb27ea980bf62e938377f96` |
+| `wta/wta_matches_2026.csv` | 255,577 | `8fea203e3f4e731308b9ed2845059818d400aa6176c801279b24e846569e9d97` |

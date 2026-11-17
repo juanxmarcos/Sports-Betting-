@@ -1,0 +1,493 @@
+{
+  "generated_at": "2026-11-17T15:29:48+00:00",
+  "provenance": {
+    "mirror": "https://huggingface.co/datasets/Aneeshers/tennis-sackmann-archive",
+    "revision": "8ac86f7c62889b5d5c4cfec4c6403edcb8c5d993",
+    "downloaded_at": "2026-11-17T15:23:23+00:00",
+    "licence": "CC BY-NC-SA 4.0",
+    "label": "unofficial mirror; original repositories withdrawn by the author (404 since about 2026-11-02); integrity not verified against the original",
+    "attribution": "Tennis match data compiled by Jeff Sackmann / Tennis Abstract (originally github.com/JeffSackmann/tennis_atp and tennis_wta), licensed CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/). Read from an unofficial mirror; original repositories withdrawn by the author (404 since about 2026-11-02); integrity not verified against the original."
+  },
+  "checksums_verified": {
+    "ok": true,
+    "missing": [],
+    "mismatch": [],
+    "checked": 39
+  },
+  "coverage": {
+    "mirror": {
+      "files": 34,
+      "rows_dropped": 0,
+      "matches": 90888,
+      "first_date": "2010-01-03",
+      "last_date": "2026-05-25",
+      "seasons": {
+        "atp:2010": {
+          "matches": 3030,
+          "walkovers": 17
+        },
+        "atp:2011": {
+          "matches": 3015,
+          "walkovers": 15
+        },
+        "atp:2012": {
+          "matches": 3094,
+          "walkovers": 18
+        },
+        "atp:2013": {
+          "matches": 2944,
+          "walkovers": 22
+        },
+        "atp:2014": {
+          "matches": 2816,
+          "walkovers": 26
+        },
+        "atp:2015": {
+          "matches": 2943,
+          "walkovers": 10
+        },
+        "atp:2016": {
+          "matches": 2941,
+          "walkovers": 20
+        },
+        "atp:2017": {
+          "matches": 2911,
+          "walkovers": 19
+        },
+        "atp:2018": {
+          "matches": 2982,
+          "walkovers": 15
+        },
+        "atp:2019": {
+          "matches": 2721,
+          "walkovers": 20
+        },
+        "atp:2020": {
+          "matches": 1462,
+          "walkovers": 6
+        },
+        "atp:2021": {
+          "matches": 2733,
+          "walkovers": 20
+        },
+        "atp:2022": {
+          "matches": 2917,
+          "walkovers": 17
+        },
+        "atp:2023": {
+          "matches": 2986,
+          "walkovers": 20
+        },
+        "atp:2024": {
+          "matches": 3158,
+          "walkovers": 20
+        },
+        "atp:2025": {
+          "matches": 2862,
+          "walkovers": 22
+        },
+        "atp:2026": {
+          "matches": 1449,
+          "walkovers": 12
+        },
+        "wta:2010": {
+          "matches": 2781,
+          "walkovers": 9
+        },
+        "wta:2011": {
+          "matches": 2804,
+          "walkovers": 18
+        },
+        "wta:2012": {
+          "matches": 2940,
+          "walkovers": 17
+        },
+        "wta:2013": {
+          "matches": 2714,
+          "walkovers": 14
+        },
+        "wta:2014": {
+          "matches": 2694,
+          "walkovers": 1
+        },
+        "wta:2015": {
+          "matches": 2651,
+          "walkovers": 20
+        },
+        "wta:2016": {
+          "matches": 2923,
+          "walkovers": 20
+        },
+        "wta:2017": {
+          "matches": 2862,
+          "walkovers": 13
+        },
+        "wta:2018": {
+          "matches": 2847,
+          "walkovers": 14
+        },
+        "wta:2019": {
+          "matches": 2652,
+          "walkovers": 11
+        },
+        "wta:2020": {
+          "matches": 1276,
+          "walkovers": 8
+        },
+        "wta:2021": {
+          "matches": 2597,
+          "walkovers": 27
+        },
+        "wta:2022": {
+          "matches": 2594,
+          "walkovers": 27
+        },
+        "wta:2023": {
+          "matches": 2810,
+          "walkovers": 22
+        },
+        "wta:2024": {
+          "matches": 2792,
+          "walkovers": 18
+        },
+        "wta:2025": {
+          "matches": 2692,
+          "walkovers": 18
+        },
+        "wta:2026": {
+          "matches": 1295,
+          "walkovers": 9
+        }
+      }
+    },
+    "players": {
+      "mirror_players": 3525,
+      "matched": 1103,
+      "unmatched": 2422,
+      "match_methods": {
+        "exact": 1060,
+        "initial+surname": 43
+      },
+      "unmatched_with_a_mirror_match_since_2024": 313,
+      "espn_players_2024_on": 1916,
+      "espn_players_with_mirror_id": 1102,
+      "doyen_db_event_players": {
+        "atp": 29,
+        "wta": 51
+      },
+      "doyen_db_event_players_with_mirror_id": {
+        "atp": 28,
+        "wta": 45
+      }
+    },
+    "links": {
+      "overlap_window": [
+        "2024-01-01",
+        "2026-05-25"
+      ],
+      "espn_window_end": "2026-06-08",
+      "mirror_matches_in_overlap": 14149,
+      "espn_matches_in_overlap": 23852,
+      "linked": 12035,
+      "share_of_mirror_matches_linked": 0.8506,
+      "share_of_espn_matches_linked": 0.5046,
+      "candidates": 12038,
+      "rejected_other_tournament": 3,
+      "winner_disagreements": 10,
+      "disagreement_rate": 0.00083,
+      "disagreement_examples": [
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2024-0741:394",
+          "espn_id": "148168",
+          "date": "2024-06-23",
+          "sackmann_tournament": "Eastbourne",
+          "espn_tournament": "Lexus Eastbourne Open",
+          "espn_event": "444-2024",
+          "winner_sackmann": "Aleksandar Vukic",
+          "winner_espn": "Yoshihito Nishioka",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2024-M-DC-2024-FLS-2-M-B-CZE-ESP-01:1",
+          "espn_id": "149956",
+          "date": "2024-09-28",
+          "sackmann_tournament": "Davis Cup Finals RR: CZE vs ESP",
+          "espn_tournament": "China Open",
+          "espn_event": "959-2024",
+          "winner_sackmann": "Roberto Bautista Agut",
+          "winner_espn": "Jiri Lehecka",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2024-M-DC-2024-FLS-2-M-B-AUS-CZE-01:2",
+          "espn_id": "149976",
+          "date": "2024-09-26",
+          "sackmann_tournament": "Davis Cup Finals RR: AUS vs CZE",
+          "espn_tournament": "Kinoshita Group Japan Open Tennis Championships",
+          "espn_event": "5-2024",
+          "winner_sackmann": "Alexei Popyrin",
+          "winner_espn": "Tomas Machac",
+          "retired": true
+        },
+        {
+          "tour": "wta",
+          "sackmann_id": "wta:2024-1020:208",
+          "espn_id": "151453",
+          "date": "2024-09-24",
+          "sackmann_tournament": "Beijing",
+          "espn_tournament": "China Open",
+          "espn_event": "959-2024",
+          "winner_sackmann": "Kamilla Rakhimova",
+          "winner_espn": "Kimberly Birrell",
+          "retired": false
+        },
+        {
+          "tour": "wta",
+          "sackmann_id": "wta:2024-1056:272",
+          "espn_id": "151943",
+          "date": "2024-10-20",
+          "sackmann_tournament": "Tokyo",
+          "espn_tournament": "Toray Pan Pacific Open Tennis",
+          "espn_event": "264-2024",
+          "winner_sackmann": "Kyoka Okamura",
+          "winner_espn": "Hailey Baptiste",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2024-7696:389",
+          "espn_id": "152919",
+          "date": "2025-01-08",
+          "sackmann_tournament": "Next Gen Finals",
+          "espn_tournament": "ASB Classic",
+          "espn_event": "925-2025",
+          "winner_sackmann": "Alex Michelsen",
+          "winner_espn": "Nishesh Basavareddy",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2025-0495:362",
+          "espn_id": "155092",
+          "date": "2025-02-23",
+          "sackmann_tournament": "Dubai",
+          "espn_tournament": "Dubai Duty Free Tennis Championships",
+          "espn_event": "25-2025",
+          "winner_sackmann": "Luca Nardi",
+          "winner_espn": "Marton Fucsovics",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2025-0747:365",
+          "espn_id": "165698",
+          "date": "2025-09-24",
+          "sackmann_tournament": "Beijing",
+          "espn_tournament": "China Open",
+          "espn_event": "959-2025",
+          "winner_sackmann": "Arthur Rinderknech",
+          "winner_espn": "David Goffin",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2025-0341:380",
+          "espn_id": "167253",
+          "date": "2025-11-02",
+          "sackmann_tournament": "Metz",
+          "espn_tournament": "Moselle Open",
+          "espn_event": "114-2025",
+          "winner_sackmann": "Vitaliy Sachko",
+          "winner_espn": "Clement Tabur",
+          "retired": false
+        },
+        {
+          "tour": "atp",
+          "sackmann_id": "atp:2026-0414:369",
+          "espn_id": "178329",
+          "date": "2026-05-17",
+          "sackmann_tournament": "Hamburg",
+          "espn_tournament": "Hamburg Open",
+          "espn_event": "942-2026",
+          "winner_sackmann": "Aleksandar Kovacevic",
+          "winner_espn": "Arthur Gea",
+          "retired": false
+        }
+      ]
+    },
+    "espn_tour_labels": {
+      "completed_matches_labelled_atp_between_two_wta_players": 5950,
+      "of_which_grand_slam_treated_as_best_of_five": 2523
+    }
+  },
+  "walk_forward": {
+    "test_from": "2025-07-01",
+    "warm_start_matches": 76174,
+    "warm_until": "2024-01-01",
+    "espn_history_matches": 29088,
+    "elo_params": {
+      "w_surface": 0.15,
+      "k_scale": 0.6
+    },
+    "results": {
+      "main_A_eligible": {
+        "n": 11637,
+        "logloss": {
+          "A_espn_only": 0.63461,
+          "B_with_mirror": 0.63261,
+          "B_minus_A": -0.002,
+          "B_minus_A_ci95": [
+            -0.00376,
+            -0.00033
+          ]
+        },
+        "brier": {
+          "A_espn_only": 0.22277,
+          "B_with_mirror": 0.22169,
+          "B_minus_A": -0.00107,
+          "B_minus_A_ci95": [
+            -0.00179,
+            -0.00031
+          ]
+        }
+      },
+      "all_test_matches": {
+        "n": 14531,
+        "logloss": {
+          "A_espn_only": 0.63771,
+          "B_with_mirror": 0.63288,
+          "B_minus_A": -0.00483,
+          "B_minus_A_ci95": [
+            -0.00648,
+            -0.0031
+          ]
+        },
+        "brier": {
+          "A_espn_only": 0.22413,
+          "B_with_mirror": 0.22176,
+          "B_minus_A": -0.00237,
+          "B_minus_A_ci95": [
+            -0.00314,
+            -0.00157
+          ]
+        }
+      },
+      "thin_history_in_A": {
+        "n": 2894,
+        "logloss": {
+          "A_espn_only": 0.65014,
+          "B_with_mirror": 0.63394,
+          "B_minus_A": -0.01619,
+          "B_minus_A_ci95": [
+            -0.02108,
+            -0.01149
+          ]
+        },
+        "brier": {
+          "A_espn_only": 0.22962,
+          "B_with_mirror": 0.22205,
+          "B_minus_A": -0.00757,
+          "B_minus_A_ci95": [
+            -0.00983,
+            -0.00535
+          ]
+        }
+      },
+      "thin_in_A_but_10plus_in_B": {
+        "n": 336,
+        "logloss": {
+          "A_espn_only": 0.61473,
+          "B_with_mirror": 0.62515,
+          "B_minus_A": 0.01042,
+          "B_minus_A_ci95": [
+            -0.01479,
+            0.03615
+          ]
+        },
+        "brier": {
+          "A_espn_only": 0.21257,
+          "B_with_mirror": 0.21706,
+          "B_minus_A": 0.0045,
+          "B_minus_A_ci95": [
+            -0.00646,
+            0.01629
+          ]
+        }
+      },
+      "atp_main": {
+        "n": 7318,
+        "logloss": {
+          "A_espn_only": 0.6267,
+          "B_with_mirror": 0.62657,
+          "B_minus_A": -0.00013,
+          "B_minus_A_ci95": [
+            -0.00248,
+            0.00229
+          ]
+        },
+        "brier": {
+          "A_espn_only": 0.21945,
+          "B_with_mirror": 0.21917,
+          "B_minus_A": -0.00028,
+          "B_minus_A_ci95": [
+            -0.00132,
+            0.00075
+          ]
+        }
+      },
+      "wta_main": {
+        "n": 4319,
+        "logloss": {
+          "A_espn_only": 0.64803,
+          "B_with_mirror": 0.64285,
+          "B_minus_A": -0.00518,
+          "B_minus_A_ci95": [
+            -0.00746,
+            -0.00284
+          ]
+        },
+        "brier": {
+          "A_espn_only": 0.22839,
+          "B_with_mirror": 0.22597,
+          "B_minus_A": -0.00242,
+          "B_minus_A_ci95": [
+            -0.00349,
+            -0.00139
+          ]
+        }
+      }
+    }
+  },
+  "market_check": {
+    "n": 7,
+    "median_bookmakers": 18.0,
+    "market": {
+      "logloss": 0.4996,
+      "brier": 0.16319
+    },
+    "A_espn_only": {
+      "logloss": 0.5269,
+      "brier": 0.17359
+    },
+    "B_with_mirror": {
+      "logloss": 0.53522,
+      "brier": 0.17773
+    }
+  },
+  "decision": {
+    "criteria": {
+      "max_disagreement_rate": 0.01,
+      "logloss_gain_ci_upper_below": 0.0,
+      "min_market_events": 200
+    },
+    "gain_vs_live_model": true,
+    "market_criterion_met": false,
+    "adopt_in_live_model": false,
+    "reasons_not_adopted": [
+      "only 7 finished events have stored multi-bookmaker tennis odds (criterion: 200), so no gain against the market can be shown"
+    ]
+  }
+}
