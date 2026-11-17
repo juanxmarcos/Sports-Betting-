@@ -2,6 +2,7 @@
 // clock, then prints the rendered HTML (the homepage unless "hash" names another route).
 // Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays",
 //   "allowMock": true (render fixtures marked mock), "noLite": true (data/parlays.json missing),
+//   "footer": true (print the footer's estimated-parlay record line instead),
 //   "stake": {"value": "25", "odds": 6.5} (simulate typing a bet amount; prints the payout text)}.
 "use strict";
 const fs = require("fs");
@@ -18,7 +19,7 @@ global.Date = FakeDate;
 const listeners = {};
 const app = { innerHTML: "", addEventListener: (t, f) => { listeners[t] = f; } };
 const stub = () => ({ innerHTML: "", textContent: "", addEventListener() {} });
-const els = { app, tz: stub(), updated: stub() };
+const els = { app, tz: stub(), updated: stub(), estrec: stub() };
 global.document = { getElementById: (id) => els[id] || stub(), querySelectorAll: () => [], title: "" };
 global.window = { addEventListener() {}, scrollTo() {}, __DOYEN_ALLOW_MOCK: input.allowMock === true };
 global.location = { hash: input.hash || "" };
@@ -29,7 +30,7 @@ global.fetch = (url) => {
   if (/parlays\.json$/.test(url)) {
     if (input.noLite) return Promise.resolve({ ok: false, status: 404 });
     const d = input.data || {};
-    return Promise.resolve({ ok: true, json: () => Promise.resolve({ generated: d.generated, default_timezone: d.default_timezone, parlays: d.parlays }) });
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ generated: d.generated, default_timezone: d.default_timezone, parlays: d.parlays, estimated_parlays: d.estimated_parlays }) });
   }
   return Promise.resolve({ ok: true, json: () => Promise.resolve(input.data) });
 };
@@ -44,6 +45,7 @@ setTimeout(() => {
     process.stdout.write(out.textContent);
     return;
   }
+  if (input.footer) { process.stdout.write(JSON.stringify({ estrec: els.estrec.textContent, hidden: els.estrec.hidden })); return; }
   if (input.fetched) { process.stdout.write(JSON.stringify(fetched)); return; }
   if (input.range && input.range !== "today") {
     listeners.click({ target: { closest: (sel) => (sel === "[data-f]" ? { dataset: { f: "range", v: input.range } } : null) } });
