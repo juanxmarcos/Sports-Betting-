@@ -7,7 +7,7 @@
     set(k, v) { try { localStorage.setItem("doyen." + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
   };
   const S = { data: null, lite: null, sport: store.get("sport", "all"), range: "today", hrange: "all", hsport: "all",
-              tz: store.get("tz", null), watch: new Set(store.get("watch", [])) };
+              tz: store.get("tz", null), hday: "0", watch: new Set(store.get("watch", [])) };
 
   const SPORTS = [["all", "All Sports"], ["soccer", "Soccer"], ["nfl", "NFL"], ["nba", "NBA"], ["tennis", "Tennis"]];
   const ICON = {
@@ -285,13 +285,18 @@
   // of those prices. A verified
   // bookmaker-quote card always wins: an estimate never reuses one of its games.
   const EC = { kind: "estimated_product",
-               empty: "No parlays today: no verified quotes, and no games later today meet the estimate rules." };
-  function estProblem(rec, now, day) {
+               empty: "No parlays today: no verified quotes, and no games later today meet the estimate rules.",
+               previewBadge: "Preview: may change at the next daily update", previewEmpty: "No preview yet for this day" };
+  // Issue #58: with `preview` the day is a later New York date, the card must carry preview: true,
+  // and its prices need only be read before each game starts (today's same-day rule is relaxed).
+  function estProblem(rec, now, day, preview) {
+    preview = preview === true;
     if (!rec || typeof rec !== "object") return "not an object";
     if ((rec.mock || rec.test) && !allowMock()) return "mock or test data";
     if (rec.kind !== EC.kind) return "not an estimate";
     if (!str(rec.parlay_id)) return "missing parlay_id";
-    if (rec.date !== day) return "not today's parlay";
+    if ((rec.preview === true) !== preview) return "preview flag does not match the day";
+    if (rec.date !== day) return preview ? "not this day's preview" : "not today's parlay";
     if (rec.status !== "active") return "parlay is not active";
     if (!str(rec.bookmaker)) return "missing bookmaker";
     const legs = rec.legs;
@@ -307,12 +312,13 @@
       if (l.status !== "active") return "leg is not active";
       const t = isoT(l.start_utc);
       if (t == null) return "leg has no valid start time";
-      if (nyKey(new Date(t)) !== day) return "leg is not on today's date";
+      if (nyKey(new Date(t)) !== day) return preview ? "leg is not on the preview's date" : "leg is not on today's date";
       if (t <= now) return "leg has started";
       if (typeof l.price !== "number" || !isFinite(l.price) || l.price <= 1) return "leg has no valid price";
       const at = isoT(l.price_at);
       if (at == null || at > now) return "leg price has no valid time";
-      if (nyKey(new Date(at)) !== day) return "leg price is stale";
+      if (!preview && nyKey(new Date(at)) !== day) return "leg price is stale";
+      if (at >= t) return "leg price read after the start";
       if (typeof l.prob === "number" && isFinite(l.prob) && l.prob * l.price < 1 - 0.0005 * l.price) weak += 1;
       product *= l.price;
     }
@@ -333,6 +339,23 @@
       .forEach((r) => { if (r.legs.some((l) => used.has(l.event_id))) return; r.legs.forEach((l) => used.add(l.event_id)); out.push(r); });
     return out.slice(0, Math.max(0, limit));
   }
+  // Preview cards for one later New York date (issue #58): the block for that date, valid cards only.
+  function previewDays() {
+    const today = nyKey(new Date());
+    return [1, 2, 3].map((n) => addDays(today, n));
+  }
+  function shownPreview(E, day) {
+    const B = E && Array.isArray(E.previews) ? E.previews.find((b) => b && b.date === day && b.preview === true) : null;
+    if (!B || B.status !== "preview") return [];
+    const now = Date.now();
+    const first = (r) => Math.min(...r.legs.map((l) => isoT(l.start_utc)));
+    const used = new Set(), out = [];
+    (Array.isArray(B.recommendations) ? B.recommendations : []).filter((r) => estProblem(r, now, day, true) === null)
+      .sort((a, b) => first(a) - first(b) || String(a.parlay_id).localeCompare(String(b.parlay_id)))
+      .forEach((r) => { if (r.legs.some((l) => used.has(l.event_id))) return; r.legs.forEach((l) => used.add(l.event_id)); out.push(r); });
+    return out.slice(0, PC.maxCards);
+  }
+  const shortDay = (key) => { const [y, m, d] = key.split("-").map(Number); return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short", month: "short", day: "numeric" }).format(new Date(Date.UTC(y, m - 1, d, 12))); };
   function estRecordLine(E) {
     const s = E && E.record;
     if (!s || typeof s.won !== "number" || typeof s.lost !== "number") return "";
@@ -344,8 +367,10 @@
   function pricesRead(r) {
     const ts = r.legs.map((l) => isoT(l.price_at)).filter((t) => t != null);
     if (ts.length !== r.legs.length) return "";
-    const lo = fmtAsOf(Math.min(...ts), false), hi = fmtAsOf(Math.max(...ts));
-    const one = fmtAsOf(Math.min(...ts)) === hi;
+    // Preview prices (issue #58) can be from an earlier day, so their time also shows the date.
+    const fmt = r.preview === true ? (t, zone = true) => `${shortDay(nyKey(new Date(t)))}, ${fmtAsOf(t, zone)}` : fmtAsOf;
+    const lo = fmt(Math.min(...ts), false), hi = fmt(Math.max(...ts));
+    const one = fmt(Math.min(...ts)) === hi;
     return `<div class="pc-note" data-prices-read>${one ? `Price as of ${esc(hi)}` : `Prices as of ${esc(lo)} – ${esc(hi)}`} — check your book.</div>`;
   }
   function estCard(r, i) {
@@ -355,6 +380,7 @@
       ? `<div class="pc-note">Estimated hit chance ${esc(pct(r.est_hit_chance))} (model estimate, unvalidated).</div>` : "";
     return `<article class="card parlay est" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}" data-kind="estimate">
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
+      ${r.preview === true ? `<div class="pc-note preview-note" data-preview><span class="pill preview">${esc(EC.previewBadge)}</span></div>` : ""}
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
@@ -390,7 +416,21 @@
     const cards = shownParlays(P);
     const blocked = cards.flatMap((r) => r.legs.map((l) => l.event_id));
     const est = shownEstimates(E, blocked, PC.maxCards - cards.length);
-    let h = `<div class="eyebrow">${esc(fmtDay(nyKey(new Date())))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>`;
+    const today = nyKey(new Date()), future = previewDays();
+    const sel = ["1", "2", "3"].includes(S.hday) ? Number(S.hday) : 0;
+    const label = (n) => (n === 0 ? "Today" : (n === 1 ? "Tomorrow" : "+" + n));
+    const seg = `<div class="seg days" role="group" aria-label="Day">${[today, ...future].map((k, n) =>
+      `<button class="${sel === n ? "on" : ""}" data-f="hday" data-v="${n}" aria-pressed="${sel === n}" data-day="${esc(k)}">${label(n)} · ${esc(shortDay(k))}</button>`).join("")}</div>
+      <p class="small muted daynav"><a href="#/history">Past days: History</a></p>`;
+    if (sel > 0) {
+      const day = future[sel - 1], prev = shownPreview(E, day);
+      let p = `<div class="eyebrow">${esc(fmtDay(day))}</div><h1 style="margin-top:6px">Preview Parlays</h1>${seg}`;
+      p += `<section class="section first" id="parlays" data-preview-day="${esc(day)}">`;
+      if (prev.length) p += `<p class="small muted">Estimates for ${esc(fmtDay(day))}, built from the latest stored prices. Previews are replaced at every daily update and are not recorded; this day's parlays become final on the day itself.</p><div class="grid parlays">${prev.map((r, i) => estCard(r, i)).join("")}</div>`;
+      else p += `<p class="zero" data-preview-empty>${esc(EC.previewEmpty)}</p>`;
+      return p + `</section>`;
+    }
+    let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${seg}`;
     h += `<section class="section first" id="parlays">`;
     if (cards.length) h += `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`;
     if (est.length) h += `<h2 class="est-h"${cards.length ? "" : ' style="margin-top:0"'}>Estimated parlays of the day</h2><div class="grid parlays">${est.map((r, i) => estCard(r, cards.length + i)).join("")}</div>`;

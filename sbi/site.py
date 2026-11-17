@@ -333,7 +333,8 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
 def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False) -> dict:
     """Estimated parlays of the day (issue #47), built after the strict block so a verified
     bookmaker quote always wins. On the scheduled run every shown estimate is appended to the
-    estimated-parlay ledger before the read-only settlement summary is computed."""
+    estimated-parlay ledger before the read-only settlement summary is computed. Previews for the
+    next New York dates (issue #58) are added under "previews" and are never recorded."""
     from . import parlay_estimated as pe
     try:
         block = pe.build(con, now, parlays.shown_cards(parlay_block, now))
@@ -344,4 +345,9 @@ def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False
         block["ledger_rows_added"] = pe.record(block, now)
     block["record"] = pe.settle(con)
     block["record_line"] = pe.record_line(block["record"])
+    # Issue #58: previews for the next New York dates, replaced on every run, never recorded.
+    try:
+        block["previews"] = pe.build_previews(con, now)
+    except Exception:
+        block["previews"] = []
     return block
