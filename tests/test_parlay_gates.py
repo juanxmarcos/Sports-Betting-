@@ -158,7 +158,7 @@ def test_calibration_without_a_quote_is_not_published_and_no_product_becomes_a_q
 
 
 def test_stale_quote_is_never_used():
-    b = parlays.build(TWO, NOW, TZ, quotes=[_quote(age_min=parlays.MAX_QUOTE_AGE_MINUTES + 15)], calibration=PASSING)
+    b = parlays.build(TWO, NOW, TZ, quotes=[_quote(age_min=11 * 60)], calibration=PASSING)   # 23:00 yesterday in New York
     assert b["recommendations"] == [] and b["audit"]["verified_quotes"] == 0
 
 
@@ -219,7 +219,7 @@ def test_cli_refuses_an_unverifiable_quote_and_records_nothing(tmp_path, monkeyp
 
 
 # ---------- the real front end renders a backend-built card (no mock flag) ----------
-def test_front_end_renders_a_gated_backend_card_and_hides_it_once_the_quote_expires():
+def test_front_end_renders_a_gated_backend_card_and_hides_it_once_the_first_leg_starts():
     import os
     import shutil
     import subprocess
@@ -241,5 +241,6 @@ def test_front_end_renders_a_gated_backend_card_and_hides_it_once_the_quote_expi
     html = render(NOW)
     assert "Home 1 vs. Away 1" in html and "BookA" in html and "48.00" in html and "4.80" in html
     assert "Mock data" not in html
-    later = render(NOW + timedelta(minutes=parlays.MAX_QUOTE_AGE_MINUTES + 10))  # quote now older than the limit
+    assert "Home 1 vs. Away 1" in render(NOW + timedelta(hours=4))       # same-day quote: still shown (issue #53)
+    later = render(NOW + timedelta(hours=5, minutes=1))                    # the first leg has started
     assert "Home 1 vs. Away 1" not in later and "No verified parlays today" in later

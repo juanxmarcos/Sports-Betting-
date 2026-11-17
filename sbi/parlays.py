@@ -7,8 +7,8 @@ for that exact combination:
 1. combined_quote: a price for the parlay itself, quoted by one bookmaker. No free data source
    provides one (docs/PARLAYS.md section 1), so the only qualifying quote is one the owner read
    off that bookmaker's bet slip and recorded with `python -m sbi parlay-quote`, verified by
-   `sbi.parlay_quotes.quote_problem` and no older than MAX_QUOTE_AGE_MINUTES. A product of leg
-   prices is never a quote.
+   `sbi.parlay_quotes.quote_problem` and quoted on the same New York day (QUOTE_RULE). A product
+   of leg prices is never a quote.
 2. joint_calibration: settled evidence that multiplied leg probabilities are calibrated for
    these competitions and this number of legs (`sbi.parlay_calibration`, pre-registered
    criteria). Today the evidence is too small, so this gate is closed.
@@ -44,8 +44,8 @@ PREREQUISITES = ("combined_quote", "joint_calibration")
 
 BLOCKERS = {
     "combined_quote": "No bookmaker-quoted parlay price. No free data source returns a bookmaker's own price "
-                      "for a combination, so a parlay needs a quote recorded from that bookmaker's bet slip in the "
-                      "last 150 minutes. A product of leg prices is never shown as a quote.",
+                      "for a combination, so a parlay needs a quote recorded from that bookmaker's bet slip earlier "
+                      "today (New York time). A product of leg prices is never shown as a quote.",
     "joint_calibration": "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs "
                          "are independent and each leg is well calibrated; the settled evidence does not yet meet "
                          "the pre-registered criteria.",
@@ -163,7 +163,7 @@ def build(legs: list[dict], now: datetime, tz: str | None = None, quotes: list[d
             usable.append(leg)
     by_id = {leg["id"]: leg for leg in usable}
     verified = [q for q in quotes or []
-                if parlay_quotes.quote_problem(q, by_id, now, MAX_QUOTE_AGE_MINUTES) is None]
+                if parlay_quotes.quote_problem(q, by_id, now) is None]
 
     checked = passing = 0
     candidates = []
@@ -298,15 +298,12 @@ CARD_SPORTS = ("soccer", "nfl", "nba", "tennis")
 CARD_TIMEZONE = "America/New_York"      # the site's authoritative publishing day
 CARD_MAX_CARDS = 5                      # a cap, not a target: 0 is a normal result
 DEFAULT_STAKE = 10                      # illustrative display amount, in dollars; never a request to bet
-# Quote freshness is tied to the static-site refresh cadence (issue #37). The scheduled job
-# (.github/workflows/daily.yml, cron "15 */2 * * *") rebuilds docs/data every 120 minutes, so a
-# limit shorter than that hid a verified quote for most of every cycle. The limit is one refresh
-# interval plus a 30-minute allowance for the job's own runtime and the Pages deploy, so a quote
-# recorded right after a build is still re-verified by the next scheduled build before it expires.
-# The browser applies the same value (PC.maxQuoteMin in docs/assets/doyen.js); tests keep them equal.
-SITE_REFRESH_MINUTES = 120              # must match the cron interval in daily.yml (tested)
-QUOTE_BUILD_ALLOWANCE_MINUTES = 30      # job runtime + Pages deploy
-MAX_QUOTE_AGE_MINUTES = SITE_REFRESH_MINUTES + QUOTE_BUILD_ALLOWANCE_MINUTES   # 150: older is never shown as current
+# Quote freshness (issue #53; replaces the 150-minute limit of issue #37). The scheduled job
+# (.github/workflows/daily.yml) rebuilds docs/data once each New York morning, plus backup runs that
+# skip when that run succeeded. A card built from today's prices therefore stays shown until its
+# first leg starts, and says when the price was taken; a quote from a previous New York day is never
+# shown as current. The browser applies the same rule (parlayProblem in docs/assets/doyen.js).
+QUOTE_RULE = "same_ny_day"
 QUOTE_KIND = "bookmaker_combined"       # one bookmaker's own price for the whole combination
 
 
@@ -400,7 +397,7 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
     at = _ts(q.get("quoted_at"))
     if at is None or at > now:
         return "quote has no valid time"
-    if (now - at).total_seconds() > MAX_QUOTE_AGE_MINUTES * 60:
+    if at.astimezone(tz).date().isoformat() != day:
         return "quote is stale"
     return None
 

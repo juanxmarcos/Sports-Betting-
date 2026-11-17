@@ -7,7 +7,9 @@ Credit model (v4): /sports and /sports/{key}/events are free; /sports/{key}/odds
 len(markets) x len(regions) credits. We query regions=eu (includes Pinnacle and Betfair
 Exchange - the sharp references) and markets h2h,totals = 2 credits per competition.
 
-Budgeting: per-run budget = min(MAX_CREDITS_PER_RUN, remaining / runs left this month).
+Budgeting: daily allowance = (remaining - RESERVE) / days left this month. Since issue #53 there is
+one data run a day, so that run may spend the whole allowance (capped at MAX_CREDITS_PER_RUN); when the
+remaining credits are unknown it spends at most UNKNOWN_REMAINING_CAP.
 Competitions with a stored event starting LATER TODAY (America/New_York) are bought first, so the
 estimated parlays of the day get fresh prices (issue #51); then future days. Within each group,
 internationals, US and tennis come first (they have no other multi-bookmaker source), then club
@@ -42,8 +44,8 @@ BASE = "https://api.the-odds-api.com/v4"
 SOURCE = "the-odds-api.com"
 REGIONS = "eu"
 MARKETS = "h2h,totals"   # btts is not offered on the bulk /odds endpoint (HTTP 422), only per event
-MAX_CREDITS_PER_RUN = 12   # several competitions per run; the DAILY allowance is the real limit
-RUNS_PER_DAY = 2
+MAX_CREDITS_PER_RUN = 40   # one run a day (issue #53): the DAILY allowance below is the real limit
+UNKNOWN_REMAINING_CAP = 12  # remaining credits unknown: spend no more than the old per-run cap
 RESERVE = 20  # never spend the last credits of the month
 NY = ZoneInfo("America/New_York")   # the parlay day (issue #51): today's games are refreshed first
 
@@ -278,10 +280,10 @@ def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:
 
 def budget(remaining: int | None, now: datetime, spent_today: int = 0) -> int:
     """Daily allowance = (remaining - reserve) / days left in the month; a run may spend what is
-    left of today's allowance, capped per run. Several runs a day share the allowance, with the
-    soonest-starting events served first."""
+    left of today's allowance, capped per run. The once-a-day run normally spends the whole
+    allowance; any extra run that day (manual) gets only what is left."""
     if remaining is None:
-        return MAX_CREDITS_PER_RUN
+        return UNKNOWN_REMAINING_CAP
     days_left = calendar.monthrange(now.year, now.month)[1] - now.day + 1
     daily = (remaining + spent_today - RESERVE) / max(days_left, 1)
     return int(max(0, min(MAX_CREDITS_PER_RUN, daily - spent_today)))

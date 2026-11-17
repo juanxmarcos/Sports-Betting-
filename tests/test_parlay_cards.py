@@ -69,7 +69,7 @@ CASES = [
     ("six legs", lambda r: r.update(legs=[leg(f"x{i}") for i in range(6)]), None),
     ("one leg", lambda r: r.update(legs=r["legs"][:1]), "needs 2-6 legs"),
     ("seven legs", lambda r: r.update(legs=[leg(f"x{i}") for i in range(7)]), "needs 2-6 legs"),
-    ("stale quote", _set(["quote", "quoted_at"], _iso(NOW - timedelta(minutes=151))), "quote is stale"),
+    ("stale quote", _set(["quote", "quoted_at"], _iso(NOW - timedelta(hours=11))), "quote is stale"),  # yesterday in New York
     ("quote from the future", _set(["quote", "quoted_at"], _iso(NOW + timedelta(minutes=1))), "quote has no valid time"),
     ("quote without timezone", _set(["quote", "quoted_at"], "2026-11-13T14:55:00"), "quote has no valid time"),
     ("leg tomorrow", lambda r: r["legs"].__setitem__(1, leg("t", hours=20)), "leg is not on today's date"),
