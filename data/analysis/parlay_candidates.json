@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-17T22:51:30+00:00",
+ "generated": "2026-11-17T23:10:44+00:00",
  "date": "2026-11-17",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,7 +15,7 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 14,
+  "events_today": 12,
   "by_sport": {
    "nba": {
     "events": 5,
@@ -24,9 +24,9 @@
     "events_with_candidate_legs": 5
    },
    "soccer": {
-    "events": 9,
-    "fresh_prices": 7,
-    "stored_model": 9
+    "events": 7,
+    "fresh_prices": 5,
+    "stored_model": 7
    }
   },
   "candidate_legs": 8,
@@ -34,7 +34,7 @@
   "pool_legs": 0,
   "excluded": {
    "event: no fresh result-market prices": 2,
-   "event: too few independent bookmakers": 7,
+   "event: too few independent bookmakers": 5,
    "leg: no bookmaker at or above fair value": 5
   }
  },
@@ -67,7 +67,7 @@
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-17T22:51:55+00:00",
+  "at": "2026-11-17T23:11:09+00:00",
   "credits_spent_last_run": 0,
   "credits_remaining": "352"
  },

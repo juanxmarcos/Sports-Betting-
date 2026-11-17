@@ -1,17 +1,17 @@
 # Sports Betting Doyen — Daily Report, 2026-11-17
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 17 Nov 17:51 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Tue 17 Nov 18:10 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 115 |
-| Events with fresh odds | 27 |
+| Events discovered | 113 |
+| Events with fresh odds | 25 |
 | Events fully evaluated (3+ independent bookmakers, complete history) | 20 |
-| Markets evaluated | 289 |
+| Markets evaluated | 277 |
 | Events passing all rules | 0 |
 | Published today | **2** |
 | Highest estimated EV | +5.5% |
@@ -105,7 +105,7 @@ Sources: <https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds
 
 ## International fixtures — model monitoring (not recommendations)
 
-9 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
+7 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
 trained on 50106 internationals; 0 with multi-bookmaker odds).
 The model's gaps against bookmakers are **monitoring signals, not selections**: no free historical international
 odds exist to validate the model against the market, so it has weight 0. Real (paper) international selections
@@ -117,10 +117,8 @@ de-vigged consensus under the standard rules.
 | Tue 17 Nov 18:30 EST | International Friendly | Ecuador v Bolivia | 72/21/7 | 86/10/4 | 1X2 D @ 8.00: model EV +69.2% ⚠ bias |
 | Tue 17 Nov 21:30 EST | CONCACAF Nations League | Mexico v Jamaica | 74/18/7 | 88/8/4 | 1X2 D @ 8.50: model EV +56.0% ⚠ bias |
 | Tue 17 Nov 19:00 EST | CONCACAF Nations League | French Guiana v Saint Vincent and the Grenadines | 55/24/21 | 35/26/40 | 1X2 H @ 2.65: model EV +45.7% |
-| Tue 17 Nov 19:00 EST | CONCACAF Nations League | United States v Haiti | 82/12/7 | 93/5/2 | 1X2 A @ 20.00: model EV +35.0% ⚠ bias |
-| Tue 17 Nov 18:00 EST | International Friendly | Chile v Colombia | 21/27/52 | 23/29/48 | 1X2 A @ 2.00: model EV +3.8% |
+| Tue 17 Nov 19:00 EST | CONCACAF Nations League | United States v Haiti | 82/12/7 | 93/5/2 | 1X2 A @ 20.00: model EV +34.9% ⚠ bias |
 | Tue 17 Nov 18:30 EST | International Friendly | Uruguay v Dominican Republic | 95/4/1 | 92/5/3 | 1X2 H @ 1.07: model EV +2.2% |
-| Tue 17 Nov 18:00 EST | International Friendly | Argentina v Costa Rica | 94/5/1 | 94/4/2 | 1X2 H @ 1.05: model EV -1.7% |
 | Tue 17 Nov 20:00 EST | CONCACAF Nations League | El Salvador v Saint Martin | 64/23/14 | — |  |
 | Tue 17 Nov 22:00 EST | CONCACAF Nations League | Nicaragua v Montserrat | 67/21/12 | — |  |
 
