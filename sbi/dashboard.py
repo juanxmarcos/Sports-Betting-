@@ -39,6 +39,8 @@ def build(con) -> Path:
              AND p.run_id=(SELECT MAX(run_id) FROM predictions p2 WHERE p2.event_id=e.event_id)
         WHERE e.status='scheduled' AND e.kickoff_utc > datetime('now','-3 hours')
         GROUP BY e.event_id ORDER BY e.kickoff_utc LIMIT 300""", con)
+    from . import leagues
+    upcoming = upcoming[upcoming.league.map(leagues.status) != leagues.MONITORING].reset_index(drop=True)   # stored, never analysed
     upcoming["ko_local"] = upcoming.kickoff_utc.map(local)
     bt = con.execute("SELECT metrics_json, created_at FROM backtest_results WHERE label LIKE 'walkforward:%' ORDER BY id DESC LIMIT 1").fetchone()
     data = {

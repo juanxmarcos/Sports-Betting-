@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 
-from . import config, db
+from . import config, db, leagues
 from . import ev as evm
 from .backtest import load_league
 from .engine import books_from_rows, passes, price_event, select
@@ -30,18 +30,20 @@ def _now() -> datetime:
 def ingest(con, now: datetime | None = None) -> dict:
     now = now or _now()
     out = {}
+    # The public database holds the active leagues only. Monitoring leagues are fetched solely by the
+    # opt-in, local-only `python -m sbi monitor-leagues` (sbi/monitoring.py), never by this job.
     try:
-        out["fixtures"] = fd.ingest_fixtures(con, config.FOOTBALL_LEAGUES)
+        out["fixtures"] = fd.ingest_fixtures(con, leagues.active())
         db.provider_ok(con, "football-data:fixtures", out["fixtures"]["events"])
     except (SourceBlocked, RuntimeError) as e:
         db.provider_err(con, "football-data:fixtures", str(e))
         out["fixtures_error"] = str(e)
     season = fd.season_code(now.date())
-    for div in config.FOOTBALL_LEAGUES:
+    for div in leagues.active():
         try:
             out[div] = fd.ingest_results(con, div, season)
             db.provider_ok(con, f"football-data:{div}", out[div]["events"])
-        except (SourceBlocked, RuntimeError) as e:
+        except (SourceBlocked, RuntimeError) as e:      # one division failing never stops the others
             db.provider_err(con, f"football-data:{div}", str(e))
             out[f"{div}_error"] = str(e)
     con.commit()
@@ -136,6 +138,19 @@ def publish_pick(con, now, eid, c, ev, base_evidence: dict, books: dict, urls: l
         "all_prices": {bk: q for bk, q in books.get((c.market, c.line), {}).items()},
         "risks": risks, "blend_weight": c.blend_w,
     })
+    from .sources.books import citation_strength, normalize_book
+    if c.views:   # which independence rule decided this pick, and what the other rule saw (new picks only)
+        v1, v2 = c.views["legacy"], c.views["verified"]
+        evidence["independence"] = {
+            "policy": c.policy, "rule_version": config.INDEPENDENCE_RULE_VERSION[c.policy],
+            "bookmakers_v1": v1["n_books"], "verified_operators_v2": v2["n_books"],
+            "unverified_bookmakers": list(c.unverified_books),
+            "weakly_verified_bookmakers": sorted(
+                b for b in books.get((c.market, c.line), {})
+                if (citation_strength(normalize_book(b)) or "").startswith("weak")),
+            "reference_v1": v1["consensus_src"], "reference_v2": v2["consensus_src"],
+            "ev_v1": round(v1["ev"], 4), "ev_v2": None if v2["market_q"] is None else round(v2["ev"], 4),
+        }
     rec_id = hashlib.sha1(f"{eid}|{c.market}|{c.selection}|{c.line}".encode()).hexdigest()[:16]
     cur = con.execute("""INSERT OR IGNORE INTO recommendations(rec_id,event_id,published_at,sport,league,kickoff_utc,
             home,away,market,selection,line,bookmaker,odds,odds_retrieved_at,model_prob,market_prob,final_prob,
@@ -156,7 +171,12 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
         "SELECT * FROM events WHERE sport='football' AND league NOT LIKE 'INT:%' AND status='scheduled' "
         "AND kickoff_utc > ? AND kickoff_utc <= ?",
         con, params=(now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat()))
-    summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0}
+    # Only the active allowlist is ever priced. Monitoring leagues live in a separate local file; even if
+    # one reached this database by mistake it would get no prediction, no candidate and no pick.
+    ok = events["league"].isin(leagues.active())
+    watching, events = events[~ok], events[ok]
+    summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0,
+               "monitoring_only_events": {k: int(v) for k, v in sorted(watching["league"].value_counts().items())}}
     cands_by_event, hist_ok, meta = {}, {}, {}
     rng = np.random.default_rng(int(now.timestamp()) // 86400)
     for div, evs in events.groupby("league"):

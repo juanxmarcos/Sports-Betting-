@@ -189,10 +189,14 @@ def combo_value(legs: list[dict], bk: str) -> tuple[float, float, float]:
     return odds, joint, joint * odds - 1.0
 
 
-def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS) -> tuple[list[dict], dict]:
+def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS,
+           linked=None) -> tuple[list[dict], dict]:
     """Bounded beam search over single-bookmaker combinations of 2..6 legs.
     Only legs priced at or above leave-one-out fair value at that bookmaker are used, so every
-    leg adds value at that slip. Returns (candidates, stats)."""
+    leg adds value at that slip. Returns (candidates, stats).
+    `linked` defaults to the live link screen; the walk-forward report (issue #38) passes a
+    different one ONLY for a labelled counterfactual diagnostic, never for a live run."""
+    linked = linked or _linked
     stats = {"evaluated": 0, "by_size": {n: 0 for n in range(MIN_LEGS, MAX_LEGS + 1)},
              "passing_by_size": {n: 0 for n in range(MIN_LEGS, MAX_LEGS + 1)},
              "rejected_linked": 0, "truncated": False, "bookmakers": 0}
@@ -219,7 +223,7 @@ def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS)
                         break
                     stats["evaluated"] += 1
                     stats["by_size"][n] += 1
-                    if any(_linked(pool[j], pool[k]) for k in combo):
+                    if any(linked(pool[j], pool[k]) for k in combo):
                         stats["rejected_linked"] += 1
                         continue
                     new = combo + (j,)
@@ -274,13 +278,15 @@ def production_blockers(c: dict, calibration: dict | None, verified_quote_ids: s
 
 
 # ---------- orchestration ----------
-def run(con, now: datetime, calibration: dict | None = None) -> dict:
+def build_pool(con, now: datetime) -> dict:
+    """Today's events, screened candidate legs and the capped pool (one selection per event).
+    Shared by `run` and the walk-forward replay (issue #38) so both use identical screens."""
     from .pipeline import _latest_books
-    day = _day(now)
     events = todays_events(con, now)
     excluded = Counter()
     by_sport = defaultdict(lambda: Counter())
     pool_all = []
+    event_reason = {}
     for e in events:
         sp = e["site_sport"] or e["sport"]
         by_sport[sp]["events"] += 1
@@ -296,6 +302,7 @@ def run(con, now: datetime, calibration: dict | None = None) -> dict:
         legs, why = screen_event(e, books, model, risk_notes(con, e["event_id"]))
         if why:
             excluded["event: " + why] += 1
+            event_reason[e["event_id"]] = why
             continue
         by_sport[sp]["events_with_candidate_legs"] += 1
         for leg in legs:
@@ -309,6 +316,15 @@ def run(con, now: datetime, calibration: dict | None = None) -> dict:
     ranked = sorted(best.values(), key=lambda x: (-x["best_value"], x["event_id"]))
     pool = [x for x in ranked if x["best_value"] >= 0][:POOL_MAX]
     excluded["leg: no bookmaker at or above fair value"] += sum(1 for x in ranked if x["best_value"] < 0)
+    return {"events": events, "excluded": excluded, "by_sport": by_sport, "pool_all": pool_all,
+            "best": best, "pool": pool, "event_reason": event_reason}
+
+
+def run(con, now: datetime, calibration: dict | None = None) -> dict:
+    day = _day(now)
+    bp = build_pool(con, now)
+    events, excluded, by_sport, pool_all, best, pool = (bp[k] for k in ("events", "excluded", "by_sport",
+                                                                          "pool_all", "best", "pool"))
     cands, stats = search(pool)
     for c in cands:
         c["id"] = candidate_id(c, day)

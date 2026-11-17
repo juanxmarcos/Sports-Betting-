@@ -270,12 +270,64 @@ left. The binding constraints are therefore (a) the timing of the multi-bookmake
 to evening games, (b) the one-leg-per-competition screen on an NBA-heavy slate and (c) no bookmaker
 offering value on two unlinked legs at once. Thresholds were not relaxed to change this.
 
-**Still open (PR B and later):** walk-forward validation of multi-leg candidates (log loss, Brier,
+**Still open (PR B and later):** walk-forward validation of multi-leg candidates (now section 9; log loss, Brier,
 calibration, confidence intervals by sport, market, league and leg count) from permitted historical
 data. A source for real single-bookmaker combined quotes (see section 7 and `reports/parlay_research.md`).
 Aligning a free-quota The Odds API refresh with evening start times without exceeding the budget.
 
-## 9. Combined-quote source audit (issue #37, PR B of #27)
+## 9. Walk-forward validation of joint probabilities, shadow only (issue #38, PR B of #35)
+
+`sbi/parlay_walkforward.py` (`python -m sbi parlay-walkforward`; read-only on the database, no network,
+no API credit) writes `reports/parlay_walkforward.md` and `data/analysis/parlay_walkforward.json`.
+
+**Point-in-time replay.** For every recorded run of the daily job (`job_runs`, job `publish`) the database
+is rebuilt in memory as it was at that moment: only events later that New York day, only `pre` quotes
+retrieved by then, only predictions and research notes created by then, scores removed. The live engine
+(`parlay_engine.build_pool`, `search`, `shortlist`) runs on that snapshot unchanged. Legs are then settled
+from final scores; void and postponed legs are not scored.
+
+**Samples.** Each event's first sighting as a screened leg; disjoint 2–6-leg combinations of those legs per
+day that pass the live link screens; the engine's shortlisted candidates (first sighting, event-disjoint
+per day); and, separately, the straight-pick backtest selections (`data/backtest/bets_test.csv`, club soccer).
+
+**Scoring.** Log loss, Brier score (bootstrap 95% intervals), reliability by probability bucket with Wilson
+intervals, and observed versus expected joint wins (z) for each leg count. Predictors: the independence
+product of de-vigged market probabilities; the product of stored model probabilities where every leg has
+one; for shortlisted candidates, the product of the slip bookmaker's implied probabilities. Correlation
+risk: residual covariance of same-day leg pairs, split by same competition and different competition.
+
+**Pre-registered criteria** (`CRITERIA`, fixed before the first scoring run): per leg count at least 200
+disjoint settled combinations and |z| ≤ 1.96; at least 500 settled legs with |z| ≤ 1.96; at least 200
+different-competition pairs whose residual-covariance interval includes 0. A leg count counts as
+"calibrated" only if all of these hold. Changing them needs new out-of-sample evidence and owner review.
+
+**First reading (replay of 34 recorded runs, 2026-11-12 to 2026-11-17 04:32 UTC).** Verdict: **not fit to
+back a recommendation**. 71 settled legs (wins 45 against 42.1 expected, z +0.74); disjoint replay
+combinations: 30 two-leg, 11 three-leg, 3 four-leg, none with 5 or 6 legs. Nothing contradicts the
+independence product so far (2 legs: 14 joint wins against 10.6 expected, z +1.35), but every leg count is
+far below 200 combinations. At the observed rate that is roughly a month of data for 2 legs, about three
+months for 3 legs and close to a year for 4 legs. The backtest sample adds 66/23/5 club-soccer combinations
+and does not cover NBA, NFL, tennis or international soccer.
+
+**Correlation.** 201 same-competition and 406 different-competition same-day pairs show no detectable
+dependence, but they come from 5 days and share legs. That neither justifies nor refutes the
+same-competition exclusion, so it stays.
+
+**The 0-candidate day (2026-11-16).** At 09:51 UTC, 21 of 42 events failed the bookmaker screen and none of
+those 21 had 3 independent bookmakers at any age (coverage). The 3 pool legs were all NBA, so the
+same-competition screen left nothing. At 21:40 UTC all 13 events failed on prices; 9 of them had 3+
+bookmakers whose quotes were too old (timing). Labelled counterfactuals (never used live) give at most 1
+shortlisted candidate per run that day even with all quotes treated as fresh *and* the same-competition
+screen removed. Across the 5 replayed days the best single run gave 0–1 live candidates, and at most 2
+with both counterfactuals. **The 3–5 daily target is not attainable on current data without lowering
+thresholds**, and thresholds were not lowered.
+
+**Ledger.** `--record` appends replayed shortlist rows to `ledger/parlay_walkforward_shadow.csv`
+(append-only, `origin=walk_forward_replay`, historical decision time, `computed_product_not_a_quote`). It is
+kept separate from the live `ledger/parlay_candidates_shadow.csv` so replayed rows are never mistaken for
+live sightings. No homepage, pick, price or threshold changes.
+
+## 10. Combined-quote source audit (issue #37, PR B of #27)
 
 **Verdict: not feasible at zero cost today.** No legally usable, no-cost provider returns a
 bookmaker's own combined price for a multi-leg slip on Soccer, NFL, NBA or Tennis that Doyen may
