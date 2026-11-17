@@ -6,7 +6,7 @@
     get(k, d) { try { const v = localStorage.getItem("doyen." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem("doyen." + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
   };
-  const S = { data: null, sport: store.get("sport", "all"), range: "today", hrange: "all", hsport: "all",
+  const S = { data: null, lite: null, sport: store.get("sport", "all"), range: "today", hrange: "all", hsport: "all",
               tz: store.get("tz", null), watch: new Set(store.get("watch", [])) };
 
   const SPORTS = [["all", "All Sports"], ["soccer", "Soccer"], ["nfl", "NFL"], ["nba", "NBA"], ["tennis", "Tennis"]];
@@ -25,7 +25,8 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const pct = (x, d = 0) => (x == null || isNaN(x) ? "—" : (x * 100).toFixed(d) + "%");
   const dec = (x) => (x == null ? "—" : Number(x).toFixed(2));
-  const tz = () => S.tz || (S.data && S.data.default_timezone) || "America/New_York";
+  const D0 = () => S.data || S.lite;
+  const tz = () => S.tz || (D0() && D0().default_timezone) || "America/New_York";
   const dkey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: tz(), year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const addDays = (key, n) => { const [y, m, d] = key.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1, d + n)); return t.toISOString().slice(0, 10); };
   const when = (x) => fmtTime(x.start_utc);
@@ -176,7 +177,8 @@
     const state = (p) => (p.status || {}).state;
     return { qualifying: live.filter((p) => state(p) === "active"), changed: live.filter((p) => state(p) === "updated") };
   }
-  function home() {
+  // Single picks (secondary route since issue #27; the homepage shows parlays only).
+  function picksView() {
     const D = S.data;
     const P = period(S.range);
     const { qualifying, changed } = livePicks(D);
@@ -194,7 +196,6 @@
       : "Every priced market is checked against the sharp consensus; none clears the bar right now."}</p></div>`;
     h += `</section>`;
     if (changed.length) h += `<section class="section" id="changed"><div class="section-h"><h2>Changed since publication</h2><span class="count">${changed.length}</span></div><p class="muted small" style="margin:-6px 0 12px">Still open, but the price or information has moved. Check the latest status before relying on these.</p><div class="grid picks">${changed.map(pickCard).join("")}</div></section>`;
-    if (S.range === "today") h += parlaysSection();
     const closeAll = (D.close_to_value || []).map((id) => evById[id]).filter((r) => r && sportOk(r.sport, S.sport) && new Date(r.start_utc) > new Date());
     const closeIn = closeAll.filter((r) => inRange(r.start_utc, r.end_utc, S.range));
     const closeShown = (closeIn.length ? closeIn : closeAll).slice(0, 3);
@@ -207,20 +208,104 @@
       : `<div class="card empty-cc"><h3>Nothing on the radar</h3><p>No matches are close to qualifying. See <a href="#/upcoming">Upcoming</a> for everything Doyen tracks.</p></div>`;
     return h + `</section>`;
   }
-  // ---------- parlays (issue #7, stage 0) ----------
-  // Doyen publishes no parlays yet: it has no bookmaker-quoted parlay price and no validated joint
-  // probability (docs/PARLAYS.md). There is deliberately NO parlay card renderer here, so nothing
-  // in the data file can make a recommendation appear until that work is done and reviewed.
+  // ---------- daily parlay homepage (issue #27) ----------
+  // The homepage shows ONLY today's recommended parlay cards. A card is rendered only for a
+  // recommendation that passes every check in parlayProblem() (mirrors sbi/parlays.py card_problem):
+  // a published block with no open blockers, dated today in New York, 2-6 active legs on distinct
+  // events that all start later today, and ONE bookmaker's own combined quote with a source and a
+  // fresh timestamp. Anything missing or unknown is rejected. Stage 0 publishes none, so production
+  // shows the one-line empty state. Mock fixtures render only when a test sets __DOYEN_ALLOW_MOCK.
   const PARLAY_URL = "https://github.com/juanxmarcos/Sports-Betting-/blob/main/docs/PARLAYS.md";
   const PARLAY_BLOCKERS = [
     { text: "No bookmaker-quoted parlay price. Doyen's odds feeds return single-market prices only, so it cannot verify that any bookmaker offers a given combination, or at what price." },
     { text: "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs are independent and each leg is well calibrated; Doyen has no settled multi-leg record to support that." },
   ];
-  function parlaysSection() {
-    return `<section class="section" id="parlays"><div class="section-h"><h2>Recommended Parlays of the Day</h2><a class="link" href="#/parlays">Details →</a></div>
-      <div class="card empty-cc parlay-empty" data-go="#/parlays" role="link" tabindex="0"><h3>No verified parlays today</h3>
-      <p>Doyen can't yet confirm a bookmaker's combined price or a reliable joint probability, so it recommends none rather than guess.</p></div></section>`;
+  const PDAY_TZ = "America/New_York";             // the site's authoritative publishing day
+  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, maxQuoteMin: 30, kind: "bookmaker_combined",
+               sports: ["soccer", "nfl", "nba", "tennis"] };
+  const nyKey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: PDAY_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+  const isoT = (x) => { if (typeof x !== "string" || !/(Z|[+-]\d\d:?\d\d)$/.test(x)) return null; const t = new Date(x).getTime(); return isNaN(t) ? null : t; };
+  const str = (x) => typeof x === "string" && x.trim() !== "";
+  const allowMock = () => typeof window !== "undefined" && window.__DOYEN_ALLOW_MOCK === true;
+  function parlayProblem(rec, now, day) {
+    if (!rec || typeof rec !== "object") return "not an object";
+    if ((rec.mock || rec.test) && !allowMock()) return "mock or test data";
+    if (!str(rec.parlay_id)) return "missing parlay_id";
+    if (rec.date !== day) return "not today's parlay";
+    if (rec.status !== "active") return "parlay is not active";
+    if (!str(rec.bookmaker)) return "missing bookmaker";
+    const legs = rec.legs;
+    if (!Array.isArray(legs) || legs.length < PC.minLegs || legs.length > PC.maxLegs) return "needs 2-6 legs";
+    const seen = new Set();
+    for (const l of legs) {
+      if (!l || typeof l !== "object") return "leg is not an object";
+      if (!str(l.event_id) || !str(l.title) || !str(l.selection)) return "leg missing identity";
+      if (seen.has(l.event_id)) return "two legs on the same event";
+      seen.add(l.event_id);
+      if (!PC.sports.includes(l.sport)) return "unsupported sport";
+      if (l.status !== "active") return "leg is not active";
+      const t = isoT(l.start_utc);
+      if (t == null) return "leg has no valid start time";
+      if (nyKey(new Date(t)) !== day) return "leg is not on today's date";
+      if (t <= now) return "leg has started";
+    }
+    const q = rec.quote;
+    if (!q || q.kind !== PC.kind) return "no single-bookmaker combined quote";
+    if (q.bookmaker !== rec.bookmaker) return "quote is from a different bookmaker";
+    if (!str(q.source)) return "quote has no provenance";
+    if (typeof q.decimal_odds !== "number" || !isFinite(q.decimal_odds) || q.decimal_odds <= 1) return "invalid combined odds";
+    const at = isoT(q.quoted_at);
+    if (at == null || at > now) return "quote has no valid time";
+    if (now - at > PC.maxQuoteMin * 60000) return "quote is stale";
+    return null;
   }
+  function shownParlays(P) {
+    if (!P || P.status !== "published" || !Array.isArray(P.blockers) || P.blockers.length) return [];
+    const now = Date.now(), day = nyKey(new Date(now));
+    if (P.date !== day) return [];
+    const first = (r) => Math.min(...r.legs.map((l) => isoT(l.start_utc)));
+    return (Array.isArray(P.recommendations) ? P.recommendations : []).filter((r) => parlayProblem(r, now, day) === null)
+      .sort((a, b) => first(a) - first(b) || String(a.parlay_id).localeCompare(String(b.parlay_id))).slice(0, PC.maxCards);
+  }
+  // Gross potential payout INCLUDING the stake = stake x quoted combined decimal odds, to the cent.
+  // Not expected value and not a probability. Null when the stake is not a usable amount.
+  function grossPayout(stake, odds) {
+    const s = Number(stake);
+    if (stake === "" || stake == null || !isFinite(s) || s < 0 || !(odds > 1)) return null;
+    return Math.round(s * odds * 100 + 1e-7) / 100;
+  }
+  const usd = (x) => (x == null ? "—" : "$" + x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  function parlayCard(r, i) {
+    const odds = r.quote.decimal_odds;
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${l.market ? `<span class="lg-m">${esc(l.market)}</span> ` : ""}${esc(l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
+    return `<article class="card parlay" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}">
+      <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
+      <ol class="legs">${legs}</ol>
+      <div class="pc-foot">
+        <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
+        <div><div class="k">Combined odds</div><div class="v">${dec(odds)}</div></div>
+        <label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0" step="1" value="${PC.stake}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>
+        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${usd(grossPayout(PC.stake, odds))}</div></div>
+      </div>
+      <div class="pc-note">${esc(r.bookmaker)} combined price, quoted ${esc(fmtClock(r.quote.quoted_at))}. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
+    </article>`;
+  }
+  function home() {
+    const P = (D0() || {}).parlays;
+    const cards = shownParlays(P);
+    let h = `<div class="eyebrow">${esc(fmtDay(nyKey(new Date())))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>`;
+    h += `<section class="section first" id="parlays">`;
+    h += cards.length ? `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`
+      : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
+    return h + `</section>`;
+  }
+  $app.addEventListener("input", (e) => {
+    const inp = e.target && e.target.closest ? e.target.closest("[data-stake]") : null;
+    if (!inp) return;
+    const card = inp.closest("[data-parlay]");
+    const out = card && card.querySelector("[data-payout]");
+    if (out) out.textContent = usd(grossPayout(inp.value, Number(card.dataset.odds)));
+  });
   function parlaysDetail() {
     const P = S.data.parlays || {};
     const a = P.audit;
@@ -240,9 +325,9 @@
     const why = `<ul class="small">${(P.blockers && P.blockers.length ? P.blockers : PARLAY_BLOCKERS).map((b) => `<li>${esc(b.text)}</li>`).join("")}</ul>
       <p class="small muted">Until both exist, any parlay card would show a price nobody quoted and a probability nobody tested.</p>`;
     const needs = `<ul class="small">
-        <li>Two or three legs, each already a published, active straight pick starting today. No extra or weaker legs are added to build one.</li>
+        <li>Two to six legs, all on games starting later today (New York date). No extra or weaker legs are added to build one, or to raise the payout.</li>
         <li>Different games, no shared team or player, and different competitions. Same-game parlays are out.</li>
-        <li>One bookmaker pricing every leg with fresh quotes, and that bookmaker's own price for the combination.</li>
+        <li>One bookmaker's own quoted price for the whole combination, with the time it was quoted. Best prices from different bookmakers are never multiplied together and shown as one quote.</li>
         <li>A joint probability with evidence behind it, not just leg probabilities multiplied on trust.</li>
         <li>A permanent snapshot at publication: legs, bookmaker, each quote, the parlay quote, times and method. Later changes are added to the record, never written over it.</li></ul>`;
     const math = `<ul class="small">
@@ -466,14 +551,18 @@
   }
 
   // ---------- router ----------
-  const TITLES = { close: "Close to Value", upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching", parlays: "Parlays" };
+  const TITLES = { picks: "Single Picks", close: "Close to Value", upcoming: "Upcoming", history: "Pick History", watchlist: "Watchlist", ask: "Ask Doyen", pick: "Pick analysis", event: "Match", watching: "Watching", parlays: "Parlays" };
   function render() {
-    if (!S.data) return;
     const parts = (location.hash.replace(/^#\/?/, "") || "").split("/");
     const r = parts[0] || "home";
-    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "watching" || r === "close" || r === "parlays" ? "home" : (r === "pick" || r === "event" ? "" : r))));
+    document.querySelectorAll("[data-r]").forEach((a) => a.classList.toggle("on", a.dataset.r === (r === "parlays" ? "home" : (r === "watching" || r === "close" ? "picks" : (r === "pick" || r === "event" ? "" : r)))));
     let html;
-    if (r === "upcoming") html = upcoming();
+    if (r === "home") {
+      if (!D0()) return;
+      html = home();
+    } else if (!S.data) { loadFull(); return; }
+    else if (r === "picks") html = picksView();
+    else if (r === "upcoming") html = upcoming();
     else if (r === "history") html = history();
     else if (r === "watchlist") html = watchlist();
     else if (r === "ask") html = ask(parts[1], parts[2]);
@@ -482,7 +571,7 @@
     else if (r === "parlays") html = parlaysDetail();
     else if (r === "pick") html = pickDetail(parts[1]);
     else if (r === "event") html = eventDetail(parts[1]);
-    else html = home();
+    else html = picksView();
     $app.innerHTML = html;
     document.title = (TITLES[r] ? TITLES[r] + " · " : "") + "Sports Betting Doyen";
   }
@@ -498,14 +587,30 @@
     sel.addEventListener("change", () => { S.tz = sel.value; store.set("tz", sel.value); render(); });
   }
 
-  fetch("data/doyen.json", { cache: "no-store" })
-    .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-    .then((d) => {
-      S.data = d;
-      d.history.forEach((p) => { p._sel = null; });
-      tzSelect();
-      document.getElementById("updated").textContent = "· Updated " + ago(d.generated);
-      render();
-    })
-    .catch((e) => { $app.innerHTML = `<div class="card empty" style="margin-top:24px"><h3>Doyen couldn't load today's research</h3><p>${esc(e.message)}. Please try again in a minute.</p></div>`; });
+  // The homepage needs only the small parlay file; every other route loads the full research file.
+  const getJSON = (u) => fetch(u, { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  let tzReady = false;
+  function ready(d) {
+    if (!tzReady) { tzReady = true; tzSelect(); }
+    document.getElementById("updated").textContent = "· Updated " + ago(d.generated);
+  }
+  const fail = (e) => { $app.innerHTML = `<div class="card empty" style="margin-top:24px"><h3>Doyen couldn't load today's research</h3><p>${esc(e.message)}. Please try again in a minute.</p></div>`; };
+  let fullP = null;
+  function loadFull() {
+    if (!fullP) {
+      $app.innerHTML = '<div class="skeleton" style="margin-top:24px"></div>';
+      fullP = getJSON("data/doyen.json").then((d) => {
+        S.data = d;
+        d.history.forEach((p) => { p._sel = null; });
+        ready(d);
+        render();
+      }).catch((e) => { fullP = null; fail(e); });
+    }
+    return fullP;
+  }
+  const r0 = (location.hash.replace(/^#\/?/, "") || "").split("/")[0];
+  if (!r0 || r0 === "home") {
+    getJSON("data/parlays.json").then((d) => { if (!d || typeof d !== "object" || !("parlays" in d)) throw new Error("bad parlay file"); S.lite = d; ready(d); render(); })
+      .catch(() => loadFull());
+  } else loadFull();
 })();

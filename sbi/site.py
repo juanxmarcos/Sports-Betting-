@@ -192,7 +192,18 @@ def _sel_text(row: dict, c: dict) -> str:
     return str(s)
 
 
-def build(con, now: datetime | None = None):
+def parlay_legs(con, now: datetime) -> list[dict]:
+    """Current published straight picks as parlay legs (the same set `build` screens)."""
+    rows = [dict(r) for r in con.execute("SELECT * FROM recommendations ORDER BY published_at DESC, rank")]
+    out = []
+    for r in rows:
+        p = _pick(con, r, now)
+        if p["status"]["state"] in ("active", "updated") and datetime.fromisoformat(p["start_utc"]) > now:
+            out.append(parlays.leg_from_pick(p, r))
+    return out
+
+
+def build(con, now: datetime | None = None, write_shadow: bool = False):
     now = now or datetime.now(timezone.utc)
     config.load_tuned()
     rec_rows = [dict(r) for r in con.execute("SELECT * FROM recommendations ORDER BY published_at DESC, rank")]
@@ -292,9 +303,15 @@ def build(con, now: datetime | None = None):
     providers = {r["provider"]: r["last_success"] for r in con.execute("SELECT provider,last_success FROM provider_status")}
     from . import diagnostics
     diag = diagnostics.build(con, now)
+    from . import parlay_calibration, parlay_quotes
+    shadow: list = []
+    parlay_block = parlays.build([parlays.leg_from_pick(p, rec_by_id[p["id"]]) for p in current], now,
+                                 quotes=parlay_quotes.load(), calibration=parlay_calibration.evaluate(), shadow=shadow)
+    if write_shadow:                          # scheduled run only: unpublished, append-only research ledger
+        parlays.record_shadow(shadow, now)
     data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
-            "parlays": parlays.build([parlays.leg_from_pick(p, rec_by_id[p["id"]]) for p in current], now),
+            "parlays": parlay_block,
             "events": events, "watching": watching, "close_to_value": close_ids, "sports": sports,
             "funnel_7d": {k: v["funnel"] for k, v in diag["funnel_7d"].items()},
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,
@@ -303,4 +320,9 @@ def build(con, now: datetime | None = None):
     out = config.ROOT / "docs" / "data"
     out.mkdir(parents=True, exist_ok=True)
     (out / "doyen.json").write_text(json.dumps(data, default=str))
+    # Small file for the daily homepage (issue #27), so a phone loads a few KB instead of the full
+    # research file. Same parlay block, nothing added.
+    (out / "parlays.json").write_text(json.dumps(
+        {"generated": data["generated"], "default_timezone": data["default_timezone"], "parlays": data["parlays"]},
+        default=str))
     return out / "doyen.json"

@@ -8,10 +8,10 @@ The owner no longer needs to paste prompts between tools or send ZIP snapshots.
 
 | Who | Does |
 |---|---|
-| **Owner** | Sets priorities. Approves consequential product, deployment or spending decisions. Merges PRs. |
+| **Owner** | Sets priorities. Has sole approval of anything that costs money. Merges PRs the auto-merge gate routes to them. |
 | **ChatGPT** | Reviews the repository, writes actionable issues, inspects PRs (diffs, tests, screenshots) and leaves review comments. |
 | **Claude Code** | Reads issues, implements changes on a task branch, runs tests, opens a PR and responds to review feedback. |
-| **GitHub** | Source of truth for requirements, discussion, code, status and results. |
+| **GitHub** | Source of truth for requirements, discussion, code, status and results. Its auto-merge gate (GitHub Actions) merges eligible zero-cost PRs once all checks pass. |
 
 ## The loop
 
@@ -20,7 +20,8 @@ Issue (Goal / Scope / Acceptance criteria / Constraints)
   → Claude Code: branch from latest main  →  implement  →  test
   → Pull request to main ("Closes #N" or "Part of #N")
   → ChatGPT / owner review comments  →  Claude Code addresses them on the same branch
-  → Owner approves and merges
+  → Zero-cost and all checks green: GitHub's auto-merge gate merges it
+  → Possible cost, CI or policy change: the owner decides and merges
 ```
 
 ### Writing an issue
@@ -50,7 +51,15 @@ The template in `.github/pull_request_template.md` pre-fills these sections.
 ### Reviews
 - Feedback goes in PR review threads or PR comments.
 - Claude Code pushes fixes to the same branch and replies to each thread with what changed.
-- **No auto-merge.** Consequential changes are merged only with the owner's approval.
+- **Owner rule (2026-11-16): zero-cost changes merge automatically; spending never does.**
+  All changes that require no new payment may be merged automatically once every check
+  passes. Anything that would or might require the owner to pay (paid API, subscription,
+  metered usage, billed upgrade, any spend) is never approved, enabled or merged
+  automatically; the owner alone approves spending.
+- The merge is done by GitHub Actions (`.github/workflows/auto-merge.yml`), not by Claude.
+  It is off until the owner sets `AUTOMERGE_ENABLED=true`. Rules, limits and setup:
+  **[AUTO_MERGE.md](AUTO_MERGE.md)**. Until it is enabled and verified on a real PR, the owner
+  still merges every PR by hand.
 
 ## Checks to run before opening a PR
 
@@ -105,11 +114,13 @@ The owner, or ChatGPT on the owner's behalf, creates an issue and marks it for C
 The scheduled **Doyen GitHub agent** (a Claude Code scheduled task on the owner's Claude Max subscription) runs every 2 hours. Each run:
 1. **Review feedback first.** For every open PR on a `claude/issue-*` branch, it reads review comments newer than Claude's last reply, makes the requested changes on the same branch, pushes, and replies to each point.
 2. **One new issue.** It picks the oldest marked issue that hasn't been claimed yet. It claims it with a comment ("Claude Code is working on this"), implements on `claude/issue-<n>-<desc>`, runs the tests, opens a PR linked to the issue, and comments on the issue with the PR link.
-3. **Never merges, never spends.** It stops and asks in an issue comment when a decision is consequential or unclear.
+3. **Never merges, never spends.** It stops and asks in an issue comment when a decision is consequential or unclear. (Eligible PRs are merged by the GitHub Actions gate described in [AUTO_MERGE.md](AUTO_MERGE.md), not by the agent.)
 
-The agent never merges and never enables paid services. The owner approves every merge.
+The agent never merges and never enables paid services. Zero-cost PRs are merged by the GitHub Actions gate once all checks pass; the owner decides every PR the gate flags.
 
 Unmarked issues (like owner notes or discussion issues) are ignored. An issue can be withdrawn by removing the label or the `[Claude]` prefix before it is claimed.
+
+**Event-driven pickup (issue #8, active since 2026-11-13):** a GitHub-triggered Claude Code task can start work within moments of the **`ready-for-claude`** label being applied, instead of waiting up to 2 hours. It runs on the Claude subscription inside Claude Code itself, with no API key and no GitHub secret. For that path only the label authorizes work, because only repository collaborators can apply labels, while anyone can type a `[Claude]` title. Feasibility, terms, setup, security and how to pause it are in **[AUTOMATION.md](AUTOMATION.md)**.
 
 ## Automatic issue pickup: options assessed
 
@@ -119,6 +130,7 @@ This document sets up a **GitHub-based handoff**, not real-time AI-to-AI chat. C
 |---|---|---|---|---|
 | **Manual (current)** | Owner asks Claude Code to "work on issue #N" | Existing Claude Code session | Counts toward Claude Max usage limits; no extra cost | Simplest, owner stays in control |
 | **Claude Code GitHub Action** (`anthropics/claude-code-action`) | A workflow runs Claude Code when an issue or comment mentions `@claude` | `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` (subscription), or an API key (**metered: not allowed** under the zero-cost rule) | GitHub Actions minutes are free for public repos; subscription usage counts toward Max limits. Anthropic's terms describe OAuth use as intended for ordinary individual use, so heavy unattended automation should use an API key, which costs money | Needs a workflow file and a secret. Runs unattended, so scope permissions tightly |
-| **Claude Code scheduled task** (claude.ai) | A recurring session checks for issues labelled e.g. `ready-for-claude` and opens PRs | Owner's Claude account | Counts toward Max usage limits; hourly at most | Same mechanism as the existing daily research task |
+| **Claude Code scheduled task** (claude.ai) | A recurring session checks for issues labelled e.g. `ready-for-claude` and opens PRs | Owner's Claude account | Counts toward Max usage limits; hourly at most | **Active:** the 2-hour Doyen GitHub agent |
+| **GitHub-triggered Claude Code task** (claude.ai) | An `issues.labeled` event starts a fresh session for that issue | Owner's Claude account via the Claude GitHub App; no secret in GitHub | Counts toward Max usage limits; per-task and per-account hourly caps | **Active** (verified by dry run #11 → PR #12). See [AUTOMATION.md](AUTOMATION.md) |
 
 Nothing above is enabled by this document. Enabling any unattended option needs its own issue and the owner's explicit approval after reviewing authentication, usage limits and cost.

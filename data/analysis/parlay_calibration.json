@@ -1,0 +1,32 @@
+{
+ "method": "parlay-joint-calibration-v1",
+ "source": "data/backtest/bets_test.csv (walk-forward test seasons)",
+ "selections_settled": 250,
+ "combinations": 66,
+ "legs_per_combination": 2,
+ "joint_wins_observed": 6,
+ "joint_wins_expected": 6.52,
+ "joint_z": -0.22,
+ "leg_wins_observed": 43,
+ "leg_wins_expected": 41.03,
+ "leg_z": 0.38,
+ "outcome_correlation_phi": -0.039,
+ "leagues": [
+  "D1",
+  "E0",
+  "E1",
+  "F1",
+  "I1",
+  "SP1"
+ ],
+ "criteria": {
+  "min_combinations": 200,
+  "max_abs_z": 1.96,
+  "max_leg_abs_z": 1.96,
+  "supported_legs": 2
+ },
+ "passed": false,
+ "reasons": [
+  "only 66 disjoint settled combinations; at least 200 are required"
+ ]
+}
