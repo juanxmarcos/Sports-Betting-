@@ -45,7 +45,7 @@ PREREQUISITES = ("combined_quote", "joint_calibration")
 BLOCKERS = {
     "combined_quote": "No bookmaker-quoted parlay price. No free data source returns a bookmaker's own price "
                       "for a combination, so a parlay needs a quote recorded from that bookmaker's bet slip in the "
-                      "last 30 minutes. A product of leg prices is never shown as a quote.",
+                      "last 150 minutes. A product of leg prices is never shown as a quote.",
     "joint_calibration": "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs "
                          "are independent and each leg is well calibrated; the settled evidence does not yet meet "
                          "the pre-registered criteria.",
@@ -298,7 +298,15 @@ CARD_SPORTS = ("soccer", "nfl", "nba", "tennis")
 CARD_TIMEZONE = "America/New_York"      # the site's authoritative publishing day
 CARD_MAX_CARDS = 5                      # a cap, not a target: 0 is a normal result
 DEFAULT_STAKE = 10                      # illustrative display amount, in dollars; never a request to bet
-MAX_QUOTE_AGE_MINUTES = 30              # a combined quote older than this is not shown as current
+# Quote freshness is tied to the static-site refresh cadence (issue #37). The scheduled job
+# (.github/workflows/daily.yml, cron "15 */2 * * *") rebuilds docs/data every 120 minutes, so a
+# limit shorter than that hid a verified quote for most of every cycle. The limit is one refresh
+# interval plus a 30-minute allowance for the job's own runtime and the Pages deploy, so a quote
+# recorded right after a build is still re-verified by the next scheduled build before it expires.
+# The browser applies the same value (PC.maxQuoteMin in docs/assets/doyen.js); tests keep them equal.
+SITE_REFRESH_MINUTES = 120              # must match the cron interval in daily.yml (tested)
+QUOTE_BUILD_ALLOWANCE_MINUTES = 30      # job runtime + Pages deploy
+MAX_QUOTE_AGE_MINUTES = SITE_REFRESH_MINUTES + QUOTE_BUILD_ALLOWANCE_MINUTES   # 150: older is never shown as current
 QUOTE_KIND = "bookmaker_combined"       # one bookmaker's own price for the whole combination
 
 

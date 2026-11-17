@@ -224,9 +224,10 @@ def main(argv=None) -> int:
         if why or args.dry_run:
             return 0 if args.dry_run and why is None else 1
         print("recorded" if parlay_quotes.append(rec) else "duplicate: already recorded")
-        print(site.build(con, now))       # refresh docs/data now: the quote only counts for 30 minutes
+        print(site.build(con, now))       # refresh docs/data now: the quote only counts for MAX_QUOTE_AGE_MINUTES
         print("Commit and push data/parlay_quotes.json and docs/data/ to update the site. The quote stops "
-              "counting 30 minutes after --quoted-at, and the page hides it then; it is never relabelled fresh.")
+              f"counting {parlays.MAX_QUOTE_AGE_MINUTES} minutes after --quoted-at, and the page hides it then; "
+              "it is never relabelled fresh.")
     elif args.cmd == "parlay-candidates":
         from . import parlay_engine
         at = datetime.fromisoformat(args.as_of) if args.as_of else now

@@ -127,7 +127,8 @@ rendered only when **all** of the following hold. The rules live in `sbi/parlays
   `status: "active"`, a timezone-aware `start_utc` on today's date that has not started yet.
 - `quote`: `kind: "bookmaker_combined"` (one bookmaker's own price for the whole combination, never a
   product of best prices from different books), the same `bookmaker`, a non-empty `source`,
-  `decimal_odds > 1` and a timezone-aware `quoted_at` no more than 30 minutes old.
+  `decimal_odds > 1` and a timezone-aware `quoted_at` no more than 150 minutes old (one site refresh plus
+  build time; section 7.4, changed from 30 minutes in issue #37).
 - Anything missing, unknown, or flagged `mock`/`test` is rejected. Mock fixtures render only in tests
   that set `window.__DOYEN_ALLOW_MOCK`, and each such card is labelled "Mock data · testing only".
 
@@ -170,7 +171,7 @@ information; enabling one needs the owner's separate approval and is not done he
    It is accepted only if every leg is a current usable pick, the bookmaker quotes every leg in
    Doyen's stored prices, the combined odds are within 0.85–1.02 × the product of that bookmaker's
    leg prices (outside that band: wrong legs, a boost or correlation pricing, so it is rejected for
-   review), and `quoted_at` is timezone-aware and at most 30 minutes old. Records in
+   review), and `quoted_at` is timezone-aware and at most 150 minutes old (section 7.4). Records in
    `data/parlay_quotes.json` are append-only.
 3. **Joint calibration** (`sbi/parlay_calibration.py`, criteria fixed in code before any result):
    at least 200 disjoint settled two-leg combinations, observed joint wins within the 95% band of the
@@ -197,11 +198,21 @@ and leg counts being published. Changing a criterion needs new out-of-sample evi
 
 ### 7.4 Freshness
 
-- The scheduled job runs every 2 hours; a combined quote counts for 30 minutes. These are
-  consistent only because the job does not invent combined quotes: an owner-recorded quote is used
-  if a site build happens within 30 minutes of `quoted_at`. `parlay-quote` rebuilds `docs/data`
-  immediately so the owner can commit it; the browser hides the card once the quote is 30 minutes
-  old. A quote is never re-stamped or relabelled as fresh.
+- **Rule (issue #37):** a combined quote counts for `MAX_QUOTE_AGE_MINUTES = 150` minutes after
+  `quoted_at`: one site refresh (`SITE_REFRESH_MINUTES = 120`, the `15 */2 * * *` cron in `daily.yml`)
+  plus a 30-minute allowance for the job's runtime and the Pages deploy. The browser uses the same value
+  (`PC.maxQuoteMin` in `docs/assets/doyen.js`). `tests/test_parlay_freshness.py` fails if the cron, the
+  Python constant and the browser constant drift apart.
+- **Why it changed.** With 30 minutes the site, which only changes when a build is committed, hid a
+  verified quote for about 90 of every 120 minutes (noted on #27). With 150 minutes, a quote recorded
+  just after a build is still inside the limit when the next scheduled build re-verifies it.
+- **What did not change.** Every build re-runs `quote_problem`: the legs must still be current published
+  picks that have not started, and the combined odds must still sit inside 0.85–1.02 × that bookmaker's
+  stored leg prices. The card shows the time the slip was read ("quoted 14:05"), so a 2-hour-old price is
+  never presented as live. A quote is never re-stamped or relabelled as fresh; after 150 minutes it stops
+  counting and the browser hides the card.
+- **Trade-off.** Bet-slip prices can move within 150 minutes. Shortening the limit again would need a more
+  frequent zero-cost refresh, which the current schedule and Odds API budget do not allow.
 - Leg prices keep their source-specific limits in `sbi/odds_policy.py` (up to 6 hours near the start
   for The Odds API). They are used only to check the quote's consistency, never displayed as the
   combined price.
@@ -315,3 +326,79 @@ thresholds**, and thresholds were not lowered.
 (append-only, `origin=walk_forward_replay`, historical decision time, `computed_product_not_a_quote`). It is
 kept separate from the live `ledger/parlay_candidates_shadow.csv` so replayed rows are never mistaken for
 live sightings. No homepage, pick, price or threshold changes.
+
+## 10. Combined-quote source audit (issue #37, PR B of #27)
+
+**Verdict: not feasible at zero cost today.** No legally usable, no-cost provider returns a
+bookmaker's own combined price for a multi-leg slip on Soccer, NFL, NBA or Tennis that Doyen may
+show on a public site. No adapter was built, because building one would mean inventing quotes or
+relabelling products of leg prices. The owner bet-slip path (section 7.2) remains the only
+compliant source of a real combined quote.
+
+Pages were read on 2026-11-17 with an automated fetch tool, one request per page. Nothing behind
+a login, paywall, 401/403/429 or anti-bot check was attempted. Quoted terms are short fragments,
+not a legal review.
+
+### 9.1 Candidates
+
+| Source (official page) | Own combined price for 2–6 legs? | Free? | Same book / freshness / coverage | Terms for public display | Verdict |
+|---|---|---|---|---|---|
+| The Odds API, in use ([v4 guide](https://the-odds-api.com/liveapi/guides/v4/), [terms](https://the-odds-api.com/terms-and-conditions.html)) | **No.** The 11 documented endpoints are single-market odds, events, scores, markets and participants. The guide never mentions parlays, accumulators or bet builders. `includeLinks` returns "bookmaker links to events, markets, and betslips if available": a deep link, not a combined price | $0 Starter, 500 credits/month; key needed (already configured) | Per-book single-market prices; refreshed every 2 h within budget; all four sports | Store and display allowed; no standalone redistribution | **Not a source.** `includeLinks` could make owner entry faster (follow-up, not built) |
+| ESPN scoreboard (in use) | No. Single-market DraftKings lines per game | Free, keyless | One book | Unofficial endpoint; no licence | Not a source |
+| football-data.co.uk (in use) | No. Per-match 1X2/OU/AH snapshots | Free | Files, not live | Research use; no republication licence (#18, #22) | Not a source |
+| Sources assessed in #15, #16, #24, #25 (Betting Data API, Polymarket, Kalshi, Betfair Exchange, Pinnacle, Smarkets, football-data.org, BALLDONTLIE, SportsDataIO, API-Football and others; see `docs/DATA_SOURCES.md`) | No. None documents a multi-leg price. Exchanges and prediction markets do not offer parlays as one priced contract | Mixed; the free ones are single-market | n/a | Several restrict automated collection (Polymarket §4.2) | Not a source |
+| TheRundown ([pricing](https://therundown.io/pricing)) | Not on the pricing page for any plan, including Free | Free: BetMGM, DraftKings, FanDuel; 5-minute delay; pre-match full-game markets; 200,000 data points/month | 3 US books, US sports focus | Free is "for internal or personal use"; commercial display starts at Pro; stored data must be deleted on cancel | **Blocked:** no documented combined price, and the free tier forbids public display |
+| ParlayAPI ([parlay-api.com](https://parlay-api.com/), via [sportsapis.dev review](https://sportsapis.dev/apis/parlayapi)) | **No:** "No SGP pricing or correlation data" | $0, 1,000 credits/month | Single-leg markets | Not checked (no combined price) | Not a source |
+| OddsPapi ([blog post](https://oddspapi.io/blog/?p=3131)) | **No:** the client multiplies leg odds ("Combining a parlay is just multiplying the decimal odds") | Free key, limits not stated | Single-leg | Not checked | Not a source (a product of legs is not a quote) |
+| SportsGameOdds ([parlay builder page](https://sportsgameodds.com/use-cases/parlay-builder-api)) | No: client-side product of leg odds (also in section 7.1) | n/a | n/a | n/a | Not a source |
+| OddsBlaze BlazeBuilder ([docs](https://oddsblaze-docs.pages.dev/endpoints/same_game_parlay)) | Yes, per sportsbook, but **same-game parlays only** (Doyen excludes same-game combinations) | No free tier found; API key "Get access at oddsblaze.com"; from $299/month per a third-party review (section 7.1) | US books | Not checked | **Paid; owner approval needed; wrong product (same-game)** |
+| OpticOdds Parlay API ([`POST /parlay/odds`](https://developer.opticodds.com/reference/post_parlay-odds)) | Yes, keyed by sportsbook; can also return a price "computed by applying OpticOdds correlation strengths", which would not be the book's own quote | No free tier found; licence via account manager | Many books | Licence terms not public | **Paid; owner approval needed** |
+| A bookmaker's own bet slip, read by the owner | Yes | Free | Exactly one book, real time | Owner's own observation | **Only compliant zero-cost path** (section 7.2) |
+
+### 9.2 Shortest compliant path
+
+1. **Now, zero cost:** the owner reads a slip and runs `python -m sbi parlay-quote ...` (section 7.2).
+   With the 150-minute rule a recorded quote survives until the next scheduled build.
+2. **Optional follow-up, zero cost:** request `includeLinks=true` on the existing Odds API call so
+   the research report can list a deep link to each leg's market. The guide says links are returned
+   "if available", and their availability and credit cost on the free plan were not measured. This
+   saves the owner time; it is still not a combined quote.
+3. **Owner decision, not activated:** a paid combined-price licence (OpticOdds, or OddsBlaze for
+   same-game only). Either would need its terms checked for public display and Doyen's
+   no-same-game rule reconsidered or kept. Nothing was signed up for, trialled or enabled.
+
+### 9.3 How many combinations a day could yield (point-in-time replay)
+
+The shadow engine (section 8) was replayed every 2 hours from 2026-11-12 10:30 to 2026-11-17 04:30
+UTC (58 snapshots) on a scratch copy of `data/sbi.sqlite`. At each time, quotes, predictions and
+research notes stored later were removed and finished events were treated as scheduled, so nothing
+later leaked in. No thresholds were changed and no network request was made.
+
+| New York day | Events today (max) | Events with a candidate leg (max) | Legs at or above fair value (max) | Combinations kept (max) |
+|---|---|---|---|---|
+| 2026-11-12 | 40 | 4 | 2 | 1 (2 legs) |
+| 2026-11-13 | 54 | 15 | 4 | 0 |
+| 2026-11-14 | 25 | 9 | 2 | 0 |
+| 2026-11-15 | 37 | 27 | 4 | 0 |
+| 2026-11-16 | 42 | 15 | 3 | 1 (2 legs) |
+
+- 3 of 58 snapshots had any combination; never more than 1 per day, never more than 2 legs.
+  **Against the 3–5 daily target the result is 0–1, even before the combined-quote gate.**
+- Event exclusions summed over all snapshots: no fresh result-market price 671, too few
+  independent bookmakers 263, probability outside the research band 61, model–market disagreement
+  7, open injury/lineup note 12. Legs with no bookmaker at or above fair value: 218.
+- **The scarcity is structural.** The free Odds API budget refreshes multi-book prices about once
+  every few hours, so most evening games have no fresh multi-book price. The one-leg-per-competition
+  screen is binding on slates dominated by one league. Few bookmakers offer value on two unrelated
+  legs at the same time.
+- Limits of the replay: the odds table keeps the first time each distinct price was seen, as the live
+  run does. Five days in the international break are not a typical season. The replay counts shadow
+  candidates only and says nothing about whether any would have won.
+
+### 9.4 Options that need owner approval (none activated)
+
+- A paid combined-price licence (9.2 step 3).
+- A paid Odds API plan for more frequent refreshes (from $30/month, `docs/DATA_SOURCES.md`). This
+  would ease the freshness exclusions but still give no combined quote.
+- Relaxing the one-leg-per-competition screen. This is a research-screen change that needs its own
+  evidence, and it is not a betting threshold.

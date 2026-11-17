@@ -221,7 +221,7 @@
     { text: "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs are independent and each leg is well calibrated; Doyen has no settled multi-leg record to support that." },
   ];
   const PDAY_TZ = "America/New_York";             // the site's authoritative publishing day
-  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, maxQuoteMin: 30, kind: "bookmaker_combined",
+  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, maxQuoteMin: 150, kind: "bookmaker_combined",
                sports: ["soccer", "nfl", "nba", "tennis"] };
   const nyKey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: PDAY_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const isoT = (x) => { if (typeof x !== "string" || !/(Z|[+-]\d\d:?\d\d)$/.test(x)) return null; const t = new Date(x).getTime(); return isNaN(t) ? null : t; };
