@@ -310,11 +310,10 @@ def render(o: dict) -> str:
           f"stop threshold {CRITERIA['max_disagreement_rate']:.0%}). Listed below. Which source is right was not checked, and neither was corrected."]
     T = c["espn_tour_labels"]
     if T["completed_matches_labelled_atp_between_two_wta_players"]:
-        s += ["", f"**Found in Doyen's own data (not changed here):** {T['completed_matches_labelled_atp_between_two_wta_players']:,} "
-              "completed ESPN matches labelled `atp` are between two WTA players (women's draws at combined events such as the "
-              f"Slams, Indian Wells, Miami and Madrid). {T['of_which_grand_slam_treated_as_best_of_five']:,} of them are Grand Slam "
-              "matches, which the live model converts to best of five sets although women play best of three. "
-              "This affects the live model, so it needs its own issue."]
+        s += ["", f"**Tour labels:** {T['completed_matches_labelled_atp_between_two_wta_players']:,} "
+              "completed ESPN matches are still labelled `atp` although both players are WTA players "
+              f"({T['of_which_grand_slam_treated_as_best_of_five']:,} of them at Grand Slams). Since #49 the tour comes "
+              "from the ESPN draw, so these are matches where ESPN gave no draw signal; see `reports/tennis_tour_labels.md`."]
     if L["disagreement_examples"]:
         s += ["", "| Date | Tour | Mirror tournament | Mirror winner | ESPN winner | Retired |", "|---|---|---|---|---|---|"]
         s += [f"| {d['date']} | {d['tour'].upper()} | {d['sackmann_tournament']} | {d['winner_sackmann']} | {d['winner_espn']} | "

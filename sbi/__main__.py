@@ -87,6 +87,8 @@ def main(argv=None) -> int:
     th.add_argument("--download", action="store_true",
                     help="download the pinned mirror files into data/local/tennis_sackmann/ (checksums must match "
                          "data/tennis_sackmann/manifest.json)")
+    sub.add_parser("tennis-tour-audit", help="tennis ATP/WTA label audit (#49): changed labels, stored rows, walk-forward "
+                                             "before/after (read-only); writes reports/tennis_tour_labels.md")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -164,6 +166,17 @@ def main(argv=None) -> int:
                           "decision": out.get("decision"), "stopped": out.get("stopped")}, indent=1))
         print(tennis_history.REPORT)
         return 1 if "stopped" in out else 0
+    if args.cmd == "tennis-tour-audit":   # read-only: database opened read-only
+        import sqlite3
+        from datetime import date
+
+        from . import tennis, tennis_tour_audit
+        ro = sqlite3.connect(f"file:{config.DB_PATH}?mode=ro", uri=True)
+        out = tennis_tour_audit.run(ro, tennis.matches(date(2024, 1, 1), now.date(), now))
+        print(json.dumps({"labels": out["labels"], "stored_mislabelled": out["stored"]["mislabelled"],
+                          "main": out["walk_forward_live"]["main"]}, indent=1))
+        print(tennis_tour_audit.REPORT)
+        return 0
     con = db.connect()
 
     if args.cmd == "init":

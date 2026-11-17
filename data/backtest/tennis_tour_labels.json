@@ -1,0 +1,243 @@
+{
+  "generated_at": "2026-11-17T16:51:07+00:00",
+  "rule": "the grouping slug mens-singles/womens-singles, else the competition type slug, else the grouping or competition name (Men's/Women's), else the scoreboard endpoint (feed_fallback)",
+  "labels": {
+    "completed_matches": 29090,
+    "completed_label_changed": 6730,
+    "completed_label_changed_by_direction": {
+      "atp->wta": 6730
+    },
+    "completed_label_changed_grand_slam": 2864,
+    "grand_slam_matches_no_longer_best_of_five": 2864,
+    "tour_rule_used": {
+      "grouping_slug": 29090
+    },
+    "not_completed_matches_in_window": 79,
+    "not_completed_label_changed": 0
+  },
+  "stored": {
+    "stored_events": 140,
+    "not_in_espn_window": 16,
+    "mislabelled": 0,
+    "mislabelled_with_published_pick": [],
+    "rows": []
+  },
+  "walk_forward_live": {
+    "test_from": "2025-07-01",
+    "min_history": 10,
+    "main": {
+      "n": 11639,
+      "logloss": {
+        "before": 0.6346,
+        "after": 0.63507,
+        "after_minus_before": 0.00047,
+        "ci95": [
+          4e-05,
+          0.00088
+        ]
+      },
+      "brier": {
+        "before": 0.22276,
+        "after": 0.22288,
+        "after_minus_before": 0.00012,
+        "ci95": [
+          -3e-05,
+          0.00027
+        ]
+      }
+    },
+    "main_wta": {
+      "n": 7112,
+      "logloss": {
+        "before": 0.63368,
+        "after": 0.63444,
+        "after_minus_before": 0.00077,
+        "ci95": [
+          6e-05,
+          0.00148
+        ]
+      },
+      "brier": {
+        "before": 0.22224,
+        "after": 0.22243,
+        "after_minus_before": 0.0002,
+        "ci95": [
+          -6e-05,
+          0.00044
+        ]
+      }
+    },
+    "main_label_changed": {
+      "n": 2791,
+      "logloss": {
+        "before": 0.61152,
+        "after": 0.61347,
+        "after_minus_before": 0.00196,
+        "ci95": [
+          0.0001,
+          0.00369
+        ]
+      },
+      "brier": {
+        "before": 0.21274,
+        "after": 0.21324,
+        "after_minus_before": 0.00051,
+        "ci95": [
+          -0.00017,
+          0.00117
+        ]
+      }
+    },
+    "main_label_changed_grand_slam": {
+      "n": 1189,
+      "logloss": {
+        "before": 0.59304,
+        "after": 0.59764,
+        "after_minus_before": 0.00459,
+        "ci95": [
+          0.0003,
+          0.00859
+        ]
+      },
+      "brier": {
+        "before": 0.20525,
+        "after": 0.20644,
+        "after_minus_before": 0.00119,
+        "ci95": [
+          -0.00038,
+          0.00271
+        ]
+      }
+    },
+    "all_test_matches": {
+      "n": 14533,
+      "logloss": {
+        "before": 0.6377,
+        "after": 0.63818,
+        "after_minus_before": 0.00049,
+        "ci95": [
+          0.00012,
+          0.00084
+        ]
+      },
+      "brier": {
+        "before": 0.22413,
+        "after": 0.22426,
+        "after_minus_before": 0.00013,
+        "ci95": [
+          1e-05,
+          0.00025
+        ]
+      }
+    }
+  },
+  "walk_forward_mirror_warm_start": {
+    "test_from": "2025-07-01",
+    "min_history": 10,
+    "main": {
+      "n": 11975,
+      "logloss": {
+        "before": 0.63239,
+        "after": 0.63283,
+        "after_minus_before": 0.00043,
+        "ci95": [
+          -5e-05,
+          0.00088
+        ]
+      },
+      "brier": {
+        "before": 0.22156,
+        "after": 0.22168,
+        "after_minus_before": 0.00012,
+        "ci95": [
+          -3e-05,
+          0.00028
+        ]
+      }
+    },
+    "main_wta": {
+      "n": 7338,
+      "logloss": {
+        "before": 0.62962,
+        "after": 0.63033,
+        "after_minus_before": 0.00071,
+        "ci95": [
+          -3e-05,
+          0.00142
+        ]
+      },
+      "brier": {
+        "before": 0.22027,
+        "after": 0.22048,
+        "after_minus_before": 0.0002,
+        "ci95": [
+          -6e-05,
+          0.00045
+        ]
+      }
+    },
+    "main_label_changed": {
+      "n": 2842,
+      "logloss": {
+        "before": 0.60751,
+        "after": 0.60933,
+        "after_minus_before": 0.00183,
+        "ci95": [
+          -0.0001,
+          0.00365
+        ]
+      },
+      "brier": {
+        "before": 0.21084,
+        "after": 0.21136,
+        "after_minus_before": 0.00052,
+        "ci95": [
+          -0.00014,
+          0.00121
+        ]
+      }
+    },
+    "main_label_changed_grand_slam": {
+      "n": 1210,
+      "logloss": {
+        "before": 0.58457,
+        "after": 0.58887,
+        "after_minus_before": 0.00429,
+        "ci95": [
+          -0.0004,
+          0.00864
+        ]
+      },
+      "brier": {
+        "before": 0.20117,
+        "after": 0.20239,
+        "after_minus_before": 0.00122,
+        "ci95": [
+          -0.00026,
+          0.00281
+        ]
+      }
+    },
+    "all_test_matches": {
+      "n": 14533,
+      "logloss": {
+        "before": 0.63287,
+        "after": 0.63328,
+        "after_minus_before": 0.00041,
+        "ci95": [
+          2e-05,
+          0.00078
+        ]
+      },
+      "brier": {
+        "before": 0.22176,
+        "after": 0.22188,
+        "after_minus_before": 0.00012,
+        "ci95": [
+          -2e-05,
+          0.00025
+        ]
+      }
+    }
+  }
+}

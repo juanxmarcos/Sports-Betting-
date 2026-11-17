@@ -1,0 +1,154 @@
+{
+ "events": [
+  {
+   "id": "413-2025",
+   "date": "2025-04-21T04:00Z",
+   "name": "Mutua Madrid Open",
+   "major": false,
+   "groupings": [
+    {
+     "grouping": {
+      "id": "2",
+      "slug": "womens-singles",
+      "displayName": "Women's Singles"
+     },
+     "competitions": [
+      {
+       "id": "155760",
+       "date": "2025-04-22T09:10Z",
+       "status": {
+        "type": {
+         "name": "STATUS_FINAL",
+         "completed": true,
+         "description": "Final",
+         "detail": "Final"
+        }
+       },
+       "type": {
+        "id": "2",
+        "text": "Women's Singles",
+        "slug": "womens-singles"
+       },
+       "round": {
+        "id": "1",
+        "displayName": "Round 1"
+       },
+       "format": {
+        "regulation": {
+         "periods": 5
+        }
+       },
+       "competitors": [
+        {
+         "type": "athlete",
+         "winner": true,
+         "athlete": {
+          "displayName": "Alexandra Eala"
+         },
+         "linescores": [
+          {
+           "value": 6.0,
+           "winner": true
+          },
+          {
+           "value": 6.0,
+           "winner": true
+          }
+         ]
+        },
+        {
+         "type": "athlete",
+         "winner": false,
+         "athlete": {
+          "displayName": "Viktoriya Tomova"
+         },
+         "linescores": [
+          {
+           "value": 3.0,
+           "winner": false
+          },
+          {
+           "value": 2.0,
+           "winner": false
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "grouping": {
+      "id": "1",
+      "slug": "mens-singles",
+      "displayName": "Men's Singles"
+     },
+     "competitions": [
+      {
+       "id": "155495",
+       "date": "2025-04-23T09:10Z",
+       "status": {
+        "type": {
+         "name": "STATUS_FINAL",
+         "completed": true,
+         "description": "Final",
+         "detail": "Final"
+        }
+       },
+       "type": {
+        "id": "1",
+        "text": "Men's Singles",
+        "slug": "mens-singles"
+       },
+       "round": {
+        "id": "1",
+        "displayName": "Round 1"
+       },
+       "format": {
+        "regulation": {
+         "periods": 5
+        }
+       },
+       "competitors": [
+        {
+         "type": "athlete",
+         "winner": true,
+         "athlete": {
+          "displayName": "Mariano Navone"
+         },
+         "linescores": [
+          {
+           "value": 6.0,
+           "winner": true
+          },
+          {
+           "value": 6.0,
+           "winner": true
+          }
+         ]
+        },
+        {
+         "type": "athlete",
+         "winner": false,
+         "athlete": {
+          "displayName": "Giovanni Mpetshi Perricard"
+         },
+         "linescores": [
+          {
+           "value": 4.0,
+           "winner": false
+          },
+          {
+           "value": 4.0,
+           "winner": false
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

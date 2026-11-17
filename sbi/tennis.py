@@ -5,6 +5,11 @@ match and set score). History is backfilled weekly and cached.
 Model: overall Elo + surface Elo (hard/clay/grass), averaged, with a dynamic K factor
 (FiveThirtyEight-style). Best-of-five Grand Slam men's matches are converted from the
 best-of-three probability via the implied per-set win probability.
+Tour label (issue #49): ESPN's ``atp`` and ``wta`` scoreboards both return combined events
+(the Slams, Indian Wells, Miami, Madrid...) with every draw, so the endpoint does not say who
+is playing. Each match takes its tour from the draw it sits in (``tour_of``): the grouping slug
+``mens-singles`` / ``womens-singles``, else the competition type slug, else the grouping name.
+The endpoint is only a fallback when ESPN gives none of these (``tour_source`` says which).
 Markets: match winner only. Set handicaps and total games are excluded because they
 are not modelled reliably here.
 Odds: The Odds API tennis tournament keys when active (multi-book); otherwise
@@ -33,6 +38,38 @@ GRASS = re.compile(r"wimbledon|queen|hsbc championships|halle|terra wortmann|her
 SLAM = re.compile(r"australian open|roland|french open|wimbledon|us open", re.I)
 
 
+_TOUR_BY_SLUG = {"mens-singles": "atp", "womens-singles": "wta"}
+
+
+def _tour_from_text(t: str) -> str | None:
+    t = (t or "").lower().replace("\u2019", "'")
+    if t.startswith(("women", "ladies", "girls")):
+        return "wta"
+    if t.startswith(("men", "gentlemen", "boys")):
+        return "atp"
+    return None
+
+
+def tour_of(grouping: dict, comp: dict, feed_tour: str) -> tuple[str, str]:
+    """(tour, source) for one singles match. Explicit ESPN draw fields first; the scoreboard endpoint last."""
+    g = grouping or {}
+    if g.get("slug") in _TOUR_BY_SLUG:
+        return _TOUR_BY_SLUG[g["slug"]], "grouping_slug"
+    ct = comp.get("type") or {}
+    if ct.get("slug") in _TOUR_BY_SLUG:
+        return _TOUR_BY_SLUG[ct["slug"]], "competition_type_slug"
+    for src, txt in (("grouping_name", g.get("displayName")), ("competition_type_name", ct.get("text"))):
+        t = _tour_from_text(txt)
+        if t:
+            return t, src
+    return feed_tour, "feed_fallback"
+
+
+def best_of_five(m: dict) -> bool:
+    """Only men's Grand Slam singles are best of five sets."""
+    return bool(m["slam"]) and m["tour"] == "atp"
+
+
 def surface(name: str, d: date) -> str:
     if GRASS.search(name) or ("stuttgart" in name.lower() and d.month == 6):
         return "grass"
@@ -53,7 +90,8 @@ def _parse(j: dict, tour: str) -> list[dict]:
     for e in j.get("events", []):
         tname = e.get("name", "")
         for g in e.get("groupings", []):
-            gname = (g.get("grouping") or {}).get("displayName", "")
+            grp = g.get("grouping") or {}
+            gname = grp.get("displayName", "")
             if "Singles" not in gname:
                 continue
             for c in g.get("competitions", []):
@@ -64,7 +102,8 @@ def _parse(j: dict, tour: str) -> list[dict]:
                 a, b = comp
                 d = datetime.fromisoformat((c.get("date") or e["date"]).replace("Z", "+00:00"))
                 rnd = (c.get("round") or {}).get("displayName", "")
-                rec = {"id": c["id"], "tour": tour, "tournament": tname, "event_id_espn": e["id"], "date": d,
+                mtour, tsrc = tour_of(grp, c, tour)
+                rec = {"id": c["id"], "tour": mtour, "feed_tour": tour, "tour_source": tsrc, "tournament": tname, "event_id_espn": e["id"], "date": d,
                        "round": rnd, "p1": a["athlete"]["displayName"], "p2": b["athlete"]["displayName"],
                        "completed": bool(st.get("completed")), "state": st.get("name"),
                        "winner": None, "slam": bool(SLAM.search(tname)), "major": bool(e.get("major")),
@@ -150,7 +189,7 @@ def bo5(p3: float) -> float:
 
 def match_prob(elo: Elo, m: dict) -> float:
     p = elo.prob(m["p1"], m["p2"], m["surface"])
-    return bo5(p) if (m["slam"] and m["tour"] == "atp") else p
+    return bo5(p) if best_of_five(m) else p
 
 
 def run_elo(hist: list[dict]) -> Elo:
@@ -195,6 +234,25 @@ def _eid(m):
     return f"tennis:{m['tour'].upper()}:{m['date'].strftime('%Y%m%d')}:{m['id']}"
 
 
+def _resolve_eid(con, m) -> str:
+    """Event ID for a match, keeping a row already stored under the old (feed-endpoint) tour label.
+
+    Before #49 a women's match at a combined event could be stored as ``tennis:ATP:...``. Such a row keeps
+    its ID (its odds and any pick reference it), and its league is corrected to the match's real tour unless
+    a published pick references it, in which case the stored row is left exactly as it was.
+    """
+    eid = _eid(m)
+    feed = m.get("feed_tour") or m["tour"]
+    if feed == m["tour"]:
+        return eid
+    legacy = _eid({**m, "tour": feed})
+    if con.execute("SELECT 1 FROM events WHERE event_id=?", (legacy,)).fetchone() is None:
+        return eid
+    if con.execute("SELECT 1 FROM recommendations WHERE event_id=?", (legacy,)).fetchone() is None:
+        con.execute("UPDATE events SET league=? WHERE event_id=?", (f"TENNIS:{m['tour'].upper()}", legacy))
+    return legacy
+
+
 def register(con, now: datetime, allm: list[dict] | None = None) -> dict:
     """Store upcoming matches (so odds can be matched) and recent results (so picks settle)."""
     allm = allm if allm is not None else matches(now.date() - timedelta(days=3), (now + timedelta(days=7)).date(), now)
@@ -203,7 +261,7 @@ def register(con, now: datetime, allm: list[dict] | None = None) -> dict:
     for m in allm:
         if m["date"] < now - timedelta(days=3) or m["date"] > now + timedelta(days=7):
             continue
-        eid, league = _eid(m), f"TENNIS:{m['tour'].upper()}"
+        eid, league = _resolve_eid(con, m), f"TENNIS:{m['tour'].upper()}"
         url = f"https://www.espn.com/tennis/scoreboard/tournament/_/eventId/{m['event_id_espn']}"
         done = m["completed"] and m["winner"] and not m.get("walkover")
         hs, as_ = (m["sets"] if done else (None, None))
@@ -241,7 +299,7 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float | None 
     rows, cands_by_event, hist_ok, meta, dinfo = [], {}, {}, {}, {}
     register(con, now, allm)
     for m in upcoming:
-        eid, league = _eid(m), f"TENNIS:{m['tour'].upper()}"
+        eid, league = _resolve_eid(con, m), f"TENNIS:{m['tour'].upper()}"
         url = f"https://www.espn.com/tennis/scoreboard/tournament/_/eventId/{m['event_id_espn']}"
         comp = f"{m['tour'].upper()} · {m['tournament']}" + (f" · {m['round']}" if m["round"] else "")
         p1 = match_prob(elo, m)
@@ -254,7 +312,7 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float | None 
         r1 = (1 - elo.w) * elo.r.get(m["p1"], 1500) + elo.w * elo.rs.get((m["p1"], m["surface"]), 1500)
         r2 = (1 - elo.w) * elo.r.get(m["p2"], 1500) + elo.w * elo.rs.get((m["p2"], m["surface"]), 1500)
         ctx = (f"Surface-adjusted Elo ({m['surface']}): {m['p1']} {r1:.0f} vs {m['p2']} {r2:.0f}; "
-               f"{n1} and {n2} matches in Doyen's history" + ("; best of five sets." if m["slam"] and m["tour"] == "atp" else "."))
+               f"{n1} and {n2} matches in Doyen's history" + ("; best of five sets." if best_of_five(m) else "."))
         if min(n1, n2) < 15:
             ctx += " Thin history for at least one player, so the rating is uncertain."
         mlc = {c.selection: c.market_q for c in cands if c.market_q is not None}
