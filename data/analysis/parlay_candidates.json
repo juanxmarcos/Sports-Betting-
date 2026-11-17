@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-17T17:19:54+00:00",
+ "generated": "2026-11-17T18:10:26+00:00",
  "date": "2026-11-17",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,7 +15,7 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 37,
+  "events_today": 36,
   "by_sport": {
    "nba": {
     "events": 5,
@@ -30,33 +30,33 @@
     "events_with_candidate_legs": 6
    },
    "tennis": {
-    "events": 5,
+    "events": 4,
     "fresh_prices": 1,
     "events_with_candidate_legs": 1
    }
   },
-  "candidate_legs": 15,
+  "candidate_legs": 16,
   "events_with_candidate_legs": 11,
-  "pool_legs": 2,
+  "pool_legs": 4,
   "excluded": {
    "event: model and market disagree strongly": 1,
-   "event: no fresh result-market prices": 12,
+   "event: no fresh result-market prices": 11,
    "event: open injury/lineup research note": 2,
    "event: too few independent bookmakers": 11,
-   "leg: no bookmaker at or above fair value": 9
+   "leg: no bookmaker at or above fair value": 7
   }
  },
  "search": {
-  "evaluated": 0,
+  "evaluated": 3,
   "by_size": {
-   "2": 0,
+   "2": 3,
    "3": 0,
    "4": 0,
    "5": 0,
    "6": 0
   },
   "passing_by_size": {
-   "2": 0,
+   "2": 3,
    "3": 0,
    "4": 0,
    "5": 0,
@@ -64,10 +64,93 @@
   },
   "rejected_linked": 0,
   "truncated": false,
-  "bookmakers": 0
+  "bookmakers": 3
  },
- "candidates_found": 0,
- "shortlist": [],
+ "candidates_found": 3,
+ "shortlist": [
+  {
+   "id": "pc-455a29868f18",
+   "bookmaker": "1xBet",
+   "n_legs": 2,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 2.2176,
+   "joint_prob_independent": 0.467233,
+   "computed_ev": 0.036135,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "tennis:ATP:20261117:187503",
+     "sport": "tennis",
+     "league": "TENNIS:ATP",
+     "title": "Ben Shelton v Alexander Zverev",
+     "market": "ML",
+     "selection": "away",
+     "start_utc": "2026-11-17T19:30:00+00:00",
+     "price": 1.54,
+     "fair_prob_ex_book": 0.665716,
+     "model_prob": null,
+     "odds_updated": "2026-11-17T18:10:56+00:00"
+    },
+    {
+     "event_id": "football:INT:uefa.nations:20261117:401861189",
+     "sport": "soccer",
+     "league": "INT:uefa.nations",
+     "title": "Wales v Portugal",
+     "market": "1X2",
+     "selection": "A",
+     "start_utc": "2026-11-17T19:45:00+00:00",
+     "price": 1.44,
+     "fair_prob_ex_book": 0.701849,
+     "model_prob": 0.629668,
+     "odds_updated": "2026-11-17T18:10:55+00:00"
+    }
+   ]
+  },
+  {
+   "id": "pc-197c3e01cc6a",
+   "bookmaker": "Unibet",
+   "n_legs": 2,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 4.7306,
+   "joint_prob_independent": 0.214333,
+   "computed_ev": 0.013924,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "football:INT:uefa.nations:20261117:401861190",
+     "sport": "soccer",
+     "league": "INT:uefa.nations",
+     "title": "Ukraine v Georgia",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-17T19:45:00+00:00",
+     "price": 2.17,
+     "fair_prob_ex_book": 0.466321,
+     "model_prob": 0.42654,
+     "odds_updated": "2026-11-17T18:10:55+00:00"
+    },
+    {
+     "event_id": "nba:NBA:20261118:401910003",
+     "sport": "nba",
+     "league": "NBA",
+     "title": "Minnesota Timberwolves v Portland Trail Blazers",
+     "market": "ML",
+     "selection": "away",
+     "start_utc": "2026-11-18T01:00:00+00:00",
+     "price": 2.18,
+     "fair_prob_ex_book": 0.459626,
+     "model_prob": 0.395626,
+     "odds_updated": "2026-11-17T18:10:55+00:00"
+    }
+   ]
+  }
+ ],
  "baseline_straight_picks": {
   "straight_picks_seen": 0,
   "usable_legs_today": 0,
@@ -75,22 +158,28 @@
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-17T17:20:50+00:00",
-  "credits_spent_last_run": 0,
-  "credits_remaining": "358"
+  "at": "2026-11-17T18:10:55+00:00",
+  "credits_spent_last_run": 3,
+  "credits_remaining": "355"
  },
- "ledger_rows_added": 0,
+ "ledger_rows_added": 2,
  "shadow_settlement": {
-  "rows": 0,
+  "rows": 2,
   "won": 0,
   "lost": 0,
   "void": 0,
-  "open": 0,
+  "open": 2,
   "expected_wins_settled": 0.0,
-  "by_legs": {}
+  "by_legs": {
+   "2": {
+    "won": 0,
+    "lost": 0,
+    "void": 0,
+    "open": 2
+   }
+  }
  },
  "why_not_3_to_5": [
-  "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]
