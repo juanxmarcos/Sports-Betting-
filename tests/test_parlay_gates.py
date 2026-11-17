@@ -158,7 +158,7 @@ def test_calibration_without_a_quote_is_not_published_and_no_product_becomes_a_q
 
 
 def test_stale_quote_is_never_used():
-    b = parlays.build(TWO, NOW, TZ, quotes=[_quote(age_min=45)], calibration=PASSING)
+    b = parlays.build(TWO, NOW, TZ, quotes=[_quote(age_min=parlays.MAX_QUOTE_AGE_MINUTES + 15)], calibration=PASSING)
     assert b["recommendations"] == [] and b["audit"]["verified_quotes"] == 0
 
 
@@ -241,5 +241,5 @@ def test_front_end_renders_a_gated_backend_card_and_hides_it_once_the_quote_expi
     html = render(NOW)
     assert "Home 1 vs. Away 1" in html and "BookA" in html and "48.00" in html and "4.80" in html
     assert "Mock data" not in html
-    later = render(NOW + timedelta(minutes=40))                                # quote now older than 30 minutes
+    later = render(NOW + timedelta(minutes=parlays.MAX_QUOTE_AGE_MINUTES + 10))  # quote now older than the limit
     assert "Home 1 vs. Away 1" not in later and "No verified parlays today" in later

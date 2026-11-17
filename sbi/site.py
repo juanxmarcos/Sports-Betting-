@@ -157,6 +157,8 @@ def _watch_short(row: dict) -> str:
         return f"Waiting for better odds ({q:.2f}+)." if q else "Waiting for a better price."
     if reason == "too few bookmakers":
         return "Waiting for more bookmakers to price it."
+    if reason == "too few verified independent bookmakers":
+        return "Waiting for more verified bookmakers to price it."
     if reason == "odds outside range":
         return "Value only at long odds, outside Doyen's range."
     if reason == "no market consensus":
@@ -256,7 +258,7 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
                  and not any("known model bias" in n.lower() for n in r.get("notes", []))]
 
     # CLOSE TO VALUE: a real, fresh price within 4 points of the EV threshold, blocked by a fixable rule.
-    fixable = ("EV below threshold", "too few bookmakers", "no market consensus", "extreme disagreement (review)",
+    fixable = ("EV below threshold", "too few bookmakers", "too few verified independent bookmakers", "no market consensus", "extreme disagreement (review)",
                "model uncertainty too high", "pessimistic EV not positive")
     close = [r for r in upcoming7 if not r["has_pick"] and r.get("closest") and fresh(r)
              and r["closest"].get("reason") in fixable and (r["closest"].get("ev") or -1) >= min_ev - 0.04]
@@ -307,9 +309,10 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
                                  quotes=parlay_quotes.load(), calibration=parlay_calibration.evaluate(), shadow=shadow)
     if write_shadow:                          # scheduled run only: unpublished, append-only research ledger
         parlays.record_shadow(shadow, now)
+    estimated = estimated_block(con, now, parlay_block, record=write_shadow)
     data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
-            "parlays": parlay_block,
+            "parlays": parlay_block, "estimated_parlays": estimated,
             "events": events, "watching": watching, "close_to_value": close_ids, "sports": sports,
             "funnel_7d": {k: v["funnel"] for k, v in diag["funnel_7d"].items()},
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,
@@ -321,6 +324,24 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
     # Small file for the daily homepage (issue #27), so a phone loads a few KB instead of the full
     # research file. Same parlay block, nothing added.
     (out / "parlays.json").write_text(json.dumps(
-        {"generated": data["generated"], "default_timezone": data["default_timezone"], "parlays": data["parlays"]},
+        {"generated": data["generated"], "default_timezone": data["default_timezone"], "parlays": data["parlays"],
+         "estimated_parlays": data["estimated_parlays"]},
         default=str))
     return out / "doyen.json"
+
+
+def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False) -> dict:
+    """Estimated parlays of the day (issue #47), built after the strict block so a verified
+    bookmaker quote always wins. On the scheduled run every shown estimate is appended to the
+    estimated-parlay ledger before the read-only settlement summary is computed."""
+    from . import parlay_estimated as pe
+    try:
+        block = pe.build(con, now, parlays.shown_cards(parlay_block, now))
+    except Exception as e:                    # never take the site down; show the truthful empty state
+        block = {"status": "unavailable", "kind": pe.ESTIMATE_KIND, "date": None, "recommendations": [],
+                 "empty_text": pe.EMPTY_TEXT, "error": type(e).__name__}
+    if record and block.get("status") == "estimated":
+        block["ledger_rows_added"] = pe.record(block, now)
+    block["record"] = pe.settle(con)
+    block["record_line"] = pe.record_line(block["record"])
+    return block

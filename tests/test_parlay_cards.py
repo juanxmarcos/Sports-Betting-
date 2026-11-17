@@ -69,7 +69,7 @@ CASES = [
     ("six legs", lambda r: r.update(legs=[leg(f"x{i}") for i in range(6)]), None),
     ("one leg", lambda r: r.update(legs=r["legs"][:1]), "needs 2-6 legs"),
     ("seven legs", lambda r: r.update(legs=[leg(f"x{i}") for i in range(7)]), "needs 2-6 legs"),
-    ("stale quote", _set(["quote", "quoted_at"], _iso(NOW - timedelta(minutes=31))), "quote is stale"),
+    ("stale quote", _set(["quote", "quoted_at"], _iso(NOW - timedelta(minutes=151))), "quote is stale"),
     ("quote from the future", _set(["quote", "quoted_at"], _iso(NOW + timedelta(minutes=1))), "quote has no valid time"),
     ("quote without timezone", _set(["quote", "quoted_at"], "2026-11-13T14:55:00"), "quote has no valid time"),
     ("leg tomorrow", lambda r: r["legs"].__setitem__(1, leg("t", hours=20)), "leg is not on today's date"),
@@ -164,7 +164,8 @@ def test_stage0_build_still_publishes_nothing_with_two_to_six_leg_limits():
 def test_committed_parlay_file_has_the_homepage_shape_and_shows_nothing():
     # The scheduled job rewrites both data files together (site.build); equality is tested there.
     lite = json.loads((ROOT / "docs" / "data" / "parlays.json").read_text())
-    assert set(lite) == {"generated", "default_timezone", "parlays"}
+    assert {"generated", "default_timezone", "parlays"} <= set(lite) <= {"generated", "default_timezone", "parlays",
+                                                                         "estimated_parlays"}   # issue #47
     assert lite["parlays"]["recommendations"] == [] and parlays.shown_cards(lite["parlays"], NOW) == []
 
 

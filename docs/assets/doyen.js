@@ -221,7 +221,7 @@
     { text: "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs are independent and each leg is well calibrated; Doyen has no settled multi-leg record to support that." },
   ];
   const PDAY_TZ = "America/New_York";             // the site's authoritative publishing day
-  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, maxQuoteMin: 30, kind: "bookmaker_combined",
+  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, maxQuoteMin: 150, kind: "bookmaker_combined",
                sports: ["soccer", "nfl", "nba", "tennis"] };
   const nyKey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: PDAY_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const isoT = (x) => { if (typeof x !== "string" || !/(Z|[+-]\d\d:?\d\d)$/.test(x)) return null; const t = new Date(x).getTime(); return isNaN(t) ? null : t; };
@@ -275,11 +275,90 @@
     return Math.round(s * odds * 100 + 1e-7) / 100;
   }
   const usd = (x) => (x == null ? "—" : "$" + x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  // ---------- estimated parlays (issue #47) ----------
+  // Owner-approved estimates shown alongside the strict path. Mirrors sbi/parlay_estimated.py
+  // card_problem: kind "estimated_product" (never a bookmaker quote), today in New York, 2-6 active
+  // legs on distinct games that start later today, every leg priced by the card's bookmaker within
+  // the last 150 minutes, and estimated odds equal to the product of those prices. A verified
+  // bookmaker-quote card always wins: an estimate never reuses one of its games.
+  const EC = { kind: "estimated_product", maxPriceMin: 150,
+               empty: "No parlays today: no verified quotes, and no games later today meet the estimate rules." };
+  function estProblem(rec, now, day) {
+    if (!rec || typeof rec !== "object") return "not an object";
+    if ((rec.mock || rec.test) && !allowMock()) return "mock or test data";
+    if (rec.kind !== EC.kind) return "not an estimate";
+    if (!str(rec.parlay_id)) return "missing parlay_id";
+    if (rec.date !== day) return "not today's parlay";
+    if (rec.status !== "active") return "parlay is not active";
+    if (!str(rec.bookmaker)) return "missing bookmaker";
+    const legs = rec.legs;
+    if (!Array.isArray(legs) || legs.length < PC.minLegs || legs.length > PC.maxLegs) return "needs 2-6 legs";
+    const seen = new Set();
+    let product = 1;
+    for (const l of legs) {
+      if (!l || typeof l !== "object") return "leg is not an object";
+      if (!str(l.event_id) || !str(l.title) || !str(l.selection)) return "leg missing identity";
+      if (seen.has(l.event_id)) return "two legs on the same event";
+      seen.add(l.event_id);
+      if (!PC.sports.includes(l.sport)) return "unsupported sport";
+      if (l.status !== "active") return "leg is not active";
+      const t = isoT(l.start_utc);
+      if (t == null) return "leg has no valid start time";
+      if (nyKey(new Date(t)) !== day) return "leg is not on today's date";
+      if (t <= now) return "leg has started";
+      if (typeof l.price !== "number" || !isFinite(l.price) || l.price <= 1) return "leg has no valid price";
+      const at = isoT(l.price_at);
+      if (at == null || at > now) return "leg price has no valid time";
+      if (now - at > EC.maxPriceMin * 60000) return "leg price is stale";
+      product *= l.price;
+    }
+    const o = rec.estimated_odds;
+    if (typeof o !== "number" || !isFinite(o) || o <= 1) return "invalid estimated odds";
+    if (Math.abs(o - product) > 0.005 * o) return "estimated odds are not the product of the leg prices";
+    return null;
+  }
+  function shownEstimates(E, blocked, limit) {
+    if (!E || E.status !== "estimated") return [];
+    const now = Date.now(), day = nyKey(new Date(now));
+    if (E.date !== day) return [];
+    const first = (r) => Math.min(...r.legs.map((l) => isoT(l.start_utc)));
+    const used = new Set(blocked), out = [];
+    (Array.isArray(E.recommendations) ? E.recommendations : []).filter((r) => estProblem(r, now, day) === null)
+      .sort((a, b) => first(a) - first(b) || String(a.parlay_id).localeCompare(String(b.parlay_id)))
+      .forEach((r) => { if (r.legs.some((l) => used.has(l.event_id))) return; r.legs.forEach((l) => used.add(l.event_id)); out.push(r); });
+    return out.slice(0, Math.max(0, limit));
+  }
+  function estRecordLine(E) {
+    const s = E && E.record;
+    if (!s || typeof s.won !== "number" || typeof s.lost !== "number") return "";
+    const pl = Number(s.paper_pl);
+    if (!isFinite(pl)) return "";
+    const sign = pl > 0 ? "+" : (pl < 0 ? "−" : "");
+    return `Estimated parlays record: ${s.won}–${s.lost}, paper P/L ${sign}${usd(Math.abs(pl))}`;
+  }
+  function estCard(r, i) {
+    const odds = r.estimated_odds;
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
+    const hit = typeof r.est_hit_chance === "number" && r.est_hit_chance > 0 && r.est_hit_chance < 1
+      ? `<div class="pc-note">Estimated hit chance ${esc(pct(r.est_hit_chance))} (model estimate, unvalidated).</div>` : "";
+    return `<article class="card parlay est" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}" data-kind="estimate">
+      <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
+      <ol class="legs">${legs}</ol>
+      <div class="pc-foot">
+        <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
+        <div><div class="k">Estimated odds</div><div class="v">${dec(odds)}</div></div>
+        <label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0" step="1" value="${PC.stake}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>
+        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${usd(grossPayout(PC.stake, odds))}</div></div>
+      </div>
+      <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
+      ${hit}
+    </article>`;
+  }
   function parlayCard(r, i) {
     const odds = r.quote.decimal_odds;
     const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${l.market ? `<span class="lg-m">${esc(l.market)}</span> ` : ""}${esc(l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
     return `<article class="card parlay" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}">
-      <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
+      <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill active">Verified bookmaker quote</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
@@ -292,11 +371,18 @@
   }
   function home() {
     const P = (D0() || {}).parlays;
+    const E = (D0() || {}).estimated_parlays;
     const cards = shownParlays(P);
+    const blocked = cards.flatMap((r) => r.legs.map((l) => l.event_id));
+    const est = shownEstimates(E, blocked, PC.maxCards - cards.length);
     let h = `<div class="eyebrow">${esc(fmtDay(nyKey(new Date())))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>`;
     h += `<section class="section first" id="parlays">`;
-    h += cards.length ? `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`
-      : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
+    if (cards.length) h += `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`;
+    if (est.length) h += `<h2 class="est-h"${cards.length ? "" : ' style="margin-top:0"'}>Estimated parlays of the day</h2><div class="grid parlays">${est.map((r, i) => estCard(r, cards.length + i)).join("")}</div>`;
+    if (!cards.length && !est.length) {
+      h += E && typeof E === "object" ? `<p class="zero">${esc(EC.empty)} <a href="#/parlays">Why?</a></p>`
+        : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
+    }
     return h + `</section>`;
   }
   $app.addEventListener("input", (e) => {
@@ -340,9 +426,23 @@
     return `<div class="sheet"><button class="back" data-go="#/">← Back</button>
       <div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>
       <div style="margin:10px 0 4px"><span class="pill monitor">No verified parlays today</span></div>
-      ${sec("Today's check", check)}${sec("Why none is published", why)}${sec("What a parlay would need", needs)}
+      ${estSection()}${sec("Today's check", check)}${sec("Why none is published", why)}${sec("What a parlay would need", needs)}
       ${sec("How the numbers work", math, false)}${sec("Risk", risk)}
       <p class="note"><a href="${PARLAY_URL}" target="_blank" rel="noopener">Full parlay methodology and staged plan</a></p></div>`;
+  }
+  function estSection() {
+    const E = S.data.estimated_parlays;
+    if (!E || typeof E !== "object") return "";
+    const r = E.record || {};
+    const line = estRecordLine(E);
+    const body = `<p class="small">Up to five estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Each uses one bookmaker that priced every leg in the last 150 minutes; the estimated price is the product of that bookmaker's single-game odds, not a bet-slip quote, so your slip may pay less.</p>
+      <ul class="small">
+        <li>Two to six legs, one per game, all on games that haven't started. Different games in one competition are allowed; same-game combinations and legs sharing a team or player are not.</li>
+        <li>Each leg uses Doyen's model probability (the other bookmakers' de-vigged consensus where Doyen has no model, as in tennis), and is used only if that bookmaker's price is above it.</li>
+        <li>Ranked by estimated hit chance × estimated value. The hit chance multiplies leg probabilities as if the legs were independent; it is unvalidated.</li>
+        <li>A verified bookmaker quote always replaces an estimate on the same games.</li></ul>
+      ${line ? `<p class="small"><b>${esc(line)}</b>${typeof r.open === "number" ? ` · ${esc(r.open)} open, ${esc(r.void || 0)} void` : ""}. Paper results at the $${PC.stake} display stake and the estimated price, settled from final scores; a void leg voids the whole parlay here.</p>` : ""}`;
+    return sec("Estimated parlays", body);
   }
   function closeAllView() {
     const D = S.data;
@@ -502,7 +602,7 @@
         <div class="stat"><div class="k">Current odds</div><div class="v">${dec(c.odds)} <span class="faint small">${esc(c.bookmaker || "")}</span></div></div>
         <div class="stat"><div class="k">Fair odds (sharp market)</div><div class="v">${c.market_prob ? dec(1 / c.market_prob) : "—"}</div></div>
         <div class="stat"><div class="k">Value vs fair</div><div class="v">${c.ev == null ? "—" : (c.ev >= 0 ? "+" : "") + pct(c.ev, 1)}</div></div></div>
-        <p class="small" style="margin-top:10px"><b>${esc(r.short)}</b></p><p class="note">Not a pick because: ${esc(({ "EV below threshold": "the price isn't far enough above fair value", "too few bookmakers": "fewer than 3 bookmakers price this market", "odds outside range": "the value is only at odds outside Doyen's range", "insufficient team history": "one side has too little history", "no market consensus": "there is no sharp reference price" })[c.reason] || c.reason || "below thresholds")}. ${c.n_books != null ? esc(c.n_books) + " bookmaker(s) quote this market." : ""}</p>` : `<p class="small">Odds unavailable. ${esc(r.short || "")}</p>`;
+        <p class="small" style="margin-top:10px"><b>${esc(r.short)}</b></p><p class="note">Not a pick because: ${esc(({ "EV below threshold": "the price isn't far enough above fair value", "too few bookmakers": "fewer than 3 bookmakers price this market", "too few verified independent bookmakers": "fewer than 3 verified, independent bookmakers price this market", "odds outside range": "the value is only at odds outside Doyen's range", "insufficient team history": "one side has too little history", "no market consensus": "there is no sharp reference price" })[c.reason] || c.reason || "below thresholds")}. ${c.n_books != null ? esc(c.n_books) + " bookmaker(s) quote this market." : ""}</p>` : `<p class="small">Odds unavailable. ${esc(r.short || "")}</p>`;
     const stats = [cmpBars(r.model_view, r.book_view), r.expected_goals ? `<div class="small muted">Expected goals ${esc(r.expected_goals.home)}–${esc(r.expected_goals.away)}</div>` : "",
       r.extra_text ? `<p class="small">${esc(r.extra_text)}</p>` : "", formBlock(r.form), injuriesBlock(r.injuries), weatherBlock(r.weather), extForecast(r.external_forecast), disagreementBlock(r.disagreement),
       r.model_weight === 0 ? `<p class="note">The model has not beaten the market out of sample, so its view is context only.</p>` : ""].join("");
@@ -593,6 +693,8 @@
   function ready(d) {
     if (!tzReady) { tzReady = true; tzSelect(); }
     document.getElementById("updated").textContent = "· Updated " + ago(d.generated);
+    const rec = document.getElementById("estrec");      // issue #47: one-line estimated-parlay record in the footer
+    if (rec) { const line = estRecordLine(d.estimated_parlays); rec.textContent = line; rec.hidden = !line; }
   }
   const fail = (e) => { $app.innerHTML = `<div class="card empty" style="margin-top:24px"><h3>Doyen couldn't load today's research</h3><p>${esc(e.message)}. Please try again in a minute.</p></div>`; };
   let fullP = null;
