@@ -521,14 +521,67 @@ def settle(con, path=None) -> dict:
     with path.open(newline="") as f:
         for r in csv.DictReader(f):
             legs = json.loads(r["legs"])
-            res = [parlay_engine._leg_result(con, x) for x in legs]
-            st = "lost" if "lost" in res else ("open" if "open" in res else ("void" if "void" in res else "won"))
+            st, _ = _row_result(con, legs)
             n = str(r.get("n_legs") or "").strip() or str(len(legs))
             for t in (out, groups[n]):
                 _add(t, st, r)
     for t in (out, *groups.values()):
         _finish(t)
     out["by_legs"] = {n: groups[n] for n in sorted(groups, key=lambda k: (not k.isdigit(), int(k) if k.isdigit() else 0, k))}
+    return out
+
+
+def _row_result(con, legs: list[dict]) -> tuple[str, list[str]]:
+    """(parlay result, per-leg results) from final scores. Any lost leg loses; otherwise an open leg
+    keeps it open; otherwise a void leg voids it; otherwise it won."""
+    res = [parlay_engine._leg_result(con, x) for x in legs]
+    st = "lost" if "lost" in res else ("open" if "open" in res else ("void" if "void" in res else "won"))
+    return st, res
+
+
+def _ledger_selection_text(leg: dict) -> str:
+    parts = str(leg.get("title") or "").split(" v ", 1)
+    home, away = (parts + [""])[:2] if len(parts) == 2 else ("", "")
+    sel = str(leg.get("selection") or "")
+    if sel in ("H", "home") and home:
+        return f"{home} to win"
+    if sel in ("A", "away") and away:
+        return f"{away} to win"
+    return "Draw" if sel == "D" else sel
+
+
+def ledger_rows(con, path=None, day: str | None = None) -> list[dict]:
+    """Every recorded estimate (issue #57), newest first, exactly as first published, with read-only
+    results from final scores. `day` limits it to one New York date (the homepage's "today").
+    Rows are never edited; result and paper P/L use the same rules and numbers as `settle`."""
+    path = path or ledger_path()
+    if not path.exists():
+        return []
+    out = []
+    with path.open(newline="") as f:
+        for i, r in enumerate(csv.DictReader(f)):
+            if day is not None and r["date"] != day:
+                continue
+            legs = json.loads(r["legs"])
+            st, res = _row_result(con, legs)
+            stake = parlays._money(r["stake"])
+            odds = r["estimated_odds"]
+            pl = (parlays.net_profit(stake, r["estimated_odds"]) if st == "won"
+                  else (-stake if st == "lost" else Decimal("0")))
+            out.append({"parlay_id": r["parlay_id"], "date": r["date"], "first_seen": r["first_seen"],
+                        "kind": r.get("kind") or ESTIMATE_KIND, "bookmaker": r["bookmaker"],
+                        "n_legs": int(str(r.get("n_legs") or "").strip() or len(legs)),
+                        "estimated_odds": float(odds), "stake": str(stake),
+                        "gross_payout": str(parlays.gross_payout(stake, odds)),
+                        "est_hit_chance": float(r["est_hit_chance"]) if r.get("est_hit_chance") else None,
+                        "result": st, "paper_pl": str(parlays._money(pl)), "_order": i,
+                        "legs": [{"event_id": x["event_id"], "title": x.get("title"), "market": x.get("market"),
+                                  "selection": x.get("selection"), "selection_text": _ledger_selection_text(x),
+                                  "price": x.get("price"), "start_utc": x.get("start_utc"), "result": lr}
+                                 for x, lr in zip(legs, res)]})
+    out.sort(key=lambda x: (x["date"], x["first_seen"], x["_order"]), reverse=True)
+    for x in out:
+        del x["_order"]
     return out
 
 
