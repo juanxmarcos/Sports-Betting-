@@ -26,6 +26,7 @@ python -m sbi daily        # ingest all sports → settle → model → EV → r
 ```bash
 python -m sbi serve        # diagnostics view (docs/dev) on http://localhost:8000
 python -m sbi coverage     # source coverage audit (read-only) → reports/source_coverage.md
+python -m sbi quote-sources  # quote-source audit (read-only): licensing matrix, credit use → reports/quote_sources.md
 python -m sbi forecast-bench --openmodel-repo DIR --football-analytics-repo DIR
                            # third-party forecast shadow benchmark (research only) → reports/forecast_benchmark.md
 ```

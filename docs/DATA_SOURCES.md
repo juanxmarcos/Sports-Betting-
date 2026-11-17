@@ -3,6 +3,11 @@
 > **Latest audit: 2026-11-13** (issue #15, phase 1). The measured baseline, the provider checks and the
 > prioritised next steps are in [Source audit 2026-11-13](#source-audit-2026-11-13) at the end of this
 > file. The numbers come from `python -m sbi coverage` (`reports/source_coverage.md`).
+>
+> **Quote-source audit: 2026-11-16** (issue #24). Budget and licensing matrix for more bookmaker and
+> prediction-market quotes, and what the existing The Odds API credits bought, in
+> [Quote-source audit 2026-11-16](#quote-source-audit-2026-11-16). Numbers come from
+> `python -m sbi quote-sources` (`reports/quote_sources.md`).
 
 > **Third-party forecast sites** (The Open Model, Football Analytics, Skorbot) were audited on
 > 2026-11-16 (issue #23). None is ingested. See [FORECAST_SOURCES.md](FORECAST_SOURCES.md).
@@ -32,6 +37,17 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
 - **Budget:** a daily allowance of (remaining − 20 reserve) / days left in the month, shared by the day's runs and capped at 12 credits per run (`sbi/sources/odds_api.py: budget`). A competition is fetched only when it has events in the next 7 days and its refresh is due (more often close to start time): NFL/NBA, internationals and tennis first, then club leagues.
 - **Matching:** an Odds API event is matched to our event when kick-off is within ±3h and both team names are similar (normalised; difflib ≥ 0.6). Unmatched events are logged, never guessed.
 - **Timestamps:** each bookmaker's own `last_update` is stored as `retrieved_at`.
+- **Quota safeguards (issue #24):**
+  - Odds for a competition are bought only when the free `/events` list contains at least one event
+    that matches a stored event. Competitions skipped this way are listed in the run log as
+    `skipped_no_matching_event`.
+  - The provider's `x-requests-last` header is compared with the expected cost. If a call cost more
+    than the documented formula, the run keeps what it bought, buys nothing more and records
+    `cost_mismatch`.
+  - `SBI_ODDS_API_BOOKMAKERS` (unset by default) requests up to 10 named bookmakers instead of the
+    `eu` region, at the same cost. See the quote-source audit before setting it.
+  - Prediction-market and daily-fantasy keys (`polymarket`, `kalshi`, `prizepicks` and others) are
+    never stored as bookmaker odds, even if the provider returns them.
 
 ### NFL / NBA / tennis (Doyen v0.2)
 - **ESPN public scoreboards** (`site.api.espn.com/apis/site/v2/sports/{football/nfl|basketball/nba|tennis/atp|tennis/wta}/scoreboard`): fixtures, results, DraftKings odds (NFL/NBA), full tennis draws with set scores. These endpoints are undocumented, so usage is kept light and past dates are cached.
@@ -335,3 +351,170 @@ Scottish and Spanish divisions) and history for validation.
   archives, an adapter can follow. The licence was non-commercial.
 - **Public database (review item):** whether raw third-party quotes may stay in the public
   `data/sbi.sqlite`. Unresolved; not confirmed as permitted.
+
+## Quote-source audit 2026-11-16
+
+Issue #24: find new, legally reusable, zero-recurring-cost price quotes for Soccer, NFL, NBA and
+Tennis. This is the **discovery audit**. It connects no new provider, changes no pick rule and
+stores no new kind of quote.
+
+**Result in one line:** no new provider is both proven permanently free and cleared for storing
+quotes in this public repository. The realistic zero-cost gain is inside the subscription Doyen
+already has: stop buying responses that cannot be matched (done here), and, if the owner chooses,
+spend the same credits on a hand-picked bookmaker list (opt-in, not enabled).
+
+### How to reproduce
+
+```bash
+python -m sbi quote-sources                                  # reads the database read-only; no network call
+python -m sbi quote-sources --as-of 2026-11-16T09:52:00+00:00   # the run reported below
+```
+
+- `reports/quote_sources.md`: operators against the PR #16 baseline, credit use per competition,
+  bookmaker names against known operators, the full matrix with links, and the Polymarket observation.
+- The matrix lives in code (`sbi/quote_sources.py: CANDIDATES`). Tests check that every row has a
+  status, official links and a check date, that only the source already in use is marked `verified`,
+  and that no blocked or opt-in provider's host appears anywhere else in the code.
+- Provider pages were read on 2026-11-16 with an automated fetch tool, so quoted terms are short
+  fragments. Read the linked page before relying on one.
+
+### Operators against the PR #16 baseline
+
+| Measure | Baseline 2026-11-13 | 2026-11-16 | Change |
+|---|---|---|---|
+| Bookmakers stored (name variants merged) | 29 | 29 | 0 |
+| Known operators (lower bound) | 10 | 10 | 0 |
+| Upper bound, every unknown counted separately (provisional) | 25 | 25 | 0 |
+
+No operator was gained or lost. Per-sport event counts moved with the fixture calendar (the report
+has the table); they do not reflect a source change.
+
+### What the existing credits bought
+
+Measured from the job log, 14 runs from 2026-11-12 to 2026-11-16:
+
+- 95 credits in 46 fetches with a recorded outcome (7 older fetches have no recorded outcome and are not counted).
+- **32 of those credits (33.7%) bought responses in which no event matched a stored event.** Every
+  quote in them was discarded. They were club-soccer leagues during the international break (Belgium
+  8, Bundesliga 8, Ligue 1 6, and 2 each for the Premier League, Championship, La Liga and Serie A)
+  and 2 credits on the WTA Finals. The next round's fixtures were not yet in the database because
+  football-data.co.uk had not published them.
+- NFL (18 credits), NBA (21), UEFA Nations League (16) and the ATP Finals (6) matched on every fetch.
+
+**Fix in this PR:** the connector now checks the free event list first and skips a competition in
+which nothing matches. On the logged runs that would have saved up to 32 credits (assuming the
+free event list showed the same fixtures as the paid response). The saved credits
+are not spent elsewhere automatically: the daily allowance and per-run cap are unchanged, so they
+stay available for refreshes that are due later in the month.
+
+### Bookmaker names against known operators
+
+Fresh stored The Odds API quotes for the next 7 days (43 events, 103 event-markets):
+
+- 22 bookmakers, of which **7 known operators** and 12 of unknown ownership.
+- Three operators appear under two brands each: Betsson Group (Betsson, Nordic Bet), Kambi (LeoVegas,
+  Unibet), evoke (888sport, William Hill).
+- Median per event-market: 14 bookmakers but 5 known operators.
+
+### The `bookmakers` parameter (opt-in, not enabled)
+
+- The provider bills "every group of 10 bookmakers" as one region, and a bookmaker list may mix
+  regions. So ten named bookmakers cost the same as today's `eu` region.
+- Measured on stored quotes: **8 bookmakers** keep every known operator and sharp reference on every
+  event-market (Pinnacle, Betfair Exchange, Unibet, Nordic Bet, 888sport, BetOnline.ag, Winamax,
+  William Hill). All 43 events keep 3+ known operators and all 40 keep a sharp reference. That
+  leaves **2 slots** for operators the `eu` region does not carry.
+- **Not measured:** what any non-`eu` bookmaker (for example DraftKings, FanDuel, BetMGM, Smarkets)
+  returns on the free plan, and for which sports. The provider's list marks some keys as paid-only.
+- **The cost of switching:** a ten-name list drops the unknown-ownership bookmakers (1xBet, Marathon
+  Bet, Betclic and others). They do not count toward the known-operator lower bound, but the
+  best-price search uses them today. Switching therefore changes which prices can be selected. That
+  is a selection-policy change and is left to the owner.
+
+Owner steps, in order. Nothing here is done automatically.
+
+1. **Probe (1 credit, stores nothing).** On a machine with the key in the environment:
+   ```bash
+   python -m sbi quote-sources --probe-bookmakers pinnacle,betfair_ex_eu,draftkings,fanduel --probe-sport basketball_nba
+   ```
+   It prints which requested bookmakers the plan returned and what the provider charged. It refuses
+   to run if the remaining credits are unknown or at the 20-credit reserve. Never paste the key
+   into an issue, a PR or a file.
+2. **Decide the list** from the probe result and the table in `reports/quote_sources.md`.
+3. **Enable** in a separate PR: pass `SBI_ODDS_API_BOOKMAKERS` to the daily job (one `env` line in
+   `daily.yml`, reading a repository variable). Lists longer than 10, unknown keys, paid-only keys and
+   prediction-market keys are refused, and the default region is used instead.
+
+### Budget and licensing matrix
+
+Statuses: **verified** (free, permitted, working), **owner opt-in** (free, needs an owner action
+first), **blocked** (reachable, data rights not confirmed), **unavailable**, **paid**.
+
+| Source | Status | Recurring cost | Sports (of our four) | Store / publish raw quotes | What it would add |
+|---|---|---|---|---|---|
+| The Odds API, `the-odds-api.com` (in use) | verified | $0, 500 credits/month | All four | Storing and displaying: permitted. Offering the data as "downloadable files" or a feed: prohibited | Already the only source of 3+ operators |
+| The Odds API `bookmakers` parameter | owner opt-in | $0, same quota | All four | Same terms | Possibly 2 operators outside `eu`; unmeasured until probed |
+| The Odds API `us_ex` keys (Polymarket, Kalshi, Novig, ProphetX) | blocked | $0 | Not verified | Same terms | A reference signal at most; not bookmaker odds. Refused by the connector |
+| Betting Data API, `theoddsapi.com` (redirects to `bettingdataapi.com`) | owner opt-in | $0 tier, 25 requests/day | NBA and NFL moneylines only | Not addressed in its terms; redistribution as a feed prohibited | US books that The Odds API also lists |
+| Polymarket Gamma API | blocked | $0, keyless | NBA, NFL, Tennis, club Soccer seen | Terms section 4.2 restricts automated collection and redistribution | Independent of bookmakers, but a contract price |
+| Kalshi public endpoints | blocked | $0, keyless | Not verified | Data terms not found | As Polymarket |
+| Betfair Exchange API (own key) | paid | KYC account; licences apply | All four | Publishing needs an Odds Publisher licence (affiliates) | Nothing new: already received through The Odds API |
+| Pinnacle API (direct) | paid | "variable cost"; by application | All four | Case by case | Nothing new |
+| Smarkets API (direct) | unavailable | Not verifiable | Not verifiable | Not verifiable | Listed in The Odds API `uk` region |
+
+Notes:
+
+- **Two vendors with nearly the same name.** `the-odds-api.com` is the one Doyen uses.
+  `theoddsapi.com` now redirects to `bettingdataapi.com`, which its terms say is "operated by
+  TheOddsAPI LLC, a Wyoming limited liability company". Its free tier is real (25 requests/day, NFL,
+  NBA and MLB moneylines, US books, no card) but is described as "Evaluate with production data", its
+  terms do not address storing or public display, and it needs a new account. **No adapter is built
+  and no account is created.** If the owner wants it: create the account, confirm in writing that
+  storing quotes is allowed, and open an issue; the key would go in a GitHub secret like `ODDS_API_KEY`.
+- **Polymarket.** Its public API is documented and keyless (500 requests per 10 s on `/events`). On
+  2026-11-16 15:00 UTC it listed, for the next 7 days: NBA 51 games (all with a two-sided
+  match-winner market), NFL 13 of 14, ATP 88, WTA 14, Premier League 9, La Liga 9. Median bid/ask
+  spread 0.01 to 0.03 per share. This was a count taken with 18 requests; no price was stored.
+  It is **not connected** because:
+  1. the terms restrict automated collection and redistribution of its data, so storing quotes in a
+     public file is not confirmed as permitted;
+  2. a share price is not a bookmaker quote: it is priced 0 to 1 in USDC, has a bid/ask spread and
+     per-market fees, settles by its own rules, and soccer is three separate Yes/No contracts;
+  3. trading is barred from restricted jurisdictions, so it could never be shown as a price to take.
+  If the rights are confirmed, it belongs in its own table as a reference signal, never in `odds`.
+- **Betfair.** The licence page requires a KYC-verified account in all cases and sends anyone who
+  wants to publish odds to an affiliate-only licence. It does not mention the Delayed App Key.
+
+### Raw quotes in the public database
+
+`data/sbi.sqlite` (38 MB) is committed to this public repository. On 2026-11-16 it held 25,309 The
+Odds API quote rows, 59,211 from football-data.co.uk and 12,571 from ESPN.
+
+- The Odds API terms permit storing and displaying its data but prohibit offering it as
+  "downloadable files". A public database of raw quotes is close to that. **This audit does not
+  conclude it is permitted.** football-data.co.uk and ESPN publish no redistribution terms that
+  were found.
+- **Nothing was deleted and no git history was rewritten.** No new proprietary quote type was added.
+- Options for the owner, least disruptive first:
+  1. Ask The Odds API whether a research database in a public repository is acceptable.
+  2. Keep publishing only derived results (picks, the site JSON, reports), and move the database to
+     a private store: a private data repository that the daily job checks out, or an encrypted file.
+     The public site does not read the database directly.
+  3. Make the repository private. GitHub Pages and free Actions minutes would then need checking.
+- Removing the quotes already in the public history is a separate, irreversible step. It is not
+  proposed without the owner's explicit approval.
+
+### Same-book parlay prices: blockers unchanged
+
+No source checked today documents a bookmaker's own combined price. The three blockers in the
+2026-11-13 audit stand: a combined price can only be the product of single-leg prices, which is not
+a bookmaker-offered price and is never described as one. See `docs/PARLAYS.md`.
+
+### Next steps (each a separate PR)
+
+1. Owner runs the 1-credit probe; if it returns operators outside `eu`, a PR enables the list and
+   reports the measured change in events with 3+ known operators against the baseline.
+2. Record in the coverage report how many credits each run saved through the free pre-check.
+3. Only if data rights are confirmed in writing: a Polymarket reference-signal table with
+   market-definition checks, kept out of `odds` and out of every pick rule.
+4. Owner decision on the public database (above).

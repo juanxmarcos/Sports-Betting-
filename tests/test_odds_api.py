@@ -159,6 +159,9 @@ def test_one_failing_competition_does_not_stop_others(monkeypatch, tmp_path):
     t = now + timedelta(days=1)
     con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
                    VALUES ('n1','nba','NBA',?,'H Team','A Team','scheduled','t','t')""", (t.isoformat(),))
+    # the soccer competition also has a matching stored event, so its (failing) odds call is attempted
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('s1','football','INT:uefa.nations',?,'H Team','A Team','scheduled','t','t')""", (t.isoformat(),))
     monkeypatch.setenv("ODDS_API_KEY", "dummy")
     ev = [{"home_team": "H Team", "away_team": "A Team", "commence_time": t.isoformat().replace("+00:00", "Z"),
            "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "last_update": now.isoformat().replace("+00:00", "Z"),
@@ -175,3 +178,156 @@ def test_one_failing_competition_does_not_stop_others(monkeypatch, tmp_path):
     monkeypatch.setattr(oa, "_get", fake_get)
     out = oa.ingest(con, now)
     assert out["matched"] == 1 and out["errors"] and "basketball_nba" in out["fetched"]
+
+
+# ---- issue #24: quota safeguards ------------------------------------------------------------
+
+def _nba(con, now, n=1):
+    """n stored NBA events tomorrow + the matching provider payload (Pinnacle h2h)."""
+    t = now + timedelta(days=1)
+    evs = []
+    for k in range(n):
+        con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                       VALUES (?,?,?,?,?,?,?,?,?)""", (f"nba:{k}", "nba", "NBA", t.isoformat(), f"H{k} Team", f"A{k} Team",
+                                                     "scheduled", "t", "t"))
+        evs.append({"home_team": f"H{k} Team", "away_team": f"A{k} Team", "commence_time": t.isoformat().replace("+00:00", "Z"),
+                    "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "last_update": now.isoformat().replace("+00:00", "Z"),
+                                    "markets": [{"key": "h2h", "outcomes": [{"name": f"H{k} Team", "price": 1.8},
+                                                                            {"name": f"A{k} Team", "price": 2.1}]}]}]})
+    return evs
+
+
+def _fake(monkeypatch, sports, events, odds=None, last="0", calls=None):
+    def fake_get(path, params, api_key):
+        if calls is not None:
+            calls.append((path, dict(params)))
+        u = {"remaining": "400", "used": "100", "last": "0"}
+        if path == "/sports":
+            return [{"key": k, "active": True} for k in sports], u
+        sk = path.split("/")[2]
+        if path.endswith("/events"):
+            return events.get(sk, []), u
+        return (odds or events).get(sk, []), {**u, "last": last}
+    monkeypatch.setenv("ODDS_API_KEY", "dummy")
+    monkeypatch.setattr(oa, "_get", fake_get)
+
+
+def test_request_cost_follows_the_documented_formula():
+    assert oa.request_cost("h2h,totals") == 2                                   # today's club-soccer call
+    assert oa.request_cost("h2h,spreads,totals") == 3                           # today's NFL/NBA call
+    ten = tuple(f"b{i}" for i in range(10))
+    assert oa.request_cost("h2h,totals", bookmakers=ten) == 2                   # 10 bookmakers = 1 region
+    assert oa.request_cost("h2h,totals", bookmakers=ten + ("b10",)) == 4        # 11 would be billed as 2 regions
+    assert oa.request_cost("h2h", bookmakers=("pinnacle",)) == 1
+
+
+def test_bookmaker_selection_is_all_or_nothing(monkeypatch):
+    monkeypatch.delenv(oa.BOOKMAKERS_ENV, raising=False)
+    assert oa.bookmaker_selection() == ((), None)                               # default: unset, no list
+    keys, why = oa.bookmaker_selection(" Pinnacle, betfair_ex_eu ,draftkings,pinnacle ")
+    assert keys == ("pinnacle", "betfair_ex_eu", "draftkings") and why is None   # trimmed, lower-cased, de-duplicated
+    eleven = ",".join(sorted(oa.KNOWN_BOOKMAKER_KEYS)[:11])
+    assert oa.bookmaker_selection(eleven)[0] == () and "second region" in oa.bookmaker_selection(eleven)[1]
+    for bad, word in (("pinnacle,polymarket", "not bookmaker odds"), ("pinnacle,kalshi", "not bookmaker odds"),
+                      ("pinnacle,prizepicks", "not bookmaker odds"), ("pinnacle,williamhill_us", "paid plans only"),
+                      ("pinnacle,pinacle", "unknown bookmaker key")):
+        keys, why = oa.bookmaker_selection(bad)
+        assert keys == () and word in why, bad
+    assert not oa.KNOWN_BOOKMAKER_KEYS & (oa.NOT_BOOKMAKER_KEYS | oa.PAID_ONLY_KEYS)
+
+
+def test_default_request_is_unchanged(monkeypatch, tmp_path):
+    """Without the opt-in the paid call still asks for regions=eu and never sends `bookmakers`."""
+    monkeypatch.delenv(oa.BOOKMAKERS_ENV, raising=False)
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    evs, calls = _nba(con, now), []
+    _fake(monkeypatch, ["basketball_nba"], {"basketball_nba": evs}, last="3", calls=calls)
+    out = oa.ingest(con, now)
+    params = [p for path, p in calls if path.endswith("/odds")][0]
+    assert params["regions"] == "eu" and "bookmakers" not in params
+    assert out["credits_spent"] == 3 and "bookmakers_requested" not in out and "cost_mismatch" not in out
+    assert "regions=eu" in con.execute("SELECT source_url FROM odds LIMIT 1").fetchone()[0]
+
+
+def test_opt_in_bookmaker_list_replaces_the_region_at_the_same_cost(monkeypatch, tmp_path):
+    monkeypatch.setenv(oa.BOOKMAKERS_ENV, "pinnacle,betfair_ex_eu,draftkings,fanduel")
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    evs, calls = _nba(con, now), []
+    _fake(monkeypatch, ["basketball_nba"], {"basketball_nba": evs}, last="3", calls=calls)
+    out = oa.ingest(con, now)
+    params = [p for path, p in calls if path.endswith("/odds")][0]
+    assert params["bookmakers"] == "pinnacle,betfair_ex_eu,draftkings,fanduel" and "regions" not in params
+    assert out["credits_spent"] == 3 and out["bookmakers_requested"] == ["pinnacle", "betfair_ex_eu", "draftkings", "fanduel"]
+    url = con.execute("SELECT source_url FROM odds LIMIT 1").fetchone()[0]
+    assert "bookmakers=pinnacle,betfair_ex_eu,draftkings,fanduel" in url and "dummy" not in url
+
+
+def test_invalid_bookmaker_list_falls_back_to_the_default_region(monkeypatch, tmp_path):
+    monkeypatch.setenv(oa.BOOKMAKERS_ENV, "pinnacle,polymarket")
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    evs, calls = _nba(con, now), []
+    _fake(monkeypatch, ["basketball_nba"], {"basketball_nba": evs}, last="3", calls=calls)
+    out = oa.ingest(con, now)
+    params = [p for path, p in calls if path.endswith("/odds")][0]
+    assert params["regions"] == "eu" and "bookmakers" not in params
+    assert "polymarket" in out["bookmakers_ignored"] and out["matched"] == 1
+
+
+def test_no_credit_is_spent_when_no_listed_event_matches(monkeypatch, tmp_path):
+    """Measured in production: 32 of 95 credits bought responses in which nothing could be matched.
+    The free event list is checked first; such a competition is skipped and named."""
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    nba, calls = _nba(con, now), []
+    t = (now + timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    epl = [{"home_team": "Arsenal", "away_team": "Chelsea", "commence_time": t, "bookmakers": []}]   # not stored by us
+    _fake(monkeypatch, ["basketball_nba", "soccer_epl"], {"basketball_nba": nba, "soccer_epl": epl}, last="3", calls=calls)
+    out = oa.ingest(con, now)
+    paid = [path for path, _ in calls if path.endswith("/odds")]
+    assert paid == ["/sports/basketball_nba/odds"]
+    assert out["skipped_no_matching_event"] == ["soccer_epl"] and out["credits_spent"] == 3
+    assert con.execute("SELECT COUNT(*) FROM odds_api_fetches WHERE sport_key='soccer_epl'").fetchone()[0] == 0
+
+
+def test_tennis_pre_check_accepts_swapped_player_order(monkeypatch, tmp_path):
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    t = now + timedelta(days=1)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('t1','tennis','TENNIS:ATP',?,'Jannik Sinner','Carlos Alcaraz','scheduled','t','t')""", (t.isoformat(),))
+    ev = [{"home_team": "Carlos Alcaraz", "away_team": "Jannik Sinner", "commence_time": t.isoformat().replace("+00:00", "Z"),
+           "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "last_update": now.isoformat().replace("+00:00", "Z"),
+                           "markets": [{"key": "h2h", "outcomes": [{"name": "Carlos Alcaraz", "price": 1.8},
+                                                                   {"name": "Jannik Sinner", "price": 2.1}]}]}]}]
+    _fake(monkeypatch, ["tennis_atp_finals"], {"tennis_atp_finals": ev}, last="1")
+    out = oa.ingest(con, now)
+    assert out["fetched"] == ["tennis_atp_finals"] and out["matched"] == 1 and not out["skipped_no_matching_event"]
+    assert con.execute("SELECT price FROM odds WHERE selection='home'").fetchone()[0] == 2.1     # Sinner is our home
+
+
+def test_overcharge_stops_further_spending(monkeypatch, tmp_path):
+    """If the provider reports a higher cost than the documented formula, keep what was bought and stop."""
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    nba, calls = _nba(con, now), []
+    t = now + timedelta(days=1)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('f1','nfl','NFL',?,'H0 Team','A0 Team','scheduled','t','t')""", (t.isoformat(),))
+    _fake(monkeypatch, ["americanfootball_nfl", "basketball_nba"], {"americanfootball_nfl": nba, "basketball_nba": nba},
+          last="6", calls=calls)                       # expected 3, charged 6
+    out = oa.ingest(con, now)
+    assert len([1 for path, _ in calls if path.endswith("/odds")]) == 1
+    assert out["cost_mismatch"]["expected"] == 3 and out["cost_mismatch"]["charged"] == 6
+    assert out["credits_spent"] == 6 and out["matched"] == 1          # the paid response is still stored
+    assert con.execute("SELECT credits FROM odds_api_fetches").fetchone()[0] == 6
+
+
+def test_prediction_market_keys_are_never_stored_as_bookmakers():
+    ev = {"home_team": "H Team", "away_team": "A Team", "bookmakers": [
+        {"key": k, "title": title, "markets": [{"key": "h2h", "last_update": "2026-11-14T08:00:00Z",
+                                                "outcomes": [{"name": "H Team", "price": 1.8}, {"name": "A Team", "price": 2.1}]}]}
+        for k, title in (("pinnacle", "Pinnacle"), ("polymarket", "Polymarket"), ("kalshi", "Kalshi"), ("prizepicks", "PrizePicks"))]}
+    assert {r[0] for r in oa.parse_odds(ev, two_way=True)} == {"Pinnacle"}

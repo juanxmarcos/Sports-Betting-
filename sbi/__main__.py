@@ -36,6 +36,12 @@ def main(argv=None) -> int:
     c = sub.add_parser("coverage", help="source coverage audit (read-only); writes reports/source_coverage.md")
     c.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
     c.add_argument("--baseline", action="store_true", help="also freeze this run as data/coverage/baseline_<date>.json")
+    qs = sub.add_parser("quote-sources", help="quote-source audit (read-only): licensing matrix, credit economics, "
+                                              "operator yield; writes reports/quote_sources.md")
+    qs.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
+    qs.add_argument("--probe-bookmakers", metavar="KEYS", help="owner-run check: ONE h2h call (1 credit) for up to 10 "
+                    "comma-separated bookmaker keys; stores nothing; needs ODDS_API_KEY")
+    qs.add_argument("--probe-sport", default="basketball_nba", help="The Odds API sport key for --probe-bookmakers")
     nr = sub.add_parser("nfl-reports", help="NFL practice/injury/QB availability (nflverse, informational); "
                                             "writes reports/nfl_availability.md")
     nr.add_argument("--season", type=int, action="append", help="season to fetch (default: the current one)")
@@ -76,6 +82,17 @@ def main(argv=None) -> int:
         rep = coverage.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc), baseline=args.baseline)
         print(json.dumps(rep["summary"], indent=1))
         print(config.REPORTS_DIR / "source_coverage.md")
+        return 0
+    if args.cmd == "quote-sources":     # read-only as well
+        from . import quote_sources
+        if args.probe_bookmakers:
+            print(json.dumps(quote_sources.probe(args.probe_bookmakers, args.probe_sport), indent=1))
+            return 0
+        at = datetime.fromisoformat(args.as_of) if args.as_of else now
+        rep = quote_sources.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc))
+        print(json.dumps({"credit_economics": rep["credit_economics"]["total"],
+                          "slots_left_for_other_operators": rep["operator_yield"]["slots_left_for_other_operators"]}, indent=1))
+        print(config.REPORTS_DIR / "quote_sources.md")
         return 0
     if args.cmd == "forecast-bench":   # research only: never opens the database
         from . import forecast_bench
