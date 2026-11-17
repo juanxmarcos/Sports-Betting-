@@ -110,7 +110,7 @@ apart from the official designation (Out / Doubtful / Questionable), keyed by th
 - **No confirmed starting quarterback.** The report shows last game's starter (from results in
   `games.csv`), whether he is on the injury report, and whether the nflverse schedule file lists
   someone else. That schedule entry is unconfirmed. The nflverse depth-chart file was checked and not
-  used: 75 MB per season, too heavy for the 2-hour job, and a depth chart is not a confirmed starter either.
+  used: 75 MB per season, too heavy for the daily job, and a depth chart is not a confirmed starter either.
 - Teams before relocation (OAK, SD, STL) are not in the team table and are skipped and counted.
 
 **Measured coverage (provider files, 2026-11-13).** Team-games are counted against the nflverse schedule.
@@ -145,7 +145,7 @@ feed under *Context feeds* once the tables exist.
 - ESPN comparison pairs players by name inside one team only, because ESPN carries no shared id.
   A name that is not unique on a team is left unpaired and counted.
 
-**Status: opt-in, not part of the 2-hour job.** The licence and the provider's stated purpose permit
+**Status: opt-in, not part of the daily job.** The licence and the provider's stated purpose permit
 automated downloads, and the fixture tests cover the failure modes, but the adapter has one live run
 behind it, not weeks. To enable it in production the owner sets `SBI_NFL_REPORTS=1` in the
 `Daily pipeline` step of `.github/workflows/daily.yml`; the step then costs one small conditional
@@ -205,7 +205,7 @@ python -m sbi coverage --as-of 2026-11-13T12:17:02+00:00 --baseline   # how the 
 - `reports/source_coverage.md`: the full matrix (sport × competition × market × source), providers,
   credentials by presence only, credit use and stored history.
 - `data/coverage/baseline_2026-11-13.json`: the frozen "before". Later runs print the change against it.
-- The command is not part of the 2-hour job and is not shown on the public site.
+- The command is not part of the daily job and is not shown on the public site.
 
 ### Measured baseline (events starting in the next 7 days, as of the 12:17 UTC run)
 

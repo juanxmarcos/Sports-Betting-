@@ -38,7 +38,7 @@ python -m sbi tennis-history [--download]
 ```bash
 python -m pytest -q
 ```
-Automation: `.github/workflows/daily.yml` runs every 2 hours and commits the data, reports and site. A Claude Code scheduled task (`automation/claude_research_routine.md`) adds evidence-graded team-news notes. Optional: the `ODDS_API_KEY` secret enables multi-bookmaker odds (free tier, budgeted per day).
+Automation: `.github/workflows/daily.yml` runs once a day (9:47 AM EST, with backup runs later that morning that skip when the day's run already succeeded) and commits the data, reports and site. A Claude Code scheduled task (`automation/claude_research_routine.md`) adds evidence-graded team-news notes. Optional: the `ODDS_API_KEY` secret enables multi-bookmaker odds (free tier, budgeted per day).
 
 ## Docs
 [Development workflow](docs/DEVELOPMENT_WORKFLOW.md) · [Auto-merge](docs/AUTO_MERGE.md) · [Audit](docs/AUDIT.md) · [Methodology](docs/METHODOLOGY.md) · [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) · [Forecast sources](docs/FORECAST_SOURCES.md) · [Feasibility](docs/FEASIBILITY.md) · [Roadmap](docs/ROADMAP.md)

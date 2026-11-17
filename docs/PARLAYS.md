@@ -132,8 +132,8 @@ rendered only when **all** of the following hold. The rules live in `sbi/parlays
   `status: "active"`, a timezone-aware `start_utc` on today's date that has not started yet.
 - `quote`: `kind: "bookmaker_combined"` (one bookmaker's own price for the whole combination, never a
   product of best prices from different books), the same `bookmaker`, a non-empty `source`,
-  `decimal_odds > 1` and a timezone-aware `quoted_at` no more than 150 minutes old (one site refresh plus
-  build time; section 7.4, changed from 30 minutes in issue #37).
+  `decimal_odds > 1` and a timezone-aware `quoted_at` on the same New York day, not in the future (section 7.4;
+  30 minutes before #37, 150 minutes before #53).
 - Anything missing, unknown, or flagged `mock`/`test` is rejected. Mock fixtures render only in tests
   that set `window.__DOYEN_ALLOW_MOCK`, and each such card is labelled "Mock data · testing only".
 
@@ -176,7 +176,7 @@ information; enabling one needs the owner's separate approval and is not done he
    It is accepted only if every leg is a current usable pick, the bookmaker quotes every leg in
    Doyen's stored prices, the combined odds are within 0.85–1.02 × the product of that bookmaker's
    leg prices (outside that band: wrong legs, a boost or correlation pricing, so it is rejected for
-   review), and `quoted_at` is timezone-aware and at most 150 minutes old (section 7.4). Records in
+   review), and `quoted_at` is timezone-aware and on the same New York day (section 7.4). Records in
    `data/parlay_quotes.json` are append-only.
 3. **Joint calibration** (`sbi/parlay_calibration.py`, criteria fixed in code before any result):
    at least 200 disjoint settled two-leg combinations, observed joint wins within the 95% band of the
@@ -203,21 +203,25 @@ and leg counts being published. Changing a criterion needs new out-of-sample evi
 
 ### 7.4 Freshness
 
-- **Rule (issue #37):** a combined quote counts for `MAX_QUOTE_AGE_MINUTES = 150` minutes after
-  `quoted_at`: one site refresh (`SITE_REFRESH_MINUTES = 120`, the `15 */2 * * *` cron in `daily.yml`)
-  plus a 30-minute allowance for the job's runtime and the Pages deploy. The browser uses the same value
-  (`PC.maxQuoteMin` in `docs/assets/doyen.js`). `tests/test_parlay_freshness.py` fails if the cron, the
-  Python constant and the browser constant drift apart.
-- **Why it changed.** With 30 minutes the site, which only changes when a build is committed, hid a
-  verified quote for about 90 of every 120 minutes (noted on #27). With 150 minutes, a quote recorded
-  just after a build is still inside the limit when the next scheduled build re-verifies it.
+- **Rule (issue #53, replaces #37's 150 minutes):** the site is rebuilt **once a day**, by the
+  morning run of `daily.yml` (`47 14 * * *` = 9:47 AM EST), with backup crons later that morning
+  (`23 16 * * *`, `11 18 * * *`) that exit early, with no Odds API call and no commit, when that day's
+  run already succeeded (`data/last_daily_run.json`, `sbi/run_marker.py`). A combined quote therefore
+  counts from `quoted_at` until the first leg starts, provided it was quoted on the **same New York
+  day**. A quote from a previous New York day never counts. The browser applies the same rule
+  (`PC.quoteRule` and `parlayProblem` in `docs/assets/doyen.js`); `tests/test_parlay_freshness.py`
+  covers the schedule, the backup skip logic and both limits.
+- **Why it changed.** GitHub skipped most 2-hourly scheduled runs on 2026-11-17 (only 04:30 and 16:04 UTC
+  ran), so cards built from good prices were hidden by the 150-minute limit. The owner decided one
+  reliable daily refresh is enough.
 - **What did not change.** Every build re-runs `quote_problem`: the legs must still be current published
   picks that have not started, and the combined odds must still sit inside 0.85–1.02 × that bookmaker's
-  stored leg prices. The card shows the time the slip was read ("quoted 14:05"), so a 2-hour-old price is
-  never presented as live. A quote is never re-stamped or relabelled as fresh; after 150 minutes it stops
-  counting and the browser hides the card.
-- **Trade-off.** Bet-slip prices can move within 150 minutes. Shortening the limit again would need a more
-  frequent zero-cost refresh, which the current schedule and Odds API budget do not allow.
+  stored leg prices. Every card says when its price was taken ("Price as of 9:47 AM EST — check your
+  book."), so a morning price is never presented as live. A quote is never re-stamped or relabelled as
+  fresh.
+- **Trade-off.** Prices can move between the morning run and the game. The card states the time, and the
+  reader is told to check the book. A more frequent refresh would need the 2-hourly schedule GitHub did
+  not run reliably, or a paid service.
 - Leg prices keep their source-specific limits in `sbi/odds_policy.py` (up to 6 hours near the start
   for The Odds API). They are used only to check the quote's consistency, never displayed as the
   combined price.
@@ -363,7 +367,7 @@ not a legal review.
 ### 9.2 Shortest compliant path
 
 1. **Now, zero cost:** the owner reads a slip and runs `python -m sbi parlay-quote ...` (section 7.2).
-   With the 150-minute rule a recorded quote survives until the next scheduled build.
+   Since #53 a recorded quote counts for the rest of its New York day, until the first leg starts.
 2. **Optional follow-up, zero cost:** request `includeLinks=true` on the existing Odds API call so
    the research report can list a deep link to each leg's market. The guide says links are returned
    "if available", and their availability and credit cost on the free plan were not measured. This
@@ -439,7 +443,7 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Sports | Soccer, NFL, NBA, Tennis only (result market: 1X2 / moneyline). |
 | Games | Start later today (New York date) and have not started; status `scheduled`. |
 | One bookmaker | Every leg priced by that bookmaker; exchanges excluded (no accumulator slip). |
-| Fresh prices | Issue #51: that bookmaker's **latest stored price retrieved on the same New York day and before the game starts** (replaces the 150-minute limit). Checked when built and again in the browser; a leg drops out as soon as its game starts. The card shows "Prices read at HH:MM". |
+| Fresh prices | Issue #51: that bookmaker's **latest stored price retrieved on the same New York day and before the game starts** (replaces the 150-minute limit). Checked when built and again in the browser; a leg drops out as soon as its game starts. The card shows "Price as of 9:47 AM EST — check your book." (issue #53). |
 | Estimated price | Product of that bookmaker's own single-leg prices. Data kind `estimated_product`; the `bookmaker_combined` kind stays reserved for real quotes. |
 | Bookmakers per game | Issue #51: **1** is enough, the one pricing the parlay. |
 | Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis): the de-vigged consensus of the *other* bookmakers when it exists, otherwise (#51) the de-vigged consensus of at least **2** independent bookmakers including the pricing one. A leg with neither is skipped. |
@@ -451,7 +455,7 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Selection | Issue #54: score alone almost always favours 2-leg combinations, so cards are picked per size bucket — **2**, **3** and **4–5** legs (6-leg combinations are no longer shown). Round 1 takes the best-scoring card of each size. Because a game can be in one card only, the sizes can pick games in any order: every order is tried and the one that covers the **most sizes** wins (ties: bigger sizes covered, then higher total score, then 4–5 picking first). For example, five games give a 3-leg and a 2-leg card rather than one 4-leg card. Round 2 takes a second of each size, 4–5 first. At most 2 per size (`PER_SIZE`) and 5 in total. A size with no qualifying combination is skipped, never padded. |
 
 No single-pick threshold is read or changed. The run makes no network request and spends no API
-credit: it reads prices the 2-hourly `daily.yml` job already stored, and writes
+credit: it reads prices the once-a-day `daily.yml` job already stored, and writes
 `docs/data/parlays.json` (block `estimated_parlays`) and `docs/data/doyen.json`.
 
 ### 11.3 Tracking
@@ -485,8 +489,8 @@ credit: it reads prices the 2-hourly `daily.yml` job already stored, and writes
   keeps the best 120 combinations per size per bookmaker, so a second card of a size can be missing
   when the best combinations all share games.
 - **Thin coverage.** Many games lack prices from today on the free Odds API quota, so several
-  days may show few or no cards. Since #51 the 2-hourly ingest buys competitions with a game later
-  today (New York) first, inside the unchanged per-day budget and quota safeguards (#25); its run
+  days may show few or no cards. Since #51 the ingest buys competitions with a game later
+  today (New York) first, inside the per-day budget and quota safeguards (#25; since #53 the single daily run may spend the whole day's allowance); its run
   output reports `planned_today_first` and `today` (events in the responses / events priced). The
   block's `coverage` reports `events_today`, `events_with_fresh_prices` and `legs`.
 

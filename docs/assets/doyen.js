@@ -221,8 +221,10 @@
     { text: "No validated joint-probability estimate. Multiplying leg probabilities assumes the legs are independent and each leg is well calibrated; Doyen has no settled multi-leg record to support that." },
   ];
   const PDAY_TZ = "America/New_York";             // the site's authoritative publishing day
-  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, maxQuoteMin: 150, kind: "bookmaker_combined",
+  const PC = { minLegs: 2, maxLegs: 6, maxCards: 5, stake: 10, quoteRule: "same_ny_day", kind: "bookmaker_combined",
                sports: ["soccer", "nfl", "nba", "tennis"] };
+  // "9:47 AM EST": the time a price was taken, always in New York time with the zone shown (issue #53).
+  const fmtAsOf = (t, zone = true) => new Intl.DateTimeFormat("en-US", { timeZone: PDAY_TZ, hour: "numeric", minute: "2-digit", ...(zone ? { timeZoneName: "short" } : {}) }).format(new Date(t));
   const nyKey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: PDAY_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const isoT = (x) => { if (typeof x !== "string" || !/(Z|[+-]\d\d:?\d\d)$/.test(x)) return null; const t = new Date(x).getTime(); return isNaN(t) ? null : t; };
   const str = (x) => typeof x === "string" && x.trim() !== "";
@@ -256,7 +258,7 @@
     if (typeof q.decimal_odds !== "number" || !isFinite(q.decimal_odds) || q.decimal_odds <= 1) return "invalid combined odds";
     const at = isoT(q.quoted_at);
     if (at == null || at > now) return "quote has no valid time";
-    if (now - at > PC.maxQuoteMin * 60000) return "quote is stale";
+    if (nyKey(new Date(at)) !== day) return "quote is stale";     // issue #53: today's quote counts until the first leg starts
     return null;
   }
   function shownParlays(P) {
@@ -342,8 +344,9 @@
   function pricesRead(r) {
     const ts = r.legs.map((l) => isoT(l.price_at)).filter((t) => t != null);
     if (ts.length !== r.legs.length) return "";
-    const lo = fmtClock(new Date(Math.min(...ts)).toISOString()), hi = fmtClock(new Date(Math.max(...ts)).toISOString());
-    return `<div class="pc-note" data-prices-read>Prices read at ${esc(lo === hi ? lo : lo + "–" + hi)}.</div>`;
+    const lo = fmtAsOf(Math.min(...ts), false), hi = fmtAsOf(Math.max(...ts));
+    const one = fmtAsOf(Math.min(...ts)) === hi;
+    return `<div class="pc-note" data-prices-read>${one ? `Price as of ${esc(hi)}` : `Prices as of ${esc(lo)} – ${esc(hi)}`} — check your book.</div>`;
   }
   function estCard(r, i) {
     const odds = r.estimated_odds;
@@ -377,7 +380,8 @@
         <label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0" step="1" value="${PC.stake}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${usd(grossPayout(PC.stake, odds))}</div></div>
       </div>
-      <div class="pc-note">${esc(r.bookmaker)} combined price, quoted ${esc(fmtClock(r.quote.quoted_at))}. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
+      <div class="pc-note" data-prices-read>Price as of ${esc(fmtAsOf(isoT(r.quote.quoted_at)))} — check your book.</div>
+      <div class="pc-note">${esc(r.bookmaker)} combined price from the bet slip. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
     </article>`;
   }
   function home() {
@@ -482,7 +486,7 @@
 
   function staleBanner() {
     const hrs = (Date.now() - new Date(S.data.generated)) / 36e5;
-    return hrs > 18 ? `<div class="banner">${WARN.replace("<svg", '<svg width="16" height="16"')}<span>Data last refreshed ${esc(ago(S.data.generated))}. Prices may have moved.</span></div>` : "";
+    return hrs > 26 ? `<div class="banner">${WARN.replace("<svg", '<svg width="16" height="16"')}<span>Data last refreshed ${esc(ago(S.data.generated))}. Prices may have moved.</span></div>` : "";
   }
   function eventStatus(r) {
     if (r.has_pick) return '<span class="pill active">Pick</span>';
