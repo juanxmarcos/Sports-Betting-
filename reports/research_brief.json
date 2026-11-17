@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-17T14:09:11+00:00",
+  "generated": "2026-11-17T16:06:34+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -95,88 +95,11 @@
   ],
   "upcoming_events": [
     {
-      "event_id": "football:INT:fifa.friendly:20261117:401932718",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T14:10:00+00:00",
-      "home": "United Arab Emirates",
-      "away": "Syria"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261117:401931495",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T15:30:00+00:00",
-      "home": "Saudi Arabia",
-      "away": "Uzbekistan"
-    },
-    {
-      "event_id": "tennis:WTA:20261117:186785",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T15:30:00+00:00",
-      "home": "Alicia Herrero Linana",
-      "away": "Lucia Bronzetti"
-    },
-    {
       "event_id": "tennis:WTA:20261117:186790",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T15:30:00+00:00",
+      "kickoff_utc": "2026-11-17T16:10:00+00:00",
       "home": "Miriam Bulgaru",
       "away": "Polona Hercog"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261117:401919974",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Jordan",
-      "away": "Australia"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261117:401930978",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Russia",
-      "away": "Venezuela"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261117:401927182",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Gambia",
-      "away": "Ivory Coast"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261117:401927166",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Guinea-Bissau",
-      "away": "Madagascar"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261117:401927175",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Kenya",
-      "away": "South Africa"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261117:401927137",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Libya",
-      "away": "Tunisia"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261117:401927174",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Sierra Leone",
-      "away": "DR Congo"
-    },
-    {
-      "event_id": "football:INT:caf.nations_qual:20261117:401927136",
-      "league": "INT:caf.nations_qual",
-      "kickoff_utc": "2026-11-17T16:00:00+00:00",
-      "home": "Togo",
-      "away": "Algeria"
     },
     {
       "event_id": "football:INT:fifa.friendly:20261117:401933615",
