@@ -6,7 +6,7 @@ which is unchanged. Strict mode wins: a parlay with a verified bookmaker combine
 as such, and an estimate never reuses one of its games.
 
 What an estimated parlay is (rules loosened by the owner in issue #51, estimated mode only)
-- 2-6 legs from today's (America/New_York) games in Soccer, NFL, NBA or Tennis that have not
+- 2-6 legs searched (cards show 2-5 since #54) from today's (America/New_York) games in Soccer, NFL, NBA or Tennis that have not
   started, at most one leg per game. Different games in one competition are allowed in this mode;
   same-game combinations are not, and neither are legs that share a team or player.
 - ONE bookmaker that has priced every leg. Each leg uses that bookmaker's latest stored price,
@@ -24,9 +24,12 @@ What an estimated parlay is (rules loosened by the owner in issue #51, estimated
 - Kept screens: consensus probability inside the research band of `sbi.parlay_engine`
   (0.30-0.85), the stored model within 0.12 of the market (data sanity), no open injury/lineup
   note. No single-pick threshold is read or changed here.
+- At most ONE leg per parlay may be "weak", i.e. below its own probability bar (probability x
+  price < 1 at the pricing bookmaker); the parlay as a whole must still have positive value (#54).
 - Ranking: score = estimated joint probability (product of leg probabilities, independence
-  assumed, unvalidated) x estimated value (joint x estimated price - 1). The best cards are kept,
-  each game used at most once across cards, at most `parlays.CARD_MAX_CARDS`; fewer is normal.
+  assumed, unvalidated) x estimated value (joint x estimated price - 1). Cards are picked per size
+  (#54): the best 4-5 leg, 3-leg and 2-leg parlay, then a second of each, each game used at most
+  once across cards, at most `parlays.CARD_MAX_CARDS`. A size with nothing qualifying is skipped.
 
 Every shown estimate is appended to `ledger/estimated_parlays.csv` (never edited) and settled
 read-only from final scores, so a hit rate and paper P/L at the $10 display stake build up.
@@ -59,6 +62,10 @@ MIN_CONSENSUS_BOOKS = 2                      # independent bookmakers, pricing o
 NY = ZoneInfo(parlays.CARD_TIMEZONE)
 MIN_LEGS, MAX_LEGS = parlays.MIN_LEGS, parlays.MAX_LEGS
 MAX_CARDS = parlays.CARD_MAX_CARDS
+SIZE_BUCKETS = ((2, 2), (3, 3), (4, 5))      # cards are picked per size (issue #54)
+PER_SIZE = 2                                 # at most this many cards of one size, within MAX_CARDS
+MAX_WEAK_LEGS = 1                            # legs below their own probability bar per parlay (issue #54)
+WEAK_TOLERANCE = 0.0005                      # card contract: rounding slack on the stored leg probability
 DEFAULT_STAKE = parlays.DEFAULT_STAKE
 BEAM = 120                                   # combinations kept per size per bookmaker
 MAX_EVALUATIONS = 200_000                    # hard stop for the whole search
@@ -267,19 +274,51 @@ def parlay_id(c: dict, day: str) -> str:
     return "pe-" + hashlib.sha1(key.encode()).hexdigest()[:12]
 
 
-def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None = None) -> list[dict]:
-    """Best score first (ties: fewer legs); a game appears in at most one card; games already in a
-    verified-quote card are skipped (strict mode wins). Returned earliest kickoff first."""
+def weak_legs(c: dict) -> int:
+    """Legs priced below their own probability bar at the card's bookmaker (probability x price < 1)."""
+    bk = c["bookmaker"]
+    return sum(1 for x in c["legs"] if x["books"][bk]["prob"] * x["books"][bk]["price"] < 1.0)
+
+
+def size_bucket(n_legs: int) -> str | None:
+    """The size bucket a parlay belongs to (issue #54): "2", "3" or "4-5"; 6 legs is in none."""
+    for lo, hi in SIZE_BUCKETS:
+        if lo <= n_legs <= hi:
+            return str(lo) if lo == hi else f"{lo}-{hi}"
+    return None
+
+
+def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None = None,
+           per_size: int | None = None) -> list[dict]:
+    """Cards per size (issue #54): the best 4-5 leg, the best 3-leg and the best 2-leg parlay, then a
+    second of each while `per_size` and `limit` allow. Bigger sizes pick first because they are
+    scarcer. Within a size, best score first (ties: fewer legs). A size with no qualifying combo is
+    skipped, never padded. Every card has positive estimated value and at most one weak leg; a game
+    appears in at most one card; games in a verified-quote card are skipped (strict mode wins).
+    Returned earliest kickoff first."""
+    per_size = PER_SIZE if per_size is None else per_size
+    order = lambda c: (-c["score"], c["n_legs"], c["bookmaker"], sorted(x["event_id"] for x in c["legs"]))
+    buckets = defaultdict(list)
+    for c in cands:
+        b = size_bucket(c["n_legs"])
+        if b is not None and c["estimated_ev"] > 0 and weak_legs(c) <= MAX_WEAK_LEGS:
+            buckets[b].append(c)
+    for b in buckets:
+        buckets[b].sort(key=order)
+    names = [size_bucket(lo) for lo, _ in reversed(SIZE_BUCKETS)]
     used, out = set(blocked_events or ()), []
-    for c in sorted(cands, key=lambda c: (-c["score"], c["n_legs"], c["bookmaker"],
-                                          sorted(x["event_id"] for x in c["legs"]))):
-        evs = {x["event_id"] for x in c["legs"]}
-        if evs & used:
-            continue
-        used |= evs
-        out.append(c)
-        if len(out) >= limit:
-            break
+    for _ in range(per_size):
+        for b in names:
+            if len(out) >= limit:
+                break
+            for c in buckets.get(b, []):
+                evs = {x["event_id"] for x in c["legs"]}
+                if evs & used:
+                    continue
+                used |= evs
+                out.append(c)
+                buckets[b].remove(c)
+                break
     out.sort(key=lambda c: (min(x["start_utc"] for x in c["legs"]), c["bookmaker"]))
     return out
 
@@ -294,7 +333,8 @@ def card(c: dict, day: str) -> dict:
             "price_label": price_label(bk), "prices_at": min(times) if len(times) == len(legs) else None,
             "stake": DEFAULT_STAKE, "gross_payout": str(parlays.gross_payout(DEFAULT_STAKE, odds)),
             "est_hit_chance": round(c["joint_prob"], 4), "est_hit_chance_label": "Model estimate, unvalidated",
-            "estimated_ev": round(c["estimated_ev"], 4),
+            "estimated_ev": round(c["estimated_ev"], 4), "size": size_bucket(len(legs)),
+            "weak_legs": weak_legs(c),
             "legs": [{"event_id": x["event_id"], "sport": x["sport"], "league": x["league"], "title": x["title"],
                       "market": x["market"], "selection": x["selection"], "selection_text": selection_text(x),
                       "start_utc": x["start_utc"], "status": "active", "price": x["books"][bk]["price"],
@@ -333,7 +373,7 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
     legs = rec.get("legs")
     if not isinstance(legs, list) or not MIN_LEGS <= len(legs) <= MAX_LEGS:
         return f"needs {MIN_LEGS}-{MAX_LEGS} legs"
-    seen, prices = set(), []
+    seen, prices, weak = set(), [], 0
     for leg in legs:
         if not isinstance(leg, dict):
             return "leg is not an object"
@@ -362,7 +402,12 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
             return "leg price has no valid time"
         if at.astimezone(tz).date().isoformat() != day:
             return "leg price is stale"           # not retrieved today (New York); start > now >= at
+        q = parlays._num(leg.get("prob"))
+        if q is not None and q * p < 1.0 - WEAK_TOLERANCE * p:
+            weak += 1
         prices.append(p)
+    if weak > MAX_WEAK_LEGS:
+        return "more than one leg below its probability"
     odds = parlays._num(rec.get("estimated_odds"))
     if odds is None or odds <= 1.0:
         return "invalid estimated odds"
@@ -451,30 +496,48 @@ def settle(con, path=None) -> dict:
     and are not modelled); otherwise open until every leg is final. P/L at the recorded stake and
     the recorded estimated price, so a real slip may have paid less."""
     path = path or ledger_path()
-    out = {"rows": 0, "won": 0, "lost": 0, "void": 0, "open": 0, "paper_pl": "0.00", "staked": "0.00",
-           "expected_wins_settled": 0.0}
+    out = _tally()
+    out["by_legs"] = {}
     if not path.exists():
         return out
-    pl, staked = Decimal("0"), Decimal("0")
+    groups = defaultdict(_tally)
     with path.open(newline="") as f:
         for r in csv.DictReader(f):
-            out["rows"] += 1
-            res = [parlay_engine._leg_result(con, x) for x in json.loads(r["legs"])]
+            legs = json.loads(r["legs"])
+            res = [parlay_engine._leg_result(con, x) for x in legs]
             st = "lost" if "lost" in res else ("open" if "open" in res else ("void" if "void" in res else "won"))
-            out[st] += 1
-            stake = parlays._money(r["stake"])
-            if st == "won":
-                pl += parlays.net_profit(stake, r["estimated_odds"])
-                staked += stake
-            elif st == "lost":
-                pl -= stake
-                staked += stake
-            if st in ("won", "lost"):
-                out["expected_wins_settled"] += float(r["est_hit_chance"])
-    out["paper_pl"] = str(parlays._money(pl))
-    out["staked"] = str(parlays._money(staked))
-    out["expected_wins_settled"] = round(out["expected_wins_settled"], 3)
+            n = str(r.get("n_legs") or "").strip() or str(len(legs))
+            for t in (out, groups[n]):
+                _add(t, st, r)
+    for t in (out, *groups.values()):
+        _finish(t)
+    out["by_legs"] = {n: groups[n] for n in sorted(groups, key=lambda k: (not k.isdigit(), int(k) if k.isdigit() else 0, k))}
     return out
+
+
+def _tally() -> dict:
+    return {"rows": 0, "won": 0, "lost": 0, "void": 0, "open": 0, "paper_pl": Decimal("0"),
+            "staked": Decimal("0"), "expected_wins_settled": 0.0}
+
+
+def _add(t: dict, st: str, r: dict) -> None:
+    t["rows"] += 1
+    t[st] += 1
+    stake = parlays._money(r["stake"])
+    if st == "won":
+        t["paper_pl"] += parlays.net_profit(stake, r["estimated_odds"])
+        t["staked"] += stake
+    elif st == "lost":
+        t["paper_pl"] -= stake
+        t["staked"] += stake
+    if st in ("won", "lost"):
+        t["expected_wins_settled"] += float(r["est_hit_chance"])
+
+
+def _finish(t: dict) -> None:
+    t["paper_pl"] = str(parlays._money(t["paper_pl"]))
+    t["staked"] = str(parlays._money(t["staked"]))
+    t["expected_wins_settled"] = round(t["expected_wins_settled"], 3)
 
 
 def record_line(s: dict) -> str:
