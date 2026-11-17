@@ -11,7 +11,8 @@ A record only counts when `quote_problem` returns None:
 - the bookmaker quotes every leg's exact selection in Doyen's own stored prices;
 - the combined odds are consistent with that bookmaker's leg prices (a large gap means the
   wrong legs, a different market, a boost, or correlation pricing: all need a human look);
-- a timezone-aware `quoted_at`, not in the future, no older than the card limit (30 minutes).
+- a timezone-aware `quoted_at`, not in the future, no older than the card limit
+  (`sbi.parlays.MAX_QUOTE_AGE_MINUTES`, 150 minutes: one site refresh plus build time).
 An old quote is never relabelled as fresh: it simply stops counting.
 """
 from __future__ import annotations
