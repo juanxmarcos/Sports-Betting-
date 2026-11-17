@@ -17,4 +17,6 @@ sens.log
 data/coverage/latest.json
 data/independence/latest.json
 data/coverage/nfl_reports_latest.json
+# local-only research copies (e.g. monitoring leagues); never published
+data/local/
 data/coverage/quote_sources_latest.json

@@ -1,0 +1,3447 @@
+{
+ "generated": "2026-11-13T16:43:21+00:00",
+ "seasons": {
+  "tune": [
+   "2021",
+   "2122"
+  ],
+  "validate": [
+   "2223",
+   "2324"
+  ],
+  "test": [
+   "2425",
+   "2526",
+   "2627"
+  ]
+ },
+ "grid": {
+  "xi": [
+   0.0013,
+   0.0019,
+   0.0026
+  ],
+  "ridge": [
+   2.0,
+   4.0,
+   8.0
+  ]
+ },
+ "thresholds": {
+  "min_test_matches": 500,
+  "min_test_bets": 100,
+  "min_known_operators": 3
+ },
+ "leagues": {
+  "E2": {
+   "league": "E2",
+   "name": "England League One",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 400,
+     "teams": 23,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 97,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 399,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 246,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 186,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 164,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 164,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 218,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 210,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 8.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 158,
+     "teams": 24,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 61,
+     "xg_rows": 158,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 158,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0026,
+    "ridge": 4.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.05356,
+     "0.0013|4.0": 1.0517,
+     "0.0013|8.0": 1.0507,
+     "0.0019|2.0": 1.05019,
+     "0.0019|4.0": 1.04852,
+     "0.0019|8.0": 1.04805,
+     "0.0026|2.0": 1.04766,
+     "0.0026|4.0": 1.04615,
+     "0.0026|8.0": 1.04618
+    }
+   },
+   "blend_weight_1x2": 0.0553,
+   "validation_1x2": {
+    "n_matches": 1095,
+    "base_rate": {
+     "logloss": 1.07389,
+     "brier": 0.65007
+    },
+    "elo": {
+     "logloss": 1.02536,
+     "brier": 0.61475
+    },
+    "dixon_coles": {
+     "logloss": 1.0271,
+     "brier": 0.61635
+    },
+    "market_pre": {
+     "logloss": 1.01555,
+     "brier": 0.60891
+    },
+    "blend": {
+     "logloss": 1.0155,
+     "brier": 0.60884
+    },
+    "market_closing": {
+     "logloss": 1.01492,
+     "brier": 0.60831
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.00179,
+     0.02111
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 173,
+      "pred": 0.2561,
+      "obs": 0.2197
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 279,
+      "pred": 0.3549,
+      "obs": 0.3728
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 278,
+      "pred": 0.4478,
+      "obs": 0.4388
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 223,
+      "pred": 0.5478,
+      "obs": 0.5336
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 108,
+      "pred": 0.6397,
+      "obs": 0.6574
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 1246,
+    "base_rate": {
+     "logloss": 1.07049,
+     "brier": 0.64744
+    },
+    "elo": {
+     "logloss": 1.04102,
+     "brier": 0.62582
+    },
+    "dixon_coles": {
+     "logloss": 1.0385,
+     "brier": 0.624
+    },
+    "market_pre": {
+     "logloss": 1.01827,
+     "brier": 0.6099
+    },
+    "blend": {
+     "logloss": 1.01868,
+     "brier": 0.61015
+    },
+    "market_closing": {
+     "logloss": 1.01545,
+     "brier": 0.60786
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.01106,
+     0.02959
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 119,
+      "pred": 0.2634,
+      "obs": 0.2185
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 333,
+      "pred": 0.3526,
+      "obs": 0.3514
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 426,
+      "pred": 0.4495,
+      "obs": 0.4742
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 268,
+      "pred": 0.5455,
+      "obs": 0.5485
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 76,
+      "pred": 0.6355,
+      "obs": 0.6316
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 23,
+      "pred": 0.1661,
+      "obs": 0.2609
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 190,
+      "pred": 0.258,
+      "obs": 0.2368
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 334,
+      "pred": 0.3524,
+      "obs": 0.3503
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 311,
+      "pred": 0.4473,
+      "obs": 0.4566
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 262,
+      "pred": 0.5475,
+      "obs": 0.584
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 102,
+      "pred": 0.6429,
+      "obs": 0.7059
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 21,
+      "pred": 0.735,
+      "obs": 0.619
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 1246,
+    "model": 0.69366,
+    "market": 0.68254
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.04075,
+    "0.0013|4.0": 1.03952,
+    "0.0013|8.0": 1.03992,
+    "0.0019|2.0": 1.03998,
+    "0.0019|4.0": 1.0388,
+    "0.0019|8.0": 1.03944,
+    "0.0026|2.0": 1.03956,
+    "0.0026|4.0": 1.03846,
+    "0.0026|8.0": 1.0394
+   },
+   "sensitivity_spread": 0.00229,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.03956,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 50,
+    "staked": 50.0,
+    "profit_units": -4.34,
+    "roi": -0.0868,
+    "roi_ci95": [
+     -0.4793,
+     0.3291
+    ],
+    "hit_rate": 0.3,
+    "avg_odds": 3.406,
+    "avg_ev_claimed": 0.0695,
+    "max_drawdown_units": 8.4,
+    "avg_clv": 0.0256,
+    "clv_ci95": [
+     -0.0012,
+     0.0592
+    ],
+    "clv_positive_share": 0.5306,
+    "by_market": {
+     "1X2": {
+      "n": 43,
+      "roi": 0.0181
+     },
+     "AH": {
+      "n": 2,
+      "roi": -1.0
+     },
+     "OU": {
+      "n": 5,
+      "roi": -0.624
+     }
+    },
+    "by_league": {
+     "E2": {
+      "n": 50,
+      "roi": -0.0868
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 5,
+    "events_priced": 5,
+    "usable_markets": 5,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 5,
+    "events_with_sharp_reference": 5
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": true,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": false,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "the model adds nothing to the market out of sample (validation blend weight 0.055; test log loss model 1.0385, market 1.01827)",
+     "only 50 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  },
+  "E3": {
+   "league": "E3",
+   "name": "England League Two",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 440,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 80,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 436,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 5,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 240,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 152,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 159,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 551,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 145,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 192,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 187,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 8.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 164,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 53,
+     "xg_rows": 164,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 164,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0013,
+    "ridge": 8.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.0706,
+     "0.0013|4.0": 1.06922,
+     "0.0013|8.0": 1.06873,
+     "0.0019|2.0": 1.07099,
+     "0.0019|4.0": 1.06955,
+     "0.0019|8.0": 1.06908,
+     "0.0026|2.0": 1.07179,
+     "0.0026|4.0": 1.07019,
+     "0.0026|8.0": 1.06966
+    }
+   },
+   "blend_weight_1x2": 0.0483,
+   "validation_1x2": {
+    "n_matches": 1097,
+    "base_rate": {
+     "logloss": 1.07619,
+     "brier": 0.65127
+    },
+    "elo": {
+     "logloss": 1.06516,
+     "brier": 0.64365
+    },
+    "dixon_coles": {
+     "logloss": 1.06876,
+     "brier": 0.64646
+    },
+    "market_pre": {
+     "logloss": 1.04995,
+     "brier": 0.63329
+    },
+    "blend": {
+     "logloss": 1.0499,
+     "brier": 0.63325
+    },
+    "market_closing": {
+     "logloss": 1.04517,
+     "brier": 0.62993
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.00653,
+     0.03108
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 88,
+      "pred": 0.2727,
+      "obs": 0.3068
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 355,
+      "pred": 0.3578,
+      "obs": 0.431
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 444,
+      "pred": 0.447,
+      "obs": 0.4099
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 188,
+      "pred": 0.5399,
+      "obs": 0.5213
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 22,
+      "pred": 0.6263,
+      "obs": 0.6364
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 1254,
+    "base_rate": {
+     "logloss": 1.0793,
+     "brier": 0.65334
+    },
+    "elo": {
+     "logloss": 1.06543,
+     "brier": 0.6435
+    },
+    "dixon_coles": {
+     "logloss": 1.06283,
+     "brier": 0.64178
+    },
+    "market_pre": {
+     "logloss": 1.04648,
+     "brier": 0.6307
+    },
+    "blend": {
+     "logloss": 1.04652,
+     "brier": 0.6307
+    },
+    "market_closing": {
+     "logloss": 1.04306,
+     "brier": 0.62828
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.00695,
+     0.02653
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 45,
+      "pred": 0.2729,
+      "obs": 0.4222
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 382,
+      "pred": 0.3618,
+      "obs": 0.3115
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 611,
+      "pred": 0.4482,
+      "obs": 0.4697
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 199,
+      "pred": 0.536,
+      "obs": 0.4925
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 24,
+      "pred": 0.1766,
+      "obs": 0.0833
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 170,
+      "pred": 0.2598,
+      "obs": 0.2471
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 330,
+      "pred": 0.3527,
+      "obs": 0.3848
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 372,
+      "pred": 0.4456,
+      "obs": 0.4543
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 254,
+      "pred": 0.5467,
+      "obs": 0.5157
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 93,
+      "pred": 0.6359,
+      "obs": 0.6022
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 1254,
+    "model": 0.69157,
+    "market": 0.68819
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.06542,
+    "0.0013|4.0": 1.06366,
+    "0.0013|8.0": 1.0627,
+    "0.0019|2.0": 1.06459,
+    "0.0019|4.0": 1.06281,
+    "0.0019|8.0": 1.06197,
+    "0.0026|2.0": 1.06388,
+    "0.0026|4.0": 1.06205,
+    "0.0026|8.0": 1.06132
+   },
+   "sensitivity_spread": 0.0041,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.06388,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 59,
+    "staked": 59.0,
+    "profit_units": -25.46,
+    "roi": -0.4315,
+    "roi_ci95": [
+     -0.7007,
+     -0.1095
+    ],
+    "hit_rate": 0.2203,
+    "avg_odds": 3.24,
+    "avg_ev_claimed": 0.0554,
+    "max_drawdown_units": 27.01,
+    "avg_clv": -0.0031,
+    "clv_ci95": [
+     -0.0192,
+     0.0129
+    ],
+    "clv_positive_share": 0.3966,
+    "by_market": {
+     "1X2": {
+      "n": 43,
+      "roi": -0.484
+     },
+     "AH": {
+      "n": 4,
+      "roi": -0.1363
+     },
+     "OU": {
+      "n": 12,
+      "roi": -0.3417
+     }
+    },
+    "by_league": {
+     "E3": {
+      "n": 59,
+      "roi": -0.4315
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 10,
+    "events_priced": 10,
+    "usable_markets": 10,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 10,
+    "events_with_sharp_reference": 10
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": true,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": false,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "the model adds nothing to the market out of sample (validation blend weight 0.048; test log loss model 1.06283, market 1.04648)",
+     "only 59 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  },
+  "EC": {
+   "league": "EC",
+   "name": "England National League",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 451,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 134,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 451,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 477,
+     "teams": 23,
+     "teams_new_to_division": 4,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 235,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 476,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 506,
+     "teams": 23,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 156,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 506,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 216,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 187,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 551,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 172,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 552,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 552,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 242,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 8.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 540,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 189,
+     "teams": 24,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 84,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 189,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.01004,
+     "0.0013|4.0": 1.01003,
+     "0.0013|8.0": 1.01181,
+     "0.0019|2.0": 1.00654,
+     "0.0019|4.0": 1.0068,
+     "0.0019|8.0": 1.00927,
+     "0.0026|2.0": 1.00347,
+     "0.0026|4.0": 1.00405,
+     "0.0026|8.0": 1.00728
+    }
+   },
+   "blend_weight_1x2": 0.2241,
+   "validation_1x2": {
+    "n_matches": 1093,
+    "base_rate": {
+     "logloss": 1.07404,
+     "brier": 0.65002
+    },
+    "elo": {
+     "logloss": 1.03811,
+     "brier": 0.62439
+    },
+    "dixon_coles": {
+     "logloss": 1.0331,
+     "brier": 0.62135
+    },
+    "market_pre": {
+     "logloss": 1.02211,
+     "brier": 0.61353
+    },
+    "blend": {
+     "logloss": 1.02106,
+     "brier": 0.61277
+    },
+    "market_closing": {
+     "logloss": 1.0208,
+     "brier": 0.61256
+    },
+    "dc_minus_market_logloss_ci95": [
+     -0.00105,
+     0.02254
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 27,
+      "pred": 0.1716,
+      "obs": 0.0741
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 110,
+      "pred": 0.2616,
+      "obs": 0.2909
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 302,
+      "pred": 0.353,
+      "obs": 0.404
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 329,
+      "pred": 0.4474,
+      "obs": 0.383
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 205,
+      "pred": 0.5438,
+      "obs": 0.4976
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 82,
+      "pred": 0.64,
+      "obs": 0.6951
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 29,
+      "pred": 0.7404,
+      "obs": 0.8621
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 1269,
+    "base_rate": {
+     "logloss": 1.07294,
+     "brier": 0.64953
+    },
+    "elo": {
+     "logloss": 1.02565,
+     "brier": 0.61468
+    },
+    "dixon_coles": {
+     "logloss": 1.02104,
+     "brier": 0.61218
+    },
+    "market_pre": {
+     "logloss": 1.00205,
+     "brier": 0.59853
+    },
+    "blend": {
+     "logloss": 1.00402,
+     "brier": 0.59999
+    },
+    "market_closing": {
+     "logloss": 0.99573,
+     "brier": 0.59459
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.01002,
+     0.0278
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 33,
+      "pred": 0.171,
+      "obs": 0.1818
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 172,
+      "pred": 0.2588,
+      "obs": 0.2151
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 304,
+      "pred": 0.3557,
+      "obs": 0.3586
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 372,
+      "pred": 0.4497,
+      "obs": 0.4301
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 227,
+      "pred": 0.5441,
+      "obs": 0.5374
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 127,
+      "pred": 0.642,
+      "obs": 0.6929
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 29,
+      "pred": 0.7382,
+      "obs": 0.6897
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 62,
+      "pred": 0.1665,
+      "obs": 0.1452
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 168,
+      "pred": 0.2534,
+      "obs": 0.2321
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 292,
+      "pred": 0.3554,
+      "obs": 0.339
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 352,
+      "pred": 0.4482,
+      "obs": 0.446
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 205,
+      "pred": 0.544,
+      "obs": 0.5415
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 124,
+      "pred": 0.639,
+      "obs": 0.6371
+     },
+     {
+      "bin": "0.7-0.8",
+      "n": 55,
+      "pred": 0.7382,
+      "obs": 0.8
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 1269,
+    "model": 0.68793,
+    "market": 0.67508
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.02654,
+    "0.0013|4.0": 1.02637,
+    "0.0013|8.0": 1.0284,
+    "0.0019|2.0": 1.02353,
+    "0.0019|4.0": 1.02359,
+    "0.0019|8.0": 1.02621,
+    "0.0026|2.0": 1.02104,
+    "0.0026|4.0": 1.02134,
+    "0.0026|8.0": 1.02465
+   },
+   "sensitivity_spread": 0.00736,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.02104,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 67,
+    "staked": 67.0,
+    "profit_units": 9.6,
+    "roi": 0.1433,
+    "roi_ci95": [
+     -0.1999,
+     0.519
+    ],
+    "hit_rate": 0.403,
+    "avg_odds": 3.174,
+    "avg_ev_claimed": 0.0781,
+    "max_drawdown_units": 8.91,
+    "avg_clv": 0.0219,
+    "clv_ci95": [
+     -0.0054,
+     0.0499
+    ],
+    "clv_positive_share": 0.5484,
+    "by_market": {
+     "1X2": {
+      "n": 52,
+      "roi": 0.0195
+     },
+     "AH": {
+      "n": 12,
+      "roi": 0.4725
+     },
+     "OU": {
+      "n": 3,
+      "roi": 0.972
+     }
+    },
+    "by_league": {
+     "EC": {
+      "n": 67,
+      "roi": 0.1433
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 11,
+    "events_priced": 11,
+    "usable_markets": 11,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 11,
+    "events_with_sharp_reference": 11
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": true,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": false,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "the model adds nothing to the market out of sample (validation blend weight 0.224; test log loss model 1.02104, market 1.00205)",
+     "only 67 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  },
+  "SC1": {
+   "league": "SC1",
+   "name": "Scotland Championship",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 4,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 137,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 36,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 137,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 135,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 49,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 135,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 42,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 53,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 45,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 46,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 47,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 8.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 69,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 17,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 69,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0019,
+    "ridge": 8.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.07664,
+     "0.0013|4.0": 1.07413,
+     "0.0013|8.0": 1.07338,
+     "0.0019|2.0": 1.07631,
+     "0.0019|4.0": 1.07376,
+     "0.0019|8.0": 1.07323,
+     "0.0026|2.0": 1.0766,
+     "0.0026|4.0": 1.07395,
+     "0.0026|8.0": 1.07362
+    }
+   },
+   "blend_weight_1x2": 0.063,
+   "validation_1x2": {
+    "n_matches": 355,
+    "base_rate": {
+     "logloss": 1.09065,
+     "brier": 0.66144
+    },
+    "elo": {
+     "logloss": 1.07224,
+     "brier": 0.64762
+    },
+    "dixon_coles": {
+     "logloss": 1.07258,
+     "brier": 0.64715
+    },
+    "market_pre": {
+     "logloss": 1.05826,
+     "brier": 0.63715
+    },
+    "blend": {
+     "logloss": 1.05819,
+     "brier": 0.63708
+    },
+    "market_closing": {
+     "logloss": 1.04741,
+     "brier": 0.62986
+    },
+    "dc_minus_market_logloss_ci95": [
+     -0.00353,
+     0.03283
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 25,
+      "pred": 0.2633,
+      "obs": 0.16
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 119,
+      "pred": 0.3657,
+      "obs": 0.3025
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 134,
+      "pred": 0.4444,
+      "obs": 0.4179
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 54,
+      "pred": 0.542,
+      "obs": 0.537
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 422,
+    "base_rate": {
+     "logloss": 1.0777,
+     "brier": 0.65218
+    },
+    "elo": {
+     "logloss": 1.05419,
+     "brier": 0.63543
+    },
+    "dixon_coles": {
+     "logloss": 1.0451,
+     "brier": 0.6297
+    },
+    "market_pre": {
+     "logloss": 1.02544,
+     "brier": 0.61551
+    },
+    "blend": {
+     "logloss": 1.02513,
+     "brier": 0.61536
+    },
+    "market_closing": {
+     "logloss": 1.01727,
+     "brier": 0.61043
+    },
+    "dc_minus_market_logloss_ci95": [
+     -0.00214,
+     0.04095
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 56,
+      "pred": 0.2669,
+      "obs": 0.2321
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 130,
+      "pred": 0.3514,
+      "obs": 0.3538
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 137,
+      "pred": 0.4477,
+      "obs": 0.5036
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 77,
+      "pred": 0.5459,
+      "obs": 0.5065
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 38,
+      "pred": 0.1663,
+      "obs": 0.1053
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 74,
+      "pred": 0.2546,
+      "obs": 0.2973
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 91,
+      "pred": 0.3511,
+      "obs": 0.4396
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 87,
+      "pred": 0.4495,
+      "obs": 0.4828
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 78,
+      "pred": 0.5464,
+      "obs": 0.4872
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 37,
+      "pred": 0.6466,
+      "obs": 0.6216
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 422,
+    "model": 0.69877,
+    "market": 0.69
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.04503,
+    "0.0013|4.0": 1.04494,
+    "0.0013|8.0": 1.04592,
+    "0.0019|2.0": 1.04398,
+    "0.0019|4.0": 1.04387,
+    "0.0019|8.0": 1.0452,
+    "0.0026|2.0": 1.04305,
+    "0.0026|4.0": 1.04298,
+    "0.0026|8.0": 1.04479
+   },
+   "sensitivity_spread": 0.00294,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.04305,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 29,
+    "staked": 29.0,
+    "profit_units": -2.32,
+    "roi": -0.08,
+    "roi_ci95": [
+     -0.5269,
+     0.4342
+    ],
+    "hit_rate": 0.3448,
+    "avg_odds": 3.472,
+    "avg_ev_claimed": 0.0585,
+    "max_drawdown_units": 4.77,
+    "avg_clv": 0.0005,
+    "clv_ci95": [
+     -0.0513,
+     0.0557
+    ],
+    "clv_positive_share": 0.6154,
+    "by_market": {
+     "1X2": {
+      "n": 22,
+      "roi": -0.2623
+     },
+     "AH": {
+      "n": 7,
+      "roi": 0.4929
+     }
+    },
+    "by_league": {
+     "SC1": {
+      "n": 29,
+      "roi": -0.08
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 4,
+    "events_priced": 4,
+    "usable_markets": 4,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 4,
+    "events_with_sharp_reference": 4
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": false,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": true,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "only 422 test matches with a market consensus (need 500)",
+     "only 29 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  },
+  "SC2": {
+   "league": "SC2",
+   "name": "Scotland League One",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 4,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 139,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 9,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 139,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 110,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 41,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.5,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 110,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 10,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 4,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 20,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 5,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 27,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 4,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 22,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 26,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 69,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 5,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 69,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.02999,
+     "0.0013|4.0": 1.02962,
+     "0.0013|8.0": 1.03206,
+     "0.0019|2.0": 1.02739,
+     "0.0019|4.0": 1.02752,
+     "0.0019|8.0": 1.03091,
+     "0.0026|2.0": 1.0256,
+     "0.0026|4.0": 1.02616,
+     "0.0026|8.0": 1.0305
+    }
+   },
+   "blend_weight_1x2": 0.0,
+   "validation_1x2": {
+    "n_matches": 354,
+    "base_rate": {
+     "logloss": 1.07198,
+     "brier": 0.64951
+    },
+    "elo": {
+     "logloss": 0.98049,
+     "brier": 0.58545
+    },
+    "dixon_coles": {
+     "logloss": 0.98037,
+     "brier": 0.5871
+    },
+    "market_pre": {
+     "logloss": 0.94567,
+     "brier": 0.55951
+    },
+    "blend": {
+     "logloss": 0.94567,
+     "brier": 0.55951
+    },
+    "market_closing": {
+     "logloss": 0.94977,
+     "brier": 0.5616
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.00891,
+     0.06115
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 35,
+      "pred": 0.1577,
+      "obs": 0.1429
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 56,
+      "pred": 0.2477,
+      "obs": 0.1786
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 70,
+      "pred": 0.3442,
+      "obs": 0.3714
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 66,
+      "pred": 0.4489,
+      "obs": 0.4697
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 46,
+      "pred": 0.5527,
+      "obs": 0.4783
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 54,
+      "pred": 0.6496,
+      "obs": 0.7222
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 423,
+    "base_rate": {
+     "logloss": 1.07855,
+     "brier": 0.65329
+    },
+    "elo": {
+     "logloss": 1.07045,
+     "brier": 0.64719
+    },
+    "dixon_coles": {
+     "logloss": 1.05761,
+     "brier": 0.63942
+    },
+    "market_pre": {
+     "logloss": 1.02359,
+     "brier": 0.61601
+    },
+    "blend": {
+     "logloss": 1.02359,
+     "brier": 0.61601
+    },
+    "market_closing": {
+     "logloss": 1.0282,
+     "brier": 0.61803
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.01146,
+     0.05738
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.1-0.2",
+      "n": 24,
+      "pred": 0.1631,
+      "obs": 0.25
+     },
+     {
+      "bin": "0.2-0.3",
+      "n": 69,
+      "pred": 0.2598,
+      "obs": 0.3188
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 126,
+      "pred": 0.3508,
+      "obs": 0.381
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 109,
+      "pred": 0.4521,
+      "obs": 0.4862
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 62,
+      "pred": 0.5449,
+      "obs": 0.4355
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 24,
+      "pred": 0.6406,
+      "obs": 0.6667
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 56,
+      "pred": 0.2491,
+      "obs": 0.2143
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 109,
+      "pred": 0.3562,
+      "obs": 0.4128
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 134,
+      "pred": 0.446,
+      "obs": 0.4254
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 60,
+      "pred": 0.542,
+      "obs": 0.5667
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 27,
+      "pred": 0.642,
+      "obs": 0.5185
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 423,
+    "model": 0.69331,
+    "market": 0.68583
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.05682,
+    "0.0013|4.0": 1.053,
+    "0.0013|8.0": 1.05168,
+    "0.0019|2.0": 1.05681,
+    "0.0019|4.0": 1.05313,
+    "0.0019|8.0": 1.05235,
+    "0.0026|2.0": 1.05761,
+    "0.0026|4.0": 1.05399,
+    "0.0026|8.0": 1.05366
+   },
+   "sensitivity_spread": 0.00593,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.05761,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 26,
+    "staked": 26.0,
+    "profit_units": -1.38,
+    "roi": -0.0531,
+    "roi_ci95": [
+     -0.5366,
+     0.494
+    ],
+    "hit_rate": 0.3462,
+    "avg_odds": 3.015,
+    "avg_ev_claimed": 0.0758,
+    "max_drawdown_units": 7.88,
+    "avg_clv": -0.0176,
+    "clv_ci95": [
+     -0.0576,
+     0.0191
+    ],
+    "clv_positive_share": 0.56,
+    "by_market": {
+     "1X2": {
+      "n": 22,
+      "roi": -0.1527
+     },
+     "AH": {
+      "n": 4,
+      "roi": 0.495
+     }
+    },
+    "by_league": {
+     "SC2": {
+      "n": 26,
+      "roi": -0.0531
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 5,
+    "events_priced": 5,
+    "usable_markets": 5,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 5,
+    "events_with_sharp_reference": 5
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": false,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": false,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "only 423 test matches with a market consensus (need 500)",
+     "the model adds nothing to the market out of sample (validation blend weight 0.000; test log loss model 1.05761, market 1.02359)",
+     "only 26 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  },
+  "SC3": {
+   "league": "SC3",
+   "name": "Scotland League Two",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 137,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 10,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 137,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 110,
+     "teams": 10,
+     "teams_new_to_division": 1,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 41,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 110,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 36,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 20,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 16,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 2,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 16,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 180,
+     "teams": 10,
+     "teams_new_to_division": 3,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 15,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 180,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 65,
+     "teams": 10,
+     "teams_new_to_division": 1,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 1,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 65,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.0275,
+     "0.0013|4.0": 1.02973,
+     "0.0013|8.0": 1.03557,
+     "0.0019|2.0": 1.02559,
+     "0.0019|4.0": 1.02831,
+     "0.0019|8.0": 1.03517,
+     "0.0026|2.0": 1.02422,
+     "0.0026|4.0": 1.0275,
+     "0.0026|8.0": 1.03549
+    }
+   },
+   "blend_weight_1x2": 0.1184,
+   "validation_1x2": {
+    "n_matches": 355,
+    "base_rate": {
+     "logloss": 1.08218,
+     "brier": 0.65533
+    },
+    "elo": {
+     "logloss": 1.0893,
+     "brier": 0.66
+    },
+    "dixon_coles": {
+     "logloss": 1.07272,
+     "brier": 0.64822
+    },
+    "market_pre": {
+     "logloss": 1.06203,
+     "brier": 0.6418
+    },
+    "blend": {
+     "logloss": 1.06184,
+     "brier": 0.64154
+    },
+    "market_closing": {
+     "logloss": 1.05449,
+     "brier": 0.63631
+    },
+    "dc_minus_market_logloss_ci95": [
+     -0.00747,
+     0.02856
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 52,
+      "pred": 0.254,
+      "obs": 0.3077
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 104,
+      "pred": 0.3511,
+      "obs": 0.3365
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 113,
+      "pred": 0.4507,
+      "obs": 0.4513
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 59,
+      "pred": 0.5378,
+      "obs": 0.5763
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 423,
+    "base_rate": {
+     "logloss": 1.0602,
+     "brier": 0.64033
+    },
+    "elo": {
+     "logloss": 1.05949,
+     "brier": 0.63912
+    },
+    "dixon_coles": {
+     "logloss": 1.06548,
+     "brier": 0.64198
+    },
+    "market_pre": {
+     "logloss": 1.05292,
+     "brier": 0.63368
+    },
+    "blend": {
+     "logloss": 1.05178,
+     "brier": 0.63289
+    },
+    "market_closing": {
+     "logloss": 1.05557,
+     "brier": 0.63561
+    },
+    "dc_minus_market_logloss_ci95": [
+     -0.00823,
+     0.03419
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 40,
+      "pred": 0.2787,
+      "obs": 0.4
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 119,
+      "pred": 0.3582,
+      "obs": 0.3866
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 163,
+      "pred": 0.4488,
+      "obs": 0.4724
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 80,
+      "pred": 0.5435,
+      "obs": 0.55
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 20,
+      "pred": 0.6324,
+      "obs": 0.6
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 52,
+      "pred": 0.2587,
+      "obs": 0.3462
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 123,
+      "pred": 0.351,
+      "obs": 0.3902
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 123,
+      "pred": 0.4482,
+      "obs": 0.5122
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 86,
+      "pred": 0.5461,
+      "obs": 0.5465
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 21,
+      "pred": 0.6328,
+      "obs": 0.5714
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 423,
+    "model": 0.69687,
+    "market": 0.68958
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.06453,
+    "0.0013|4.0": 1.06199,
+    "0.0013|8.0": 1.05957,
+    "0.0019|2.0": 1.06448,
+    "0.0019|4.0": 1.06162,
+    "0.0019|8.0": 1.05902,
+    "0.0026|2.0": 1.06548,
+    "0.0026|4.0": 1.06212,
+    "0.0026|8.0": 1.05921
+   },
+   "sensitivity_spread": 0.00646,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.06548,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 33,
+    "staked": 33.0,
+    "profit_units": 8.99,
+    "roi": 0.2724,
+    "roi_ci95": [
+     -0.267,
+     0.8328
+    ],
+    "hit_rate": 0.4242,
+    "avg_odds": 3.194,
+    "avg_ev_claimed": 0.0655,
+    "max_drawdown_units": 8.0,
+    "avg_clv": 0.0307,
+    "clv_ci95": [
+     -0.0081,
+     0.0685
+    ],
+    "clv_positive_share": 0.6207,
+    "by_market": {
+     "1X2": {
+      "n": 22,
+      "roi": 0.3641
+     },
+     "AH": {
+      "n": 8,
+      "roi": 0.225
+     },
+     "OU": {
+      "n": 3,
+      "roi": -0.2733
+     }
+    },
+    "by_league": {
+     "SC3": {
+      "n": 33,
+      "roi": 0.2724
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 5,
+    "events_priced": 5,
+    "usable_markets": 5,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 5,
+    "events_with_sharp_reference": 5
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": false,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": true,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "only 423 test matches with a market consensus (need 500)",
+     "only 33 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  },
+  "SP2": {
+   "league": "SP2",
+   "name": "Spain Segunda Division",
+   "tier": "monitoring",
+   "seasons": {
+    "tune": [
+     "2021",
+     "2122"
+    ],
+    "validate": [
+     "2223",
+     "2324"
+    ],
+    "test": [
+     "2425",
+     "2526",
+     "2627"
+    ]
+   },
+   "audit": [
+    {
+     "season": "1718",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": null,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 462,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1819",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 0,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 0.0,
+      "AH": 0.0
+     },
+     "median_bookmakers_closing_1x2": 1.0,
+     "matches_with_pre_1x2": 441,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "1920",
+     "matches": 398,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 331,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 398,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2021",
+     "matches": 526,
+     "teams": 29,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 457,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 526,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2122",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": 6,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 373,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 6.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 6.0,
+     "matches_with_pre_1x2": 462,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2223",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 461,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 462,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2324",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 462,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 462,
+     "sharp_references_pre": [
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2425",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 462,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 5.0,
+      "OU": 3.0,
+      "AH": 3.0
+     },
+     "median_bookmakers_closing_1x2": 5.0,
+     "matches_with_pre_1x2": 462,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2526",
+     "matches": 462,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 460,
+     "xg_rows": 0,
+     "median_bookmakers_pre": {
+      "1X2": 8.0,
+      "OU": 2.0,
+      "AH": 2.0
+     },
+     "median_bookmakers_closing_1x2": 8.0,
+     "matches_with_pre_1x2": 462,
+     "sharp_references_pre": [
+      "Betfair Exchange",
+      "Pinnacle"
+     ]
+    },
+    {
+     "season": "2627",
+     "matches": 140,
+     "teams": 22,
+     "teams_new_to_division": 7,
+     "duplicate_events": 0,
+     "kickoff_not_1500": 140,
+     "xg_rows": 140,
+     "median_bookmakers_pre": {
+      "1X2": 7.0,
+      "OU": 2.0,
+      "AH": 1.0
+     },
+     "median_bookmakers_closing_1x2": 7.0,
+     "matches_with_pre_1x2": 140,
+     "sharp_references_pre": [
+      "Betfair Exchange"
+     ]
+    }
+   ],
+   "hyperparameters": {
+    "xi": 0.0013,
+    "ridge": 8.0,
+    "chosen_on": "this league's tune seasons only",
+    "tune_grid_logloss": {
+     "0.0013|2.0": 1.05972,
+     "0.0013|4.0": 1.05784,
+     "0.0013|8.0": 1.05724,
+     "0.0019|2.0": 1.05988,
+     "0.0019|4.0": 1.05797,
+     "0.0019|8.0": 1.05742,
+     "0.0026|2.0": 1.06033,
+     "0.0026|4.0": 1.05834,
+     "0.0026|8.0": 1.05781
+    }
+   },
+   "blend_weight_1x2": 0.0641,
+   "validation_1x2": {
+    "n_matches": 917,
+    "base_rate": {
+     "logloss": 1.05772,
+     "brier": 0.63936
+    },
+    "elo": {
+     "logloss": 1.04908,
+     "brier": 0.63343
+    },
+    "dixon_coles": {
+     "logloss": 1.04999,
+     "brier": 0.63349
+    },
+    "market_pre": {
+     "logloss": 1.04007,
+     "brier": 0.62726
+    },
+    "blend": {
+     "logloss": 1.04003,
+     "brier": 0.62714
+    },
+    "market_closing": {
+     "logloss": 1.03559,
+     "brier": 0.62415
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.00053,
+     0.01965
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 21,
+      "pred": 0.282,
+      "obs": 0.381
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 312,
+      "pred": 0.3614,
+      "obs": 0.3654
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 414,
+      "pred": 0.4444,
+      "obs": 0.4976
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 154,
+      "pred": 0.5316,
+      "obs": 0.526
+     }
+    ]
+   },
+   "test_1x2": {
+    "n_matches": 1053,
+    "base_rate": {
+     "logloss": 1.0667,
+     "brier": 0.64447
+    },
+    "elo": {
+     "logloss": 1.04517,
+     "brier": 0.62827
+    },
+    "dixon_coles": {
+     "logloss": 1.04569,
+     "brier": 0.62959
+    },
+    "market_pre": {
+     "logloss": 1.02065,
+     "brier": 0.61206
+    },
+    "blend": {
+     "logloss": 1.02129,
+     "brier": 0.6125
+    },
+    "market_closing": {
+     "logloss": 1.0185,
+     "brier": 0.61053
+    },
+    "dc_minus_market_logloss_ci95": [
+     0.01467,
+     0.03574
+    ],
+    "calibration_dc_home": [
+     {
+      "bin": "0.3-0.4",
+      "n": 268,
+      "pred": 0.3642,
+      "obs": 0.3246
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 541,
+      "pred": 0.4488,
+      "obs": 0.4584
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 211,
+      "pred": 0.5366,
+      "obs": 0.5829
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 21,
+      "pred": 0.6236,
+      "obs": 0.7143
+     }
+    ],
+    "calibration_market_home": [
+     {
+      "bin": "0.2-0.3",
+      "n": 84,
+      "pred": 0.2646,
+      "obs": 0.2262
+     },
+     {
+      "bin": "0.3-0.4",
+      "n": 269,
+      "pred": 0.3559,
+      "obs": 0.3532
+     },
+     {
+      "bin": "0.4-0.5",
+      "n": 360,
+      "pred": 0.4499,
+      "obs": 0.45
+     },
+     {
+      "bin": "0.5-0.6",
+      "n": 231,
+      "pred": 0.5453,
+      "obs": 0.5584
+     },
+     {
+      "bin": "0.6-0.7",
+      "n": 78,
+      "pred": 0.6361,
+      "obs": 0.7308
+     }
+    ]
+   },
+   "test_ou25_logloss": {
+    "n": 1053,
+    "model": 0.69893,
+    "market": 0.68285
+   },
+   "sensitivity_test_logloss_dc": {
+    "0.0013|2.0": 1.04809,
+    "0.0013|4.0": 1.04625,
+    "0.0013|8.0": 1.04565,
+    "0.0019|2.0": 1.04677,
+    "0.0019|4.0": 1.04502,
+    "0.0019|8.0": 1.04469,
+    "0.0026|2.0": 1.04589,
+    "0.0026|4.0": 1.04418,
+    "0.0026|8.0": 1.04409
+   },
+   "sensitivity_spread": 0.004,
+   "pooled_hyperparameters_from_other_leagues": {
+    "xi": 0.0026,
+    "ridge": 2.0,
+    "test_logloss_dc": 1.04589,
+    "note": "tuned on E0,E1,SP1,D1,I1,F1; scored here for comparison only, not adopted"
+   },
+   "test_bets_deployed_rules": {
+    "n_bets": 56,
+    "staked": 56.0,
+    "profit_units": -3.73,
+    "roi": -0.0665,
+    "roi_ci95": [
+     -0.4607,
+     0.3351
+    ],
+    "hit_rate": 0.2857,
+    "avg_odds": 3.411,
+    "avg_ev_claimed": 0.0575,
+    "max_drawdown_units": 18.29,
+    "avg_clv": -0.0102,
+    "clv_ci95": [
+     -0.0322,
+     0.011
+    ],
+    "clv_positive_share": 0.5091,
+    "by_market": {
+     "1X2": {
+      "n": 52,
+      "roi": -0.0638
+     },
+     "AH": {
+      "n": 2,
+      "roi": -0.01
+     },
+     "OU": {
+      "n": 2,
+      "roi": -0.195
+     }
+    },
+    "by_league": {
+     "SP2": {
+      "n": 56,
+      "roi": -0.0665
+     }
+    }
+   },
+   "live": {
+    "scheduled_events": 11,
+    "events_priced": 11,
+    "usable_markets": 10,
+    "known_operators": 4,
+    "unknown_bookmakers": 2,
+    "events_fresh_bookmaker_timed": 0,
+    "events_fresh_observed_only": 11,
+    "events_with_sharp_reference": 9
+   },
+   "verdict": {
+    "status": "monitoring",
+    "checks": {
+     "enough_test_matches": true,
+     "market_beats_base_rate": true,
+     "model_adds_to_market": false,
+     "enough_simulated_bets": false,
+     "clv_interval_above_zero": false,
+     "roi_interval_above_zero": false,
+     "live_known_operators": true,
+     "live_bookmaker_timed_quotes": false
+    },
+    "blockers": [
+     "the model adds nothing to the market out of sample (validation blend weight 0.064; test log loss model 1.04569, market 1.02065)",
+     "only 56 simulated selections on the test seasons (need 100)",
+     "closing-line value is not reliably positive (95% interval includes zero or is missing)",
+     "simulated return is not distinguishable from zero (95% interval includes zero or is missing)",
+     "current quotes carry only a file-publication time, never the bookmaker's own update time"
+    ],
+    "promotion": "never automatic: needs an owner-approved change to sbi/leagues.py"
+   }
+  }
+ }
+}
