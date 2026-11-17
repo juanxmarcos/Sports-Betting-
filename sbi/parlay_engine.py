@@ -77,9 +77,10 @@ def _day(now: datetime) -> str:
     return now.astimezone(NY).date().isoformat()
 
 
-def todays_events(con, now: datetime) -> list[dict]:
-    """Scheduled events in supported sports that start later today (New York calendar day)."""
-    day = _day(now)
+def todays_events(con, now: datetime, day: str | None = None) -> list[dict]:
+    """Scheduled events in supported sports that start later today (New York calendar day), or on
+    the New York date `day` (issue #58 previews) and after `now`."""
+    day = day or _day(now)
     start = datetime.fromisoformat(day).replace(tzinfo=NY)
     end = start + timedelta(days=1)
     has_meta = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='event_meta'").fetchone()

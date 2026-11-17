@@ -260,6 +260,10 @@ details.sec[open] summary::after{content:"–"}
 .pc-n{font:600 11px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
 .pill.mock{color:var(--warn);border-color:rgba(221,184,114,.45)}
 .pill.estimate{color:var(--warn);border-color:rgba(221,184,114,.45);height:22px;font-size:11px}
+.pill.preview{color:var(--info);border-color:rgba(143,179,224,.4);height:auto;min-height:22px;font-size:11px;white-space:normal;line-height:1.35;padding-top:3px;padding-bottom:3px}
+.seg.days{margin-top:14px;flex-wrap:wrap;max-width:100%}
+.seg.days button{padding:0 12px}
+.daynav{margin:8px 0 0}
 .pc-h .pill{margin-left:auto}.pc-h .pill+.pill{margin-left:6px}
 .est-h{margin:22px 0 12px}
 

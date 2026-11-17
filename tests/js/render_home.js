@@ -3,7 +3,8 @@
 // Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays",
 //   "allowMock": true (render fixtures marked mock), "noLite": true (data/parlays.json missing),
 //   "footer": true (print the footer's estimated-parlay record line instead),
-//   "stake": {"value": "25", "odds": 6.5} (simulate typing a bet amount; prints the payout text)}.
+//   "stake": {"value": "25", "odds": 6.5} (simulate typing a bet amount; prints the payout text),
+//   "hday": "1" (click the homepage day switcher: 0 today, 1-3 the preview days; issue #58)}.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -47,6 +48,9 @@ setTimeout(() => {
   }
   if (input.footer) { process.stdout.write(JSON.stringify({ estrec: els.estrec.textContent, hidden: els.estrec.hidden })); return; }
   if (input.fetched) { process.stdout.write(JSON.stringify(fetched)); return; }
+  if (input.hday != null) {
+    listeners.click({ target: { closest: (sel) => (sel === "[data-f]" ? { dataset: { f: "hday", v: String(input.hday) } } : null) } });
+  }
   if (input.range && input.range !== "today") {
     listeners.click({ target: { closest: (sel) => (sel === "[data-f]" ? { dataset: { f: "range", v: input.range } } : null) } });
   }

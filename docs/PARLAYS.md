@@ -474,7 +474,33 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
   that field is empty). The `#/parlays` page shows it as a table under the record line.
 - The record (with expected wins among settled rows) is the input #41's calibration work can use.
 
-### 11.4 Limits
+### 11.4 Previews for the next 3 days (issue #58)
+- **Day switcher.** The homepage shows *Today · Tomorrow · +2 · +3*, each with its weekday and date
+  (e.g. "Tomorrow · Thu, Nov 19"; New York dates). Today is the default. A *Past days: History* link
+  sits under it.
+- **Same rules, one exception.** Each run builds estimated parlays for each of the next 3 New York
+  dates (`PREVIEW_DAYS`) with the rules of 11.2: one bookmaker, per-size selection, at most one weak
+  leg, positive estimated value. Only the price rule differs: a preview leg uses that bookmaker's
+  **latest stored price at the time of the run, retrieved before the game starts**; the "same New
+  York day" rule is relaxed for previews only. Today's cards keep it.
+- **Labelled.** Each preview card carries `preview: true` and the badge *"Preview: may change at the
+  next daily update"*, next to the Estimate badge, and shows when its prices were read, with the date.
+- **Not recorded.** Previews are stored under `estimated_parlays.previews` in `docs/data/parlays.json`
+  and `docs/data/doyen.json` and replaced on every run; no history is kept. They are never written to
+  `ledger/estimated_parlays.csv` and never count in the record. On its own day a date is rebuilt
+  from that day's prices and recorded as today's parlays (11.3); a card with the same games and
+  bookmaker keeps the same `parlay_id`.
+- **No padding.** A day with no priced games shows *"No preview yet for this day"*. No prices are
+  invented and no extra API credit is spent: previews read the prices the daily run already stored
+  within the free Odds API budget (today's games first, then later days).
+- **Contract.** `card_problem(..., preview=True)` in Python and `estProblem(..., true)` in the browser
+  reject a preview without `preview: true`, dated for another day, with a leg on another date, a
+  started leg, or a price read at or after its game's start. A preview card is never valid as
+  today's card, and today's card is never valid as a preview.
+- **Limit.** The odds table stores a price only when it changes, so an unchanged preview price can
+  show an earlier "as of" time, sometimes from an earlier day. The card shows that time.
+
+### 11.5 Limits
 - **Not a quote.** A bookmaker may price a combination below the product of its single prices, or
   refuse it.
 - **Unvalidated joint probability.** Multiplying leg probabilities assumes independence and

@@ -34,6 +34,12 @@ What an estimated parlay is (rules loosened by the owner in issue #51, estimated
 Every shown estimate is appended to `ledger/estimated_parlays.csv` (never edited) and settled
 read-only from final scores, so a hit rate and paper P/L at the $10 display stake build up.
 No network request is made and no API credit is spent.
+
+Previews (issue #58): each run also builds parlays for each of the next `PREVIEW_DAYS` New York
+dates with the same rules, except the price rule: the bookmaker's latest stored price at the time
+of the run, retrieved before the game starts (the same-day rule applies to today only). Previews
+carry `preview: true` and `PREVIEW_BADGE`, are replaced on every run, and are never written to the
+ledger or counted in the record; on its own day a date is rebuilt and recorded as today's parlays.
 """
 from __future__ import annotations
 
@@ -41,7 +47,7 @@ import csv
 import hashlib
 import json
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from itertools import permutations
 from math import prod
@@ -71,6 +77,10 @@ DEFAULT_STAKE = parlays.DEFAULT_STAKE
 BEAM = 120                                   # combinations kept per size per bookmaker
 MAX_EVALUATIONS = 200_000                    # hard stop for the whole search
 EMPTY_TEXT = "No parlays today: no verified quotes, and no games later today meet the estimate rules."
+PREVIEW_DAYS = 3                             # next New York dates previewed (issue #58)
+PREVIEW_BADGE = "Preview: may change at the next daily update"
+PREVIEW_EMPTY_TEXT = "No preview yet for this day"
+PREVIEW_PRICE_RULE = "latest stored price from that bookmaker at the time of the run, retrieved before the game starts"
 DISCLOSURE = ("Estimates for paper trading in a personal research project, never a guarantee. Parlays win less "
               "often than single picks, and every leg has to win.")
 
@@ -85,9 +95,10 @@ def _ny_day(t: datetime) -> str:
     return t.astimezone(NY).date().isoformat()
 
 
-def fresh_books(con, event_id: str, now: datetime, start: datetime | None = None) -> dict:
+def fresh_books(con, event_id: str, now: datetime, start: datetime | None = None, same_day: bool = True) -> dict:
     """Latest pre-match quote per (bookmaker, market, selection, line) retrieved at or before `now`,
-    kept only if it was retrieved on the same New York day as `now` and before the game's start."""
+    kept only if it was retrieved before the game's start and, unless `same_day` is False (issue
+    #58 previews), on the same New York day as `now`."""
     from .engine import books_from_rows
     rows = con.execute("""SELECT market, line, bookmaker, selection, price, retrieved_at FROM odds
                           WHERE event_id=? AND kind='pre'""", (event_id,)).fetchall()
@@ -95,7 +106,7 @@ def fresh_books(con, event_id: str, now: datetime, start: datetime | None = None
     for r in rows:
         bk = normalize_book(r["bookmaker"])
         t = parlays._ts(r["retrieved_at"])
-        if not bk or t is None or t > now or _ny_day(t) != day or (start is not None and t >= start):
+        if not bk or t is None or t > now or (same_day and _ny_day(t) != day) or (start is not None and t >= start):
             continue
         key = (bk, r["market"], r["selection"], -999 if r["line"] is None else r["line"])
         if key not in latest or t > latest[key]["t"]:
@@ -173,14 +184,16 @@ def legs_for_event(event: dict, books: dict, model: dict | None, n_risk_notes: i
     return max(legs, key=lambda x: (x["best_value"], x["selection"])), None
 
 
-def build_pool(con, now: datetime) -> tuple[list[dict], dict]:
-    events = parlay_engine.todays_events(con, now)
+def build_pool(con, now: datetime, day: str | None = None) -> tuple[list[dict], dict]:
+    """Leg pool for today, or for the later New York date `day` (a preview, issue #58)."""
+    preview = day is not None and day != parlay_engine._day(now)
+    events = parlay_engine.todays_events(con, now, day)
     excluded, pool, fresh = Counter(), [], 0
     for e in events:
         if e["site_sport"] is None:
             excluded["unsupported sport"] += 1
             continue
-        books = fresh_books(con, e["event_id"], now, parlays._ts(e["kickoff_utc"]))
+        books = fresh_books(con, e["event_id"], now, parlays._ts(e["kickoff_utc"]), same_day=not preview)
         if books:
             fresh += 1
         leg, why = legs_for_event(e, books, parlay_engine.model_probs(con, e["event_id"], now),
@@ -340,12 +353,12 @@ def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None
     return out
 
 
-def card(c: dict, day: str) -> dict:
+def card(c: dict, day: str, preview: bool = False) -> dict:
     bk = c["bookmaker"]
     legs = sorted(c["legs"], key=lambda x: (x["start_utc"], x["event_id"]))
     odds = round(prod(x["books"][bk]["price"] for x in legs), 4)
     times = [x["price_ts"][bk] for x in legs if bk in x.get("price_ts", {})]
-    return {"parlay_id": parlay_id(c, day), "date": day, "status": "active", "kind": ESTIMATE_KIND, "badge": BADGE,
+    out = {"parlay_id": parlay_id(c, day), "date": day, "status": "active", "kind": ESTIMATE_KIND, "badge": BADGE,
             "bookmaker": bk, "n_legs": len(legs), "estimated_odds": odds,
             "price_label": price_label(bk), "prices_at": min(times) if len(times) == len(legs) else None,
             "stake": DEFAULT_STAKE, "gross_payout": str(parlays.gross_payout(DEFAULT_STAKE, odds)),
@@ -358,6 +371,9 @@ def card(c: dict, day: str) -> dict:
                       "prob": round(x["books"][bk]["prob"], 4),
                       "prob_source": x["books"][bk].get("prob_source", x["prob_source"]),
                       "price_at": x.get("price_ts", {}).get(bk)} for x in legs]}
+    if preview:
+        out.update(preview=True, preview_badge=PREVIEW_BADGE)
+    return out
 
 
 def selection_text(leg: dict) -> str:
@@ -367,8 +383,10 @@ def selection_text(leg: dict) -> str:
 
 
 # ---------- card contract (mirrored in docs/assets/doyen.js estProblem) ----------
-def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
-    """Why an estimated card must NOT be shown. None = it may be shown. Unknown data is rejected."""
+def card_problem(rec, now: datetime, day: str | None = None, preview: bool = False) -> str | None:
+    """Why an estimated card must NOT be shown. None = it may be shown. Unknown data is rejected.
+    With `preview` (issue #58) `day` is a later New York date: the card must be marked as a preview
+    and its prices need only be read before each game starts (not on the same New York day)."""
     from zoneinfo import ZoneInfo
     tz = ZoneInfo(parlays.CARD_TIMEZONE)
     day = day or now.astimezone(tz).date().isoformat()
@@ -380,8 +398,10 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
         return "not an estimate"
     if not isinstance(rec.get("parlay_id"), str) or not rec["parlay_id"].strip():
         return "missing parlay_id"
+    if bool(rec.get("preview")) != preview:
+        return "preview flag does not match the day"
     if rec.get("date") != day:
-        return "not today's parlay"
+        return "not today's parlay" if not preview else "not this day's preview"
     if rec.get("status") != "active":
         return "parlay is not active"
     bk = rec.get("bookmaker")
@@ -408,7 +428,7 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
         if start is None:
             return "leg has no valid start time"
         if start.astimezone(tz).date().isoformat() != day:
-            return "leg is not on today's date"
+            return "leg is not on today's date" if not preview else "leg is not on the preview's date"
         if start <= now:
             return "leg has started"
         p = parlays._num(leg.get("price"))
@@ -417,8 +437,10 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
         at = parlays._ts(leg.get("price_at"))
         if at is None or at > now:
             return "leg price has no valid time"
-        if at.astimezone(tz).date().isoformat() != day:
+        if not preview and at.astimezone(tz).date().isoformat() != day:
             return "leg price is stale"           # not retrieved today (New York); start > now >= at
+        if at >= start:
+            return "leg price read after the start"
         q = parlays._num(leg.get("prob"))
         if q is not None and q * p < 1.0 - WEAK_TOLERANCE * p:
             weak += 1
@@ -466,6 +488,38 @@ def build(con, now: datetime, verified_cards: list[dict] | None = None) -> dict:
             "verified_badge": VERIFIED_BADGE, "empty_text": EMPTY_TEXT, "disclosure": DISCLOSURE,
             "price_rule": PRICE_RULE, "default_stake": DEFAULT_STAKE,
             "coverage": {**cov, "combinations_kept": len(cands)}, "recommendations": recs}
+
+
+def preview_days(now: datetime, n: int = PREVIEW_DAYS) -> list[str]:
+    """The next `n` New York dates after today."""
+    today = date.fromisoformat(parlay_engine._day(now))
+    return [(today + timedelta(days=k)).isoformat() for k in range(1, n + 1)]
+
+
+def build_preview(con, now: datetime, day: str) -> dict:
+    """Preview parlays for a later New York date (issue #58): same search and selection as today,
+    prices from the latest stored quotes before each game starts. Never recorded in the ledger."""
+    pool, cov = build_pool(con, now, day)
+    cands = search(pool)
+    picked = [card(c, day, preview=True) for c in select(cands, MAX_CARDS)]
+    recs = [r for r in picked if card_problem(r, now, day, preview=True) is None]
+    return {"status": "preview", "preview": True, "method": METHOD, "kind": ESTIMATE_KIND, "date": day,
+            "timezone": parlays.CARD_TIMEZONE, "generated": now.isoformat(), "badge": BADGE,
+            "preview_badge": PREVIEW_BADGE, "empty_text": PREVIEW_EMPTY_TEXT, "price_rule": PREVIEW_PRICE_RULE,
+            "default_stake": DEFAULT_STAKE, "coverage": {**cov, "combinations_kept": len(cands)},
+            "recommendations": recs}
+
+
+def build_previews(con, now: datetime) -> list[dict]:
+    out = []
+    for day in preview_days(now):
+        try:
+            out.append(build_preview(con, now, day))
+        except Exception as e:                # one bad day never hides the others; truthful empty state
+            out.append({"status": "unavailable", "preview": True, "kind": ESTIMATE_KIND, "date": day,
+                        "preview_badge": PREVIEW_BADGE, "empty_text": PREVIEW_EMPTY_TEXT,
+                        "recommendations": [], "error": type(e).__name__})
+    return out
 
 
 # ---------- append-only ledger and read-only settlement ----------
