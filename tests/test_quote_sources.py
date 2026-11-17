@@ -151,8 +151,8 @@ def test_report_compares_with_the_frozen_baseline(path, tmp_path, monkeypatch):
     coverage.write(NOW, baseline=True, db_path=path)
     rep = qs.write(NOW, db_path=path)
     assert rep["baseline"]["file"] == "baseline_2026-11-13.json"
-    assert rep["baseline"]["bookmakers"]["known_operators"] == rep["now"]["bookmakers"]["known_operators"] == 3
-    assert "| Known operators | 3 | 3 | +0 |" in (tmp_path / "reports" / "quote_sources.md").read_text()
+    assert rep["baseline"]["bookmakers"]["known_operators"] == rep["now"]["bookmakers"]["known_operators"] == 5   # #21 registry maps more fixture books to operators
+    assert "| Known operators | 5 | 5 | +0 |" in (tmp_path / "reports" / "quote_sources.md").read_text()
 
 
 def _probe_fake(monkeypatch, remaining="400", calls=None):

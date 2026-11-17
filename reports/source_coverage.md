@@ -12,10 +12,55 @@ Measured from the stored database for events starting in the next 168 hours. Gen
 
 | Sport | Scheduled | Any quote | Observed fresh | Bookmaker-timed fresh | 3+ operators (lower) | 3+ operators (upper, provisional) | Sharp reference | Names | Known operators | Unknown ownership |
 |---|---|---|---|---|---|---|---|---|---|---|
-| soccer | 146 | 57 | 57 | 26 | 26 | 26 | 26 | 24 | 7 | 8 |
-| nba | 52 | 9 | 9 | 9 | 9 | 9 | 9 | 21 | 7 | 11 |
-| nfl | 14 | 14 | 14 | 14 | 14 | 14 | 13 | 22 | 6 | 13 |
-| tennis | 51 | 6 | 6 | 6 | 2 | 6 | 2 | 23 | 6 | 7 |
+| soccer | 146 | 57 | 57 | 26 | 26 | 26 | 26 | 24 | 9 | 5 |
+| nba | 52 | 9 | 9 | 9 | 9 | 9 | 9 | 21 | 8 | 8 |
+| nfl | 14 | 14 | 14 | 14 | 14 | 14 | 13 | 22 | 9 | 8 |
+| tennis | 51 | 6 | 6 | 6 | 2 | 4 | 2 | 23 | 7 | 5 |
+
+## Change since baseline (2026-11-13 12:17 UTC)
+
+| Sport | Measure | Baseline | Now | Change |
+|---|---|---|---|---|
+| nba | scheduled events | 52 | 52 | +0 |
+| nba | with any quote | 9 | 9 | +0 |
+| nba | with fresh quote observed | 9 | 9 | +0 |
+| nba | with fresh quote bookmaker timed | 9 | 9 | +0 |
+| nba | with 3plus operators lower | 9 | 9 | +0 |
+| nba | with 3plus operators upper | 9 | 9 | +0 |
+| nba | with sharp reference | 9 | 9 | +0 |
+| nba | bookmaker names | 21 | 21 | +0 |
+| nba | known operators | 7 | 8 | +1 |
+| nba | unknown bookmakers | 11 | 8 | -3 |
+| nfl | scheduled events | 14 | 14 | +0 |
+| nfl | with any quote | 14 | 14 | +0 |
+| nfl | with fresh quote observed | 14 | 14 | +0 |
+| nfl | with fresh quote bookmaker timed | 14 | 14 | +0 |
+| nfl | with 3plus operators lower | 14 | 14 | +0 |
+| nfl | with 3plus operators upper | 14 | 14 | +0 |
+| nfl | with sharp reference | 13 | 13 | +0 |
+| nfl | bookmaker names | 22 | 22 | +0 |
+| nfl | known operators | 6 | 9 | +3 |
+| nfl | unknown bookmakers | 13 | 8 | -5 |
+| soccer | scheduled events | 146 | 146 | +0 |
+| soccer | with any quote | 57 | 57 | +0 |
+| soccer | with fresh quote observed | 57 | 57 | +0 |
+| soccer | with fresh quote bookmaker timed | 26 | 26 | +0 |
+| soccer | with 3plus operators lower | 26 | 26 | +0 |
+| soccer | with 3plus operators upper | 26 | 26 | +0 |
+| soccer | with sharp reference | 26 | 26 | +0 |
+| soccer | bookmaker names | 24 | 24 | +0 |
+| soccer | known operators | 7 | 9 | +2 |
+| soccer | unknown bookmakers | 8 | 5 | -3 |
+| tennis | scheduled events | 51 | 51 | +0 |
+| tennis | with any quote | 6 | 6 | +0 |
+| tennis | with fresh quote observed | 6 | 6 | +0 |
+| tennis | with fresh quote bookmaker timed | 6 | 6 | +0 |
+| tennis | with 3plus operators lower | 2 | 2 | +0 |
+| tennis | with 3plus operators upper | 6 | 4 | -2 |
+| tennis | with sharp reference | 2 | 2 | +0 |
+| tennis | bookmaker names | 23 | 23 | +0 |
+| tennis | known operators | 6 | 7 | +1 |
+| tennis | unknown bookmakers | 7 | 5 | -2 |
 
 ## Coverage matrix
 
@@ -35,31 +80,31 @@ Measured from the stored database for events starting in the next 168 hours. Gen
 | soccer | INT:fifa.friendly | OU | espn.com (public scoreboard) | 10 / 37 | 10 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
 | soccer | INT:uefa.nations | 1X2 | espn.com (game summary) | 18 / 44 | 18 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
 | soccer | INT:uefa.nations | 1X2 | espn.com (public scoreboard) | 22 / 44 | 22 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
-| soccer | INT:uefa.nations | 1X2 | the-odds-api.com | 26 / 44 | 26 | 23 | 7–14 | Betfair Exchange, Pinnacle | 0.0 | bookmaker's own update time |
+| soccer | INT:uefa.nations | 1X2 | the-odds-api.com | 26 / 44 | 26 | 23 | 8–13 | Betfair Exchange, Pinnacle | 0.0 | bookmaker's own update time |
 | soccer | INT:uefa.nations | AH | espn.com (public scoreboard) | 22 / 44 | 22 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
 | soccer | INT:uefa.nations | OU | espn.com (public scoreboard) | 22 / 44 | 22 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
-| soccer | INT:uefa.nations | OU | the-odds-api.com | 26 / 44 | 26 | 16 | 5–11 | Pinnacle | 0.0 | bookmaker's own update time |
+| soccer | INT:uefa.nations | OU | the-odds-api.com | 26 / 44 | 26 | 16 | 5–10 | Pinnacle | 0.0 | bookmaker's own update time |
 | nba | NBA | ML | espn.com (public scoreboard) | 9 / 52 | 9 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
-| nba | NBA | ML | the-odds-api.com | 9 / 52 | 9 | 20 | 7–17 | Betfair Exchange, Pinnacle | 0.0 | bookmaker's own update time |
+| nba | NBA | ML | the-odds-api.com | 9 / 52 | 9 | 20 | 7–15 | Betfair Exchange, Pinnacle | 0.0 | bookmaker's own update time |
 | nba | NBA | SPREAD | espn.com (public scoreboard) | 9 / 52 | 9 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
 | nba | NBA | SPREAD | the-odds-api.com | 9 / 52 | 9 | 15 | 5–12 | Pinnacle | 0.0 | bookmaker's own update time |
 | nba | NBA | TOTAL | espn.com (public scoreboard) | 9 / 52 | 9 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
-| nba | NBA | TOTAL | the-odds-api.com | 9 / 52 | 9 | 16 | 5–14 | Pinnacle | 0.0 | bookmaker's own update time |
+| nba | NBA | TOTAL | the-odds-api.com | 9 / 52 | 9 | 16 | 5–13 | Pinnacle | 0.0 | bookmaker's own update time |
 | nfl | NFL | ML | espn.com (public scoreboard) | 14 / 14 | 14 | 1 | 1–1 | none | 0.0 | first seen by Doyen (reprice time unknown) |
-| nfl | NFL | ML | the-odds-api.com | 14 / 14 | 14 | 20 | 6–17 | Betfair Exchange, Pinnacle | 9.6 | bookmaker's own update time |
+| nfl | NFL | ML | the-odds-api.com | 14 / 14 | 14 | 20 | 8–15 | Betfair Exchange, Pinnacle | 9.6 | bookmaker's own update time |
 | nfl | NFL | SPREAD | espn.com (public scoreboard) | 14 / 14 | 14 | 1 | 1–1 | none | 15.6 | first seen by Doyen (reprice time unknown) |
-| nfl | NFL | SPREAD | the-odds-api.com | 14 / 14 | 14 | 17 | 5–15 | Pinnacle | 9.6 | bookmaker's own update time |
+| nfl | NFL | SPREAD | the-odds-api.com | 14 / 14 | 14 | 17 | 7–14 | Pinnacle | 9.6 | bookmaker's own update time |
 | nfl | NFL | TOTAL | espn.com (public scoreboard) | 14 / 14 | 14 | 1 | 1–1 | none | 15.6 | first seen by Doyen (reprice time unknown) |
-| nfl | NFL | TOTAL | the-odds-api.com | 14 / 14 | 14 | 16 | 5–15 | Pinnacle | 9.6 | bookmaker's own update time |
-| tennis | TENNIS:ATP | ML | the-odds-api.com | 4 / 15 | 4 | 5 | 2–4 | none | 0.0 | bookmaker's own update time |
-| tennis | TENNIS:WTA | ML | the-odds-api.com | 2 / 36 | 2 | 23 | 6–13 | Betfair Exchange | 0.0 | bookmaker's own update time |
+| nfl | NFL | TOTAL | the-odds-api.com | 14 / 14 | 14 | 16 | 7–14 | Pinnacle | 9.6 | bookmaker's own update time |
+| tennis | TENNIS:ATP | ML | the-odds-api.com | 4 / 15 | 4 | 5 | 2–3 | none | 0.0 | bookmaker's own update time |
+| tennis | TENNIS:WTA | ML | the-odds-api.com | 2 / 36 | 2 | 23 | 7–12 | Betfair Exchange | 0.0 | bookmaker's own update time |
 
 ## Bookmaker independence
 
 - 39 stored names are 29 bookmakers after merging name variants.
-- **Known operators: 10** (owner or pricing platform recorded in the map): Bet365; BetOnline (BetOnline.ag); Betfair Exchange; Betsson Group (Betsson, Nordic Bet); Entain (Bwin); Flutter (Paddy Power, Sky Bet); Kambi (LeoVegas, Unibet); Pinnacle; Winamax; evoke (888sport, William Hill).
-- **Unknown ownership: 15** (not verified, not counted as independent): 1xBet, BetAnything, BetVictor, Betclic, Betfred, Codere (IT), Coolbet, DraftKings, Everygame, GTbets, Marathon Bet, Matchbook, MyBookie.ag, PMU, Tipico.
-- Independent operators overall: **between 10 and 25**. The upper figure is provisional until ownership and pricing-platform independence are verified.
+- **Known operators: 15** (owner or pricing platform recorded in the map): Banijay Gaming (Betclic, Tipico); Bet365; BetVictor; Betfair Exchange; Betfred; Betsson Group (Betsson, Nordic Bet); Coolbet; DraftKings; Entain (Bwin); Flutter (Paddy Power, Sky Bet); Kambi (LeoVegas, PMU, Unibet); Matchbook; Pinnacle; Winamax; evoke (888sport, William Hill).
+- **Unknown ownership: 8** (not verified, not counted as independent): 1xBet, BetAnything, BetOnline.ag, Codere (IT), Everygame, GTbets, Marathon Bet, MyBookie.ag.
+- Independent operators overall: **between 15 and 23**. The upper figure is provisional until ownership and pricing-platform independence are verified.
 - Name variants merged: Betclic (FR) → Betclic, LeoVegas (SE) → LeoVegas, PMU (FR) → PMU, Unibet (FR) → Unibet, Unibet (NL) → Unibet, Unibet (SE) → Unibet, Winamax (DE) → Winamax, Winamax (FR) → Winamax.
 - Excluded (aggregates or in-play feeds, not bookmakers): Avg, Max.
 
@@ -72,7 +117,7 @@ Measured from the stored database for events starting in the next 168 hours. Gen
 | espn:international | yes | 0.0 | 201 |  |
 | espn:nba | yes | 0.0 | 75 |  |
 | espn:nfl | yes | 0.0 | 15 |  |
-| espn:tennis | yes | 0.0 | 51 |  |
+| espn:tennis | yes | -0.0 | 51 |  |
 | football-data:B1 | yes | 0.0 | 99 |  |
 | football-data:D1 | yes | 0.0 | 81 |  |
 | football-data:E0 | yes | 0.0 | 100 |  |
