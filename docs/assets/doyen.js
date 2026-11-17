@@ -278,10 +278,11 @@
   // ---------- estimated parlays (issue #47) ----------
   // Owner-approved estimates shown alongside the strict path. Mirrors sbi/parlay_estimated.py
   // card_problem: kind "estimated_product" (never a bookmaker quote), today in New York, 2-6 active
-  // legs on distinct games that start later today, every leg priced by the card's bookmaker within
-  // the last 150 minutes, and estimated odds equal to the product of those prices. A verified
+  // legs on distinct games that start later today, every leg priced by the card's bookmaker earlier
+  // today in New York (issue #51; before the game starts), and estimated odds equal to the product
+  // of those prices. A verified
   // bookmaker-quote card always wins: an estimate never reuses one of its games.
-  const EC = { kind: "estimated_product", maxPriceMin: 150,
+  const EC = { kind: "estimated_product",
                empty: "No parlays today: no verified quotes, and no games later today meet the estimate rules." };
   function estProblem(rec, now, day) {
     if (!rec || typeof rec !== "object") return "not an object";
@@ -309,7 +310,7 @@
       if (typeof l.price !== "number" || !isFinite(l.price) || l.price <= 1) return "leg has no valid price";
       const at = isoT(l.price_at);
       if (at == null || at > now) return "leg price has no valid time";
-      if (now - at > EC.maxPriceMin * 60000) return "leg price is stale";
+      if (nyKey(new Date(at)) !== day) return "leg price is stale";
       product *= l.price;
     }
     const o = rec.estimated_odds;
@@ -336,6 +337,12 @@
     const sign = pl > 0 ? "+" : (pl < 0 ? "−" : "");
     return `Estimated parlays record: ${s.won}–${s.lost}, paper P/L ${sign}${usd(Math.abs(pl))}`;
   }
+  function pricesRead(r) {
+    const ts = r.legs.map((l) => isoT(l.price_at)).filter((t) => t != null);
+    if (ts.length !== r.legs.length) return "";
+    const lo = fmtClock(new Date(Math.min(...ts)).toISOString()), hi = fmtClock(new Date(Math.max(...ts)).toISOString());
+    return `<div class="pc-note" data-prices-read>Prices read at ${esc(lo === hi ? lo : lo + "–" + hi)}.</div>`;
+  }
   function estCard(r, i) {
     const odds = r.estimated_odds;
     const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
@@ -350,6 +357,7 @@
         <label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0" step="1" value="${PC.stake}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${usd(grossPayout(PC.stake, odds))}</div></div>
       </div>
+      ${pricesRead(r)}
       <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
       ${hit}
     </article>`;
@@ -435,10 +443,11 @@
     if (!E || typeof E !== "object") return "";
     const r = E.record || {};
     const line = estRecordLine(E);
-    const body = `<p class="small">Up to five estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Each uses one bookmaker that priced every leg in the last 150 minutes; the estimated price is the product of that bookmaker's single-game odds, not a bet-slip quote, so your slip may pay less.</p>
+    const body = `<p class="small">Up to five estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Each uses one bookmaker that priced every leg earlier today, before the game starts; the estimated price is the product of that bookmaker's single-game odds, not a bet-slip quote, so your slip may pay less.</p>
       <ul class="small">
         <li>Two to six legs, one per game, all on games that haven't started. Different games in one competition are allowed; same-game combinations and legs sharing a team or player are not.</li>
-        <li>Each leg uses Doyen's model probability (the other bookmakers' de-vigged consensus where Doyen has no model, as in tennis), and is used only if that bookmaker's price is above it.</li>
+        <li>Each leg uses Doyen's model probability. Where Doyen has no model (tennis) it uses a de-vigged market consensus of at least two bookmakers; a leg with neither is skipped.</li>
+        <li>The whole parlay must have positive estimated value (estimated hit chance × estimated odds above 1). One leg may be priced below Doyen's probability inside a positive pair, but no further leg may lower the parlay's value.</li>
         <li>Ranked by estimated hit chance × estimated value. The hit chance multiplies leg probabilities as if the legs were independent; it is unvalidated.</li>
         <li>A verified bookmaker quote always replaces an estimate on the same games.</li></ul>
       ${line ? `<p class="small"><b>${esc(line)}</b>${typeof r.open === "number" ? ` · ${esc(r.open)} open, ${esc(r.void || 0)} void` : ""}. Paper results at the $${PC.stake} display stake and the estimated price, settled from final scores; a void leg voids the whole parlay here.</p>` : ""}`;

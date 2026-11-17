@@ -331,3 +331,58 @@ def test_prediction_market_keys_are_never_stored_as_bookmakers():
                                                 "outcomes": [{"name": "H Team", "price": 1.8}, {"name": "A Team", "price": 2.1}]}]}
         for k, title in (("pinnacle", "Pinnacle"), ("polymarket", "Polymarket"), ("kalshi", "Kalshi"), ("prizepicks", "PrizePicks"))]}
     assert {r[0] for r in oa.parse_odds(ev, two_way=True)} == {"Pinnacle"}
+
+
+# ---------- issue #51: today's games (New York day) are refreshed first, inside the same budget ----------
+def _epl_today(con, now, hours=5):
+    t = now + timedelta(hours=hours)
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,source,updated_at)
+                   VALUES ('e1','football','E0',?,'Arsenal','Chelsea','scheduled','t','t')""", (t.isoformat(),))
+    return [{"home_team": "Arsenal", "away_team": "Chelsea", "commence_time": t.isoformat().replace("+00:00", "Z"),
+             "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "last_update": now.isoformat().replace("+00:00", "Z"),
+                             "markets": [{"key": "h2h", "outcomes": [{"name": "Arsenal", "price": 2.1},
+                                                                     {"name": "Chelsea", "price": 3.4},
+                                                                     {"name": "Draw", "price": 3.5}]}]}]}]
+
+
+def test_later_today_uses_the_new_york_day():
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)                       # 07:00 in New York
+    assert oa.later_today(datetime(2026, 11, 14, 4, 30, tzinfo=timezone.utc), now)   # 23:30 NY, same day
+    assert not oa.later_today(datetime(2026, 11, 14, 5, 30, tzinfo=timezone.utc), now)  # 00:30 NY, tomorrow
+    assert not oa.later_today(now - timedelta(minutes=1), now)                   # already started
+
+
+def test_plan_order_puts_todays_games_before_future_days():
+    t0 = datetime(2026, 11, 13, 20, tzinfo=timezone.utc)
+    items = [(False, 0, t0 + timedelta(hours=20), "basketball_nba", "NBA"),
+             (True, 1, t0, "soccer_epl", "E0"),
+             (False, 1, t0 + timedelta(hours=30), "soccer_spain_la_liga", "SP1"),
+             (True, 0, t0 + timedelta(hours=2), "tennis_atp_finals", "TENNIS:ATP")]
+    assert [p[2] for p in oa.plan_order(items)] == ["tennis_atp_finals", "soccer_epl", "basketball_nba",
+                                                     "soccer_spain_la_liga"]
+
+
+def test_ingest_spends_the_budget_on_todays_games_first(monkeypatch, tmp_path):
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    nba, epl, calls = _nba(con, now), _epl_today(con, now), []                  # NBA tomorrow, EPL later today
+    monkeypatch.setattr(oa, "MAX_CREDITS_PER_RUN", 3)                           # room for one competition only
+    _fake(monkeypatch, ["basketball_nba", "soccer_epl"], {"basketball_nba": nba, "soccer_epl": epl}, calls=calls)
+    out = oa.ingest(con, now)
+    assert out["planned"] == ["soccer_epl", "basketball_nba"] and out["planned_today_first"] == ["soccer_epl"]
+    assert [path for path, _ in calls if path.endswith("/odds")] == ["/sports/soccer_epl/odds"]
+    assert out["credits_spent"] == 2 <= out["budget_credits"] == 3
+    assert out["today"] == {"events_in_responses": 1, "events_priced": 1}
+
+
+@pytest.mark.parametrize("cap", [0, 1, 2, 3, 4, 5, 12])
+def test_today_first_never_spends_more_than_the_budget(monkeypatch, tmp_path, cap):
+    con = db.connect(tmp_path / "t.sqlite")
+    now = datetime(2026, 11, 13, 12, tzinfo=timezone.utc)
+    nba, epl = _nba(con, now), _epl_today(con, now)
+    monkeypatch.setattr(oa, "MAX_CREDITS_PER_RUN", cap)
+    _fake(monkeypatch, ["basketball_nba", "soccer_epl", "americanfootball_nfl"],
+          {"basketball_nba": nba, "soccer_epl": epl, "americanfootball_nfl": nba})
+    out = oa.ingest(con, now)
+    assert out["credits_spent"] <= out["budget_credits"] <= cap
+    assert sum(r[0] for r in con.execute("SELECT credits FROM odds_api_fetches")) == out["credits_spent"]

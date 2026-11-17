@@ -53,22 +53,67 @@ def _pool_leg(i, books, *, hours=5, sport="nba", league="NBA", home=None, away=N
             "price_ts": {bk: _iso(NOW - timedelta(minutes=30)) for bk in books}}
 
 
-# ---------- legs ----------
+# ---------- legs (issue #51: estimated mode only) ----------
 def test_one_leg_per_game_and_model_probability_preferred():
     leg, why = pe.legs_for_event(_event(1), _two_way(), None)
     assert why is None and leg["selection"] == "home" and leg["prob_source"] == "market_consensus_ex_book"
-    assert set(leg["books"]) == {"Bet365"}                         # only a price above the probability is kept
+    # #51: every pricing bookmaker is kept, value or not; the parlay-level check decides later.
+    assert set(leg["books"]) == {"Bet365", "DraftKings", "Unibet", "Pinnacle"}   # a sportsbook, not an exchange
     assert leg["books"]["Bet365"]["prob"] == pytest.approx(0.5, abs=0.003)
+    assert leg["books"]["DraftKings"]["value"] < 0 < leg["books"]["Bet365"]["value"]
     leg, _ = pe.legs_for_event(_event(1), _two_way(), {("ML", "home"): 0.53, ("ML", "away"): 0.47})
     assert leg["prob_source"] == "model" and leg["books"]["Bet365"]["prob"] == 0.53
     assert leg["books"]["Bet365"]["value"] == pytest.approx(0.53 * 2.10 - 1)
     assert isinstance(leg, dict)                                   # one leg, never both sides of a game
 
 
-def test_no_leg_when_no_bookmaker_beats_the_probability():
+def test_pinnacle_prices_a_leg_and_exchanges_never_do():
+    books = {("ML", None): {"Pinnacle": {"home": 1.95, "away": 1.95}, "Betfair Exchange": {"home": 2.3, "away": 1.75},
+                            "Bet365": {"home": 2.0, "away": 1.85}}}
+    legs, why = pe.screen_event(_event(1), books, None)
+    assert why is None and all("Betfair Exchange" not in x["books"] for x in legs)
+    only_exchange = {("ML", None): {"Betfair Exchange": {"home": 2.0, "away": 1.95}}}
+    assert pe.screen_event(_event(1), only_exchange, {("ML", "home"): 0.5})[1] == "no bookmaker that offers a parlay slip"
+
+
+def test_a_leg_below_doyens_probability_is_still_a_candidate():
     flat = {("ML", None): {b: {"home": 1.9, "away": 1.9} for b in ("Pinnacle", "DraftKings", "Unibet", "Bet365")}}
-    assert pe.legs_for_event(_event(1), flat, None) == (None, "no bookmaker price above Doyen's probability")
+    leg, why = pe.legs_for_event(_event(1), flat, None)
+    assert why is None and all(v["value"] < 0 for v in leg["books"].values())
+
+
+def test_one_bookmaker_is_enough_when_doyen_has_a_model():
+    one = {("ML", None): {"Bet365": {"home": 2.0, "away": 1.85}}}
+    leg, why = pe.legs_for_event(_event(1), one, {("ML", "home"): 0.52, ("ML", "away"): 0.48})
+    assert why is None and set(leg["books"]) == {"Bet365"} and leg["prob_source"] == "model"
+    # No model (tennis): one bookmaker alone gives no consensus, so the leg is skipped.
+    assert pe.legs_for_event(_event(1, "tennis", "TENNIS:ATP"), one, None) == (
+        None, "no model probability and no 2-bookmaker consensus")
+
+
+def test_no_model_leg_uses_a_two_bookmaker_consensus_including_the_pricing_one():
+    two = {("ML", None): {"Bet365": {"home": 2.0, "away": 1.85}, "DraftKings": {"home": 1.95, "away": 1.9}}}
+    leg, why = pe.legs_for_event(_event(1, "tennis", "TENNIS:ATP"), two, None)
+    assert why is None and set(leg["books"]) == {"Bet365", "DraftKings"}
+    v = leg["books"]["Bet365"]
+    assert v["prob_source"] == "market_consensus_incl_book"
+    # de-vigged median of the two books (both included), never a single book on its own
+    from sbi import ev as evm
+    i = ["home", "away"].index(leg["selection"])
+    fair = [evm.devig_power([q["home"], q["away"]])[i] for q in two[("ML", None)].values()]
+    assert v["prob"] == pytest.approx(sum(fair) / 2, abs=1e-6)
+    # Where the other bookmakers already give a consensus, it is still preferred (no circularity).
+    leg, _ = pe.legs_for_event(_event(1, "tennis", "TENNIS:ATP"), _two_way(), None)
+    assert leg["books"]["Bet365"]["prob_source"] == "market_consensus_ex_book"
+
+
+def test_kept_screens_injury_note_disagreement_and_band():
     assert pe.legs_for_event(_event(1), _two_way(), None, n_risk_notes=1)[1] == "open injury/lineup research note"
+    assert pe.legs_for_event(_event(1), _two_way(), {("ML", "home"): 0.70, ("ML", "away"): 0.30})[1] == \
+        "model and market disagree strongly"
+    longshot = {("ML", None): {b: {"home": 1.10, "away": 7.0} for b in ("Pinnacle", "Bet365")}}
+    assert pe.legs_for_event(_event(1), longshot, None)[1] == "probability outside research band"
+    assert pe.legs_for_event(_event(1), {}, None)[1] == "no fresh result-market prices"
 
 
 # ---------- search ----------
@@ -114,6 +159,43 @@ def test_five_card_cap_each_game_once_and_earliest_first():
     assert all(c["n_legs"] == 2 for c in chosen)                   # equal legs: fewer legs ranks first
 
 
+def test_whole_parlay_value_replaces_the_per_leg_rule():
+    # One leg below Doyen's probability (0.48 x 2.0 = 0.96) completes a pair with positive value.
+    strong, weak = _pool_leg(1, {"B": (2.2, 0.5)}), _pool_leg(2, {"B": (2.0, 0.48)})
+    [c] = pe.search([strong, weak])
+    assert c["n_legs"] == 2 and c["estimated_ev"] == pytest.approx(0.5 * 0.48 * 2.2 * 2.0 - 1) and c["estimated_ev"] > 0
+    # A pair whose joint value is not positive is never shown.
+    assert pe.search([_pool_leg(1, {"B": (2.02, 0.5)}), _pool_leg(2, {"B": (2.0, 0.48)})]) == []
+    # Two legs below the probability can never make a positive parlay.
+    assert pe.search([_pool_leg(1, {"B": (1.9, 0.5)}), _pool_leg(2, {"B": (1.9, 0.5)})]) == []
+
+
+def test_no_leg_that_lowers_the_parlay_value_is_added():
+    a, b = _pool_leg(1, {"B": (2.2, 0.5)}), _pool_leg(2, {"B": (2.2, 0.5)})
+    weak = _pool_leg(3, {"B": (2.0, 0.48)})                        # value -0.04
+    sets = {frozenset(x["event_id"] for x in c["legs"]) for c in pe.search([a, b, weak])}
+    assert frozenset({"nba:1", "nba:2"}) in sets and frozenset({"nba:1", "nba:3"}) in sets
+    # {1, 3} is a positive pair and leg 2 does not lower it, so {1, 2, 3} is allowed ...
+    assert frozenset({"nba:1", "nba:2", "nba:3"}) in sets
+    # ... but a weak leg that pairs positively with no leg is never added to a bigger parlay.
+    weaker = _pool_leg(6, {"B": (1.8, 0.5)})                       # value -0.10: 1.1 x 0.90 < 1
+    sets = {frozenset(x["event_id"] for x in c["legs"]) for c in pe.search([a, b, weaker])}
+    assert sets == {frozenset({"nba:1", "nba:2"})}
+    even = _pool_leg(4, {"B": (2.0, 0.5)})                         # value exactly 0: does not lower it
+    sets = {frozenset(x["event_id"] for x in c["legs"]) for c in pe.search([a, b, even])}
+    assert frozenset({"nba:1", "nba:2", "nba:4"}) in sets
+    for c in pe.search([a, b, weak, even, _pool_leg(5, {"B": (2.1, 0.5)})]):
+        assert c["estimated_ev"] > 0 and sum(x["books"]["B"]["value"] < 0 for x in c["legs"]) <= 1
+
+
+def test_loosened_rules_allow_longer_parlays_from_more_legs():
+    pool = [_pool_leg(i, {"B": (2.05, 0.5)}) for i in range(6)] + [_pool_leg(9, {"B": (1.98, 0.5)})]
+    cands = pe.search(pool)
+    six = [c for c in cands if c["n_legs"] == 6]
+    assert six and all(c["estimated_ev"] > 0 for c in cands)
+    assert any("nba:9" in {x["event_id"] for x in c["legs"]} for c in six)   # the below-probability leg, last
+
+
 def test_fewer_cards_when_fewer_qualify_and_none_is_normal():
     assert pe.select(pe.search([_pool_leg(1, {"B": (2.1, 0.5)})])) == []
     assert len(pe.select(pe.search([_pool_leg(i, {"B": (2.1, 0.5)}) for i in range(4)]))) == 2
@@ -157,8 +239,10 @@ ECASES = [
     ("seven legs", lambda r: r.update(**ecard(n_legs=7)), "needs 2-6 legs"),
     ("leg started", _leg_set(0, "start_utc", _iso(NOW - timedelta(minutes=1))), "leg has started"),
     ("leg tomorrow", _leg_set(1, "start_utc", _iso(NOW + timedelta(hours=20))), "leg is not on today's date"),
-    ("stale leg price", _leg_set(1, "price_at", _iso(NOW - timedelta(minutes=151))), "leg price is stale"),
-    ("price 150 min old", _leg_set(1, "price_at", _iso(NOW - timedelta(minutes=150))), None),
+    # #51: any price read earlier today (New York) counts; yesterday's price does not.
+    ("price from yesterday", _leg_set(1, "price_at", _iso(NOW - timedelta(hours=10, minutes=1))), "leg price is stale"),
+    ("price read just after midnight", _leg_set(1, "price_at", _iso(NOW - timedelta(hours=9, minutes=59))), None),
+    ("price 151 min old", _leg_set(1, "price_at", _iso(NOW - timedelta(minutes=151))), None),
     ("future price time", _leg_set(0, "price_at", _iso(NOW + timedelta(minutes=1))), "leg price has no valid time"),
     ("no price time", _leg_set(0, "price_at", None), "leg price has no valid time"),
     ("same game twice", lambda r: r["legs"].__setitem__(1, dict(r["legs"][0])), "two legs on the same event"),
@@ -223,31 +307,44 @@ def _store(con, eid, sport, league, ko, home, away, books, retrieved, status="sc
                                                                "https://api.the-odds-api.com/v4/x", retrieved.isoformat()))
 
 
-def test_fresh_books_keep_only_prices_from_the_last_150_minutes(con):
-    _store(con, "nba:1", "nba", "NBA", NOW + timedelta(hours=5), "H1", "A1", _two_way(), NOW - timedelta(minutes=149))
-    _store(con, "nba:2", "nba", "NBA", NOW + timedelta(hours=5), "H2", "A2", _two_way(), NOW - timedelta(minutes=151))
-    _store(con, "nba:3", "nba", "NBA", NOW + timedelta(hours=5), "H3", "A3", _two_way(), NOW + timedelta(minutes=5))
-    assert pe.fresh_books(con, "nba:1", NOW) and pe.fresh_books(con, "nba:2", NOW) == {}
-    assert pe.fresh_books(con, "nba:3", NOW) == {}
+def test_fresh_books_keep_todays_latest_price_before_the_start(con):
+    ko = NOW + timedelta(hours=5)
+    _store(con, "nba:1", "nba", "NBA", ko, "H1", "A1", _two_way(), NOW - timedelta(hours=9, minutes=50))   # 00:10 NY
+    _store(con, "nba:2", "nba", "NBA", ko, "H2", "A2", _two_way(), NOW - timedelta(hours=10, minutes=10))  # yesterday
+    _store(con, "nba:3", "nba", "NBA", ko, "H3", "A3", _two_way(), NOW + timedelta(minutes=5))             # future
+    assert pe.fresh_books(con, "nba:1", NOW, ko) and pe.fresh_books(con, "nba:2", NOW, ko) == {}
+    assert pe.fresh_books(con, "nba:3", NOW, ko) == {}
+    # The LATEST price is used: a newer read replaces an older one, even if older reads were today.
+    con.execute("""INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at)
+                   VALUES ('nba:1','Bet365','ML','home',NULL,2.30,'pre','x',?)""", ((NOW - timedelta(minutes=5)).isoformat(),))
+    assert pe.fresh_books(con, "nba:1", NOW, ko)[("ML", None)]["Bet365"]["home"] == 2.30
+    # A price read after the game started is never used.
+    assert pe.fresh_books(con, "nba:1", NOW, NOW - timedelta(minutes=10))[("ML", None)]["Bet365"]["home"] == 2.10
 
 
-def test_build_end_to_end_no_started_stale_or_tomorrow_legs(con):
-    fresh, stale = NOW - timedelta(minutes=40), NOW - timedelta(minutes=200)
+def test_build_end_to_end_no_started_yesterday_or_tomorrow_legs(con):
+    fresh, morning, yesterday = NOW - timedelta(minutes=40), NOW - timedelta(hours=6), NOW - timedelta(hours=14)
     _store(con, "nba:1", "nba", "NBA", NOW + timedelta(hours=8), "H1", "A1", _two_way(), fresh)
-    _store(con, "nba:2", "nba", "NBA", NOW + timedelta(hours=9), "H2", "A2", _two_way(), fresh)   # same competition
-    _store(con, "tennis:3", "tennis", "TENNIS:ATP", NOW + timedelta(hours=6), "P1", "P2", _two_way(), stale)
+    _store(con, "nba:2", "nba", "NBA", NOW + timedelta(hours=9), "H2", "A2", _two_way(), morning)  # #51: still today
+    _store(con, "tennis:3", "tennis", "TENNIS:ATP", NOW + timedelta(hours=6), "P1", "P2", _two_way(), yesterday)
     _store(con, "nba:4", "nba", "NBA", NOW - timedelta(minutes=5), "H4", "A4", _two_way(), fresh)    # started
     _store(con, "nfl:5", "nfl", "NFL", NOW + timedelta(hours=30), "H5", "A5", _two_way(), fresh)     # tomorrow
     con.commit()
     b = pe.build(con, NOW)
     assert b["status"] == "estimated" and b["kind"] == "estimated_product" and b["date"] == DAY
-    assert b["coverage"]["events_today"] == 3 and b["coverage"]["excluded"] == {"no fresh result-market prices": 1}
+    assert b["method"] == "parlay-estimated-v2" and "same New York day" in b["price_rule"]
+    cov = b["coverage"]
+    assert cov["events_today"] == 3 and cov["events_with_fresh_prices"] == 2
+    assert cov["excluded"] == {"no fresh result-market prices": 1} and cov["legs"] == 2
     [r] = b["recommendations"]
     assert {x["event_id"] for x in r["legs"]} == {"nba:1", "nba:2"} and r["bookmaker"] == "Bet365"
     assert r["estimated_odds"] == pytest.approx(2.10 * 2.10) and r["gross_payout"] == "44.10"
-    assert all(x["price_at"] == fresh.isoformat() for x in r["legs"])
+    assert {x["price_at"] for x in r["legs"]} == {fresh.isoformat(), morning.isoformat()}
+    assert r["prices_at"] == morning.isoformat()
     # Strict mode wins: a verified card on one of those games removes the estimate.
     assert pe.build(con, NOW, verified_cards=[{"legs": [{"event_id": "nba:1"}]}])["recommendations"] == []
+    # A leg drops out as soon as its game starts.
+    assert pe.build(con, NOW + timedelta(hours=8, minutes=1))["recommendations"] == []
 
 
 def test_build_with_nothing_today_is_an_honest_empty_block(con):
@@ -345,6 +442,7 @@ def test_home_renders_estimated_cards_with_labels_and_payout():
     assert "Home 0 to win" in card and card.count("<li>") == 2
     assert "Estimated hit chance 30% (model estimate, unvalidated)" in card
     assert "Combined odds" not in card and "Verified bookmaker quote" not in card
+    assert "Prices read at " in card and "data-prices-read" in card
     assert "No verified parlays today" not in html and pe.EMPTY_TEXT not in html
 
 
@@ -392,4 +490,5 @@ def test_footer_shows_the_estimated_record_line():
 def test_parlay_rules_page_explains_estimated_mode():
     html = render(eblock([]), hash="#/parlays")
     assert "Estimated parlays" in html and "not a bet-slip quote" in html and "unvalidated" in html
+    assert "150 minutes" not in html and "positive estimated value" in html
     assert "Estimated parlays record: 1–2, paper P/L −$2.10" in html

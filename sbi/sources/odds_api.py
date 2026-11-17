@@ -7,9 +7,12 @@ Credit model (v4): /sports and /sports/{key}/events are free; /sports/{key}/odds
 len(markets) x len(regions) credits. We query regions=eu (includes Pinnacle and Betfair
 Exchange - the sharp references) and markets h2h,totals = 2 credits per competition.
 
-Budgeting: per-run budget = min(MAX_CREDITS_PER_RUN, remaining / runs left this month),
-spent only on competitions with events in the next 36h, internationals first (they have
-no other multi-bookmaker source), then club leagues.
+Budgeting: per-run budget = min(MAX_CREDITS_PER_RUN, remaining / runs left this month).
+Competitions with a stored event starting LATER TODAY (America/New_York) are bought first, so the
+estimated parlays of the day get fresh prices (issue #51); then future days. Within each group,
+internationals, US and tennis come first (they have no other multi-bookmaker source), then club
+leagues, soonest start first. The budget and the safeguards below are unchanged: ordering decides
+only which competitions the existing allowance is spent on.
 
 Quota safeguards (issue #24):
   * a competition is paid for only when the FREE /events list contains at least one event that
@@ -29,6 +32,7 @@ import os
 import re
 import unicodedata
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -41,6 +45,7 @@ MARKETS = "h2h,totals"   # btts is not offered on the bulk /odds endpoint (HTTP 
 MAX_CREDITS_PER_RUN = 12   # several competitions per run; the DAILY allowance is the real limit
 RUNS_PER_DAY = 2
 RESERVE = 20  # never spend the last credits of the month
+NY = ZoneInfo("America/New_York")   # the parlay day (issue #51): today's games are refreshed first
 
 # The Odds API sport key -> our league code. Internationals map to the ESPN-based INT:* events.
 INTERNATIONAL = {
@@ -294,6 +299,17 @@ def spent_today(con, now: datetime) -> int:
     return tot
 
 
+def later_today(t: datetime, now: datetime) -> bool:
+    """Starts after `now` on the same New York day."""
+    return now < t and t.astimezone(NY).date() == now.astimezone(NY).date()
+
+
+def plan_order(items: list[tuple]) -> list[tuple]:
+    """items: (today, prio, soonest, sport_key, league). Today's games first, then priority group,
+    then soonest start. Returned as (prio, soonest, sport_key, league, today)."""
+    return [(p, t, sk, lg, today) for today, p, t, sk, lg in sorted(items, key=lambda x: (not x[0], x[1], x[2], x[3]))]
+
+
 def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
     """Fetch odds for competitions with events in the next 7 days and STORE EVERY EVENT in that window
     (v0.3 kept only <36h, discarding most of what each paid request returned)."""
@@ -318,23 +334,26 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
                 continue
             # Free pre-check: buy the odds only if at least one listed event matches an event we
             # store. Otherwise every returned quote would be discarded as unmatched.
-            if not any(_matches(con, league, e) for e, t in zip(evs, starts) if now < t <= window_end):
+            matched = [t for e, t in zip(evs, starts) if now < t <= window_end and _matches(con, league, e)]
+            if not matched:
                 no_match.append(sk)
                 continue
             if _due(con, sk, min(soon), now):
-                plan.append((prio, min(soon), sk, league))   # soonest kick-off first within priority
-    plan.sort()
+                today = any(later_today(t, now) for t in matched)
+                plan.append((today, prio, min(soon), sk, league))
+    plan = plan_order(plan)
     remaining = int(usage["remaining"]) if usage.get("remaining") not in (None, "") else None
     allowed = budget(remaining, now, spent_today(con, now))
     out = {"credits_remaining_before": remaining, "budget_credits": allowed, "planned": [p[2] for p in plan],
            "fetched": [], "matched": 0, "unmatched": [], "odds_rows": 0, "coverage": {},
-           "skipped_no_matching_event": no_match}
+           "skipped_no_matching_event": no_match, "planned_today_first": [p[2] for p in plan if p[4]],
+           "today": {"events_in_responses": 0, "events_priced": 0}}
     if books:
         out["bookmakers_requested"] = list(books)
     if books_problem:
         out["bookmakers_ignored"] = books_problem
     spent = 0
-    for _, _, sk, league in plan:
+    for _, _, sk, league, _today in plan:
         two_way = sk in US or sk.startswith("tennis_")
         markets = ("h2h" if sk.startswith("tennis_") else US_MARKETS) if two_way else MARKETS
         c = request_cost(markets, REGIONS, books)
@@ -365,6 +384,8 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
             if not (now < commence <= window_end):
                 continue
             cov["in_window"] += 1
+            is_today = later_today(commence, now)
+            out["today"]["events_in_responses"] += is_today
             eid, score, kdiff = match_event(con, league, e["home_team"], e["away_team"], commence, with_info=True)
             swapped = False
             if not eid and league.startswith("TENNIS"):   # player order differs between sources
@@ -381,6 +402,7 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
                 continue
             out["matched"] += 1
             cov["matched"] += 1
+            out["today"]["events_priced"] += is_today
             for bk, market, sel, line, price, ts in parse_odds(e, two_way=two_way):
                 if swapped:
                     sel = {"home": "away", "away": "home"}.get(sel, sel)
