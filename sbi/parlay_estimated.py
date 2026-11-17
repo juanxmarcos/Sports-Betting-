@@ -43,6 +43,7 @@ import json
 from collections import Counter, defaultdict
 from datetime import datetime
 from decimal import Decimal
+from itertools import permutations
 from math import prod
 
 from zoneinfo import ZoneInfo
@@ -291,8 +292,8 @@ def size_bucket(n_legs: int) -> str | None:
 def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None = None,
            per_size: int | None = None) -> list[dict]:
     """Cards per size (issue #54): the best 4-5 leg, the best 3-leg and the best 2-leg parlay, then a
-    second of each while `per_size` and `limit` allow. Bigger sizes pick first because they are
-    scarcer. Within a size, best score first (ties: fewer legs). A size with no qualifying combo is
+    second of each while `per_size` and `limit` allow. In the first round the sizes pick games in
+    the order that covers the most sizes (bigger sizes first on a tie). Within a size, best score first (ties: fewer legs). A size with no qualifying combo is
     skipped, never padded. Every card has positive estimated value and at most one weak leg; a game
     appears in at most one card; games in a verified-quote card are skipped (strict mode wins).
     Returned earliest kickoff first."""
@@ -305,20 +306,36 @@ def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None
             buckets[b].append(c)
     for b in buckets:
         buckets[b].sort(key=order)
-    names = [size_bucket(lo) for lo, _ in reversed(SIZE_BUCKETS)]
-    used, out = set(blocked_events or ()), []
-    for _ in range(per_size):
-        for b in names:
+    names = [size_bucket(lo) for lo, _ in reversed(SIZE_BUCKETS)]     # bigger sizes first
+
+    def take(order: list[str], used: set, out: list, taken: set) -> None:
+        for b in order:
             if len(out) >= limit:
-                break
+                return
             for c in buckets.get(b, []):
                 evs = {x["event_id"] for x in c["legs"]}
-                if evs & used:
+                if id(c) in taken or evs & used:
                     continue
                 used |= evs
                 out.append(c)
-                buckets[b].remove(c)
+                taken.add(id(c))
                 break
+
+    # Round 1: one card per size. A game can be in one card only, so the order in which sizes pick
+    # matters on a thin day; every order is tried and the one covering the most sizes wins (ties:
+    # bigger sizes covered, then the higher total score, then bigger sizes picking first).
+    best = None
+    for order in permutations(names):
+        used, out, taken = set(blocked_events or ()), [], set()
+        take(list(order), used, out, taken)
+        got = {size_bucket(c["n_legs"]) for c in out}
+        key = (len(got), tuple(b in got for b in names), sum(c["score"] for c in out),
+               tuple(-names.index(b) for b in order))
+        if best is None or key > best[0]:
+            best = (key, used, out, taken)
+    _, used, out, taken = best
+    for _ in range(per_size - 1):                                      # later rounds: bigger first
+        take(names, used, out, taken)
     out.sort(key=lambda c: (min(x["start_utc"] for x in c["legs"]), c["bookmaker"]))
     return out
 

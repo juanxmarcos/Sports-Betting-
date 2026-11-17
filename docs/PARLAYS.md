@@ -448,7 +448,7 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Leg screens | Estimated-mode screen `parlay_estimated.screen_event` (the shadow engine's `parlay_engine.screen_event` is unchanged): market consensus probability 0.30–0.85 (one bookmaker de-vigged when it is the only one), model within 0.12 of the market (data sanity), no open injury/lineup note. |
 | Combinations | At most one leg per game. Same-game combinations and legs sharing a team or player are out. Different games in one competition are **allowed** in this mode. |
 | Ranking | Score = estimated joint probability × estimated value, where joint = product of leg probabilities (independence assumed) and value = joint × estimated odds − 1. Ties go to fewer legs. Each game appears in at most one card. |
-| Selection | Issue #54: score alone almost always favours 2-leg combinations, so cards are picked per size bucket — **2**, **3** and **4–5** legs (6-leg combinations are no longer shown). Round 1 takes the best-scoring card of each size, 4–5 first, then 3, then 2 (bigger sizes are scarcer, so they choose games first); round 2 takes a second of each size in the same order. At most 2 per size (`PER_SIZE`) and 5 in total. A size with no qualifying combination is skipped, never padded. |
+| Selection | Issue #54: score alone almost always favours 2-leg combinations, so cards are picked per size bucket — **2**, **3** and **4–5** legs (6-leg combinations are no longer shown). Round 1 takes the best-scoring card of each size. Because a game can be in one card only, the sizes can pick games in any order: every order is tried and the one that covers the **most sizes** wins (ties: bigger sizes covered, then higher total score, then 4–5 picking first). For example, five games give a 3-leg and a 2-leg card rather than one 4-leg card. Round 2 takes a second of each size, 4–5 first. At most 2 per size (`PER_SIZE`) and 5 in total. A size with no qualifying combination is skipped, never padded. |
 
 No single-pick threshold is read or changed. The run makes no network request and spends no API
 credit: it reads prices the 2-hourly `daily.yml` job already stored, and writes
@@ -480,8 +480,8 @@ credit: it reads prices the 2-hourly `daily.yml` job already stored, and writes
 - **Weaker evidence per leg since #51.** One bookmaker can price a leg, and a tennis leg's
   probability can come from a consensus that includes the pricing bookmaker itself, which pulls
   its estimated value towards zero. The parlay-level value check is the only value gate.
-- **Per-size selection trades score for variety (#54).** Bigger sizes choose games first, so on a
-  thin day a 4-leg card can take games that would otherwise have made two 2-leg cards. The search
+- **Per-size selection trades score for variety (#54).** On a thin day a 3- or 4-leg card can take
+  games that would otherwise have made two higher-scoring 2-leg cards. The search
   keeps the best 120 combinations per size per bookmaker, so a second card of a size can be missing
   when the best combinations all share games.
 - **Thin coverage.** Many games lack prices from today on the free Odds API quota, so several

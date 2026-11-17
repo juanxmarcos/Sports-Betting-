@@ -176,6 +176,16 @@ def test_one_card_of_each_size_when_2_3_and_4_leg_combos_qualify():
     assert len(evs) == len(set(evs)) == 9
 
 
+def test_thin_day_covers_the_most_sizes_not_the_biggest_card():
+    # Five games: a 4-leg card alone would use four of them and leave no 2-leg card. Trying every
+    # order of sizes shows a 3-leg and a 2-leg card instead (two sizes beat one).
+    pool = [_pool_leg(i, {"B": (1.9, 0.56)}, hours=1 + i * 0.5) for i in range(5)]
+    chosen = pe.select(pe.search(pool))
+    assert _sizes(chosen) == ["2", "3"]
+    # With only four games, two sizes cannot both fit; the bigger size wins the tie.
+    assert _sizes(pe.select(pe.search(pool[:4]))) == ["4-5"]
+
+
 def test_only_2_leg_cards_when_only_2_leg_combos_qualify():
     # Two positive legs and one weak leg in each pair: {strong, weak} pairs qualify, nothing bigger
     # can (a bigger parlay would need a second weak leg or a pair without a positive value).
