@@ -10,6 +10,9 @@
 > [Soccer league expansion 2026-11-13](#soccer-league-expansion-2026-11-13), which also states the
 > source-use and redistribution rights for football-data.co.uk.
 
+> **Third-party forecast sites** (The Open Model, Football Analytics, Skorbot) were audited on
+> 2026-11-16 (issue #23). None is ingested. See [FORECAST_SOURCES.md](FORECAST_SOURCES.md).
+
 Every stored row carries `source`, `source_url` and a timestamp (`retrieved_at` for odds is
 the HTTP `Last-Modified` time of the file, i.e. when football-data published that snapshot).
 

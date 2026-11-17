@@ -1,4 +1,4 @@
-"""Homepage contract (issue #6): Picks of the Day are plural peers, headings match the period,
+"""Single-picks contract (issue #6; moved to #/picks by issue #27, the homepage is parlays only): Picks of the Day are plural peers, headings match the period,
 and inactive picks are never presented as currently qualifying.
 
 Renders the real docs/assets/doyen.js in Node against small fixtures with a fixed clock."""
@@ -36,7 +36,7 @@ def _data(picks, potd=None):
 
 
 def render(picks, range_="today", potd=None):
-    out = subprocess.run(["node", str(HARNESS)], input=json.dumps({"data": _data(picks, potd), "now": NOW, "range": range_}),
+    out = subprocess.run(["node", str(HARNESS)], input=json.dumps({"data": _data(picks, potd), "now": NOW, "range": range_, "hash": "#/picks"}),
                          capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
     return out.stdout
@@ -145,10 +145,8 @@ def test_week_heading_and_context_match_the_selection():
     assert "No picks qualify this week yet." in render([], "week")
 
 
-def test_parlay_section_sits_below_picks_without_any_suggestions():
+def test_single_picks_page_no_longer_carries_the_parlay_section():
+    # Issue #27: parlays are the homepage; the single-picks route keeps picks, close-to-value and watching.
     html = render([_pick("a", TODAY_1)])
-    par = section(html, "parlays")
-    assert par and "Recommended Parlays of the Day" in par and "No verified parlays today" in par
-    assert "<article" not in par and not re.search(r"\d\.\d\d", par)     # no cards, no odds
-    assert html.index('id="picks"') < html.index('id="parlays"') < html.index("Close to Value")
-    assert section(render([], "tomorrow"), "parlays") is None            # today only
+    assert section(html, "parlays") is None and "Recommended Parlays" not in html
+    assert cards(section(html, "picks")) == [("card cc pick", "a")] and "Close to Value" in html

@@ -46,6 +46,24 @@ def main(argv=None) -> int:
     nr.add_argument("--season", type=int, action="append", help="season to fetch (default: the current one)")
     nr.add_argument("--no-fetch", action="store_true", help="report from what is stored; do not fetch injury files")
     nr.add_argument("--history", type=int, nargs="*", default=[], help="also measure coverage of these season files")
+    fb = sub.add_parser("forecast-bench", help="shadow benchmark of third-party soccer forecasts (research only); "
+                                               "writes reports/forecast_benchmark.md")
+    fb.add_argument("--openmodel-repo", help="local clone of github.com/Hicruben/theopenmodel")
+    fb.add_argument("--football-analytics-repo", help="local clone of github.com/serayd61/football-predictions-open-data")
+    pq = sub.add_parser("parlay-quote", help="record a combined parlay price read off a bookmaker's bet slip "
+                                             "(owner only; verified, append-only; never places a bet)")
+    pq.add_argument("--bookmaker", required=True, help="exactly as Doyen names it, e.g. Unibet")
+    pq.add_argument("--odds", type=float, required=True, help="the slip's combined DECIMAL odds")
+    pq.add_argument("--legs", required=True, help="comma-separated pick ids (python -m sbi parlay-research lists them)")
+    pq.add_argument("--quoted-at", help="ISO-8601 time the slip showed this price, with timezone (default: now)")
+    pq.add_argument("--source", required=True, help="where the price was seen, e.g. 'Unibet bet slip, desktop'")
+    pq.add_argument("--dry-run", action="store_true", help="verify only; do not record")
+    pc = sub.add_parser("parlay-candidates", help="full-slate parlay candidate research, shadow only (no network); "
+                                                  "writes reports/parlay_candidates.md")
+    pc.add_argument("--as-of", help="ISO timestamp to evaluate at (default: now)")
+    pc.add_argument("--record", action="store_true", help="also append the shortlist to ledger/parlay_candidates_shadow.csv")
+    sub.add_parser("parlay-research", help="parlay calibration, scarcity and shadow-ledger report (read-only); "
+                                           "writes reports/parlay_research.md")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -79,6 +97,14 @@ def main(argv=None) -> int:
             return 2
         print(json.dumps(out, indent=1, default=str))
         print("Local research copy only. Do not commit or publish this file.")
+        return 0
+    if args.cmd == "forecast-bench":   # research only: never opens the database
+        from . import forecast_bench
+        rep = forecast_bench.write({"openmodel": args.openmodel_repo,
+                                    "football-analytics": args.football_analytics_repo}, now=now)
+        print(json.dumps({k: {"rows": v.get("rows"), "match_status": v.get("match_status")}
+                          for k, v in rep["sources"].items()}, indent=1))
+        print(config.REPORTS_DIR / "forecast_benchmark.md")
         return 0
     con = db.connect()
 
@@ -148,6 +174,34 @@ def main(argv=None) -> int:
         r = nfl_reports.run(con, now, seasons=args.season, fetch=not args.no_fetch, history=args.history)
         print(json.dumps({k: r[k] for k in ("ingest", "summary", "source")}, indent=1, default=str))
         print(r["report"])
+    elif args.cmd == "parlay-quote":
+        from . import parlay_quotes, parlays, site
+        at = datetime.fromisoformat(args.quoted_at) if args.quoted_at else now
+        if at.tzinfo is None:
+            print("--quoted-at needs a timezone, e.g. 2026-11-16T18:05:00-05:00")
+            return 2
+        rec = parlay_quotes.make(args.bookmaker, args.odds, [x.strip() for x in args.legs.split(",") if x.strip()],
+                                 at, args.source, now)
+        legs = {leg["id"]: leg for leg in site.parlay_legs(con, now)}
+        why = parlay_quotes.quote_problem(rec, legs, now, parlays.MAX_QUOTE_AGE_MINUTES)
+        print(json.dumps({"quote": rec, "verified_now": why is None, "problem": why}, indent=1))
+        if why or args.dry_run:
+            return 0 if args.dry_run and why is None else 1
+        print("recorded" if parlay_quotes.append(rec) else "duplicate: already recorded")
+        print(site.build(con, now))       # refresh docs/data now: the quote only counts for 30 minutes
+        print("Commit and push data/parlay_quotes.json and docs/data/ to update the site. The quote stops "
+              "counting 30 minutes after --quoted-at, and the page hides it then; it is never relabelled fresh.")
+    elif args.cmd == "parlay-candidates":
+        from . import parlay_engine
+        at = datetime.fromisoformat(args.as_of) if args.as_of else now
+        at = at if at.tzinfo else at.replace(tzinfo=timezone.utc)
+        r = parlay_engine.write(con, at, record_ledger=args.record)
+        print(f"events today {r['coverage']['events_today']}, pool legs {r['coverage']['pool_legs']}, "
+              f"combinations evaluated {r['search']['evaluated']}, shadow shortlist {len(r['shortlist'])}")
+        print(config.REPORTS_DIR / "parlay_candidates.md")
+    elif args.cmd == "parlay-research":
+        from . import parlay_research
+        print(parlay_research.write(con, now))
     elif args.cmd == "status":
         for r in con.execute("SELECT job,started_at,status FROM job_runs ORDER BY id DESC LIMIT 10"):
             print(dict(r))

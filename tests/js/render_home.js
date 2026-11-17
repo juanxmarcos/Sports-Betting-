@@ -1,6 +1,8 @@
 // Test harness: runs docs/assets/doyen.js against a JSON fixture with a minimal DOM stub and a fixed
 // clock, then prints the rendered HTML (the homepage unless "hash" names another route).
-// Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays"}.
+// Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays",
+//   "allowMock": true (render fixtures marked mock), "noLite": true (data/parlays.json missing),
+//   "stake": {"value": "25", "odds": 6.5} (simulate typing a bet amount; prints the payout text)}.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -18,13 +20,31 @@ const app = { innerHTML: "", addEventListener: (t, f) => { listeners[t] = f; } }
 const stub = () => ({ innerHTML: "", textContent: "", addEventListener() {} });
 const els = { app, tz: stub(), updated: stub() };
 global.document = { getElementById: (id) => els[id] || stub(), querySelectorAll: () => [], title: "" };
-global.window = { addEventListener() {}, scrollTo() {} };
+global.window = { addEventListener() {}, scrollTo() {}, __DOYEN_ALLOW_MOCK: input.allowMock === true };
 global.location = { hash: input.hash || "" };
 global.localStorage = { getItem: () => null, setItem() {} };
-global.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve(input.data) });
+const fetched = [];
+global.fetch = (url) => {
+  fetched.push(url);
+  if (/parlays\.json$/.test(url)) {
+    if (input.noLite) return Promise.resolve({ ok: false, status: 404 });
+    const d = input.data || {};
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ generated: d.generated, default_timezone: d.default_timezone, parlays: d.parlays }) });
+  }
+  return Promise.resolve({ ok: true, json: () => Promise.resolve(input.data) });
+};
 
 require(path.join(__dirname, "..", "..", "docs", "assets", "doyen.js"));
 setTimeout(() => {
+  if (input.stake) {
+    const out = { textContent: "" };
+    const card = { dataset: { odds: String(input.stake.odds) }, querySelector: () => out };
+    const inp = { value: input.stake.value, closest: (sel) => (sel === "[data-parlay]" ? card : inp) };
+    listeners.input({ target: inp });
+    process.stdout.write(out.textContent);
+    return;
+  }
+  if (input.fetched) { process.stdout.write(JSON.stringify(fetched)); return; }
   if (input.range && input.range !== "today") {
     listeners.click({ target: { closest: (sel) => (sel === "[data-f]" ? { dataset: { f: "range", v: input.range } } : null) } });
   }
