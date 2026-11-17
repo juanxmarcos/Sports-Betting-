@@ -421,9 +421,13 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 
 ### 11.1 What is shown
 - Up to **5** cards under "Estimated parlays of the day", earliest kickoff first. Fewer, or none, is
-  normal: legs and cards are never forced.
-- Each card: 2–6 legs (game, selection, start time), one bookmaker, **estimated odds**, an editable
-  $10 stake, gross payout = stake × estimated odds (to the cent), an **Estimate** badge, and the line
+  normal: legs and cards are never forced. Issue #54: cards are picked **per size** (section 11.2,
+  "Selection"), so a qualifying 3-leg or 4–5 leg parlay reaches the homepage even when 2-leg
+  combinations score higher.
+- Each card: its leg count ("Parlay N · K legs"), 2–6 legs (game, selection, start time), one
+  bookmaker, **estimated combined odds**, the fixed line **"$10 bet pays $X"** (stake × estimated odds,
+  $10 stake, to the cent; issue #54), an editable stake with its gross payout, an **Estimate** badge,
+  and the line
   *"Estimated price: product of [bookmaker]'s single-game odds, not a bet-slip quote. Your slip may
   pay less."* It may also show "Estimated hit chance N% (model estimate, unvalidated)".
 - A strict card (owner-recorded verified combined quote, section 7) is shown first with a
@@ -444,9 +448,11 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Bookmakers per game | Issue #51: **1** is enough, the one pricing the parlay. |
 | Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis): the de-vigged consensus of the *other* bookmakers when it exists, otherwise (#51) the de-vigged consensus of at least **2** independent bookmakers including the pricing one. A leg with neither is skipped. |
 | Parlay value | Issue #51 removed the per-leg rule (probability × price > 1 at every leg). The **whole parlay** must have positive estimated value: joint probability × estimated odds > 1. A parlay starts from a positive-value pair and no further leg may lower its value (probability × price ≥ 1), so at most one leg sits below Doyen's probability, and only if it forms a positive pair with the parlay's strongest leg. Legs are never forced. |
+| Weak legs | Issue #54 makes it explicit: a leg is **weak** when it is below its own probability bar (probability × price < 1 at the pricing bookmaker). **At most one weak leg per parlay**, and the parlay as a whole must still have positive estimated value. Enforced in the search, again in the selection (`weak_legs`, `MAX_WEAK_LEGS = 1`), and in the card contract in Python and the browser ("more than one leg below its probability", with 0.0005 × price slack for the rounded stored probability). |
 | Leg screens | Estimated-mode screen `parlay_estimated.screen_event` (the shadow engine's `parlay_engine.screen_event` is unchanged): market consensus probability 0.30–0.85 (one bookmaker de-vigged when it is the only one), model within 0.12 of the market (data sanity), no open injury/lineup note. |
 | Combinations | At most one leg per game. Same-game combinations and legs sharing a team or player are out. Different games in one competition are **allowed** in this mode. |
 | Ranking | Score = estimated joint probability × estimated value, where joint = product of leg probabilities (independence assumed) and value = joint × estimated odds − 1. Ties go to fewer legs. Each game appears in at most one card. |
+| Selection | Issue #54: score alone almost always favours 2-leg combinations, so cards are picked per size bucket — **2**, **3** and **4–5** legs (6-leg combinations are no longer shown). Round 1 takes the best-scoring card of each size. Because a game can be in one card only, the sizes can pick games in any order: every order is tried and the one that covers the **most sizes** wins (ties: bigger sizes covered, then higher total score, then 4–5 picking first). For example, five games give a 3-leg and a 2-leg card rather than one 4-leg card. Round 2 takes a second of each size, 4–5 first. At most 2 per size (`PER_SIZE`) and 5 in total. A size with no qualifying combination is skipped, never padded. |
 
 No single-pick threshold is read or changed. The run makes no network request and spends no API
 credit: it reads prices the once-a-day `daily.yml` job already stored, and writes
@@ -454,12 +460,16 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
 
 ### 11.3 Tracking
 - Every estimate shown by the scheduled run is appended to `ledger/estimated_parlays.csv` with its
-  first-shown legs, bookmaker, prices, estimated odds, estimated hit chance and $10 stake. Rows are
-  never edited or removed; if the same parlay is shown later at a different price, the first one counts.
+  first-shown legs, **leg count (`n_legs`)**, bookmaker, prices, estimated odds, estimated hit chance
+  and $10 stake. Rows are never edited or removed; if the same parlay is shown later at a different
+  price, the first one counts.
 - Settlement is computed read-only from final scores on every run: any lost leg loses the parlay;
   otherwise a void or postponed leg voids it (stake returned, P/L 0; bookmaker void-leg rules differ
   and are not modelled); otherwise it stays open. Paper P/L uses the $10 stake and the estimated
   price, so a real slip may have paid less.
+- Issue #54: the settlement also reports `by_legs`, the same tally (won, lost, void, open, paper P/L,
+  staked, expected wins) **per leg count**, read from each row's `n_legs` (or its number of legs if
+  that field is empty). The `#/parlays` page shows it as a table under the record line.
 - The record (with expected wins among settled rows) is the input #41's calibration work can use.
 
 ### 11.4 Limits
@@ -474,6 +484,10 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
 - **Weaker evidence per leg since #51.** One bookmaker can price a leg, and a tennis leg's
   probability can come from a consensus that includes the pricing bookmaker itself, which pulls
   its estimated value towards zero. The parlay-level value check is the only value gate.
+- **Per-size selection trades score for variety (#54).** On a thin day a 3- or 4-leg card can take
+  games that would otherwise have made two higher-scoring 2-leg cards. The search
+  keeps the best 120 combinations per size per bookmaker, so a second card of a size can be missing
+  when the best combinations all share games.
 - **Thin coverage.** Many games lack prices from today on the free Odds API quota, so several
   days may show few or no cards. Since #51 the ingest buys competitions with a game later
   today (New York) first, inside the per-day budget and quota safeguards (#25; since #53 the single daily run may spend the whole day's allowance); its run

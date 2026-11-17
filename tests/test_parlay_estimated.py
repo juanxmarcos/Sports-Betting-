@@ -149,14 +149,80 @@ def test_two_to_six_legs_only():
 
 
 def test_five_card_cap_each_game_once_and_earliest_first():
-    pool = [_pool_leg(i, {"B": (1.9, 0.56)}, hours=1 + i * 0.5) for i in range(14)]
-    chosen = pe.select(pe.search(pool))
+    legs = iter([_pool_leg(i, {"B": (1.9, 0.56)}, hours=1 + i * 0.5) for i in range(40)])
+    cands = [pe.combo([next(legs) for _ in range(n)], "B") for n in (2, 2, 2, 3, 3, 3, 4, 5, 4)]
+    chosen = pe.select(cands)
     assert len(chosen) == 5
     evs = [x["event_id"] for c in chosen for x in c["legs"]]
     assert len(evs) == len(set(evs))
     firsts = [min(x["start_utc"] for x in c["legs"]) for c in chosen]
     assert firsts == sorted(firsts)
-    assert all(c["n_legs"] == 2 for c in chosen)                   # equal legs: fewer legs ranks first
+    # #54: per size, at most two of each; bigger sizes pick first, so the fifth card is 4-5 legs or 3.
+    sizes = sorted(pe.size_bucket(c["n_legs"]) for c in chosen)
+    assert sizes == ["2", "3", "3", "4-5", "4-5"]
+
+
+# ---------- issue #54: the best parlay of each size ----------
+def _sizes(chosen):
+    return sorted(pe.size_bucket(c["n_legs"]) for c in chosen)
+
+
+def test_one_card_of_each_size_when_2_3_and_4_leg_combos_qualify():
+    pool = [_pool_leg(i, {"B": (1.9, 0.56)}, hours=1 + i * 0.5) for i in range(9)]   # exactly 4 + 3 + 2 games
+    chosen = pe.select(pe.search(pool))
+    assert _sizes(chosen) == ["2", "3", "4-5"]
+    assert {c["n_legs"] for c in chosen} == {2, 3, 4}
+    evs = [x["event_id"] for c in chosen for x in c["legs"]]
+    assert len(evs) == len(set(evs)) == 9
+
+
+def test_thin_day_covers_the_most_sizes_not_the_biggest_card():
+    # Five games: a 4-leg card alone would use four of them and leave no 2-leg card. Trying every
+    # order of sizes shows a 3-leg and a 2-leg card instead (two sizes beat one).
+    pool = [_pool_leg(i, {"B": (1.9, 0.56)}, hours=1 + i * 0.5) for i in range(5)]
+    chosen = pe.select(pe.search(pool))
+    assert _sizes(chosen) == ["2", "3"]
+    # With only four games, two sizes cannot both fit; the bigger size wins the tie.
+    assert _sizes(pe.select(pe.search(pool[:4]))) == ["4-5"]
+
+
+def test_only_2_leg_cards_when_only_2_leg_combos_qualify():
+    # Two positive legs and one weak leg in each pair: {strong, weak} pairs qualify, nothing bigger
+    # can (a bigger parlay would need a second weak leg or a pair without a positive value).
+    pool = [_pool_leg(1, {"B": (2.2, 0.5)}), _pool_leg(2, {"B": (2.0, 0.48)}),
+            _pool_leg(3, {"B": (2.2, 0.5)}), _pool_leg(4, {"B": (2.0, 0.48)})]
+    cands = pe.search(pool)
+    assert cands and {c["n_legs"] for c in cands} >= {2}
+    chosen = pe.select([c for c in cands if c["n_legs"] == 2])
+    assert chosen and _sizes(chosen) == ["2"] * len(chosen)
+    # A size with nothing qualifying is skipped, never padded.
+    assert pe.select([]) == []
+    two_only = [_pool_leg(1, {"B": (2.2, 0.5)}), _pool_leg(2, {"B": (2.0, 0.48)})]
+    assert _sizes(pe.select(pe.search(two_only))) == ["2"]
+
+
+def test_no_card_ever_has_more_than_one_weak_leg():
+    strong = [_pool_leg(i, {"B": (2.6, 0.5)}) for i in range(4)]
+    weak = [_pool_leg(10 + i, {"B": (1.9, 0.5)}) for i in range(4)]   # value -0.05 each
+    cands = pe.search(strong + weak)
+    assert any(pe.weak_legs(c) == 1 for c in cands)
+    assert all(pe.weak_legs(c) <= 1 and c["estimated_ev"] > 0 for c in cands)
+    # Even a hand-made candidate with two weak legs and a positive value is never selected.
+    two_weak = pe.combo([strong[0], strong[1], weak[0], weak[1]], "B")
+    assert pe.weak_legs(two_weak) == 2 and two_weak["estimated_ev"] > 0
+    assert pe.select([two_weak]) == []
+    chosen = pe.select(cands + [two_weak])
+    assert chosen and all(pe.weak_legs(c) <= 1 for c in chosen)
+    # ... and the card contract rejects such a card on the page too.
+    c = pe.card(two_weak, DAY)
+    assert c["weak_legs"] == 2 and pe.card_problem(c, NOW) == "more than one leg below its probability"
+    assert pe.card_problem(pe.card(pe.combo([strong[0], strong[1], weak[0]], "B"), DAY), NOW) is None
+
+
+def test_cards_carry_size_and_ten_dollar_payout():
+    c = pe.card(pe.combo([_pool_leg(i, {"B": (2.0, 0.55)}) for i in range(4)], "B"), DAY)
+    assert c["n_legs"] == 4 and c["size"] == "4-5" and c["stake"] == 10
+    assert c["gross_payout"] == "160.00" and c["estimated_odds"] == 16.0 and c["est_hit_chance"] == round(0.55 ** 4, 4)
 
 
 def test_whole_parlay_value_replaces_the_per_leg_rule():
@@ -198,7 +264,9 @@ def test_loosened_rules_allow_longer_parlays_from_more_legs():
 
 def test_fewer_cards_when_fewer_qualify_and_none_is_normal():
     assert pe.select(pe.search([_pool_leg(1, {"B": (2.1, 0.5)})])) == []
-    assert len(pe.select(pe.search([_pool_leg(i, {"B": (2.1, 0.5)}) for i in range(4)]))) == 2
+    # #54: four games make one 4-leg card (bigger sizes pick first); the rest are not padded.
+    chosen = pe.select(pe.search([_pool_leg(i, {"B": (2.1, 0.5)}) for i in range(4)]))
+    assert [c["n_legs"] for c in chosen] == [4]
 
 
 def test_verified_games_are_skipped():
@@ -212,7 +280,8 @@ def ecard(pid="pe-1", n_legs=2, prices=None, price_age_min=30, **over):
     prices = prices or [1.9, 2.1, 1.8, 1.7, 2.0, 1.6, 1.5][:n_legs]
     legs = [{"event_id": f"ev-{pid}-{i}", "sport": "nba", "league": "NBA", "title": f"Home {i} v Away {i}",
              "market": "ML", "selection": "home", "selection_text": f"Home {i} to win",
-             "start_utc": _iso(NOW + timedelta(hours=3, minutes=i)), "status": "active", "price": p, "prob": 0.55,
+             "start_utc": _iso(NOW + timedelta(hours=3, minutes=i)), "status": "active", "price": p,
+             "prob": round(1 / p + 0.01, 4),
              "prob_source": "model", "price_at": _iso(NOW - timedelta(minutes=price_age_min))} for i, p in enumerate(prices)]
     r = {"parlay_id": pid, "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "badge": "Estimate",
          "bookmaker": "BookA", "n_legs": len(legs), "estimated_odds": round(prod(prices), 4),
@@ -255,6 +324,10 @@ ECASES = [
     ("yesterday", lambda r: r.update(date="2026-11-12"), "not today's parlay"),
     ("no bookmaker", lambda r: r.update(bookmaker=""), "missing bookmaker"),
     ("mock flag", lambda r: r.update(mock=True), "mock or test data"),
+    # #54: at most one leg below its own probability bar (probability x price < 1).
+    ("one weak leg", _leg_set(0, "prob", 0.5), None),
+    ("two weak legs", lambda r: [r["legs"][i].__setitem__("prob", 0.4) for i in (0, 1)],
+     "more than one leg below its probability"),
 ]
 
 
@@ -274,7 +347,7 @@ def test_shown_caps_at_five_and_skips_verified_games():
 
 @pytest.mark.parametrize("prices,payout", [([1.9, 2.1], "39.90"), ([1.333, 1.5], "20.00"), ([2.05, 1.87, 1.62], "62.10")])
 def test_card_payout_to_the_cent_and_labels(prices, payout):
-    legs = [_pool_leg(i, {"BookA": (p, 0.6)}) for i, p in enumerate(prices)]
+    legs = [_pool_leg(i, {"BookA": (p, 0.8)}) for i, p in enumerate(prices)]
     c = pe.card(pe.combo(legs, "BookA"), DAY)
     assert c["gross_payout"] == payout and c["stake"] == 10
     assert Decimal(c["gross_payout"]) == parlays.gross_payout(10, c["estimated_odds"])
@@ -357,7 +430,9 @@ def _settle_event(con, eid, home, away, status="finished"):
     con.execute("UPDATE events SET status=?, home_score=?, away_score=? WHERE event_id=?", (status, home, away, eid))
 
 
-def test_ledger_is_append_only_and_settles_wins_losses_voids_and_open(con):
+def test_ledger_is_append_only_and_settles_wins_losses_voids_and_open(con, monkeypatch):
+    monkeypatch.setattr(pe, "SIZE_BUCKETS", ((2, 2),))             # 2-leg cards only, to settle 4 rows
+    monkeypatch.setattr(pe, "PER_SIZE", 5)
     for i in range(1, 9):
         _store(con, f"nba:{i}", "nba", "NBA", NOW + timedelta(hours=2 + i * 0.1), f"H{i}", f"A{i}", _two_way(),
                NOW - timedelta(minutes=10))
@@ -383,8 +458,37 @@ def test_ledger_is_append_only_and_settles_wins_losses_voids_and_open(con):
     assert (s["rows"], s["won"], s["lost"], s["void"], s["open"]) == (4, 1, 1, 1, 1)
     assert s["paper_pl"] == "24.10" and s["staked"] == "20.00"     # +10 x (4.41 - 1) - 10
     assert pe.record_line(s) == "Estimated parlays record: 1–1, paper P/L +$24.10"
+    assert list(s["by_legs"]) == ["2"] and s["by_legs"]["2"]["won"] == 1 and s["by_legs"]["2"]["paper_pl"] == "24.10"
     assert pe.ledger_path().read_text() == before                  # settlement never edits the ledger
     assert pe.record_line({"won": 0, "lost": 2, "paper_pl": "-20.00"}) == "Estimated parlays record: 0–2, paper P/L −$20.00"
+
+
+def test_ledger_rows_record_leg_count_and_results_group_by_it(con):
+    # Old rows stay byte-for-byte; new rows of each size are appended with n_legs.
+    for i in range(1, 10):
+        _store(con, f"nba:{i}", "nba", "NBA", NOW + timedelta(hours=2 + i * 0.1), f"H{i}", f"A{i}",
+               _two_way(soft_home=2.3), NOW - timedelta(minutes=10))
+    con.commit()
+    path = pe.ledger_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    old = ",".join(pe.LEDGER_FIELDS) + "\r\n" + ('2026-11-12T12:00:00+00:00,2026-11-12,pe-old,BookZ,2,'
+           '"[{""event_id"": ""nba:old"", ""market"": ""ML"", ""selection"": ""home"", ""price"": 2.0, '
+           '""prob"": 0.6, ""title"": ""Old v Game"", ""start_utc"": ""2026-11-12T23:00:00+00:00""}]",'
+           'estimated_product,4.0,0.36,0.44,10\r\n')
+    path.write_bytes(old.encode())
+    b = pe.build(con, NOW)
+    assert sorted(pe.size_bucket(r["n_legs"]) for r in b["recommendations"]) == ["2", "3", "4-5"]
+    assert pe.record(b, NOW) == 3
+    text = path.read_bytes()
+    assert text.startswith(old.encode())
+    with path.open() as f:
+        rows = list(csv.DictReader(f))
+    assert sorted(int(r["n_legs"]) for r in rows[1:]) == sorted(r["n_legs"] for r in b["recommendations"])
+    assert all(int(r["n_legs"]) == len(json.loads(r["legs"])) for r in rows[1:])
+    s = pe.settle(con)
+    assert s["rows"] == 4 and sum(g["rows"] for g in s["by_legs"].values()) == 4
+    assert list(s["by_legs"]) == sorted(s["by_legs"], key=int) and "2" in s["by_legs"] and "3" in s["by_legs"]
+    assert path.read_bytes() == text
 
 
 def test_site_build_exports_the_block_and_records_only_on_the_scheduled_run(con):
@@ -438,7 +542,9 @@ def test_home_renders_estimated_cards_with_labels_and_payout():
     assert "Estimated parlays of the day" in html and '<span class="pill estimate">Estimate</span>' in card
     assert ("Estimated price: product of BookA's single-game odds, not a bet-slip quote. Your slip may pay less."
             in card)
-    assert ">Estimated odds<" in card and ">3.99<" in card and ">$39.90<" in card and 'value="10"' in card
+    assert ">Estimated combined odds<" in card and ">3.99<" in card and ">$39.90<" in card and 'value="10"' in card
+    assert "<b>$10 bet pays $39.90</b> (estimated, 2 legs, if every leg wins)" in card
+    assert "Parlay 1 · 2 legs" in card
     assert "Home 0 to win" in card and card.count("<li>") == 2
     assert "Estimated hit chance 30% (model estimate, unvalidated)" in card
     assert "Combined odds" not in card and "Verified bookmaker quote" not in card
@@ -492,3 +598,15 @@ def test_parlay_rules_page_explains_estimated_mode():
     assert "Estimated parlays" in html and "not a bet-slip quote" in html and "unvalidated" in html
     assert "150 minutes" not in html and "positive estimated value" in html
     assert "Estimated parlays record: 1–2, paper P/L −$2.10" in html
+    assert "Picked per size" in html and "At most one leg may be priced below" in html
+
+
+@needs_node
+def test_parlay_rules_page_groups_results_by_leg_count():
+    by = {"2": {"rows": 2, "won": 1, "lost": 1, "void": 0, "open": 0, "paper_pl": "8.20"},
+          "4": {"rows": 1, "won": 0, "lost": 1, "void": 0, "open": 0, "paper_pl": "-10.00"}}
+    html = render(eblock([], record={"rows": 3, "won": 1, "lost": 2, "void": 0, "open": 0, "paper_pl": "-1.80",
+                                     "staked": "30.00", "by_legs": by}), hash="#/parlays")
+    assert "data-by-legs" in html
+    assert "<td>2 legs</td><td>1–1</td><td>0</td><td>0</td><td>+$8.20</td>" in html
+    assert "<td>4 legs</td><td>0–1</td><td>0</td><td>0</td><td>−$10.00</td>" in html
