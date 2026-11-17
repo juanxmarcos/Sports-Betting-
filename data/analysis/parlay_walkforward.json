@@ -1,0 +1,2968 @@
+{
+ "method": "parlay-walkforward-v1",
+ "publication": "shadow_only",
+ "price_kind": "computed_product_not_a_quote",
+ "decision_times": 34,
+ "days": [
+  "2026-11-12",
+  "2026-11-13",
+  "2026-11-14",
+  "2026-11-15",
+  "2026-11-16"
+ ],
+ "first": "2026-11-12T17:31:12+00:00",
+ "last": "2026-11-17T04:32:17+00:00",
+ "legs_seen": 71,
+ "legs_settled": 71,
+ "legs_settled_by_sport": {
+  "tennis": 6,
+  "nba": 26,
+  "nfl": 14,
+  "soccer": 25
+ },
+ "leg_calibration_market": {
+  "n": 71,
+  "observed_wins": 45,
+  "expected_wins": 42.1,
+  "z": 0.74,
+  "log_loss": 0.5907,
+  "log_loss_95": [
+   0.5191,
+   0.6648
+  ],
+  "brier": 0.203,
+  "brier_95": [
+   0.1708,
+   0.2379
+  ],
+  "reliability": [
+   {
+    "bucket": "0.30-0.40",
+    "n": 11,
+    "mean_pred": 0.3509,
+    "observed": 0.1818,
+    "observed_95": [
+     0.0514,
+     0.477
+    ]
+   },
+   {
+    "bucket": "0.40-0.50",
+    "n": 13,
+    "mean_pred": 0.4476,
+    "observed": 0.6923,
+    "observed_95": [
+     0.4237,
+     0.8732
+    ]
+   },
+   {
+    "bucket": "0.50-0.60",
+    "n": 9,
+    "mean_pred": 0.5521,
+    "observed": 0.7778,
+    "observed_95": [
+     0.4526,
+     0.9368
+    ]
+   },
+   {
+    "bucket": "0.60-0.70",
+    "n": 14,
+    "mean_pred": 0.6439,
+    "observed": 0.5714,
+    "observed_95": [
+     0.3259,
+     0.7862
+    ]
+   },
+   {
+    "bucket": "0.70-0.85",
+    "n": 24,
+    "mean_pred": 0.7682,
+    "observed": 0.7917,
+    "observed_95": [
+     0.5953,
+     0.9076
+    ]
+   }
+  ]
+ },
+ "leg_calibration_model_subset": {
+  "n": 65,
+  "model": {
+   "n": 65,
+   "observed_wins": 41,
+   "expected_wins": 37.16,
+   "z": 1.02,
+   "log_loss": 0.6247,
+   "log_loss_95": [
+    0.5507,
+    0.7039
+   ],
+   "brier": 0.2182,
+   "brier_95": [
+    0.1844,
+    0.2562
+   ],
+   "reliability": [
+    {
+     "bucket": "0.30-0.40",
+     "n": 11,
+     "mean_pred": 0.3507,
+     "observed": 0.2727,
+     "observed_95": [
+      0.0975,
+      0.5657
+     ]
+    },
+    {
+     "bucket": "0.40-0.50",
+     "n": 11,
+     "mean_pred": 0.4452,
+     "observed": 0.7273,
+     "observed_95": [
+      0.4343,
+      0.9025
+     ]
+    },
+    {
+     "bucket": "0.50-0.60",
+     "n": 14,
+     "mean_pred": 0.5595,
+     "observed": 0.6429,
+     "observed_95": [
+      0.3876,
+      0.8366
+     ]
+    },
+    {
+     "bucket": "0.60-0.70",
+     "n": 14,
+     "mean_pred": 0.666,
+     "observed": 0.5714,
+     "observed_95": [
+      0.3259,
+      0.7862
+     ]
+    },
+    {
+     "bucket": "0.70-0.85",
+     "n": 13,
+     "mean_pred": 0.7754,
+     "observed": 0.8462,
+     "observed_95": [
+      0.5776,
+      0.9567
+     ]
+    }
+   ]
+  },
+  "market": {
+   "n": 65,
+   "observed_wins": 41,
+   "expected_wins": 38.41,
+   "z": 0.69,
+   "log_loss": 0.5955,
+   "log_loss_95": [
+    0.5224,
+    0.6745
+   ],
+   "brier": 0.2053,
+   "brier_95": [
+    0.1731,
+    0.2423
+   ],
+   "reliability": [
+    {
+     "bucket": "0.30-0.40",
+     "n": 10,
+     "mean_pred": 0.3475,
+     "observed": 0.2,
+     "observed_95": [
+      0.0567,
+      0.5098
+     ]
+    },
+    {
+     "bucket": "0.40-0.50",
+     "n": 12,
+     "mean_pred": 0.447,
+     "observed": 0.6667,
+     "observed_95": [
+      0.3906,
+      0.8619
+     ]
+    },
+    {
+     "bucket": "0.50-0.60",
+     "n": 9,
+     "mean_pred": 0.5521,
+     "observed": 0.7778,
+     "observed_95": [
+      0.4526,
+      0.9368
+     ]
+    },
+    {
+     "bucket": "0.60-0.70",
+     "n": 13,
+     "mean_pred": 0.644,
+     "observed": 0.6154,
+     "observed_95": [
+      0.3552,
+      0.8229
+     ]
+    },
+    {
+     "bucket": "0.70-0.85",
+     "n": 21,
+     "mean_pred": 0.7731,
+     "observed": 0.7619,
+     "observed_95": [
+      0.5491,
+      0.8937
+     ]
+    }
+   ]
+  }
+ },
+ "leg_calibration_by_sport": {
+  "nba": {
+   "n": 26,
+   "observed_wins": 16,
+   "expected_wins": 16.28,
+   "z": -0.12,
+   "log_loss": 0.5964,
+   "log_loss_95": [
+    0.4604,
+    0.7457
+   ],
+   "brier": 0.2045,
+   "brier_95": [
+    0.1423,
+    0.2705
+   ],
+   "reliability": [
+    {
+     "bucket": "0.30-0.40",
+     "n": 3,
+     "mean_pred": 0.3587,
+     "observed": 0.0,
+     "observed_95": [
+      0.0,
+      0.5615
+     ]
+    },
+    {
+     "bucket": "0.40-0.50",
+     "n": 4,
+     "mean_pred": 0.4436,
+     "observed": 0.5,
+     "observed_95": [
+      0.15,
+      0.85
+     ]
+    },
+    {
+     "bucket": "0.50-0.60",
+     "n": 3,
+     "mean_pred": 0.5665,
+     "observed": 1.0,
+     "observed_95": [
+      0.4385,
+      1.0
+     ]
+    },
+    {
+     "bucket": "0.60-0.70",
+     "n": 4,
+     "mean_pred": 0.6551,
+     "observed": 0.75,
+     "observed_95": [
+      0.3006,
+      0.9544
+     ]
+    },
+    {
+     "bucket": "0.70-0.85",
+     "n": 12,
+     "mean_pred": 0.7593,
+     "observed": 0.6667,
+     "observed_95": [
+      0.3906,
+      0.8619
+     ]
+    }
+   ]
+  },
+  "nfl": {
+   "n": 14,
+   "observed_wins": 9,
+   "expected_wins": 8.22,
+   "z": 0.45,
+   "log_loss": 0.5644,
+   "log_loss_95": [
+    0.4177,
+    0.7373
+   ],
+   "brier": 0.1922,
+   "brier_95": [
+    0.1268,
+    0.2652
+   ],
+   "reliability": [
+    {
+     "bucket": "0.30-0.40",
+     "n": 2,
+     "mean_pred": 0.3433,
+     "observed": 0.0,
+     "observed_95": [
+      0.0,
+      0.6576
+     ]
+    },
+    {
+     "bucket": "0.40-0.50",
+     "n": 4,
+     "mean_pred": 0.4437,
+     "observed": 0.75,
+     "observed_95": [
+      0.3006,
+      0.9544
+     ]
+    },
+    {
+     "bucket": "0.60-0.70",
+     "n": 4,
+     "mean_pred": 0.6484,
+     "observed": 0.5,
+     "observed_95": [
+      0.15,
+      0.85
+     ]
+    },
+    {
+     "bucket": "0.70-0.85",
+     "n": 4,
+     "mean_pred": 0.7916,
+     "observed": 1.0,
+     "observed_95": [
+      0.5101,
+      1.0
+     ]
+    }
+   ]
+  },
+  "soccer": {
+   "n": 25,
+   "observed_wins": 16,
+   "expected_wins": 13.91,
+   "z": 0.89,
+   "log_loss": 0.612,
+   "log_loss_95": [
+    0.4964,
+    0.7235
+   ],
+   "brier": 0.2135,
+   "brier_95": [
+    0.1621,
+    0.2668
+   ],
+   "reliability": [
+    {
+     "bucket": "0.30-0.40",
+     "n": 5,
+     "mean_pred": 0.3425,
+     "observed": 0.4,
+     "observed_95": [
+      0.1176,
+      0.7693
+     ]
+    },
+    {
+     "bucket": "0.40-0.50",
+     "n": 4,
+     "mean_pred": 0.4535,
+     "observed": 0.75,
+     "observed_95": [
+      0.3006,
+      0.9544
+     ]
+    },
+    {
+     "bucket": "0.50-0.60",
+     "n": 6,
+     "mean_pred": 0.5449,
+     "observed": 0.6667,
+     "observed_95": [
+      0.3,
+      0.9032
+     ]
+    },
+    {
+     "bucket": "0.60-0.70",
+     "n": 5,
+     "mean_pred": 0.6316,
+     "observed": 0.6,
+     "observed_95": [
+      0.2307,
+      0.8824
+     ]
+    },
+    {
+     "bucket": "0.70-0.85",
+     "n": 5,
+     "mean_pred": 0.7912,
+     "observed": 0.8,
+     "observed_95": [
+      0.3755,
+      0.9638
+     ]
+    }
+   ]
+  },
+  "tennis": {
+   "n": 6,
+   "observed_wins": 4,
+   "expected_wins": 3.69,
+   "z": 0.28,
+   "log_loss": 0.5384,
+   "log_loss_95": [
+    0.339,
+    0.7849
+   ],
+   "brier": 0.1786,
+   "brier_95": [
+    0.0816,
+    0.2901
+   ],
+   "reliability": [
+    {
+     "bucket": "0.30-0.40",
+     "n": 1,
+     "mean_pred": 0.3849,
+     "observed": 0.0,
+     "observed_95": [
+      0.0,
+      0.7935
+     ]
+    },
+    {
+     "bucket": "0.40-0.50",
+     "n": 1,
+     "mean_pred": 0.456,
+     "observed": 1.0,
+     "observed_95": [
+      0.2065,
+      1.0
+     ]
+    },
+    {
+     "bucket": "0.60-0.70",
+     "n": 1,
+     "mean_pred": 0.643,
+     "observed": 0.0,
+     "observed_95": [
+      0.0,
+      0.7935
+     ]
+    },
+    {
+     "bucket": "0.70-0.85",
+     "n": 3,
+     "mean_pred": 0.734,
+     "observed": 1.0,
+     "observed_95": [
+      0.4385,
+      1.0
+     ]
+    }
+   ]
+  }
+ },
+ "replay_combinations": {
+  "2": {
+   "combinations": 30,
+   "independence_market": {
+    "n": 30,
+    "observed_wins": 14,
+    "expected_wins": 10.61,
+    "z": 1.35,
+    "log_loss": 0.6791,
+    "log_loss_95": [
+     0.5396,
+     0.8195
+    ],
+    "brier": 0.244,
+    "brier_95": [
+     0.1789,
+     0.3122
+    ],
+    "reliability": [
+     {
+      "bucket": "0.10-0.20",
+      "n": 4,
+      "mean_pred": 0.1582,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.4899
+      ]
+     },
+     {
+      "bucket": "0.20-0.35",
+      "n": 12,
+      "mean_pred": 0.2763,
+      "observed": 0.5,
+      "observed_95": [
+       0.2538,
+       0.7462
+      ]
+     },
+     {
+      "bucket": "0.35-0.50",
+      "n": 7,
+      "mean_pred": 0.3949,
+      "observed": 0.5714,
+      "observed_95": [
+       0.2505,
+       0.8418
+      ]
+     },
+     {
+      "bucket": "0.50-1.00",
+      "n": 7,
+      "mean_pred": 0.5574,
+      "observed": 0.5714,
+      "observed_95": [
+       0.2505,
+       0.8418
+      ]
+     }
+    ]
+   },
+   "model_subset": {
+    "n": 24,
+    "independence_model": {
+     "n": 24,
+     "observed_wins": 11,
+     "expected_wins": 8.02,
+     "z": 1.34,
+     "log_loss": 0.6765,
+     "log_loss_95": [
+      0.502,
+      0.8424
+     ],
+     "brier": 0.2414,
+     "brier_95": [
+      0.1616,
+      0.3162
+     ],
+     "reliability": [
+      {
+       "bucket": "0.10-0.20",
+       "n": 4,
+       "mean_pred": 0.1445,
+       "observed": 0.25,
+       "observed_95": [
+        0.0456,
+        0.6994
+       ]
+      },
+      {
+       "bucket": "0.20-0.35",
+       "n": 10,
+       "mean_pred": 0.2786,
+       "observed": 0.4,
+       "observed_95": [
+        0.1682,
+        0.6873
+       ]
+      },
+      {
+       "bucket": "0.35-0.50",
+       "n": 5,
+       "mean_pred": 0.3927,
+       "observed": 0.4,
+       "observed_95": [
+        0.1176,
+        0.7693
+       ]
+      },
+      {
+       "bucket": "0.50-1.00",
+       "n": 5,
+       "mean_pred": 0.538,
+       "observed": 0.8,
+       "observed_95": [
+        0.3755,
+        0.9638
+       ]
+      }
+     ]
+    },
+    "independence_market": {
+     "n": 24,
+     "observed_wins": 11,
+     "expected_wins": 8.45,
+     "z": 1.14,
+     "log_loss": 0.6555,
+     "log_loss_95": [
+      0.4912,
+      0.8288
+     ],
+     "brier": 0.233,
+     "brier_95": [
+      0.1576,
+      0.3062
+     ],
+     "reliability": [
+      {
+       "bucket": "0.10-0.20",
+       "n": 4,
+       "mean_pred": 0.1582,
+       "observed": 0.0,
+       "observed_95": [
+        0.0,
+        0.4899
+       ]
+      },
+      {
+       "bucket": "0.20-0.35",
+       "n": 9,
+       "mean_pred": 0.2731,
+       "observed": 0.5556,
+       "observed_95": [
+        0.2666,
+        0.8112
+       ]
+      },
+      {
+       "bucket": "0.35-0.50",
+       "n": 5,
+       "mean_pred": 0.3968,
+       "observed": 0.4,
+       "observed_95": [
+        0.1176,
+        0.7693
+       ]
+      },
+      {
+       "bucket": "0.50-1.00",
+       "n": 6,
+       "mean_pred": 0.5633,
+       "observed": 0.6667,
+       "observed_95": [
+        0.3,
+        0.9032
+       ]
+      }
+     ]
+    }
+   },
+   "legs": {
+    "n": 60,
+    "observed_wins": 38,
+    "expected_wins": 35.62,
+    "z": 0.66,
+    "log_loss": 0.5946,
+    "log_loss_95": [
+     0.5182,
+     0.6725
+    ],
+    "brier": 0.205,
+    "brier_95": [
+     0.1707,
+     0.244
+    ],
+    "reliability": [
+     {
+      "bucket": "0.30-0.40",
+      "n": 9,
+      "mean_pred": 0.3562,
+      "observed": 0.2222,
+      "observed_95": [
+       0.0632,
+       0.5474
+      ]
+     },
+     {
+      "bucket": "0.40-0.50",
+      "n": 12,
+      "mean_pred": 0.4506,
+      "observed": 0.6667,
+      "observed_95": [
+       0.3906,
+       0.8619
+      ]
+     },
+     {
+      "bucket": "0.50-0.60",
+      "n": 7,
+      "mean_pred": 0.5413,
+      "observed": 0.7143,
+      "observed_95": [
+       0.3589,
+       0.9178
+      ]
+     },
+     {
+      "bucket": "0.60-0.70",
+      "n": 11,
+      "mean_pred": 0.6454,
+      "observed": 0.5455,
+      "observed_95": [
+       0.2801,
+       0.7873
+      ]
+     },
+     {
+      "bucket": "0.70-0.85",
+      "n": 21,
+      "mean_pred": 0.7675,
+      "observed": 0.8095,
+      "observed_95": [
+       0.6,
+       0.9233
+      ]
+     }
+    ]
+   },
+   "sports": {
+    "tennis": 6,
+    "nba": 21,
+    "nfl": 13,
+    "soccer": 20
+   }
+  },
+  "3": {
+   "combinations": 11,
+   "independence_market": {
+    "n": 11,
+    "observed_wins": 3,
+    "expected_wins": 2.51,
+    "z": 0.36,
+    "log_loss": 0.5698,
+    "log_loss_95": [
+     0.2723,
+     0.9265
+    ],
+    "brier": 0.1943,
+    "brier_95": [
+     0.0673,
+     0.3419
+    ],
+    "reliability": [
+     {
+      "bucket": "0.05-0.10",
+      "n": 1,
+      "mean_pred": 0.0865,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.7935
+      ]
+     },
+     {
+      "bucket": "0.10-0.20",
+      "n": 5,
+      "mean_pred": 0.1662,
+      "observed": 0.2,
+      "observed_95": [
+       0.0362,
+       0.6245
+      ]
+     },
+     {
+      "bucket": "0.20-0.35",
+      "n": 3,
+      "mean_pred": 0.2759,
+      "observed": 0.3333,
+      "observed_95": [
+       0.0615,
+       0.7923
+      ]
+     },
+     {
+      "bucket": "0.35-0.50",
+      "n": 2,
+      "mean_pred": 0.3806,
+      "observed": 0.5,
+      "observed_95": [
+       0.0945,
+       0.9055
+      ]
+     }
+    ]
+   },
+   "model_subset": {
+    "n": 5,
+    "independence_model": {
+     "n": 5,
+     "observed_wins": 2,
+     "expected_wins": 1.25,
+     "z": 0.78,
+     "log_loss": 0.6342,
+     "log_loss_95": [
+      0.2306,
+      1.1512
+     ],
+     "brier": 0.2237,
+     "brier_95": [
+      0.0425,
+      0.4443
+     ],
+     "reliability": [
+      {
+       "bucket": "0.10-0.20",
+       "n": 2,
+       "mean_pred": 0.1884,
+       "observed": 0.0,
+       "observed_95": [
+        0.0,
+        0.6576
+       ]
+      },
+      {
+       "bucket": "0.20-0.35",
+       "n": 2,
+       "mean_pred": 0.2444,
+       "observed": 0.5,
+       "observed_95": [
+        0.0945,
+        0.9055
+       ]
+      },
+      {
+       "bucket": "0.35-0.50",
+       "n": 1,
+       "mean_pred": 0.3894,
+       "observed": 1.0,
+       "observed_95": [
+        0.2065,
+        1.0
+       ]
+      }
+     ]
+    },
+    "independence_market": {
+     "n": 5,
+     "observed_wins": 2,
+     "expected_wins": 1.22,
+     "z": 0.82,
+     "log_loss": 0.6302,
+     "log_loss_95": [
+      0.2177,
+      1.1242
+     ],
+     "brier": 0.2244,
+     "brier_95": [
+      0.0392,
+      0.4353
+     ],
+     "reliability": [
+      {
+       "bucket": "0.10-0.20",
+       "n": 2,
+       "mean_pred": 0.1764,
+       "observed": 0.0,
+       "observed_95": [
+        0.0,
+        0.6576
+       ]
+      },
+      {
+       "bucket": "0.20-0.35",
+       "n": 2,
+       "mean_pred": 0.2533,
+       "observed": 0.5,
+       "observed_95": [
+        0.0945,
+        0.9055
+       ]
+      },
+      {
+       "bucket": "0.35-0.50",
+       "n": 1,
+       "mean_pred": 0.3594,
+       "observed": 1.0,
+       "observed_95": [
+        0.2065,
+        1.0
+       ]
+      }
+     ]
+    }
+   },
+   "legs": {
+    "n": 33,
+    "observed_wins": 23,
+    "expected_wins": 20.23,
+    "z": 1.04,
+    "log_loss": 0.5912,
+    "log_loss_95": [
+     0.481,
+     0.7089
+    ],
+    "brier": 0.2038,
+    "brier_95": [
+     0.1536,
+     0.2547
+    ],
+    "reliability": [
+     {
+      "bucket": "0.30-0.40",
+      "n": 3,
+      "mean_pred": 0.3533,
+      "observed": 0.3333,
+      "observed_95": [
+       0.0615,
+       0.7923
+      ]
+     },
+     {
+      "bucket": "0.40-0.50",
+      "n": 7,
+      "mean_pred": 0.4489,
+      "observed": 0.7143,
+      "observed_95": [
+       0.3589,
+       0.9178
+      ]
+     },
+     {
+      "bucket": "0.50-0.60",
+      "n": 4,
+      "mean_pred": 0.5402,
+      "observed": 0.75,
+      "observed_95": [
+       0.3006,
+       0.9544
+      ]
+     },
+     {
+      "bucket": "0.60-0.70",
+      "n": 6,
+      "mean_pred": 0.6417,
+      "observed": 0.5,
+      "observed_95": [
+       0.1876,
+       0.8124
+      ]
+     },
+     {
+      "bucket": "0.70-0.85",
+      "n": 13,
+      "mean_pred": 0.7702,
+      "observed": 0.8462,
+      "observed_95": [
+       0.5776,
+       0.9567
+      ]
+     }
+    ]
+   },
+   "sports": {
+    "tennis": 6,
+    "nba": 9,
+    "nfl": 8,
+    "soccer": 10
+   }
+  },
+  "4": {
+   "combinations": 3,
+   "independence_market": {
+    "n": 3,
+    "observed_wins": 0,
+    "expected_wins": 0.36,
+    "z": -0.65,
+    "log_loss": 0.1305,
+    "log_loss_95": [
+     0.0568,
+     0.243
+    ],
+    "brier": 0.0191,
+    "brier_95": [
+     0.003,
+     0.0465
+    ],
+    "reliability": [
+     {
+      "bucket": "0.05-0.10",
+      "n": 2,
+      "mean_pred": 0.0715,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.6576
+      ]
+     },
+     {
+      "bucket": "0.20-0.35",
+      "n": 1,
+      "mean_pred": 0.2157,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.7935
+      ]
+     }
+    ]
+   },
+   "legs": {
+    "n": 12,
+    "observed_wins": 6,
+    "expected_wins": 7.08,
+    "z": -0.67,
+    "log_loss": 0.5695,
+    "log_loss_95": [
+     0.3926,
+     0.779
+    ],
+    "brier": 0.1896,
+    "brier_95": [
+     0.1114,
+     0.2901
+    ],
+    "reliability": [
+     {
+      "bucket": "0.30-0.40",
+      "n": 2,
+      "mean_pred": 0.3475,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.6576
+      ]
+     },
+     {
+      "bucket": "0.40-0.50",
+      "n": 2,
+      "mean_pred": 0.4149,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.6576
+      ]
+     },
+     {
+      "bucket": "0.50-0.60",
+      "n": 2,
+      "mean_pred": 0.5654,
+      "observed": 1.0,
+      "observed_95": [
+       0.3424,
+       1.0
+      ]
+     },
+     {
+      "bucket": "0.60-0.70",
+      "n": 1,
+      "mean_pred": 0.6719,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.7935
+      ]
+     },
+     {
+      "bucket": "0.70-0.85",
+      "n": 5,
+      "mean_pred": 0.7505,
+      "observed": 0.8,
+      "observed_95": [
+       0.3755,
+       0.9638
+      ]
+     }
+    ]
+   },
+   "sports": {
+    "tennis": 3,
+    "soccer": 3,
+    "nfl": 3,
+    "nba": 3
+   }
+  },
+  "5": {
+   "combinations": 0,
+   "independence_market": {
+    "n": 0
+   },
+   "legs": {
+    "n": 0
+   },
+   "sports": {}
+  },
+  "6": {
+   "combinations": 0,
+   "independence_market": {
+    "n": 0
+   },
+   "legs": {
+    "n": 0
+   },
+   "sports": {}
+  }
+ },
+ "backtest_combinations": {
+  "2": {
+   "combinations": 66,
+   "independence_market": {
+    "n": 66,
+    "observed_wins": 6,
+    "expected_wins": 6.52,
+    "z": -0.22,
+    "log_loss": 0.3102,
+    "log_loss_95": [
+     0.1735,
+     0.4803
+    ],
+    "brier": 0.0848,
+    "brier_95": [
+     0.0353,
+     0.1466
+    ],
+    "reliability": [
+     {
+      "bucket": "0.02-0.05",
+      "n": 1,
+      "mean_pred": 0.0408,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.7935
+      ]
+     },
+     {
+      "bucket": "0.05-0.10",
+      "n": 52,
+      "mean_pred": 0.079,
+      "observed": 0.0962,
+      "observed_95": [
+       0.0418,
+       0.2061
+      ]
+     },
+     {
+      "bucket": "0.10-0.20",
+      "n": 9,
+      "mean_pred": 0.1407,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.2992
+      ]
+     },
+     {
+      "bucket": "0.20-0.35",
+      "n": 4,
+      "mean_pred": 0.2763,
+      "observed": 0.25,
+      "observed_95": [
+       0.0456,
+       0.6994
+      ]
+     }
+    ]
+   },
+   "legs": {
+    "n": 132,
+    "observed_wins": 43,
+    "expected_wins": 41.03,
+    "z": 0.38,
+    "log_loss": 0.601,
+    "log_loss_95": [
+     0.5344,
+     0.67
+    ],
+    "brier": 0.2058,
+    "brier_95": [
+     0.1754,
+     0.2394
+    ],
+    "reliability": [
+     {
+      "bucket": "0.30-0.40",
+      "n": 29,
+      "mean_pred": 0.3187,
+      "observed": 0.5172,
+      "observed_95": [
+       0.3443,
+       0.6861
+      ]
+     },
+     {
+      "bucket": "0.40-0.50",
+      "n": 5,
+      "mean_pred": 0.4417,
+      "observed": 0.2,
+      "observed_95": [
+       0.0362,
+       0.6245
+      ]
+     },
+     {
+      "bucket": "0.50-0.60",
+      "n": 4,
+      "mean_pred": 0.5349,
+      "observed": 1.0,
+      "observed_95": [
+       0.5101,
+       1.0
+      ]
+     },
+     {
+      "bucket": "0.60-0.70",
+      "n": 3,
+      "mean_pred": 0.6493,
+      "observed": 0.3333,
+      "observed_95": [
+       0.0615,
+       0.7923
+      ]
+     },
+     {
+      "bucket": "0.70-0.85",
+      "n": 2,
+      "mean_pred": 0.755,
+      "observed": 1.0,
+      "observed_95": [
+       0.3424,
+       1.0
+      ]
+     }
+    ]
+   },
+   "sports": {
+    "soccer": 132
+   }
+  },
+  "3": {
+   "combinations": 23,
+   "independence_market": {
+    "n": 23,
+    "observed_wins": 1,
+    "expected_wins": 0.67,
+    "z": 0.41,
+    "log_loss": 0.2016,
+    "log_loss_95": [
+     0.0245,
+     0.5469
+    ],
+    "brier": 0.0431,
+    "brier_95": [
+     0.0006,
+     0.127
+    ],
+    "reliability": [
+     {
+      "bucket": "0.00-0.02",
+      "n": 6,
+      "mean_pred": 0.0173,
+      "observed": 0.1667,
+      "observed_95": [
+       0.0301,
+       0.5635
+      ]
+     },
+     {
+      "bucket": "0.02-0.05",
+      "n": 15,
+      "mean_pred": 0.026,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.2039
+      ]
+     },
+     {
+      "bucket": "0.05-0.10",
+      "n": 2,
+      "mean_pred": 0.0903,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.6576
+      ]
+     }
+    ]
+   },
+   "legs": {
+    "n": 69,
+    "observed_wins": 27,
+    "expected_wins": 20.88,
+    "z": 1.63,
+    "log_loss": 0.6426,
+    "log_loss_95": [
+     0.5473,
+     0.7432
+    ],
+    "brier": 0.2261,
+    "brier_95": [
+     0.1796,
+     0.2741
+    ],
+    "reliability": [
+     {
+      "bucket": "0.30-0.40",
+      "n": 16,
+      "mean_pred": 0.3211,
+      "observed": 0.6875,
+      "observed_95": [
+       0.444,
+       0.8584
+      ]
+     },
+     {
+      "bucket": "0.40-0.50",
+      "n": 2,
+      "mean_pred": 0.4371,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.6576
+      ]
+     },
+     {
+      "bucket": "0.50-0.60",
+      "n": 2,
+      "mean_pred": 0.557,
+      "observed": 1.0,
+      "observed_95": [
+       0.3424,
+       1.0
+      ]
+     },
+     {
+      "bucket": "0.70-0.85",
+      "n": 1,
+      "mean_pred": 0.788,
+      "observed": 1.0,
+      "observed_95": [
+       0.2065,
+       1.0
+      ]
+     }
+    ]
+   },
+   "sports": {
+    "soccer": 69
+   }
+  },
+  "4": {
+   "combinations": 5,
+   "independence_market": {
+    "n": 5,
+    "observed_wins": 0,
+    "expected_wins": 0.05,
+    "z": -0.23,
+    "log_loss": 0.0101,
+    "log_loss_95": [
+     0.0059,
+     0.018
+    ],
+    "brier": 0.0002,
+    "brier_95": [
+     0.0,
+     0.0004
+    ],
+    "reliability": [
+     {
+      "bucket": "0.00-0.02",
+      "n": 4,
+      "mean_pred": 0.0062,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.4899
+      ]
+     },
+     {
+      "bucket": "0.02-0.05",
+      "n": 1,
+      "mean_pred": 0.0254,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.7935
+      ]
+     }
+    ]
+   },
+   "legs": {
+    "n": 20,
+    "observed_wins": 6,
+    "expected_wins": 6.27,
+    "z": -0.13,
+    "log_loss": 0.558,
+    "log_loss_95": [
+     0.4019,
+     0.7471
+    ],
+    "brier": 0.1866,
+    "brier_95": [
+     0.113,
+     0.2689
+    ],
+    "reliability": [
+     {
+      "bucket": "0.30-0.40",
+      "n": 2,
+      "mean_pred": 0.3187,
+      "observed": 0.5,
+      "observed_95": [
+       0.0945,
+       0.9055
+      ]
+     },
+     {
+      "bucket": "0.40-0.50",
+      "n": 1,
+      "mean_pred": 0.444,
+      "observed": 0.0,
+      "observed_95": [
+       0.0,
+       0.7935
+      ]
+     },
+     {
+      "bucket": "0.70-0.85",
+      "n": 1,
+      "mean_pred": 0.788,
+      "observed": 1.0,
+      "observed_95": [
+       0.2065,
+       1.0
+      ]
+     }
+    ]
+   },
+   "sports": {
+    "soccer": 20
+   }
+  },
+  "5": {
+   "combinations": 0,
+   "independence_market": {
+    "n": 0
+   },
+   "legs": {
+    "n": 0
+   },
+   "sports": {}
+  },
+  "6": {
+   "combinations": 0,
+   "independence_market": {
+    "n": 0
+   },
+   "legs": {
+    "n": 0
+   },
+   "sports": {}
+  }
+ },
+ "backtest_source": "data/backtest/bets_test.csv (walk-forward test seasons, six club soccer leagues)",
+ "correlation": {
+  "same competition": {
+   "pairs": 201,
+   "mean_residual_cov": -0.00413,
+   "cov_95": [
+    -0.0312,
+    0.0251
+   ]
+  },
+  "different competition": {
+   "pairs": 406,
+   "mean_residual_cov": 0.0098,
+   "cov_95": [
+    -0.0081,
+    0.0278
+   ]
+  },
+  "shared team": {
+   "pairs": 0,
+   "mean_residual_cov": null,
+   "cov_95": null
+  },
+  "note": "Pairs within a day share legs, so they are not independent: the intervals are optimistic. The same-competition pairs are what the live screen excludes."
+ },
+ "shortlist": {
+  "settled": 1,
+  "by_legs": {
+   "2": {
+    "leave_one_out_fair": {
+     "n": 1,
+     "observed_wins": 0,
+     "expected_wins": 0.16,
+     "z": -0.43,
+     "log_loss": 0.1688,
+     "log_loss_95": null,
+     "brier": 0.0241,
+     "brier_95": null,
+     "reliability": [
+      {
+       "bucket": "0.10-0.20",
+       "n": 1,
+       "mean_pred": 0.1554,
+       "observed": 0.0,
+       "observed_95": [
+        0.0,
+        0.7935
+       ]
+      }
+     ]
+    },
+    "slip_implied": {
+     "n": 1,
+     "observed_wins": 0,
+     "expected_wins": 0.15,
+     "z": -0.43,
+     "log_loss": 0.1663,
+     "log_loss_95": null,
+     "brier": 0.0235,
+     "brier_95": null,
+     "reliability": [
+      {
+       "bucket": "0.10-0.20",
+       "n": 1,
+       "mean_pred": 0.1532,
+       "observed": 0.0,
+       "observed_95": [
+        0.0,
+        0.7935
+       ]
+      }
+     ]
+    },
+    "shadow_return_per_unit": -1.0
+   }
+  }
+ },
+ "shortlisted_unique": 1,
+ "per_day": {
+  "2026-11-12": {
+   "runs": 22,
+   "max_shortlist": 1,
+   "unique_shortlisted": 1,
+   "max_pool": 2
+  },
+  "2026-11-13": {
+   "runs": 3,
+   "max_shortlist": 0,
+   "unique_shortlisted": 0,
+   "max_pool": 4
+  },
+  "2026-11-14": {
+   "runs": 3,
+   "max_shortlist": 0,
+   "unique_shortlisted": 0,
+   "max_pool": 2
+  },
+  "2026-11-15": {
+   "runs": 3,
+   "max_shortlist": 0,
+   "unique_shortlisted": 0,
+   "max_pool": 4
+  },
+  "2026-11-16": {
+   "runs": 3,
+   "max_shortlist": 0,
+   "unique_shortlisted": 0,
+   "max_pool": 3
+  }
+ },
+ "runs": [
+  {
+   "at": "2026-11-12T17:31:12+00:00",
+   "date": "2026-11-12",
+   "events": 24,
+   "events_by_sport": {
+    "soccer": 16,
+    "tennis": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 24,
+   "excluded": {
+    "event: no fresh result-market prices": 24,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T17:37:53+00:00",
+   "date": "2026-11-12",
+   "events": 24,
+   "events_by_sport": {
+    "soccer": 16,
+    "tennis": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 24,
+   "excluded": {
+    "event: no fresh result-market prices": 24,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T18:27:33+00:00",
+   "date": "2026-11-12",
+   "events": 24,
+   "events_by_sport": {
+    "soccer": 16,
+    "tennis": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 24,
+   "excluded": {
+    "event: no fresh result-market prices": 24,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T19:52:00+00:00",
+   "date": "2026-11-12",
+   "events": 10,
+   "events_by_sport": {
+    "tennis": 2,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 10,
+   "excluded": {
+    "event: no fresh result-market prices": 10,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:07:33+00:00",
+   "date": "2026-11-12",
+   "events": 10,
+   "events_by_sport": {
+    "tennis": 2,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 10,
+   "excluded": {
+    "event: no fresh result-market prices": 10,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:14:49+00:00",
+   "date": "2026-11-12",
+   "events": 10,
+   "events_by_sport": {
+    "tennis": 2,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 10,
+   "excluded": {
+    "event: no fresh result-market prices": 9,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:30:06+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 9,
+   "excluded": {
+    "event: no fresh result-market prices": 8,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:31:21+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 9,
+   "excluded": {
+    "event: no fresh result-market prices": 8,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:32:47+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 9,
+   "excluded": {
+    "event: no fresh result-market prices": 8,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:34:13+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 9,
+   "excluded": {
+    "event: no fresh result-market prices": 8,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:47:37+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 9,
+   "excluded": {
+    "event: no fresh result-market prices": 3,
+    "event: too few independent bookmakers": 6,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T20:55:40+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 4
+   },
+   "candidate_legs": 9,
+   "pool_legs": 1,
+   "pool_by_sport": {
+    "nba": 1
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T21:19:02+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 4
+   },
+   "candidate_legs": 9,
+   "pool_legs": 1,
+   "pool_by_sport": {
+    "nba": 1
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T21:22:59+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 4
+   },
+   "candidate_legs": 9,
+   "pool_legs": 1,
+   "pool_by_sport": {
+    "nba": 1
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-12T21:27:20+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 3
+   },
+   "candidate_legs": 9,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-12T21:45:51+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 3
+   },
+   "candidate_legs": 9,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-12T21:48:32+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 3
+   },
+   "candidate_legs": 9,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-12T21:51:12+00:00",
+   "date": "2026-11-12",
+   "events": 9,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 3,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 3
+   },
+   "candidate_legs": 9,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-12T22:12:06+00:00",
+   "date": "2026-11-12",
+   "events": 7,
+   "events_by_sport": {
+    "soccer": 2,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 2,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 1,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 2
+   },
+   "candidate_legs": 7,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-12T22:15:08+00:00",
+   "date": "2026-11-12",
+   "events": 7,
+   "events_by_sport": {
+    "soccer": 2,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 2,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 1,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 2
+   },
+   "candidate_legs": 7,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-12T22:17:52+00:00",
+   "date": "2026-11-12",
+   "events": 7,
+   "events_by_sport": {
+    "soccer": 2,
+    "nba": 4,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 2,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 1,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 2
+   },
+   "candidate_legs": 7,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nba": 1,
+    "nfl": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 0,
+   "candidates": 1,
+   "shortlist": 1
+  },
+  {
+   "at": "2026-11-13T02:41:16+00:00",
+   "date": "2026-11-12",
+   "events": 0,
+   "events_by_sport": {},
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 0,
+   "excluded": {
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-13T12:17:02+00:00",
+   "date": "2026-11-13",
+   "events": 53,
+   "events_by_sport": {
+    "soccer": 38,
+    "tennis": 6,
+    "nba": 9
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 32,
+   "excluded": {
+    "event: no fresh result-market prices": 7,
+    "event: open injury/lineup research note": 1,
+    "event: probability outside research band": 5,
+    "event: too few independent bookmakers": 25,
+    "leg: no bookmaker at or above fair value": 11
+   },
+   "candidate_legs": 22,
+   "pool_legs": 4,
+   "pool_by_sport": {
+    "tennis": 1,
+    "soccer": 2,
+    "nba": 1
+   },
+   "pool_competitions": 3,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 1,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-13T20:56:12+00:00",
+   "date": "2026-11-13",
+   "events": 17,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 7,
+    "nba": 9
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 7,
+   "excluded": {
+    "event: no fresh result-market prices": 2,
+    "event: probability outside research band": 2,
+    "event: too few independent bookmakers": 5,
+    "leg: no bookmaker at or above fair value": 7
+   },
+   "candidate_legs": 11,
+   "pool_legs": 1,
+   "pool_by_sport": {
+    "nba": 1
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-14T02:29:29+00:00",
+   "date": "2026-11-13",
+   "events": 3,
+   "events_by_sport": {
+    "nba": 3
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 0,
+   "excluded": {
+    "event: probability outside research band": 1,
+    "leg: no bookmaker at or above fair value": 2
+   },
+   "candidate_legs": 2,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-14T11:32:37+00:00",
+   "date": "2026-11-14",
+   "events": 24,
+   "events_by_sport": {
+    "soccer": 19,
+    "nba": 5
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 11,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 2,
+    "event: probability outside research band": 3,
+    "event: too few independent bookmakers": 9,
+    "leg: no bookmaker at or above fair value": 7
+   },
+   "candidate_legs": 14,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "soccer": 2
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 1,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-14T18:08:58+00:00",
+   "date": "2026-11-14",
+   "events": 17,
+   "events_by_sport": {
+    "soccer": 12,
+    "nba": 5
+   },
+   "events_with_3plus_groups_any_age": 5,
+   "excluded_for_prices": 12,
+   "excluded": {
+    "event: probability outside research band": 1,
+    "event: too few independent bookmakers": 12,
+    "leg: no bookmaker at or above fair value": 3
+   },
+   "candidate_legs": 5,
+   "pool_legs": 1,
+   "pool_by_sport": {
+    "soccer": 1
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-14T22:28:58+00:00",
+   "date": "2026-11-14",
+   "events": 8,
+   "events_by_sport": {
+    "soccer": 3,
+    "nba": 5
+   },
+   "events_with_3plus_groups_any_age": 5,
+   "excluded_for_prices": 8,
+   "excluded": {
+    "event: too few independent bookmakers": 8,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-15T06:39:18+00:00",
+   "date": "2026-11-15",
+   "events": 37,
+   "events_by_sport": {
+    "tennis": 6,
+    "soccer": 10,
+    "nfl": 12,
+    "nba": 9
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 6,
+   "excluded": {
+    "event: no fresh result-market prices": 5,
+    "event: open injury/lineup research note": 1,
+    "event: probability outside research band": 3,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 23
+   },
+   "candidate_legs": 40,
+   "pool_legs": 4,
+   "pool_by_sport": {
+    "nfl": 3,
+    "tennis": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-15T21:05:25+00:00",
+   "date": "2026-11-15",
+   "events": 10,
+   "events_by_sport": {
+    "nfl": 2,
+    "nba": 7,
+    "soccer": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 1,
+   "excluded": {
+    "event: probability outside research band": 2,
+    "event: too few independent bookmakers": 1,
+    "leg: no bookmaker at or above fair value": 5
+   },
+   "candidate_legs": 11,
+   "pool_legs": 2,
+   "pool_by_sport": {
+    "nfl": 1,
+    "nba": 1
+   },
+   "pool_competitions": 2,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-16T02:13:12+00:00",
+   "date": "2026-11-15",
+   "events": 0,
+   "events_by_sport": {},
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 0,
+   "excluded": {
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-16T09:51:53+00:00",
+   "date": "2026-11-16",
+   "events": 42,
+   "events_by_sport": {
+    "soccer": 23,
+    "tennis": 10,
+    "nba": 8,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 21,
+   "excluded": {
+    "event: model and market disagree strongly": 1,
+    "event: no fresh result-market prices": 10,
+    "event: open injury/lineup research note": 1,
+    "event: probability outside research band": 4,
+    "event: too few independent bookmakers": 11,
+    "leg: no bookmaker at or above fair value": 12
+   },
+   "candidate_legs": 21,
+   "pool_legs": 3,
+   "pool_by_sport": {
+    "nba": 3
+   },
+   "pool_competitions": 1,
+   "books_with_2plus_value_legs": 1,
+   "evaluated": 1,
+   "rejected_linked": 1,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-16T21:40:32+00:00",
+   "date": "2026-11-16",
+   "events": 13,
+   "events_by_sport": {
+    "tennis": 1,
+    "soccer": 3,
+    "nba": 8,
+    "nfl": 1
+   },
+   "events_with_3plus_groups_any_age": 9,
+   "excluded_for_prices": 13,
+   "excluded": {
+    "event: no fresh result-market prices": 3,
+    "event: too few independent bookmakers": 10,
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  },
+  {
+   "at": "2026-11-17T04:32:17+00:00",
+   "date": "2026-11-16",
+   "events": 0,
+   "events_by_sport": {},
+   "events_with_3plus_groups_any_age": 0,
+   "excluded_for_prices": 0,
+   "excluded": {
+    "leg: no bookmaker at or above fair value": 0
+   },
+   "candidate_legs": 0,
+   "pool_legs": 0,
+   "pool_by_sport": {},
+   "pool_competitions": 0,
+   "books_with_2plus_value_legs": 0,
+   "evaluated": 0,
+   "rejected_linked": 0,
+   "candidates": 0,
+   "shortlist": 0
+  }
+ ],
+ "verdict_replay": {
+  "criteria": {
+   "min_combinations_per_leg_count": 200,
+   "max_abs_joint_z": 1.96,
+   "min_legs": 500,
+   "max_abs_leg_z": 1.96,
+   "min_pairs_correlation": 200
+  },
+  "per_leg_count": {
+   "2": {
+    "calibrated": false,
+    "reasons": [
+     "30 combinations; 200 required"
+    ]
+   },
+   "3": {
+    "calibrated": false,
+    "reasons": [
+     "11 combinations; 200 required"
+    ]
+   },
+   "4": {
+    "calibrated": false,
+    "reasons": [
+     "3 combinations; 200 required"
+    ]
+   },
+   "5": {
+    "calibrated": false,
+    "reasons": [
+     "0 combinations; 200 required",
+     "no joint outcomes"
+    ]
+   },
+   "6": {
+    "calibrated": false,
+    "reasons": [
+     "0 combinations; 200 required",
+     "no joint outcomes"
+    ]
+   }
+  },
+  "leg_reasons": [
+   "71 settled legs; 500 required"
+  ],
+  "correlation_reasons": [],
+  "fit_to_back_recommendation": false
+ },
+ "verdict_backtest": {
+  "criteria": {
+   "min_combinations_per_leg_count": 200,
+   "max_abs_joint_z": 1.96,
+   "min_legs": 500,
+   "max_abs_leg_z": 1.96,
+   "min_pairs_correlation": 200
+  },
+  "per_leg_count": {
+   "2": {
+    "calibrated": false,
+    "reasons": [
+     "66 combinations; 200 required"
+    ]
+   },
+   "3": {
+    "calibrated": false,
+    "reasons": [
+     "23 combinations; 200 required"
+    ]
+   },
+   "4": {
+    "calibrated": false,
+    "reasons": [
+     "5 combinations; 200 required"
+    ]
+   },
+   "5": {
+    "calibrated": false,
+    "reasons": [
+     "0 combinations; 200 required",
+     "no joint outcomes"
+    ]
+   },
+   "6": {
+    "calibrated": false,
+    "reasons": [
+     "0 combinations; 200 required",
+     "no joint outcomes"
+    ]
+   }
+  },
+  "leg_reasons": [
+   "250 settled legs; 500 required"
+  ],
+  "correlation_reasons": [
+   "194 different-competition pairs; 200 required"
+  ],
+  "fit_to_back_recommendation": false
+ },
+ "days_needed_replay": {
+  "2": 29,
+  "3": 86,
+  "4": 329,
+  "5": null,
+  "6": null
+ },
+ "counterfactuals": [
+  {
+   "at": "2026-11-12T17:31:12+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T17:37:53+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T18:27:33+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T19:52:00+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:07:33+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:14:49+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:30:06+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:31:21+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:32:47+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:34:13+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:47:37+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T20:55:40+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 1,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 1,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T21:19:02+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 1,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 1,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T21:22:59+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 1,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 1,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-12T21:27:20+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 3,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-12T21:45:51+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 3,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-12T21:48:32+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 3,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-12T21:51:12+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 3,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-12T22:12:06+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-12T22:15:08+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-12T22:17:52+00:00",
+   "date": "2026-11-12",
+   "live": 1,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-13T02:41:16+00:00",
+   "date": "2026-11-12",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-13T12:17:02+00:00",
+   "date": "2026-11-13",
+   "live": 0,
+   "pool_legs": 4,
+   "no_same_competition": 1,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 6,
+   "all_fresh+no_same_competition": 2
+  },
+  {
+   "at": "2026-11-13T20:56:12+00:00",
+   "date": "2026-11-13",
+   "live": 0,
+   "pool_legs": 1,
+   "no_same_competition": 0,
+   "all_fresh+live": 1,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-14T02:29:29+00:00",
+   "date": "2026-11-13",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-14T11:32:37+00:00",
+   "date": "2026-11-14",
+   "live": 0,
+   "pool_legs": 2,
+   "no_same_competition": 1,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-14T18:08:58+00:00",
+   "date": "2026-11-14",
+   "live": 0,
+   "pool_legs": 1,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-14T22:28:58+00:00",
+   "date": "2026-11-14",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-15T06:39:18+00:00",
+   "date": "2026-11-15",
+   "live": 0,
+   "pool_legs": 4,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 4,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-15T21:05:25+00:00",
+   "date": "2026-11-15",
+   "live": 0,
+   "pool_legs": 2,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 2,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-16T02:13:12+00:00",
+   "date": "2026-11-15",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  },
+  {
+   "at": "2026-11-16T09:51:53+00:00",
+   "date": "2026-11-16",
+   "live": 0,
+   "pool_legs": 3,
+   "no_same_competition": 1,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 3,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-16T21:40:32+00:00",
+   "date": "2026-11-16",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 4,
+   "all_fresh+no_same_competition": 1
+  },
+  {
+   "at": "2026-11-17T04:32:17+00:00",
+   "date": "2026-11-16",
+   "live": 0,
+   "pool_legs": 0,
+   "no_same_competition": 0,
+   "all_fresh+live": 0,
+   "all_fresh_pool_legs": 0,
+   "all_fresh+no_same_competition": 0
+  }
+ ],
+ "ledger_rows_added": 0,
+ "focus_day": "2026-11-16"
+}
