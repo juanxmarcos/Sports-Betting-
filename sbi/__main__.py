@@ -81,6 +81,12 @@ def main(argv=None) -> int:
                     help="also append replayed shortlist rows to ledger/parlay_walkforward_shadow.csv")
     sub.add_parser("parlay-research", help="parlay calibration, scarcity and shadow-ledger report (read-only); "
                                            "writes reports/parlay_research.md")
+    th = sub.add_parser("tennis-history", help="Sackmann tennis history from an unofficial mirror: sanity check, coverage "
+                                               "and walk-forward (research only; database opened read-only); "
+                                               "writes reports/tennis_history.md")
+    th.add_argument("--download", action="store_true",
+                    help="download the pinned mirror files into data/local/tennis_sackmann/ (checksums must match "
+                         "data/tennis_sackmann/manifest.json)")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -142,6 +148,22 @@ def main(argv=None) -> int:
                           for k, v in rep["sources"].items()}, indent=1))
         print(config.REPORTS_DIR / "forecast_benchmark.md")
         return 0
+    if args.cmd == "tennis-history":   # research only: database opened read-only, live model untouched
+        import sqlite3
+        from datetime import date
+
+        from . import tennis, tennis_history
+        from .sources import sackmann
+        if args.download:
+            got = sackmann.download(manifest=sackmann.load_manifest())
+            print(f"downloaded {len(got)} files to {sackmann.LOCAL_DIR}; checksums match the manifest")
+        ro = sqlite3.connect(f"file:{config.DB_PATH}?mode=ro", uri=True)
+        espn = tennis.matches(date(2024, 1, 1), now.date(), now)
+        out = tennis_history.run(ro, espn)
+        print(json.dumps({"links": {k: out["coverage"]["links"][k] for k in ("linked", "disagreement_rate")},
+                          "decision": out.get("decision"), "stopped": out.get("stopped")}, indent=1))
+        print(tennis_history.REPORT)
+        return 1 if "stopped" in out else 0
     con = db.connect()
 
     if args.cmd == "init":

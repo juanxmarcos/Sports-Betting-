@@ -32,6 +32,8 @@ python -m sbi independence # bookmaker-independence audit (read-only) → report
 python -m sbi quote-sources  # quote-source audit (read-only): licensing matrix, credit use → reports/quote_sources.md
 python -m sbi forecast-bench --openmodel-repo DIR --football-analytics-repo DIR
                            # third-party forecast shadow benchmark (research only) → reports/forecast_benchmark.md
+python -m sbi tennis-history [--download]
+                           # Sackmann tennis history from an unofficial mirror (research only) → reports/tennis_history.md
 ```
 ```bash
 python -m pytest -q
