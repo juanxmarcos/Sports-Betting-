@@ -313,6 +313,7 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
     data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
             "parlays": parlay_block, "estimated_parlays": estimated,
+            "parlay_history": pe_history(con),
             "events": events, "watching": watching, "close_to_value": close_ids, "sports": sports,
             "funnel_7d": {k: v["funnel"] for k, v in diag["funnel_7d"].items()},
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,
@@ -328,6 +329,16 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
          "estimated_parlays": data["estimated_parlays"]},
         default=str))
     return out / "doyen.json"
+
+
+def pe_history(con) -> list[dict]:
+    """Every estimated parlay in the ledger, newest first, with results (History page, issue #57).
+    Only in the full research file; the homepage file carries today's rows only."""
+    from . import parlay_estimated as pe
+    try:
+        return pe.ledger_rows(con)
+    except Exception:                         # never take the site down
+        return []
 
 
 def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False) -> dict:
@@ -350,4 +361,7 @@ def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False
         block["previews"] = pe.build_previews(con, now)
     except Exception:
         block["previews"] = []
+    # Issue #57: every estimate recorded for today's New York date, as first published, so a card
+    # stays on the homepage after its games start (marked closed, then settled). Never rebuilt or repriced.
+    block["ledger_today"] = pe.ledger_rows(con, day=now.astimezone(pe.NY).date().isoformat())
     return block

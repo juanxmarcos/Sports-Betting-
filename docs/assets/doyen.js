@@ -394,6 +394,65 @@
       ${hit}
     </article>`;
   }
+  // ---------- today's recorded parlays (issue #57) ----------
+  // Every estimate the scheduled run recorded for today's New York date (estimated_parlays.ledger_today,
+  // read from ledger/estimated_parlays.csv) stays on the homepage after its games start. These cards are
+  // shown exactly as first published, never rebuilt or repriced, and never look bettable once a leg starts.
+  function ledgerOk(r, day) {
+    if (!r || typeof r !== "object") return false;
+    if ((r.mock || r.test) && !allowMock()) return false;
+    if (r.kind !== EC.kind || !str(r.parlay_id) || r.date !== day || !str(r.bookmaker)) return false;
+    if (typeof r.estimated_odds !== "number" || !isFinite(r.estimated_odds) || r.estimated_odds <= 1) return false;
+    if (!Array.isArray(r.legs) || r.legs.length < PC.minLegs || r.legs.length > PC.maxLegs) return false;
+    return r.legs.every((l) => l && typeof l === "object" && str(l.title) && str(l.selection) && isoT(l.start_utc) != null);
+  }
+  function recordedToday(E, skip) {
+    if (!E || typeof E !== "object" || !Array.isArray(E.ledger_today)) return [];
+    const day = nyKey(new Date()), seen = new Set(skip);
+    const first = (r) => Math.min(...r.legs.map((l) => isoT(l.start_utc)));
+    return E.ledger_today.filter((r) => ledgerOk(r, day) && !seen.has(r.parlay_id) && (seen.add(r.parlay_id), true))
+      .sort((a, b) => first(a) - first(b) || String(a.parlay_id).localeCompare(String(b.parlay_id)));
+  }
+  const FINAL = { won: "Won", lost: "Lost", void: "Void" };
+  function ledgerCard(r, i) {
+    const now = Date.now();
+    const first = Math.min(...r.legs.map((l) => isoT(l.start_utc)));
+    const started = first <= now;
+    const stake = Number(r.stake) > 0 ? Number(r.stake) : PC.stake;
+    const pays = grossPayout(stake, r.estimated_odds);
+    const pl = Number(r.paper_pl), plTxt = isFinite(pl) ? (pl > 0 ? "+" : (pl < 0 ? "−" : "")) + usd(Math.abs(pl)) : "–";
+    let state, cls;
+    if (r.result === "won") { state = `Won: paid ${usd(pays)}`; cls = "won"; }
+    else if (r.result === "lost") { state = `Lost: lost ${usd(stake)}`; cls = "lost"; }
+    else if (r.result === "void") { state = "Void: stake returned"; cls = "void"; }
+    else if (started) { state = "Started, betting closed"; cls = "closed"; }
+    else { state = `Open: first game at ${fmtClock(first)}`; cls = "open"; }
+    const mark = (l) => {
+      if (l.result === "won") return '<span class="lg-r won" title="Leg won">✓</span>';
+      if (l.result === "lost") return '<span class="lg-r lost" title="Leg lost">✗</span>';
+      if (l.result === "void") return '<span class="lg-r void">void</span>';
+      return isoT(l.start_utc) <= now ? '<span class="lg-r">pending</span>' : "";
+    };
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))} ${mark(l)}</div></li>`).join("");
+    const pub = isoT(r.first_seen);
+    const at = pub != null ? ` (published ${esc(fmtAsOf(pub))})` : "";
+    const gone = !started && !FINAL[r.result]
+      ? `<div class="pc-note">No longer in today's current picks; the price shown is from publication and may have moved.</div>` : "";
+    const closed = started || FINAL[r.result] ? `<div class="pc-note">Betting closed: a game in this parlay has started.</div>` : "";
+    return `<article class="card parlay est recorded" data-parlay="${esc(r.parlay_id)}" data-kind="recorded" data-state="${esc(cls)}">
+      <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
+      <div class="pc-state ${esc(cls)}" data-state-line>${esc(state)}</div>
+      <ol class="legs">${legs}</ol>
+      <div class="pc-foot">
+        <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
+        <div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>
+        <div><div class="k">$${esc(stake)} bet pays</div><div class="v">${usd(pays)}</div></div>
+        ${FINAL[r.result] ? `<div><div class="k">Paper P/L</div><div class="v">${esc(plTxt)}</div></div>` : ""}
+      </div>
+      ${closed}${gone}
+      <div class="pc-note">Price at publication time${at}: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Results come from final scores; paper results only.</div>
+    </article>`;
+  }
   function parlayCard(r, i) {
     const odds = r.quote.decimal_odds;
     const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${l.market ? `<span class="lg-m">${esc(l.market)}</span> ` : ""}${esc(l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
@@ -430,11 +489,12 @@
       else p += `<p class="zero" data-preview-empty>${esc(EC.previewEmpty)}</p>`;
       return p + `</section>`;
     }
+    const rec = recordedToday(E, est.map((r) => r.parlay_id));     // issue #57: started and settled cards stay
     let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${seg}`;
     h += `<section class="section first" id="parlays">`;
     if (cards.length) h += `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`;
-    if (est.length) h += `<h2 class="est-h"${cards.length ? "" : ' style="margin-top:0"'}>Estimated parlays of the day</h2><div class="grid parlays">${est.map((r, i) => estCard(r, cards.length + i)).join("")}</div>`;
-    if (!cards.length && !est.length) {
+    if (est.length || rec.length) h += `<h2 class="est-h"${cards.length ? "" : ' style="margin-top:0"'}>Estimated parlays of the day</h2><div class="grid parlays">${est.map((r, i) => estCard(r, cards.length + i)).join("")}${rec.map((r, i) => ledgerCard(r, cards.length + est.length + i)).join("")}</div>`;
+    if (!cards.length && !est.length && !rec.length) {
       h += E && typeof E === "object" ? `<p class="zero">${esc(EC.empty)} <a href="#/parlays">Why?</a></p>`
         : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
     }
@@ -551,6 +611,35 @@
     return h;
   }
 
+  // Issue #57: every recorded parlay (ledger/estimated_parlays.csv), newest first, with its result.
+  function parlayHistory() {
+    const rows = (Array.isArray(S.data.parlay_history) ? S.data.parlay_history : [])
+      .filter((r) => r && typeof r === "object" && str(r.parlay_id) && Array.isArray(r.legs) && ((!r.mock && !r.test) || allowMock()));
+    const E = S.data.estimated_parlays || {};
+    const R = E.record || {};
+    const line = estRecordLine(E);
+    const groups = R.by_legs && typeof R.by_legs === "object" ? Object.entries(R.by_legs) : [];
+    const signed = (x) => { const v = Number(x); return isFinite(v) ? (v > 0 ? "+" : (v < 0 ? "−" : "")) + usd(Math.abs(v)) : "–"; };
+    const byLegs = groups.filter(([, g]) => g && typeof g.won === "number").map(([n, g]) =>
+      `<tr><td>${esc(n)} legs</td><td>${esc(g.won)}–${esc(g.lost)}</td><td>${esc(g.void || 0)}</td><td>${esc(g.open || 0)}</td><td>${signed(g.paper_pl)}</td></tr>`).join("");
+    const RES = { won: "Won", lost: "Lost", void: "Void", open: "Open" };
+    const mk = { won: " ✓", lost: " ✗", void: " (void)" };
+    const list = rows.map((r) => {
+      const legs = r.legs.map((l) => `<li>${vs(l.title)}: ${esc(l.selection_text || l.selection)}${mk[l.result] || ""}</li>`).join("");
+      const res = RES[r.result] || "Open";
+      return `<div class="card ph" data-ph="${esc(r.parlay_id)}" data-result="${esc(r.result || "open")}">
+        <div class="ph-h"><span class="t">${esc(fmtDay(r.date))}</span><span>${esc(r.bookmaker)} · ${esc(r.n_legs || r.legs.length)} legs</span><span class="pill ${esc(r.result || "open")}">${esc(res)}</span></div>
+        <ul class="ph-legs small">${legs}</ul>
+        <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b></span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
+    }).join("");
+    const table = byLegs ? `<table class="small" data-ph-by-legs><thead><tr><th>Size</th><th>Won–lost</th><th>Void</th><th>Open</th><th>Paper P/L</th></tr></thead><tbody>${byLegs}</tbody></table>` : "";
+    return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
+      <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void leg voids the whole parlay here. Nothing is edited or removed.</p>
+      ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
+      ${table}
+      ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
+  }
+
   function history() {
     const now = Date.now();
     const H = S.data.history.filter((p) => sportOk(p.sport, S.hsport) && (S.hrange === "all" || (now - new Date(p.published_at)) / 864e5 <= (S.hrange === "7" ? 7 : 30)));
@@ -561,12 +650,12 @@
     let h = `<h1>Pick History</h1><p class="lead">Every published pick at its original odds. Nothing is edited or removed.</p>
       ${filters(true, "hsport", "hrange", [["7", "7 days"], ["30", "30 days"], ["all", "All time"]])}
       <div class="brief"><span>Record <b>${W}–${L}${P ? "–" + P : ""}</b></span><span class="dot"></span><span><b>${H.length - settled.length}</b> awaiting result</span></div>`;
-    if (!H.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No picks in this period</h3><p>Quiet periods are normal: Doyen only publishes when the evidence clears its bar.</p></div>`;
+    if (!H.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No picks in this period</h3><p>Quiet periods are normal: Doyen only publishes when the evidence clears its bar.</p></div>` + parlayHistory();
     const res = (p) => p.status.state === "settled" ? statusPill(p.status) : `<span class="pill">${p.status.state === "withdrawn" ? "Withdrawn" : "Pending"}</span>`;
     return h + `<div class="rows hist" style="margin-top:14px">` + H.map((p) => `<div class="row" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
         <div class="t">${esc(fmtMon(p.published_at))}</div>
         <div class="ev"><b>${vs(p.title)}</b><span>${esc(p.selection)}</span></div>
-        <div class="t r">${dec(p.odds)}</div>${res(p)}</div>`).join("") + `</div>`;
+        <div class="t r">${dec(p.odds)}</div>${res(p)}</div>`).join("") + `</div>` + parlayHistory();
   }
 
   function watchlist() {

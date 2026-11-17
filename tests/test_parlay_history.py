@@ -1,0 +1,228 @@
+"""Issue #57: today's recorded parlays stay on the homepage after kickoff, and History lists every parlay.
+
+Every game, price and bookmaker below is test data built for these tests, never a real quote. The
+database tests use a temporary database; the browser tests run the real docs/assets/doyen.js."""
+import csv
+import json
+import os
+import re
+import shutil
+import subprocess
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from sbi import config, db, site
+from sbi import parlay_estimated as pe
+
+ROOT = Path(__file__).resolve().parent.parent
+HARNESS = ROOT / "tests" / "js" / "render_home.js"
+NOW = datetime(2026, 11, 13, 23, 0, tzinfo=timezone.utc)          # 6:00 PM in New York
+DAY, YESTERDAY = "2026-11-13", "2026-11-12"
+needs_node = pytest.mark.skipif(not shutil.which("node") and not os.environ.get("CI"), reason="node is not installed")
+
+
+def _iso(dt):
+    return dt.isoformat()
+
+
+@pytest.fixture
+def con(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "t.sqlite")
+    monkeypatch.setattr(config, "REPORTS_DIR", tmp_path / "reports")
+    monkeypatch.setattr(config, "SITE_DIR", tmp_path / "site")
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
+    monkeypatch.setattr(config, "ROOT", tmp_path)
+    return db.connect(tmp_path / "t.sqlite")
+
+
+def _event(con, eid, ko, home, away, status="scheduled", hs=None, as_=None):
+    con.execute("""INSERT INTO events(event_id,sport,league,kickoff_utc,home,away,status,home_score,away_score,source,updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                (eid, "nba", "NBA", ko.isoformat(), home, away, status, hs, as_, "test", db.utcnow()))
+
+
+def _leg(eid, title, ko, sel="home", price=2.0, prob=0.55):
+    return {"event_id": eid, "market": "ML", "selection": sel, "price": price, "prob": prob, "title": title,
+            "start_utc": _iso(ko)}
+
+
+def _row(pid, day, first_seen, legs, odds, stake=10, hit=0.3):
+    return {"first_seen": _iso(first_seen), "date": day, "parlay_id": pid, "bookmaker": "BookA", "n_legs": len(legs),
+            "legs": json.dumps(legs), "kind": pe.ESTIMATE_KIND, "estimated_odds": odds, "est_hit_chance": hit,
+            "estimated_ev": 0.1, "stake": stake}
+
+
+def _fixture(con):
+    """Yesterday: one won 2-leg, one lost 3-leg. Today: a 2-leg whose first leg started an hour ago."""
+    y = NOW - timedelta(days=1)
+    _event(con, "nba:y1", y - timedelta(hours=1), "Y1H", "Y1A", "finished", 110, 100)
+    _event(con, "nba:y2", y, "Y2H", "Y2A", "finished", 100, 90)
+    _event(con, "nba:y3", y, "Y3H", "Y3A", "finished", 80, 95)
+    _event(con, "nba:t1", NOW - timedelta(hours=1), "T1H", "T1A")
+    _event(con, "nba:t2", NOW + timedelta(hours=2), "T2H", "T2A")
+    con.commit()
+    rows = [
+        _row("pe-won", YESTERDAY, y - timedelta(hours=6),
+             [_leg("nba:y1", "Y1H v Y1A", y - timedelta(hours=1)), _leg("nba:y2", "Y2H v Y2A", y, price=1.5)], 3.0),
+        _row("pe-lost", YESTERDAY, y - timedelta(hours=5),
+             [_leg("nba:y1", "Y1H v Y1A", y - timedelta(hours=1)), _leg("nba:y2", "Y2H v Y2A", y),
+              _leg("nba:y3", "Y3H v Y3A", y)], 8.0),
+        _row("pe-today", DAY, NOW - timedelta(hours=2),
+             [_leg("nba:t1", "T1H v T1A", NOW - timedelta(hours=1), sel="away"),
+              _leg("nba:t2", "T2H v T2A", NOW + timedelta(hours=2))], 4.0),
+    ]
+    path = pe.ledger_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=pe.LEDGER_FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+    return path
+
+
+def test_ledger_rows_are_newest_first_with_results_that_match_settle(con):
+    path = _fixture(con)
+    before = path.read_bytes()
+    rows = pe.ledger_rows(con)
+    assert [r["parlay_id"] for r in rows] == ["pe-today", "pe-lost", "pe-won"]
+    by = {r["parlay_id"]: r for r in rows}
+    assert by["pe-won"]["result"] == "won" and by["pe-won"]["paper_pl"] == "20.00"
+    assert by["pe-won"]["gross_payout"] == "30.00" and [x["result"] for x in by["pe-won"]["legs"]] == ["won", "won"]
+    assert by["pe-lost"]["result"] == "lost" and by["pe-lost"]["paper_pl"] == "-10.00"
+    assert [x["result"] for x in by["pe-lost"]["legs"]] == ["won", "won", "lost"]
+    assert by["pe-today"]["result"] == "open" and by["pe-today"]["paper_pl"] == "0.00"
+    assert by["pe-today"]["legs"][0]["selection_text"] == "T1A to win"
+    assert by["pe-today"]["legs"][1]["selection_text"] == "T2H to win"
+    # Totals equal the read-only settlement, overall and by leg count.
+    s = pe.settle(con)
+    assert sum(Decimal(r["paper_pl"]) for r in rows) == Decimal(s["paper_pl"])
+    for st in ("won", "lost", "void", "open"):
+        assert sum(r["result"] == st for r in rows) == s[st]
+        for n, g in s["by_legs"].items():
+            assert sum(r["result"] == st and str(r["n_legs"]) == n for r in rows) == g[st]
+    assert [r["parlay_id"] for r in pe.ledger_rows(con, day=DAY)] == ["pe-today"]
+    assert path.read_bytes() == before                             # the ledger is never edited
+
+
+def test_site_build_exports_todays_rows_to_the_homepage_and_all_rows_to_history(con):
+    _fixture(con)
+    d = json.loads(site.build(con, NOW).read_text())
+    assert [r["parlay_id"] for r in d["estimated_parlays"]["ledger_today"]] == ["pe-today"]
+    assert [r["parlay_id"] for r in d["parlay_history"]] == ["pe-today", "pe-lost", "pe-won"]
+    lite = json.loads((config.ROOT / "docs" / "data" / "parlays.json").read_text())
+    assert "parlay_history" not in lite                            # the homepage file stays small
+    assert lite["estimated_parlays"]["ledger_today"] == d["estimated_parlays"]["ledger_today"]
+
+
+# ---------- rendered pages (real docs/assets/doyen.js in Node) ----------
+def _run(payload):
+    out = subprocess.run(["node", str(HARNESS)], input=json.dumps(payload), capture_output=True, text=True, timeout=30)
+    assert out.returncode == 0, out.stderr
+    return out.stdout
+
+
+def _rec(pid, day=DAY, legs=None, result="open", odds=4.0, first_seen=None, paper_pl="0.00", leg_results=None):
+    legs = legs or [("T1H v T1A", "T1A to win", NOW - timedelta(hours=1)), ("T2H v T2A", "T2H to win", NOW + timedelta(hours=2))]
+    leg_results = leg_results or ["open"] * len(legs)
+    return {"parlay_id": pid, "date": day, "first_seen": _iso(first_seen or NOW - timedelta(hours=2)),
+            "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA", "n_legs": len(legs), "estimated_odds": odds,
+            "stake": "10.00", "gross_payout": f"{10 * odds:.2f}", "est_hit_chance": 0.3, "result": result,
+            "paper_pl": paper_pl,
+            "legs": [{"event_id": f"ev-{pid}-{i}", "title": t, "market": "ML", "selection": "home", "selection_text": s,
+                      "price": 2.0, "start_utc": _iso(ko), "result": lr}
+                     for i, ((t, s, ko), lr) in enumerate(zip(legs, leg_results))]}
+
+
+def _data(ledger_today, recs=None, history=None, record=None):
+    est = {"status": "estimated", "kind": pe.ESTIMATE_KIND, "date": DAY, "recommendations": recs or [],
+           "ledger_today": ledger_today,
+           "record": record or {"rows": 3, "won": 1, "lost": 1, "void": 0, "open": 1, "paper_pl": "10.00",
+                                "staked": "20.00",
+                                "by_legs": {"2": {"rows": 2, "won": 1, "lost": 0, "void": 0, "open": 1, "paper_pl": "20.00"},
+                                            "3": {"rows": 1, "won": 0, "lost": 1, "void": 0, "open": 0, "paper_pl": "-10.00"}}}}
+    strict = {"date": DAY, "status": "not_published", "blockers": [{"key": "combined_quote", "text": "x"}], "recommendations": []}
+    return {"generated": _iso(NOW), "default_timezone": "America/New_York", "parlays": strict, "estimated_parlays": est,
+            "parlay_history": history or [], "picks": [], "history": [], "events": [], "watching": [], "close_to_value": [],
+            "briefing": {}, "funnel_7d": {}, "sports": {}, "record": {"won": 0, "lost": 0, "push": 0, "profit_units": 0, "open": 0}}
+
+
+def recorded(html):
+    return re.findall(r'<article class="card parlay est recorded" data-parlay="([^"]+)"[^>]*data-state="([^"]+)"', html)
+
+
+def _card(html, pid):
+    i = html.index(f'data-parlay="{pid}"')
+    return html[i:html.index("</article>", i)]
+
+
+@needs_node
+def test_started_parlay_stays_on_home_marked_closed_and_yesterdays_does_not():
+    html = _run({"data": _data([_rec("pe-today"), _rec("pe-old", day=YESTERDAY)]), "now": _iso(NOW)})
+    assert recorded(html) == [("pe-today", "closed")]
+    card = _card(html, "pe-today")
+    assert "Started, betting closed" in card and "Betting closed: a game in this parlay has started." in card
+    assert "data-stake" not in card and "<input" not in card          # never looks bettable
+    assert "bet now" not in card.lower() and "check your book" not in card
+    assert "Estimated odds at publication" in card and "Price at publication time (published" in card
+    assert '<span class="pill estimate">Estimate</span>' in card and "not a bet-slip quote" in card
+    assert "pending" in card and "$10 bet pays" in card and "$40.00" in card
+    assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" in html
+
+
+@needs_node
+def test_settled_parlays_show_leg_marks_and_the_result():
+    won = _rec("pe-w", result="won", paper_pl="30.00", leg_results=["won", "won"],
+               legs=[("A v B", "A to win", NOW - timedelta(hours=4)), ("C v D", "C to win", NOW - timedelta(hours=3))])
+    lost = _rec("pe-l", result="lost", paper_pl="-10.00", leg_results=["lost", "open"])
+    html = _run({"data": _data([won, lost]), "now": _iso(NOW)})
+    assert sorted(recorded(html)) == [("pe-l", "lost"), ("pe-w", "won")]
+    w = _card(html, "pe-w")
+    assert "Won: paid $40.00" in w and w.count("✓") == 2 and "Paper P/L" in w and "+$30.00" in w
+    lo = _card(html, "pe-l")
+    assert "Lost: lost $10.00" in lo and "✗" in lo and "pending" not in lo and "−$10.00" in lo
+
+
+@needs_node
+def test_open_recorded_card_and_live_card_are_not_duplicated():
+    later = [("T3H v T3A", "T3H to win", NOW + timedelta(hours=1)), ("T4H v T4A", "T4H to win", NOW + timedelta(hours=2))]
+    html = _run({"data": _data([_rec("pe-open", legs=later)]), "now": _iso(NOW)})
+    card = _card(html, "pe-open")
+    assert recorded(html) == [("pe-open", "open")]
+    assert re.search(r"Open: first game at 7:00\sPM", card) and "No longer in today's current picks" in card
+    # The same parlay_id still in the current block shows once, as the live card.
+    live = {"parlay_id": "pe-open", "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",
+            "n_legs": 2, "estimated_odds": 4.0, "stake": 10,
+            "legs": [{"event_id": f"ev-pe-open-{i}", "sport": "nba", "title": t, "selection": "home", "selection_text": s,
+                      "start_utc": _iso(ko), "status": "active", "price": 2.0, "prob": 0.55,
+                      "price_at": _iso(NOW - timedelta(minutes=30))} for i, (t, s, ko) in enumerate(later)]}
+    html = _run({"data": _data([_rec("pe-open", legs=later)], recs=[live]), "now": _iso(NOW)})
+    assert html.count('data-parlay="pe-open"') == 1 and recorded(html) == []
+    assert 'data-kind="estimate"' in html
+
+
+@needs_node
+def test_empty_state_only_when_nothing_was_recorded_today():
+    html = _run({"data": _data([_rec("pe-old", day=YESTERDAY)]), "now": _iso(NOW)})
+    assert recorded(html) == [] and f"{pe.EMPTY_TEXT} <a" in html
+    html = _run({"data": _data([]), "now": _iso(NOW)})
+    assert f"{pe.EMPTY_TEXT} <a" in html
+
+
+@needs_node
+def test_history_page_lists_every_parlay_with_result_and_record():
+    hist = [_rec("pe-today"),
+            _rec("pe-lost", day=YESTERDAY, result="lost", paper_pl="-10.00", odds=8.0, leg_results=["won", "lost"]),
+            _rec("pe-won", day=YESTERDAY, result="won", paper_pl="20.00", odds=3.0, leg_results=["won", "won"])]
+    html = _run({"data": _data([], history=hist), "now": _iso(NOW), "hash": "#/history"})
+    assert re.findall(r'data-ph="([^"]+)" data-result="([^"]+)"', html) == [
+        ("pe-today", "open"), ("pe-lost", "lost"), ("pe-won", "won")]
+    assert "<h2>Parlays</h2>" in html and "Record 1–1, paper P/L +$10.00" in html
+    won = html[html.index('data-ph="pe-won"'):]
+    assert "$10 bet pays <b>$30.00</b>" in won and "Paper P/L <b>+$20.00</b>" in won and "Thursday, November 12" in won
+    assert "BookA · 2 legs" in won and "T1A to win ✓" in won
+    assert "<td>2 legs</td><td>1–0</td><td>0</td><td>1</td><td>+$20.00</td>" in html
+    assert "<td>3 legs</td><td>0–1</td><td>0</td><td>0</td><td>−$10.00</td>" in html
+    assert 'href="/' not in html and 'src="/' not in html            # relative paths only

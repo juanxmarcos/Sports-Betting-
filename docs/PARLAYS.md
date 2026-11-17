@@ -432,8 +432,10 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
   pay less."* It may also show "Estimated hit chance N% (model estimate, unvalidated)".
 - A strict card (owner-recorded verified combined quote, section 7) is shown first with a
   **Verified bookmaker quote** badge, and no estimate reuses any of its games.
-- Empty state (one line): *"No parlays today: no verified quotes, and no games later today meet the
-  estimate rules."*
+- Issue #57: **recorded cards stay all day.** Every estimate in `ledger/estimated_parlays.csv` for today's
+  New York date stays on the homepage after its games start (section 11.5).
+- Empty state (one line), only when nothing was recorded for today and no card qualifies now:
+  *"No parlays today: no verified quotes, and no games later today meet the estimate rules."*
 - The footer shows *"Estimated parlays record: W–L, paper P/L"*, linking to `#/parlays`, where the
   rules below are summarised.
 
@@ -504,9 +506,10 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
 - **Unvalidated joint probability.** Multiplying leg probabilities assumes independence and
   calibrated legs; same-competition legs can be correlated. Nothing here has passed the
   joint-calibration criteria of section 7.
-- **Cards change during the day** as prices move; a card is hidden in the browser once any leg has
-  started or a price is not from today (New York). Since #51 a price can be several hours old;
-  the card shows when the prices were read.
+- **Cards change during the day** as prices move; a *live* card (current block) is dropped in the browser
+  once any leg has started or a price is not from today (New York). Since #57 the recorded version of
+  that parlay then takes its place, marked closed (section 11.5). Since #51 a price can be several hours
+  old; the card shows when the prices were read.
 - **Weaker evidence per leg since #51.** One bookmaker can price a leg, and a tennis leg's
   probability can come from a consensus that includes the pricing bookmaker itself, which pulls
   its estimated value towards zero. The parlay-level value check is the only value gate.
@@ -520,3 +523,31 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
   output reports `planned_today_first` and `today` (events in the responses / events priced). The
   block's `coverage` reports `events_today`, `events_with_fresh_prices` and `legs`.
 
+
+### 11.5 Today's recorded parlays and the History list (issue #57)
+
+**Owner request (2026-11-17).** A recommended parlay must not disappear from the homepage once one of
+its games starts, and every recommended parlay must appear in History with its result.
+
+- **Source.** `parlay_estimated.ledger_rows(con, day=…)` reads `ledger/estimated_parlays.csv` read-only
+  and attaches per-leg and parlay results from final scores (the same rules as `settle`). `site.build`
+  writes today's rows (New York date) as `estimated_parlays.ledger_today` in both `parlays.json` and
+  `doyen.json`, and every row, newest first, as `parlay_history` in `doyen.json` only (the homepage
+  file stays small). The ledger is never edited.
+- **Homepage.** Live cards (current block, games not started) render as before. Each recorded row for
+  today that is not also a live card renders as published: same legs, bookmaker and estimated odds,
+  never rebuilt or repriced. The browser checks the row (`ledgerOk` in `docs/assets/doyen.js`: estimate
+  kind, today's date, 2–6 legs with valid start times, odds > 1) and shows one status:
+  - *"Open: first game at 7:30 PM"*: no leg has started (plus "No longer in today's current picks; the
+    price shown is from publication and may have moved" when the parlay has left the current block);
+  - *"Started, betting closed"*: any leg has started and the result is not final;
+  - *"Won: paid $X"*, *"Lost: lost $10.00"* or *"Void: stake returned"* when final, with paper P/L.
+  Each leg shows ✓ (won), ✗ (lost), "void", or "pending" once started. Recorded cards have no stake
+  input and no "check your book" line; the price is labelled *"Estimated odds at publication"* and
+  *"Price at publication time (published 1:10 PM EST)"*.
+- **History (`#/history`).** A "Parlays" section lists every ledger row newest first: date, bookmaker,
+  leg count, legs with picks and ✓/✗, estimated odds, "$10 bet pays $X", result (won/lost/void/open) and
+  paper P/L, with the record line and the by-leg-count table from `settle()`.
+- **Not covered.** Verified-quote (strict) parlays have no published-parlay ledger yet (none has ever
+  been published), so they are not listed in History; a started verified card still leaves the homepage.
+- Results on the page are as of the last data run; a game that finished after it shows "pending".

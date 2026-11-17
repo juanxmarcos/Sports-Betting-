@@ -285,3 +285,17 @@ details.sec[open] summary::after{content:"–"}
 /* issue #54: estimated-parlay results by leg count */
 table[data-by-legs] { border-collapse: collapse; margin-top: 6px; }
 table[data-by-legs] th, table[data-by-legs] td { padding: 4px 14px 4px 0; text-align: left; font-variant-numeric: tabular-nums; }
+
+/* Issue #57: recorded parlays stay on the homepage after kickoff; History lists every parlay */
+.pc-state{font-size:13px;font-weight:600;color:var(--muted)}
+.pc-state.open{color:var(--info)}.pc-state.closed{color:var(--warn)}
+.pc-state.won{color:var(--pos)}.pc-state.lost{color:var(--neg)}
+.lg-r{margin-left:4px;font-weight:700;color:var(--muted)}.lg-r.won{color:var(--pos)}.lg-r.lost{color:var(--neg)}
+.parlay.recorded[data-state="won"],.parlay.recorded[data-state="lost"],.parlay.recorded[data-state="void"],.parlay.recorded[data-state="closed"]{opacity:.92}
+.pill.open{color:var(--info);border-color:rgba(143,179,224,.3)}
+.ph-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.ph{padding:12px 14px}
+.ph-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.ph-h .pill{margin-left:auto}
+.ph-h .t{font-weight:600;color:var(--ivory)}
+.ph-legs{margin:8px 0;padding-left:18px}
+.ph-f{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--muted)}
