@@ -14,7 +14,7 @@ from scipy.optimize import minimize_scalar
 from scipy.special import expit, logit
 
 from . import config
-from .tennis import SLAM, Elo, bo5, matches
+from .tennis import Elo, best_of_five, bo5, matches
 
 
 def VElo(w_surface=0.5, k_scale=1.0):
@@ -26,7 +26,7 @@ def _run(hist, w, ks, start, stop):
     for m in hist:
         if start <= m["date"] < stop and min(elo.matches_played(m["p1"]), elo.matches_played(m["p2"])) >= 10:
             p = elo.prob(m["p1"], m["p2"], m["surface"])
-            if m["slam"] and m["tour"] == "atp":
+            if best_of_five(m):
                 p = bo5(p)
             f = lambda pl: sum(1 for d in recent.get(pl, []) if 0 < (m["date"] - d).days <= 7)  # noqa: E731
             rows.append((p, 1.0 if m["winner"] == m["p1"] else 0.0, f(m["p1"]) - f(m["p2"])))

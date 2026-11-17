@@ -1,0 +1,170 @@
+{
+ "events": [
+  {
+   "id": "172-2025",
+   "date": "2025-05-19T04:00Z",
+   "name": "Roland Garros",
+   "major": true,
+   "groupings": [
+    {
+     "grouping": {
+      "id": "1",
+      "slug": "mens-singles",
+      "displayName": "Men's Singles"
+     },
+     "competitions": [
+      {
+       "id": "156671",
+       "date": "2025-05-25T09:10Z",
+       "status": {
+        "type": {
+         "name": "STATUS_FINAL",
+         "completed": true,
+         "description": "Final",
+         "detail": "Final"
+        }
+       },
+       "type": {
+        "id": "1",
+        "text": "Men's Singles",
+        "slug": "mens-singles"
+       },
+       "round": {
+        "id": "1",
+        "displayName": "Round 1"
+       },
+       "format": {
+        "regulation": {
+         "periods": 5
+        }
+       },
+       "competitors": [
+        {
+         "type": "athlete",
+         "winner": false,
+         "athlete": {
+          "displayName": "Tristan Schoolkate"
+         },
+         "linescores": [
+          {
+           "value": 4.0,
+           "winner": false
+          },
+          {
+           "value": 2.0,
+           "winner": false
+          },
+          {
+           "value": 2.0,
+           "winner": false
+          }
+         ]
+        },
+        {
+         "type": "athlete",
+         "winner": true,
+         "athlete": {
+          "displayName": "Marton Fucsovics"
+         },
+         "linescores": [
+          {
+           "value": 6.0,
+           "winner": true
+          },
+          {
+           "value": 6.0,
+           "winner": true
+          },
+          {
+           "value": 6.0,
+           "winner": true
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "grouping": {
+      "id": "2",
+      "slug": "womens-singles",
+      "displayName": "Women's Singles"
+     },
+     "competitions": [
+      {
+       "id": "157139",
+       "date": "2025-05-25T09:10Z",
+       "status": {
+        "type": {
+         "name": "STATUS_FINAL",
+         "completed": true,
+         "description": "Final",
+         "detail": "Final"
+        }
+       },
+       "type": {
+        "id": "2",
+        "text": "Women's Singles",
+        "slug": "womens-singles"
+       },
+       "round": {
+        "id": "1",
+        "displayName": "Round 1"
+       },
+       "format": {
+        "regulation": {
+         "periods": 5
+        }
+       },
+       "competitors": [
+        {
+         "type": "athlete",
+         "winner": false,
+         "athlete": {
+          "displayName": "Lulu Sun"
+         },
+         "linescores": [
+          {
+           "value": 1.0,
+           "winner": false
+          },
+          {
+           "value": 6.0,
+           "winner": false
+          }
+         ]
+        },
+        {
+         "type": "athlete",
+         "winner": true,
+         "athlete": {
+          "displayName": "Victoria Mboko"
+         },
+         "linescores": [
+          {
+           "value": 6.0,
+           "winner": true
+          },
+          {
+           "value": 7.0,
+           "winner": true
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "grouping": {
+      "id": "3",
+      "slug": "mens-doubles",
+      "displayName": "Men's Doubles"
+     },
+     "competitions": []
+    }
+   ]
+  }
+ ]
+}
