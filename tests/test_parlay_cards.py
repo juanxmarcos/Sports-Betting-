@@ -164,7 +164,8 @@ def test_stage0_build_still_publishes_nothing_with_two_to_six_leg_limits():
 def test_committed_parlay_file_has_the_homepage_shape_and_shows_nothing():
     # The scheduled job rewrites both data files together (site.build); equality is tested there.
     lite = json.loads((ROOT / "docs" / "data" / "parlays.json").read_text())
-    assert set(lite) == {"generated", "default_timezone", "parlays"}
+    assert {"generated", "default_timezone", "parlays"} <= set(lite) <= {"generated", "default_timezone", "parlays",
+                                                                         "estimated_parlays"}   # issue #47
     assert lite["parlays"]["recommendations"] == [] and parlays.shown_cards(lite["parlays"], NOW) == []
 
 

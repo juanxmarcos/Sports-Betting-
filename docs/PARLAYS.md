@@ -1,4 +1,9 @@
-# Sports Betting Doyen — Recommended Parlays of the Day (gated; nothing published yet)
+# Sports Betting Doyen — Recommended Parlays of the Day (strict path gated; labelled estimates shown)
+
+**Update, issue #47 (2026-11-17): estimated mode.** The owner approved showing up to five clearly
+labelled *estimated* parlays a day alongside the strict path below, which is unchanged. See
+[section 11](#11-estimated-parlays-of-the-day-issue-47). When neither a verified nor an estimated
+parlay qualifies, the homepage says so in one line.
 
 **Status: stage 1 (issue #33).** The backend can now publish a real parlay, but only when every
 gate in section 7 passes for that exact combination. Today two gates are closed (no free source of
@@ -402,3 +407,64 @@ later leaked in. No thresholds were changed and no network request was made.
   would ease the freshness exclusions but still give no combined quote.
 - Relaxing the one-leg-per-competition screen. This is a research-screen change that needs its own
   evidence, and it is not a betting threshold.
+
+## 11. Estimated parlays of the day (issue #47)
+
+**Owner decision (2026-11-17).** Doyen is a small personal, non-commercial, paper-trading project.
+The owner wants parlays on the homepage now, will not pay for data, and approved an estimated mode
+alongside the strict path (sections 7–10), which keeps its gates. Code: `sbi/parlay_estimated.py`;
+browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parlay_estimated.py`.
+
+### 11.1 What is shown
+- Up to **5** cards under "Estimated parlays of the day", earliest kickoff first. Fewer, or none, is
+  normal: legs and cards are never forced.
+- Each card: 2–6 legs (game, selection, start time), one bookmaker, **estimated odds**, an editable
+  $10 stake, gross payout = stake × estimated odds (to the cent), an **Estimate** badge, and the line
+  *"Estimated price: product of [bookmaker]'s single-game odds, not a bet-slip quote. Your slip may
+  pay less."* It may also show "Estimated hit chance N% (model estimate, unvalidated)".
+- A strict card (owner-recorded verified combined quote, section 7) is shown first with a
+  **Verified bookmaker quote** badge, and no estimate reuses any of its games.
+- Empty state (one line): *"No parlays today: no verified quotes, and no games later today meet the
+  estimate rules."*
+- The footer shows *"Estimated parlays record: W–L, paper P/L"*, linking to `#/parlays`, where the
+  rules below are summarised.
+
+### 11.2 Rules
+| Rule | Implementation |
+|---|---|
+| Sports | Soccer, NFL, NBA, Tennis only (result market: 1X2 / moneyline). |
+| Games | Start later today (New York date) and have not started; status `scheduled`. |
+| One bookmaker | Every leg priced by that bookmaker; exchanges excluded (no accumulator slip). |
+| Fresh prices | Each of that bookmaker's prices was retrieved within **150 minutes** (`parlays.MAX_QUOTE_AGE_MINUTES`), checked when built and again in the browser. |
+| Estimated price | Product of that bookmaker's own single-leg prices. Data kind `estimated_product`; the `bookmaker_combined` kind stays reserved for real quotes. |
+| Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis), the de-vigged consensus of the *other* bookmakers. |
+| Leg value | A leg is used at a bookmaker only if probability × price > 1 there, so every leg adds value; legs are never added for payout. |
+| Leg screens | The existing research screens of `parlay_engine.screen_event`: enough independent bookmakers, a market consensus, consensus probability 0.30–0.85, model within 0.12 of the market, no open injury/lineup note. |
+| Combinations | At most one leg per game. Same-game combinations and legs sharing a team or player are out. Different games in one competition are **allowed** in this mode. |
+| Ranking | Score = estimated joint probability × estimated value, where joint = product of leg probabilities (independence assumed) and value = joint × estimated odds − 1. Ties go to fewer legs. Each game appears in at most one card. |
+
+No single-pick threshold is read or changed. The run makes no network request and spends no API
+credit: it reads prices the 2-hourly `daily.yml` job already stored, and writes
+`docs/data/parlays.json` (block `estimated_parlays`) and `docs/data/doyen.json`.
+
+### 11.3 Tracking
+- Every estimate shown by the scheduled run is appended to `ledger/estimated_parlays.csv` with its
+  first-shown legs, bookmaker, prices, estimated odds, estimated hit chance and $10 stake. Rows are
+  never edited or removed; if the same parlay is shown later at a different price, the first one counts.
+- Settlement is computed read-only from final scores on every run: any lost leg loses the parlay;
+  otherwise a void or postponed leg voids it (stake returned, P/L 0; bookmaker void-leg rules differ
+  and are not modelled); otherwise it stays open. Paper P/L uses the $10 stake and the estimated
+  price, so a real slip may have paid less.
+- The record (with expected wins among settled rows) is the input #41's calibration work can use.
+
+### 11.4 Limits
+- **Not a quote.** A bookmaker may price a combination below the product of its single prices, or
+  refuse it.
+- **Unvalidated joint probability.** Multiplying leg probabilities assumes independence and
+  calibrated legs; same-competition legs can be correlated. Nothing here has passed the
+  joint-calibration criteria of section 7.
+- **Cards change during the day** as prices move; a card is hidden in the browser once any of its
+  prices is older than 150 minutes or any leg has started.
+- **Thin coverage.** Many games lack enough fresh multi-bookmaker prices on the free Odds API
+  quota, so several days may show few or no cards.
+

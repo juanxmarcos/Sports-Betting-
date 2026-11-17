@@ -259,6 +259,10 @@ details.sec[open] summary::after{content:"–"}
 .pc-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .pc-n{font:600 11px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
 .pill.mock{color:var(--warn);border-color:rgba(221,184,114,.45)}
+.pill.estimate{color:var(--warn);border-color:rgba(221,184,114,.45);height:22px;font-size:11px}
+.pc-h .pill{margin-left:auto}.pc-h .pill+.pill{margin-left:6px}
+.est-h{margin:22px 0 12px}
+
 .legs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .legs li{display:grid;grid-template-columns:1fr auto;column-gap:10px;padding:9px 0;border-top:1px solid var(--line-2)}
 .legs li:first-child{border-top:0;padding-top:0}
