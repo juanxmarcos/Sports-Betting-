@@ -1,14 +1,14 @@
 # Sports Betting Doyen — Daily Report, 2026-11-17
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 17 Nov 17:19 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Tue 17 Nov 17:51 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 116 |
+| Events discovered | 115 |
 | Events with fresh odds | 27 |
 | Events fully evaluated (3+ independent bookmakers, complete history) | 20 |
 | Markets evaluated | 289 |
@@ -117,7 +117,7 @@ de-vigged consensus under the standard rules.
 | Tue 17 Nov 18:30 EST | International Friendly | Ecuador v Bolivia | 72/21/7 | 86/10/4 | 1X2 D @ 8.00: model EV +69.2% ⚠ bias |
 | Tue 17 Nov 21:30 EST | CONCACAF Nations League | Mexico v Jamaica | 74/18/7 | 88/8/4 | 1X2 D @ 8.50: model EV +56.0% ⚠ bias |
 | Tue 17 Nov 19:00 EST | CONCACAF Nations League | French Guiana v Saint Vincent and the Grenadines | 55/24/21 | 35/26/40 | 1X2 H @ 2.65: model EV +45.7% |
-| Tue 17 Nov 19:00 EST | CONCACAF Nations League | United States v Haiti | 82/12/7 | 93/5/2 | 1X2 A @ 20.00: model EV +34.9% ⚠ bias |
+| Tue 17 Nov 19:00 EST | CONCACAF Nations League | United States v Haiti | 82/12/7 | 93/5/2 | 1X2 A @ 20.00: model EV +35.0% ⚠ bias |
 | Tue 17 Nov 18:00 EST | International Friendly | Chile v Colombia | 21/27/52 | 23/29/48 | 1X2 A @ 2.00: model EV +3.8% |
 | Tue 17 Nov 18:30 EST | International Friendly | Uruguay v Dominican Republic | 95/4/1 | 92/5/3 | 1X2 H @ 1.07: model EV +2.2% |
 | Tue 17 Nov 18:00 EST | International Friendly | Argentina v Costa Rica | 94/5/1 | 94/4/2 | 1X2 H @ 1.05: model EV -1.7% |
@@ -132,8 +132,8 @@ is underconfident on heavy favourites, so these gaps are most likely model error
 
 ## Track record (paper, fixed 1-unit stakes)
 
-Settled 12 · W 3 / L 9 / P 0 ·
-profit -6.83u · yield -56.9%
-(95% CI -100.0% to -12.8%) ·
-avg CLV +2.2% · max drawdown 8.2u.
-*Only 12 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*
+Settled 17 · W 4 / L 12 / P 1 ·
+profit -7.14u · yield -42.0%
+(95% CI -84.2% to +8.5%) ·
+avg CLV +1.4% · max drawdown 8.2u.
+*Only 17 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*

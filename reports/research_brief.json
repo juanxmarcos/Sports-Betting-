@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-17T22:20:25+00:00",
+  "generated": "2026-11-17T22:52:02+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -34,13 +34,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261117:186795",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-17T22:30:00+00:00",
-      "home": "Antonia Vergara Rivera",
-      "away": "Fernanda Labrana"
-    },
     {
       "event_id": "football:INT:fifa.friendly:20261117:401930895",
       "league": "INT:fifa.friendly",
