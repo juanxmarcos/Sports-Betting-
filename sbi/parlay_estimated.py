@@ -5,20 +5,25 @@ estimated-parlay mode that runs alongside the strict path (`sbi.parlays`, issues
 which is unchanged. Strict mode wins: a parlay with a verified bookmaker combined quote is shown
 as such, and an estimate never reuses one of its games.
 
-What an estimated parlay is
+What an estimated parlay is (rules loosened by the owner in issue #51, estimated mode only)
 - 2-6 legs from today's (America/New_York) games in Soccer, NFL, NBA or Tennis that have not
   started, at most one leg per game. Different games in one competition are allowed in this mode;
   same-game combinations are not, and neither are legs that share a team or player.
-- ONE bookmaker that has priced every leg, with each of its prices retrieved in the last
-  `parlays.MAX_QUOTE_AGE_MINUTES` (150) minutes. Exchanges are excluded (no accumulator slip).
+- ONE bookmaker that has priced every leg. Each leg uses that bookmaker's latest stored price,
+  retrieved on the same New York day and before the game starts (#51 replaced the 150-minute
+  limit). A leg drops out as soon as its game starts. Exchanges are excluded (no accumulator slip).
 - Estimated price = the product of that bookmaker's own single-leg prices. It is NOT a bet-slip
   quote and is never labelled `bookmaker_combined` (`ESTIMATE_KIND` below); the slip may pay less.
-- Leg probability = Doyen's stored model probability where one exists (Soccer, NFL, NBA), else the
-  de-vigged consensus of the OTHER bookmakers (Tennis has no stored model probability). Each leg
-  must add value at that bookmaker (probability x price > 1); legs are never added for payout.
-- Candidate legs pass the existing research screens of `sbi.parlay_engine.screen_event` (enough
-  independent bookmakers, a market consensus, a probability band, model/market agreement, no open
-  injury/lineup note). No single-pick threshold is read or changed here.
+- Leg probability = Doyen's stored model probability where one exists (Soccer, NFL, NBA). Where
+  there is none (Tennis) it is a de-vigged market consensus: the other bookmakers' consensus when
+  one exists, otherwise the consensus of at least 2 independent bookmakers including the pricing
+  one. A leg with neither is skipped. One bookmaker is enough to price a leg (#51).
+- Value is checked for the WHOLE parlay (#51): joint probability x estimated price > 1. A single
+  leg may sit below Doyen's probability only as part of a positive-value pair; every further leg
+  must not lower the parlay's estimated value (probability x price >= 1). Legs are never forced.
+- Kept screens: consensus probability inside the research band of `sbi.parlay_engine`
+  (0.30-0.85), the stored model within 0.12 of the market (data sanity), no open injury/lineup
+  note. No single-pick threshold is read or changed here.
 - Ranking: score = estimated joint probability (product of leg probabilities, independence
   assumed, unvalidated) x estimated value (joint x estimated price - 1). The best cards are kept,
   each game used at most once across cards, at most `parlays.CARD_MAX_CARDS`; fewer is normal.
@@ -33,18 +38,25 @@ import csv
 import hashlib
 import json
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from decimal import Decimal
 from math import prod
 
-from . import config, parlay_engine, parlays
-from .sources.books import normalize_book
+from zoneinfo import ZoneInfo
 
-METHOD = "parlay-estimated-v1"
+from . import config, parlay_engine, parlays
+from . import ev as evm
+from .sources.books import normalize_book
+from .sources.football_data import AGGREGATES, EXCHANGES
+
+METHOD = "parlay-estimated-v2"
 ESTIMATE_KIND = "estimated_product"          # never parlays.QUOTE_KIND ("bookmaker_combined")
 BADGE = "Estimate"
 VERIFIED_BADGE = "Verified bookmaker quote"
-MAX_PRICE_AGE_MINUTES = parlays.MAX_QUOTE_AGE_MINUTES       # the 150-minute rule
+PRICE_RULE = "latest price from that bookmaker, retrieved on the same New York day and before the game starts"
+MIN_PRICING_BOOKS = 1                        # the bookmaker pricing the parlay (#51)
+MIN_CONSENSUS_BOOKS = 2                      # independent bookmakers, pricing one included, when no model (#51)
+NY = ZoneInfo(parlays.CARD_TIMEZONE)
 MIN_LEGS, MAX_LEGS = parlays.MIN_LEGS, parlays.MAX_LEGS
 MAX_CARDS = parlays.CARD_MAX_CARDS
 DEFAULT_STAKE = parlays.DEFAULT_STAKE
@@ -61,64 +73,108 @@ def price_label(bookmaker: str) -> str:
 
 
 # ---------- inputs (read-only) ----------
-def fresh_books(con, event_id: str, now: datetime, max_age_minutes: int = MAX_PRICE_AGE_MINUTES) -> dict:
-    """Latest pre-match quote per (bookmaker, market, selection, line), keeping only quotes whose own
-    retrieval time is within `max_age_minutes` of `now` (and not in the future)."""
+def _ny_day(t: datetime) -> str:
+    return t.astimezone(NY).date().isoformat()
+
+
+def fresh_books(con, event_id: str, now: datetime, start: datetime | None = None) -> dict:
+    """Latest pre-match quote per (bookmaker, market, selection, line) retrieved at or before `now`,
+    kept only if it was retrieved on the same New York day as `now` and before the game's start."""
     from .engine import books_from_rows
     rows = con.execute("""SELECT market, line, bookmaker, selection, price, retrieved_at FROM odds
                           WHERE event_id=? AND kind='pre'""", (event_id,)).fetchall()
-    latest: dict = {}
+    day, latest = _ny_day(now), {}
     for r in rows:
         bk = normalize_book(r["bookmaker"])
-        if not bk:
+        t = parlays._ts(r["retrieved_at"])
+        if not bk or t is None or t > now or _ny_day(t) != day or (start is not None and t >= start):
             continue
         key = (bk, r["market"], r["selection"], -999 if r["line"] is None else r["line"])
-        if key not in latest or r["retrieved_at"] > latest[key]["retrieved_at"]:
-            latest[key] = {"bk": bk, **dict(r)}
-    lo = now - timedelta(minutes=max_age_minutes)
-    keep = []
-    for v in latest.values():
-        t = parlays._ts(v["retrieved_at"])
-        if t is not None and lo <= t <= now:
-            keep.append((v["market"], v["line"], v["bk"], v["selection"], v["price"]))
-    return books_from_rows(keep)
+        if key not in latest or t > latest[key]["t"]:
+            latest[key] = {"bk": bk, "t": t, **dict(r)}
+    return books_from_rows([(v["market"], v["line"], v["bk"], v["selection"], v["price"]) for v in latest.values()])
+
+
+def screen_event(event: dict, books: dict, model: dict | None = None,
+                 n_risk_notes: int = 0) -> tuple[list[dict], str | None]:
+    """Estimated-mode leg screen (#51). The strict/shadow screen `parlay_engine.screen_event` is
+    unchanged. Per selection and per pricing bookmaker: price, probability used and its source."""
+    sport = event.get("site_sport")
+    if sport not in parlay_engine.RESULT_MARKET:
+        return [], "unsupported sport"
+    market = parlay_engine.RESULT_MARKET[sport]
+    sels = parlay_engine.SELECTIONS[market]
+    book = evm.clean(books.get((market, None)) or {}, sels)
+    book = {bk: q for bk, q in book.items() if bk not in AGGREGATES or bk == "Avg"}
+    if not book:
+        return [], "no fresh result-market prices"
+    pricing = sorted(bk for bk in book if bk not in AGGREGATES and bk not in EXCHANGES)
+    if len(pricing) < MIN_PRICING_BOOKS:
+        return [], "no bookmaker that offers a parlay slip"
+    if n_risk_notes:
+        return [], "open injury/lineup research note"
+    ref, ref_src = evm.consensus(book, sels)          # market reference for the band and sanity screens
+    if not ref:
+        return [], "no market reference"
+    consensus_ok = evm.n_books(book, sels) >= MIN_CONSENSUS_BOOKS and not str(ref_src).startswith("single:")
+    legs, reasons = [], Counter()
+    for s in sels:
+        q = float(ref[s])
+        if not parlay_engine.MIN_LEG_PROB <= q <= parlay_engine.MAX_LEG_PROB:
+            reasons["probability outside research band"] += 1
+            continue
+        mp = (model or {}).get((market, s))
+        if mp is not None and abs(float(mp) - q) > parlay_engine.MAX_MODEL_DISAGREEMENT:
+            reasons["model and market disagree strongly"] += 1
+            continue
+        per = {}
+        for bk in pricing:
+            if mp is not None:
+                p, src = float(mp), "model"
+            else:
+                ex, ex_src = evm.consensus_excluding(book, sels, bk)
+                if ex and not str(ex_src or "").startswith("single:"):
+                    p, src = float(ex[s]), "market_consensus_ex_book"
+                elif consensus_ok:
+                    p, src = q, "market_consensus_incl_book"
+                else:
+                    continue
+            price = float(book[bk][s])
+            per[bk] = {"price": price, "prob": p, "value": p * price - 1.0, "prob_source": src}
+        if not per:
+            reasons["no model probability and no 2-bookmaker consensus"] += 1
+            continue
+        legs.append({"event_id": event["event_id"], "sport": sport, "league": event["league"],
+                     "competition": event.get("competition") or event["league"],
+                     "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
+                     "title": f"{event['home']} v {event['away']}", "market": market, "selection": s,
+                     "consensus_prob": round(q, 6), "model_prob": None if mp is None else round(float(mp), 6),
+                     "prob_source": "model" if mp is not None else next(iter(per.values()))["prob_source"],
+                     "books": per, "best_value": max(v["value"] for v in per.values())})
+    if not legs:
+        return [], (reasons.most_common(1)[0][0] if reasons else "no selection passed")
+    return legs, None
 
 
 def legs_for_event(event: dict, books: dict, model: dict | None, n_risk_notes: int = 0) -> tuple[dict | None, str | None]:
-    """The single best leg for one game (or None, reason). Per bookmaker the leg carries its price,
-    the probability used and the value at that bookmaker."""
-    legs, why = parlay_engine.screen_event(event, books, model, n_risk_notes)
+    """The single best leg for one game (or None, reason): the selection with the highest value at
+    any pricing bookmaker. The value may be negative here; the parlay-level check is in `search`."""
+    legs, why = screen_event(event, books, model, n_risk_notes)
     if why:
         return None, why
-    best = None
-    for leg in legs:
-        per = {}
-        for bk, v in leg["books"].items():
-            p = leg["model_prob"] if leg["model_prob"] is not None else v["fair_prob"]
-            value = p * v["price"] - 1.0
-            if value > 0:
-                per[bk] = {"price": v["price"], "prob": float(p), "value": value}
-        if not per:
-            continue
-        cand = {**{k: leg[k] for k in ("event_id", "sport", "league", "competition", "participants", "start_utc",
-                                       "title", "market", "selection", "model_prob", "consensus_prob")},
-                "prob_source": "model" if leg["model_prob"] is not None else "market_consensus_ex_book",
-                "books": per, "best_value": max(x["value"] for x in per.values())}
-        if best is None or cand["best_value"] > best["best_value"]:
-            best = cand
-    if best is None:
-        return None, "no bookmaker price above Doyen's probability"
-    return best, None
+    return max(legs, key=lambda x: (x["best_value"], x["selection"])), None
 
 
 def build_pool(con, now: datetime) -> tuple[list[dict], dict]:
     events = parlay_engine.todays_events(con, now)
-    excluded, pool = Counter(), []
+    excluded, pool, fresh = Counter(), [], 0
     for e in events:
         if e["site_sport"] is None:
             excluded["unsupported sport"] += 1
             continue
-        books = fresh_books(con, e["event_id"], now)
+        books = fresh_books(con, e["event_id"], now, parlays._ts(e["kickoff_utc"]))
+        if books:
+            fresh += 1
         leg, why = legs_for_event(e, books, parlay_engine.model_probs(con, e["event_id"], now),
                                   parlay_engine.risk_notes(con, e["event_id"]))
         if why:
@@ -127,7 +183,8 @@ def build_pool(con, now: datetime) -> tuple[list[dict], dict]:
         leg["price_ts"] = _price_times(con, e["event_id"], leg, now)
         pool.append(leg)
     pool.sort(key=lambda x: (-x["best_value"], x["event_id"]))
-    return pool, {"events_today": len(events), "legs": len(pool), "excluded": dict(sorted(excluded.items()))}
+    return pool, {"events_today": len(events), "events_with_fresh_prices": fresh, "legs": len(pool),
+                  "excluded": dict(sorted(excluded.items()))}
 
 
 def _price_times(con, event_id: str, leg: dict, now: datetime) -> dict:
@@ -137,9 +194,9 @@ def _price_times(con, event_id: str, leg: dict, now: datetime) -> dict:
                             AND selection=? AND line IS NULL""", (event_id, leg["market"], leg["selection"])):
         bk = normalize_book(r["bookmaker"])
         t = parlays._ts(r["retrieved_at"])
-        if bk in leg["books"] and t is not None and t <= now and (bk not in out or r["retrieved_at"] > out[bk]):
-            out[bk] = r["retrieved_at"]
-    return out
+        if bk in leg["books"] and t is not None and t <= now and (bk not in out or t > out[bk][0]):
+            out[bk] = (t, r["retrieved_at"])
+    return {bk: v for bk, (t, v) in out.items()}
 
 
 # ---------- search and selection (pure) ----------
@@ -160,30 +217,44 @@ def combo(legs: list[dict], bk: str) -> dict:
             "estimated_ev": ev, "score": score(joint, ev)}
 
 
+def adds_no_loss(leg: dict, bk: str) -> bool:
+    """A leg does not lower a parlay's estimated value at `bk` when probability x price >= 1."""
+    return leg["books"][bk]["prob"] * leg["books"][bk]["price"] >= 1.0
+
+
 def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS) -> list[dict]:
-    """Per bookmaker, 2..6-leg combinations of legs that each add value there (beam search on score)."""
+    """Per bookmaker, 2..6-leg combinations with positive estimated value (beam search on score).
+    A parlay starts from a pair with joint probability x estimated price > 1, and every further leg
+    must not lower that value (probability x price >= 1). So at most one leg sits below Doyen's
+    probability, and only if it forms a positive-value pair with the parlay's strongest leg. Legs
+    are tried in order of value at the bookmaker, which makes that weak leg the last one tried."""
     by_book = defaultdict(list)
     for i, leg in enumerate(pool):
         for bk in leg["books"]:
             by_book[bk].append(i)
     out, evals = [], 0
     for bk in sorted(by_book):
-        idx = by_book[bk]
+        idx = sorted(by_book[bk], key=lambda i: (-pool[i]["books"][bk]["value"], i))
+        pos = {i: n for n, i in enumerate(idx)}
         frontier = [(i,) for i in idx]
-        for _n in range(MIN_LEGS, MAX_LEGS + 1):
+        for n in range(MIN_LEGS, MAX_LEGS + 1):
             nxt = {}
             for c in frontier:
-                for j in idx:
-                    if j <= c[-1] or evals >= max_evals:
-                        continue
+                for j in idx[pos[c[-1]] + 1:]:
+                    if evals >= max_evals:
+                        break
                     evals += 1
                     if any(linked(pool[j], pool[k]) for k in c):
+                        continue
+                    if n > MIN_LEGS and not adds_no_loss(pool[j], bk) and (
+                            not all(adds_no_loss(pool[k], bk) for k in c)
+                            or combo([pool[c[0]], pool[j]], bk)["estimated_ev"] <= 0):
                         continue
                     new = c + (j,)
                     cand = combo([pool[k] for k in new], bk)
                     if cand["estimated_ev"] > 0:
                         nxt[new] = cand
-            ranked = sorted(nxt.items(), key=lambda kv: (-kv[1]["score"], kv[0]))[:beam]
+            ranked = sorted(nxt.items(), key=lambda kv: (-kv[1]["score"], sorted(kv[0])))[:beam]
             out += [c for _, c in ranked]
             frontier = [k for k, _ in ranked]
             if not frontier:
@@ -227,7 +298,8 @@ def card(c: dict, day: str) -> dict:
             "legs": [{"event_id": x["event_id"], "sport": x["sport"], "league": x["league"], "title": x["title"],
                       "market": x["market"], "selection": x["selection"], "selection_text": selection_text(x),
                       "start_utc": x["start_utc"], "status": "active", "price": x["books"][bk]["price"],
-                      "prob": round(x["books"][bk]["prob"], 4), "prob_source": x["prob_source"],
+                      "prob": round(x["books"][bk]["prob"], 4),
+                      "prob_source": x["books"][bk].get("prob_source", x["prob_source"]),
                       "price_at": x.get("price_ts", {}).get(bk)} for x in legs]}
 
 
@@ -288,8 +360,8 @@ def card_problem(rec, now: datetime, day: str | None = None) -> str | None:
         at = parlays._ts(leg.get("price_at"))
         if at is None or at > now:
             return "leg price has no valid time"
-        if (now - at).total_seconds() > MAX_PRICE_AGE_MINUTES * 60:
-            return "leg price is stale"
+        if at.astimezone(tz).date().isoformat() != day:
+            return "leg price is stale"           # not retrieved today (New York); start > now >= at
         prices.append(p)
     odds = parlays._num(rec.get("estimated_odds"))
     if odds is None or odds <= 1.0:
@@ -330,7 +402,7 @@ def build(con, now: datetime, verified_cards: list[dict] | None = None) -> dict:
     return {"status": "estimated", "method": METHOD, "kind": ESTIMATE_KIND, "date": day,
             "timezone": parlays.CARD_TIMEZONE, "generated": now.isoformat(), "badge": BADGE,
             "verified_badge": VERIFIED_BADGE, "empty_text": EMPTY_TEXT, "disclosure": DISCLOSURE,
-            "max_price_age_minutes": MAX_PRICE_AGE_MINUTES, "default_stake": DEFAULT_STAKE,
+            "price_rule": PRICE_RULE, "default_stake": DEFAULT_STAKE,
             "coverage": {**cov, "combinations_kept": len(cands)}, "recommendations": recs}
 
 

@@ -435,11 +435,12 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Sports | Soccer, NFL, NBA, Tennis only (result market: 1X2 / moneyline). |
 | Games | Start later today (New York date) and have not started; status `scheduled`. |
 | One bookmaker | Every leg priced by that bookmaker; exchanges excluded (no accumulator slip). |
-| Fresh prices | Each of that bookmaker's prices was retrieved within **150 minutes** (`parlays.MAX_QUOTE_AGE_MINUTES`), checked when built and again in the browser. |
+| Fresh prices | Issue #51: that bookmaker's **latest stored price retrieved on the same New York day and before the game starts** (replaces the 150-minute limit). Checked when built and again in the browser; a leg drops out as soon as its game starts. The card shows "Prices read at HH:MM". |
 | Estimated price | Product of that bookmaker's own single-leg prices. Data kind `estimated_product`; the `bookmaker_combined` kind stays reserved for real quotes. |
-| Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis), the de-vigged consensus of the *other* bookmakers. |
-| Leg value | A leg is used at a bookmaker only if probability × price > 1 there, so every leg adds value; legs are never added for payout. |
-| Leg screens | The existing research screens of `parlay_engine.screen_event`: enough independent bookmakers, a market consensus, consensus probability 0.30–0.85, model within 0.12 of the market, no open injury/lineup note. |
+| Bookmakers per game | Issue #51: **1** is enough, the one pricing the parlay. |
+| Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis): the de-vigged consensus of the *other* bookmakers when it exists, otherwise (#51) the de-vigged consensus of at least **2** independent bookmakers including the pricing one. A leg with neither is skipped. |
+| Parlay value | Issue #51 removed the per-leg rule (probability × price > 1 at every leg). The **whole parlay** must have positive estimated value: joint probability × estimated odds > 1. A parlay starts from a positive-value pair and no further leg may lower its value (probability × price ≥ 1), so at most one leg sits below Doyen's probability, and only if it forms a positive pair with the parlay's strongest leg. Legs are never forced. |
+| Leg screens | Estimated-mode screen `parlay_estimated.screen_event` (the shadow engine's `parlay_engine.screen_event` is unchanged): market consensus probability 0.30–0.85 (one bookmaker de-vigged when it is the only one), model within 0.12 of the market (data sanity), no open injury/lineup note. |
 | Combinations | At most one leg per game. Same-game combinations and legs sharing a team or player are out. Different games in one competition are **allowed** in this mode. |
 | Ranking | Score = estimated joint probability × estimated value, where joint = product of leg probabilities (independence assumed) and value = joint × estimated odds − 1. Ties go to fewer legs. Each game appears in at most one card. |
 
@@ -463,8 +464,15 @@ credit: it reads prices the 2-hourly `daily.yml` job already stored, and writes
 - **Unvalidated joint probability.** Multiplying leg probabilities assumes independence and
   calibrated legs; same-competition legs can be correlated. Nothing here has passed the
   joint-calibration criteria of section 7.
-- **Cards change during the day** as prices move; a card is hidden in the browser once any of its
-  prices is older than 150 minutes or any leg has started.
-- **Thin coverage.** Many games lack enough fresh multi-bookmaker prices on the free Odds API
-  quota, so several days may show few or no cards.
+- **Cards change during the day** as prices move; a card is hidden in the browser once any leg has
+  started or a price is not from today (New York). Since #51 a price can be several hours old;
+  the card shows when the prices were read.
+- **Weaker evidence per leg since #51.** One bookmaker can price a leg, and a tennis leg's
+  probability can come from a consensus that includes the pricing bookmaker itself, which pulls
+  its estimated value towards zero. The parlay-level value check is the only value gate.
+- **Thin coverage.** Many games lack prices from today on the free Odds API quota, so several
+  days may show few or no cards. Since #51 the 2-hourly ingest buys competitions with a game later
+  today (New York) first, inside the unchanged per-day budget and quota safeguards (#25); its run
+  output reports `planned_today_first` and `today` (events in the responses / events priced). The
+  block's `coverage` reports `events_today`, `events_with_fresh_prices` and `legs`.
 
