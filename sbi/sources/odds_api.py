@@ -10,6 +10,16 @@ Exchange - the sharp references) and markets h2h,totals = 2 credits per competit
 Budgeting: per-run budget = min(MAX_CREDITS_PER_RUN, remaining / runs left this month),
 spent only on competitions with events in the next 36h, internationals first (they have
 no other multi-bookmaker source), then club leagues.
+
+Quota safeguards (issue #24):
+  * a competition is paid for only when the FREE /events list contains at least one event that
+    matches an event we store; a response nothing can be attached to is not bought;
+  * the provider's own `x-requests-last` header is compared with the expected cost. If a call
+    cost more than expected, the run stops buying and records the mismatch;
+  * SBI_ODDS_API_BOOKMAKERS (opt-in, unset by default) asks for named bookmakers instead of a
+    region. The provider bills "every group of 10 bookmakers" as one region, so a list of up
+    to 10 costs the same as today's single region. Longer lists, unknown keys, paid-only keys
+    and prediction-market or DFS keys are refused and the default region is used instead.
 """
 from __future__ import annotations
 
@@ -56,6 +66,71 @@ CLUB = {
 BOOK_NAMES = {"pinnacle": "Pinnacle", "betfair_ex_eu": "Betfair Exchange", "betfair_ex_uk": "Betfair Exchange",
               "matchbook": "Matchbook"}
 EXCHANGE_KEYS = {"betfair_ex_eu", "betfair_ex_uk", "matchbook"}
+
+BOOKMAKERS_ENV = "SBI_ODDS_API_BOOKMAKERS"
+BOOKMAKERS_PER_REGION = 10      # provider: "Every group of 10 bookmakers is the equivalent of 1 region"
+# Keys the provider lists (the-odds-api.com/sports-odds-data/bookmaker-apis.html, read 2026-11-16) that
+# must never be stored as bookmaker odds:
+#   * prediction markets and peer-to-peer exchanges of the `us_ex` region: a contract price there is
+#     not a sportsbook quote (different settlement, fees, currency and access);
+#   * daily-fantasy "books" of the `us_dfs` region: the provider calls their odds indicative only.
+# parse_odds drops them even if the provider returns them, so they cannot count toward the
+# "3+ bookmakers" rule or be offered as a best price.
+NOT_BOOKMAKER_KEYS = frozenset({
+    "polymarket", "polymarket_us", "kalshi", "limitless", "novig", "prophetx", "betopenly",
+    "dabble_us_dfs", "parlayplay", "pick6", "prizepicks", "underdog"})
+# Listed by the provider as "paid subscriptions only": asking for them on the free plan buys nothing.
+PAID_ONLY_KEYS = frozenset({"williamhill_us", "fanatics", "courtside", "rebet", "bet365_au", "dabble_au",
+                            "bet99_ca_on"})
+# Bookmaker keys of the regions relevant to Soccer/NFL/NBA/Tennis, as listed on the same page.
+# Only these may be named in SBI_ODDS_API_BOOKMAKERS; a typo is refused rather than sent.
+KNOWN_BOOKMAKER_KEYS = frozenset({
+    # eu
+    "onexbet", "sport888", "betclic_fr", "betanysports", "betfair_ex_eu", "betonlineag", "betsson", "betvictor",
+    "coolbet", "everygame", "gtbets", "leovegas_se", "marathonbet", "matchbook", "mybookieag", "nordicbet",
+    "pinnacle", "pmu_fr", "tipico_de", "unibet_fr", "unibet_nl", "unibet_se", "williamhill", "winamax_de",
+    "winamax_fr",
+    # uk
+    "betano_uk", "betfair_ex_uk", "betfair_sb_uk", "betfred_uk", "betway", "boylesports", "casumo", "coral",
+    "grosvenor", "ladbrokes_uk", "leovegas", "livescorebet", "paddypower", "skybet", "smarkets", "unibet_uk",
+    "virginbet",
+    # us, us2
+    "betmgm", "betrivers", "betus", "bovada", "draftkings", "fanduel", "lowvig", "ballybet", "betparx",
+    "betwhale", "espnbet", "fliff", "hardrockbet",
+})
+
+
+def request_cost(markets: str, regions: str = REGIONS, bookmakers: tuple[str, ...] = ()) -> int:
+    """Credits one /odds call is expected to cost: markets x regions, where a bookmaker list
+    replaces the regions and is billed as one region per started group of ten."""
+    n_markets = len([m for m in markets.split(",") if m])
+    if bookmakers:
+        n_regions = -(-len(bookmakers) // BOOKMAKERS_PER_REGION)
+    else:
+        n_regions = len([r for r in regions.split(",") if r])
+    return n_markets * n_regions
+
+
+def bookmaker_selection(raw: str | None = None) -> tuple[tuple[str, ...], str | None]:
+    """-> (keys, reason). Parse the opt-in bookmaker list. Any problem returns an empty selection
+    and the reason, so the caller falls back to the default region. A list is never trimmed or
+    partly used: the owner gets exactly what was asked for, or the unchanged default."""
+    raw = os.environ.get(BOOKMAKERS_ENV, "") if raw is None else raw
+    keys = tuple(dict.fromkeys(k.strip().lower() for k in raw.split(",") if k.strip()))
+    if not keys:
+        return (), None
+    if len(keys) > BOOKMAKERS_PER_REGION:
+        return (), (f"{len(keys)} bookmakers requested; more than {BOOKMAKERS_PER_REGION} would be billed "
+                    "as a second region, so the list is ignored")
+    for label, group in (("not bookmaker odds (prediction market, peer-to-peer exchange or DFS)", NOT_BOOKMAKER_KEYS),
+                         ("paid plans only", PAID_ONLY_KEYS)):
+        bad = sorted(k for k in keys if k in group)
+        if bad:
+            return (), f"{', '.join(bad)}: {label}; the list is ignored"
+    unknown = sorted(k for k in keys if k not in KNOWN_BOOKMAKER_KEYS)
+    if unknown:
+        return (), f"unknown bookmaker key(s) {', '.join(unknown)}; the list is ignored"
+    return keys, None
 
 
 def key() -> str | None:
@@ -121,6 +196,8 @@ def parse_odds(event: dict, two_way: bool = False) -> list[tuple]:
     home, away = event["home_team"], event["away_team"]
     for bk in event.get("bookmakers", []):
         from .books import normalize_book
+        if bk["key"] in NOT_BOOKMAKER_KEYS:      # prediction markets / DFS are never bookmaker odds
+            continue
         name = normalize_book(BOOK_NAMES.get(bk["key"], bk.get("title", bk["key"])))
         if not name:
             continue
@@ -160,6 +237,21 @@ def parse_odds(event: dict, two_way: bool = False) -> list[tuple]:
                     elif o["name"] == away:
                         out.append((name, "AH", "away", -float(o["point"]), float(o["price"]), ts))
     return out
+
+
+def _int(v) -> int | None:
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _matches(con, league: str, e: dict) -> bool:
+    """Would this provider event attach to an event we store? Same test the paid response gets."""
+    commence = datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00"))
+    if match_event(con, league, e["home_team"], e["away_team"], commence):
+        return True
+    return league.startswith("TENNIS") and bool(match_event(con, league, e["away_team"], e["home_team"], commence))
 
 
 def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:
@@ -208,12 +300,12 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
     api_key = key()
     if not api_key:
         return {"skipped": "ODDS_API_KEY not set"}
-    cost = len(MARKETS.split(",")) * len(REGIONS.split(","))
+    books, books_problem = bookmaker_selection()
     sports, usage = _get("/sports", {}, api_key)  # free
     active = {s["key"] for s in sports if s.get("active")}
     # find competitions with events in the window (free endpoint)
     window_end = now + timedelta(hours=horizon_h)
-    plan = []
+    plan, no_match = [], []
     tennis = {k: ("TENNIS:ATP" if "_atp_" in k else "TENNIS:WTA") for k in active if k.startswith("tennis_")}
     for prio, mapping in ((0, US), (0, INTERNATIONAL), (0, tennis), (1, CLUB)):
         for sk, league in mapping.items():
@@ -222,30 +314,50 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
             evs, usage = _get(f"/sports/{sk}/events", {"dateFormat": "iso"}, api_key)
             starts = [datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00")) for e in evs]
             soon = [t for t in starts if now < t <= window_end]
-            if soon and _due(con, sk, min(soon), now):
+            if not soon:
+                continue
+            # Free pre-check: buy the odds only if at least one listed event matches an event we
+            # store. Otherwise every returned quote would be discarded as unmatched.
+            if not any(_matches(con, league, e) for e, t in zip(evs, starts) if now < t <= window_end):
+                no_match.append(sk)
+                continue
+            if _due(con, sk, min(soon), now):
                 plan.append((prio, min(soon), sk, league))   # soonest kick-off first within priority
     plan.sort()
     remaining = int(usage["remaining"]) if usage.get("remaining") not in (None, "") else None
     allowed = budget(remaining, now, spent_today(con, now))
     out = {"credits_remaining_before": remaining, "budget_credits": allowed, "planned": [p[2] for p in plan],
-           "fetched": [], "matched": 0, "unmatched": [], "odds_rows": 0, "coverage": {}}
+           "fetched": [], "matched": 0, "unmatched": [], "odds_rows": 0, "coverage": {},
+           "skipped_no_matching_event": no_match}
+    if books:
+        out["bookmakers_requested"] = list(books)
+    if books_problem:
+        out["bookmakers_ignored"] = books_problem
     spent = 0
     for _, _, sk, league in plan:
         two_way = sk in US or sk.startswith("tennis_")
         markets = ("h2h" if sk.startswith("tennis_") else US_MARKETS) if two_way else MARKETS
-        c = len(markets.split(",")) * len(REGIONS.split(","))
+        c = request_cost(markets, REGIONS, books)
         if spent + c > allowed:
             continue
+        scope = {"bookmakers": ",".join(books)} if books else {"regions": REGIONS}
         try:
-            data, usage = _get(f"/sports/{sk}/odds", {"regions": REGIONS, "markets": markets,
+            data, usage = _get(f"/sports/{sk}/odds", {**scope, "markets": markets,
                                                       "oddsFormat": "decimal", "dateFormat": "iso"}, api_key)
         except (RuntimeError, requests.RequestException) as ex:   # one competition failing must not stop the rest
             out.setdefault("errors", []).append(db.redact(str(ex))[:200])
             continue
+        charged = _int(usage.get("last"))
+        overcharged = charged is not None and charged > c
+        c = max(c, charged or 0)      # account for what the provider says it charged, never less
         spent += c
         out["fetched"].append(sk)
         con.execute("INSERT INTO odds_api_fetches(sport_key, fetched_at, credits) VALUES (?,?,?)", (sk, now.isoformat(), c))
-        url = f"{BASE}/sports/{sk}/odds?regions={REGIONS}&markets={markets}"  # key stripped
+        url = f"{BASE}/sports/{sk}/odds?{'&'.join(f'{k}={v}' for k, v in scope.items())}&markets={markets}"  # key stripped
+        if overcharged:
+            # The call cost more than the documented formula. Keep what was paid for, buy nothing more.
+            out["cost_mismatch"] = {"sport_key": sk, "expected": request_cost(markets, REGIONS, books), "charged": charged}
+            allowed = spent
         cov = out["coverage"].setdefault(sk, {"returned": 0, "in_window": 0, "matched": 0})
         cov["returned"] = len(data)
         for e in data:

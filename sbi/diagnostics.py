@@ -100,7 +100,8 @@ def providers(con, now: datetime) -> dict:
         "SELECT job, started_at, details FROM job_runs WHERE status IN ('error','partial') ORDER BY id DESC LIMIT 10")]
     return {"providers": prov, "odds_freshness": fresh,
             "odds_api": {k: oad.get(k) for k in ("skipped", "credits_remaining_after", "credits_spent", "fetched",
-                                                   "matched", "unmatched")},
+                                                   "matched", "unmatched", "skipped_no_matching_event",
+                                                   "bookmakers_requested", "bookmakers_ignored", "cost_mismatch")},
             "recent_job_problems": errs}
 
 

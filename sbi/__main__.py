@@ -40,6 +40,12 @@ def main(argv=None) -> int:
     i.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
     i.add_argument("--history", action="store_true",
                    help="also replay the backtest test seasons under both rules (network, several minutes)")
+    qs = sub.add_parser("quote-sources", help="quote-source audit (read-only): licensing matrix, credit economics, "
+                                              "operator yield; writes reports/quote_sources.md")
+    qs.add_argument("--as-of", help="ISO-8601 UTC time to measure at (default: now)")
+    qs.add_argument("--probe-bookmakers", metavar="KEYS", help="owner-run check: ONE h2h call (1 credit) for up to 10 "
+                    "comma-separated bookmaker keys; stores nothing; needs ODDS_API_KEY")
+    qs.add_argument("--probe-sport", default="basketball_nba", help="The Odds API sport key for --probe-bookmakers")
     nr = sub.add_parser("nfl-reports", help="NFL practice/injury/QB availability (nflverse, informational); "
                                             "writes reports/nfl_availability.md")
     nr.add_argument("--season", type=int, action="append", help="season to fetch (default: the current one)")
@@ -61,6 +67,13 @@ def main(argv=None) -> int:
                                                   "writes reports/parlay_candidates.md")
     pc.add_argument("--as-of", help="ISO timestamp to evaluate at (default: now)")
     pc.add_argument("--record", action="store_true", help="also append the shortlist to ledger/parlay_candidates_shadow.csv")
+    pw = sub.add_parser("parlay-walkforward", help="walk-forward validation of multi-leg joint probabilities, "
+                                                   "shadow only (no network); writes reports/parlay_walkforward.md")
+    pw.add_argument("--since", help="first decision time to replay (ISO, default: all recorded runs)")
+    pw.add_argument("--until", help="last decision time to replay (ISO)")
+    pw.add_argument("--focus-day", default="2026-11-16", help="New York day to explain in detail")
+    pw.add_argument("--record", action="store_true",
+                    help="also append replayed shortlist rows to ledger/parlay_walkforward_shadow.csv")
     sub.add_parser("parlay-research", help="parlay calibration, scarcity and shadow-ledger report (read-only); "
                                            "writes reports/parlay_research.md")
     args = ap.parse_args(argv)
@@ -81,6 +94,17 @@ def main(argv=None) -> int:
         print(json.dumps({"deployed_policy": rep["deployed_policy"], "registry": rep["registry_summary"],
                           "blocked_share": rep["upcoming"]["blocked_share"]}, indent=1))
         print(config.REPORTS_DIR / "independence_audit.md")
+        return 0
+    if args.cmd == "quote-sources":     # read-only as well
+        from . import quote_sources
+        if args.probe_bookmakers:
+            print(json.dumps(quote_sources.probe(args.probe_bookmakers, args.probe_sport), indent=1))
+            return 0
+        at = datetime.fromisoformat(args.as_of) if args.as_of else now
+        rep = quote_sources.write(at if at.tzinfo else at.replace(tzinfo=timezone.utc))
+        print(json.dumps({"credit_economics": rep["credit_economics"]["total"],
+                          "slots_left_for_other_operators": rep["operator_yield"]["slots_left_for_other_operators"]}, indent=1))
+        print(config.REPORTS_DIR / "quote_sources.md")
         return 0
     if args.cmd == "forecast-bench":   # research only: never opens the database
         from . import forecast_bench
@@ -183,6 +207,14 @@ def main(argv=None) -> int:
         print(f"events today {r['coverage']['events_today']}, pool legs {r['coverage']['pool_legs']}, "
               f"combinations evaluated {r['search']['evaluated']}, shadow shortlist {len(r['shortlist'])}")
         print(config.REPORTS_DIR / "parlay_candidates.md")
+    elif args.cmd == "parlay-walkforward":
+        from . import parlay_walkforward as pw
+        times = pw.decision_times(con, args.since, args.until)
+        out = pw.write(con, times, record_ledger=args.record, focus_day=args.focus_day)
+        r = out["result"]
+        print(f"decision times {r['decision_times']}, settled legs {r['legs_settled']}, "
+              f"fit to back a recommendation: {r['verdict_replay']['fit_to_back_recommendation'] and r['verdict_backtest']['fit_to_back_recommendation']}")
+        print(out["report"])
     elif args.cmd == "parlay-research":
         from . import parlay_research
         print(parlay_research.write(con, now))
