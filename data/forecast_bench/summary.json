@@ -1,0 +1,1261 @@
+{
+ "sources": {
+  "openmodel": {
+   "registry": {
+    "name": "The Open Model",
+    "url": "https://theopenmodel.com/data/",
+    "repository": "https://github.com/Hicruben/theopenmodel",
+    "licence": "CC BY 4.0 (data), MIT (code)",
+    "attribution": "Data: The Open Model (theopenmodel.com), CC BY 4.0.",
+    "status": "measured",
+    "method": "ClubElo ratings -> Dixon-Coles bivariate Poisson"
+   },
+   "info": {
+    "snapshot_files": 58,
+    "snapshot_files_revised": 0,
+    "invalid_rows": 0,
+    "last_snapshot_commit": "2026-09-09 08:22:05+00:00",
+    "head": {
+     "commit": "a4f1239a2bc8d0550408a5f8ee1cebb2f1815138",
+     "committed_at": "2026-09-09T08:22:05+00:00"
+    }
+   },
+   "rows": 201,
+   "match_status": {
+    "matched": 200,
+    "kickoff_mismatch": 1
+   },
+   "evidence": {
+    "verified_pre_kickoff": 201
+   },
+   "unmapped_teams": [],
+   "matched_without_doyen_price": 10,
+   "by_league": {
+    "D1": {
+     "matched": 27,
+     "doyen_fixtures_in_source_window": 27,
+     "doyen_fixtures_in_season": 81,
+     "scored": 24
+    },
+    "E0": {
+     "matched": 40,
+     "doyen_fixtures_in_source_window": 40,
+     "doyen_fixtures_in_season": 100,
+     "scored": 38
+    },
+    "F1": {
+     "matched": 36,
+     "doyen_fixtures_in_source_window": 36,
+     "doyen_fixtures_in_season": 90,
+     "scored": 34
+    },
+    "I1": {
+     "matched": 40,
+     "doyen_fixtures_in_source_window": 40,
+     "doyen_fixtures_in_season": 110,
+     "scored": 40
+    },
+    "SP1": {
+     "matched": 57,
+     "doyen_fixtures_in_source_window": 57,
+     "doyen_fixtures_in_season": 119,
+     "scored": 54
+    }
+   },
+   "sets": {
+    "verified_pre_kickoff": {
+     "n": 190,
+     "min_n_for_a_verdict": 300,
+     "match_days": 25,
+     "kickoff_from": "2026-08-15",
+     "kickoff_to": "2026-09-16",
+     "models": {
+      "source": {
+       "logloss": 0.9838,
+       "brier": 0.5859
+      },
+      "market_pre": {
+       "logloss": 0.966,
+       "brier": 0.5744
+      },
+      "market_closing": {
+       "logloss": 0.9583,
+       "brier": 0.57
+      },
+      "doyen": {
+       "logloss": 0.9675,
+       "brier": 0.5726
+      },
+      "doyen_dixon_coles": {
+       "logloss": 0.9718,
+       "brier": 0.5762
+      },
+      "doyen_elo": {
+       "logloss": 0.9673,
+       "brier": 0.572
+      },
+      "uniform": {
+       "logloss": 1.0986,
+       "brier": 0.6667
+      }
+     },
+     "paired": {
+      "source_minus_market_pre": {
+       "logloss_diff": 0.0179,
+       "logloss_ci95": [
+        -0.0001,
+        0.0428
+       ],
+       "brier_diff": 0.0116,
+       "brier_ci95": [
+        -0.0011,
+        0.0291
+       ],
+       "verdict": "inconclusive"
+      },
+      "source_minus_market_closing": {
+       "logloss_diff": 0.0255,
+       "logloss_ci95": [
+        0.0071,
+        0.0506
+       ],
+       "brier_diff": 0.0159,
+       "brier_ci95": [
+        0.0024,
+        0.0337
+       ],
+       "verdict": "inconclusive"
+      },
+      "source_minus_doyen": {
+       "logloss_diff": 0.0163,
+       "logloss_ci95": [
+        -0.0041,
+        0.0378
+       ],
+       "brier_diff": 0.0134,
+       "brier_ci95": [
+        -0.0003,
+        0.0267
+       ],
+       "verdict": "inconclusive"
+      },
+      "doyen_minus_market_pre": {
+       "logloss_diff": 0.0015,
+       "logloss_ci95": [
+        -0.0202,
+        0.027
+       ],
+       "brier_diff": -0.0018,
+       "brier_ci95": [
+        -0.0162,
+        0.0155
+       ],
+       "verdict": "inconclusive"
+      }
+     },
+     "calibration": {
+      "source": {
+       "ece": 0.0198,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 73,
+         "predicted": 0.1327,
+         "observed": 0.1096
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 340,
+         "predicted": 0.2823,
+         "observed": 0.2853
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 116,
+         "predicted": 0.4823,
+         "observed": 0.4483
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 35,
+         "predicted": 0.6695,
+         "observed": 0.8
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 6,
+         "predicted": 0.8247,
+         "observed": 0.8333
+        }
+       ]
+      },
+      "market_pre": {
+       "ece": 0.0138,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 106,
+         "predicted": 0.133,
+         "observed": 0.1321
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 309,
+         "predicted": 0.2853,
+         "observed": 0.288
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 101,
+         "predicted": 0.4835,
+         "observed": 0.4455
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 44,
+         "predicted": 0.6902,
+         "observed": 0.75
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 10,
+         "predicted": 0.8539,
+         "observed": 0.9
+        }
+       ]
+      },
+      "doyen": {
+       "ece": 0.0207,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 76,
+         "predicted": 0.1455,
+         "observed": 0.0921
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 331,
+         "predicted": 0.2792,
+         "observed": 0.2749
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 123,
+         "predicted": 0.48,
+         "observed": 0.4797
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 36,
+         "predicted": 0.6692,
+         "observed": 0.8333
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 4,
+         "predicted": 0.8451,
+         "observed": 0.75
+        }
+       ]
+      }
+     },
+     "dependency": {
+      "mean_abs_diff_source_vs_doyen": 0.0348,
+      "mean_abs_diff_source_vs_market": 0.0426,
+      "mean_abs_diff_doyen_vs_market": 0.042,
+      "corr_probabilities_source_vs_doyen": 0.927,
+      "corr_deviation_from_market_source_vs_doyen": 0.532,
+      "in_sample_pool_weight_on_source_vs_market": 0.0,
+      "in_sample_pool_weight_on_doyen_vs_market": 0.431
+     }
+    },
+    "all_matched": {
+     "n": 190,
+     "min_n_for_a_verdict": 300,
+     "match_days": 25,
+     "kickoff_from": "2026-08-15",
+     "kickoff_to": "2026-09-16",
+     "models": {
+      "source": {
+       "logloss": 0.9838,
+       "brier": 0.5859
+      },
+      "market_pre": {
+       "logloss": 0.966,
+       "brier": 0.5744
+      },
+      "market_closing": {
+       "logloss": 0.9583,
+       "brier": 0.57
+      },
+      "doyen": {
+       "logloss": 0.9675,
+       "brier": 0.5726
+      },
+      "doyen_dixon_coles": {
+       "logloss": 0.9718,
+       "brier": 0.5762
+      },
+      "doyen_elo": {
+       "logloss": 0.9673,
+       "brier": 0.572
+      },
+      "uniform": {
+       "logloss": 1.0986,
+       "brier": 0.6667
+      }
+     },
+     "paired": {
+      "source_minus_market_pre": {
+       "logloss_diff": 0.0179,
+       "logloss_ci95": [
+        -0.0001,
+        0.0428
+       ],
+       "brier_diff": 0.0116,
+       "brier_ci95": [
+        -0.0011,
+        0.0291
+       ],
+       "verdict": "inconclusive"
+      },
+      "source_minus_market_closing": {
+       "logloss_diff": 0.0255,
+       "logloss_ci95": [
+        0.0071,
+        0.0506
+       ],
+       "brier_diff": 0.0159,
+       "brier_ci95": [
+        0.0024,
+        0.0337
+       ],
+       "verdict": "inconclusive"
+      },
+      "source_minus_doyen": {
+       "logloss_diff": 0.0163,
+       "logloss_ci95": [
+        -0.0041,
+        0.0378
+       ],
+       "brier_diff": 0.0134,
+       "brier_ci95": [
+        -0.0003,
+        0.0267
+       ],
+       "verdict": "inconclusive"
+      },
+      "doyen_minus_market_pre": {
+       "logloss_diff": 0.0015,
+       "logloss_ci95": [
+        -0.0202,
+        0.027
+       ],
+       "brier_diff": -0.0018,
+       "brier_ci95": [
+        -0.0162,
+        0.0155
+       ],
+       "verdict": "inconclusive"
+      }
+     },
+     "calibration": {
+      "source": {
+       "ece": 0.0198,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 73,
+         "predicted": 0.1327,
+         "observed": 0.1096
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 340,
+         "predicted": 0.2823,
+         "observed": 0.2853
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 116,
+         "predicted": 0.4823,
+         "observed": 0.4483
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 35,
+         "predicted": 0.6695,
+         "observed": 0.8
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 6,
+         "predicted": 0.8247,
+         "observed": 0.8333
+        }
+       ]
+      },
+      "market_pre": {
+       "ece": 0.0138,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 106,
+         "predicted": 0.133,
+         "observed": 0.1321
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 309,
+         "predicted": 0.2853,
+         "observed": 0.288
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 101,
+         "predicted": 0.4835,
+         "observed": 0.4455
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 44,
+         "predicted": 0.6902,
+         "observed": 0.75
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 10,
+         "predicted": 0.8539,
+         "observed": 0.9
+        }
+       ]
+      },
+      "doyen": {
+       "ece": 0.0207,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 76,
+         "predicted": 0.1455,
+         "observed": 0.0921
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 331,
+         "predicted": 0.2792,
+         "observed": 0.2749
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 123,
+         "predicted": 0.48,
+         "observed": 0.4797
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 36,
+         "predicted": 0.6692,
+         "observed": 0.8333
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 4,
+         "predicted": 0.8451,
+         "observed": 0.75
+        }
+       ]
+      }
+     },
+     "dependency": {
+      "mean_abs_diff_source_vs_doyen": 0.0348,
+      "mean_abs_diff_source_vs_market": 0.0426,
+      "mean_abs_diff_doyen_vs_market": 0.042,
+      "corr_probabilities_source_vs_doyen": 0.927,
+      "corr_deviation_from_market_source_vs_doyen": 0.532,
+      "in_sample_pool_weight_on_source_vs_market": 0.0,
+      "in_sample_pool_weight_on_doyen_vs_market": 0.431
+     }
+    },
+    "published_promptly": {
+     "n": 190,
+     "min_n_for_a_verdict": 300,
+     "match_days": 25,
+     "kickoff_from": "2026-08-15",
+     "kickoff_to": "2026-09-16",
+     "models": {
+      "source": {
+       "logloss": 0.9838,
+       "brier": 0.5859
+      },
+      "market_pre": {
+       "logloss": 0.966,
+       "brier": 0.5744
+      },
+      "market_closing": {
+       "logloss": 0.9583,
+       "brier": 0.57
+      },
+      "doyen": {
+       "logloss": 0.9675,
+       "brier": 0.5726
+      },
+      "doyen_dixon_coles": {
+       "logloss": 0.9718,
+       "brier": 0.5762
+      },
+      "doyen_elo": {
+       "logloss": 0.9673,
+       "brier": 0.572
+      },
+      "uniform": {
+       "logloss": 1.0986,
+       "brier": 0.6667
+      }
+     },
+     "paired": {
+      "source_minus_market_pre": {
+       "logloss_diff": 0.0179,
+       "logloss_ci95": [
+        -0.0001,
+        0.0428
+       ],
+       "brier_diff": 0.0116,
+       "brier_ci95": [
+        -0.0011,
+        0.0291
+       ],
+       "verdict": "inconclusive"
+      },
+      "source_minus_market_closing": {
+       "logloss_diff": 0.0255,
+       "logloss_ci95": [
+        0.0071,
+        0.0506
+       ],
+       "brier_diff": 0.0159,
+       "brier_ci95": [
+        0.0024,
+        0.0337
+       ],
+       "verdict": "inconclusive"
+      },
+      "source_minus_doyen": {
+       "logloss_diff": 0.0163,
+       "logloss_ci95": [
+        -0.0041,
+        0.0378
+       ],
+       "brier_diff": 0.0134,
+       "brier_ci95": [
+        -0.0003,
+        0.0267
+       ],
+       "verdict": "inconclusive"
+      },
+      "doyen_minus_market_pre": {
+       "logloss_diff": 0.0015,
+       "logloss_ci95": [
+        -0.0202,
+        0.027
+       ],
+       "brier_diff": -0.0018,
+       "brier_ci95": [
+        -0.0162,
+        0.0155
+       ],
+       "verdict": "inconclusive"
+      }
+     },
+     "calibration": {
+      "source": {
+       "ece": 0.0198,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 73,
+         "predicted": 0.1327,
+         "observed": 0.1096
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 340,
+         "predicted": 0.2823,
+         "observed": 0.2853
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 116,
+         "predicted": 0.4823,
+         "observed": 0.4483
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 35,
+         "predicted": 0.6695,
+         "observed": 0.8
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 6,
+         "predicted": 0.8247,
+         "observed": 0.8333
+        }
+       ]
+      },
+      "market_pre": {
+       "ece": 0.0138,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 106,
+         "predicted": 0.133,
+         "observed": 0.1321
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 309,
+         "predicted": 0.2853,
+         "observed": 0.288
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 101,
+         "predicted": 0.4835,
+         "observed": 0.4455
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 44,
+         "predicted": 0.6902,
+         "observed": 0.75
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 10,
+         "predicted": 0.8539,
+         "observed": 0.9
+        }
+       ]
+      },
+      "doyen": {
+       "ece": 0.0207,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 76,
+         "predicted": 0.1455,
+         "observed": 0.0921
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 331,
+         "predicted": 0.2792,
+         "observed": 0.2749
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 123,
+         "predicted": 0.48,
+         "observed": 0.4797
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 36,
+         "predicted": 0.6692,
+         "observed": 0.8333
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 4,
+         "predicted": 0.8451,
+         "observed": 0.75
+        }
+       ]
+      }
+     },
+     "dependency": {
+      "mean_abs_diff_source_vs_doyen": 0.0348,
+      "mean_abs_diff_source_vs_market": 0.0426,
+      "mean_abs_diff_doyen_vs_market": 0.042,
+      "corr_probabilities_source_vs_doyen": 0.927,
+      "corr_deviation_from_market_source_vs_doyen": 0.532,
+      "in_sample_pool_weight_on_source_vs_market": 0.0,
+      "in_sample_pool_weight_on_doyen_vs_market": 0.431
+     }
+    }
+   },
+   "unmatched_rows": [
+    "la-liga 2026-09-16 Levante v Bilbao: kickoff_mismatch"
+   ],
+   "matched_with_identical_kickoff": 198,
+   "largest_kickoff_gap_hours": 21.5,
+   "kickoff_from": "2026-08-16T15:00:00+00:00",
+   "kickoff_to": "2026-09-16T19:30:00+00:00",
+   "hours_public_before_kickoff": {
+    "min": 1.1,
+    "median": 10.8,
+    "max": 179.1
+   },
+   "revised_after_publication": 0,
+   "rows_with_more_than_one_pre_kickoff_version": 147
+  },
+  "football-analytics": {
+   "registry": {
+    "name": "Football Analytics",
+    "url": "https://footballanalytics.pro/en/data",
+    "repository": "https://github.com/serayd61/football-predictions-open-data",
+    "licence": "CC BY 4.0",
+    "attribution": "Data: Football Analytics open data (footballanalytics.pro/data), CC BY 4.0.",
+    "status": "measured",
+    "method": "Dixon-Coles / Poisson attack-defence model, refitted daily (dc-1.0)"
+   },
+   "info": {
+    "file_versions": 26,
+    "invalid_rows": 0,
+    "mirror_started": "2026-10-17 13:29:01+00:00",
+    "rows_revised": 0,
+    "rows_removed": 0,
+    "rows_in_first_version": 634,
+    "head": {
+     "commit": "f0a8bf60d787b19311f71e85e96e765f76bb51c2",
+     "committed_at": "2026-11-15T12:43:50+00:00"
+    }
+   },
+   "rows": 1547,
+   "match_status": {
+    "matched": 783,
+    "league_not_in_doyen": 762,
+    "score_conflict": 1,
+    "no_doyen_fixture": 1
+   },
+   "evidence": {
+    "claimed_pre_kickoff": 1547
+   },
+   "unmapped_teams": [],
+   "matched_without_doyen_price": 16,
+   "by_league": {
+    "D1": {
+     "matched": 67,
+     "doyen_fixtures_in_source_window": 81,
+     "doyen_fixtures_in_season": 81,
+     "scored": 64
+    },
+    "E0": {
+     "matched": 87,
+     "doyen_fixtures_in_source_window": 100,
+     "doyen_fixtures_in_season": 100,
+     "scored": 85
+    },
+    "E1": {
+     "matched": 158,
+     "doyen_fixtures_in_source_window": 180,
+     "doyen_fixtures_in_season": 180,
+     "scored": 154
+    },
+    "F1": {
+     "matched": 82,
+     "doyen_fixtures_in_source_window": 90,
+     "doyen_fixtures_in_season": 90,
+     "scored": 80
+    },
+    "I1": {
+     "matched": 98,
+     "doyen_fixtures_in_source_window": 110,
+     "doyen_fixtures_in_season": 110,
+     "scored": 98
+    },
+    "N1": {
+     "matched": 90,
+     "doyen_fixtures_in_source_window": 99,
+     "doyen_fixtures_in_season": 108,
+     "scored": 90
+    },
+    "P1": {
+     "matched": 93,
+     "doyen_fixtures_in_source_window": 98,
+     "doyen_fixtures_in_season": 98,
+     "scored": 91
+    },
+    "SP1": {
+     "matched": 108,
+     "doyen_fixtures_in_source_window": 119,
+     "doyen_fixtures_in_season": 119,
+     "scored": 105
+    }
+   },
+   "sets": {
+    "verified_pre_kickoff": {
+     "n": 0,
+     "min_n_for_a_verdict": 300
+    },
+    "all_matched": {
+     "n": 767,
+     "min_n_for_a_verdict": 300,
+     "match_days": 68,
+     "kickoff_from": "2026-08-07",
+     "kickoff_to": "2026-11-08",
+     "models": {
+      "source": {
+       "logloss": 0.9993,
+       "brier": 0.5956
+      },
+      "market_pre": {
+       "logloss": 0.9664,
+       "brier": 0.5739
+      },
+      "market_closing": {
+       "logloss": 0.9616,
+       "brier": 0.5711
+      },
+      "doyen": {
+       "logloss": 0.982,
+       "brier": 0.585
+      },
+      "doyen_dixon_coles": {
+       "logloss": 0.9865,
+       "brier": 0.5879
+      },
+      "doyen_elo": {
+       "logloss": 0.9827,
+       "brier": 0.5853
+      },
+      "uniform": {
+       "logloss": 1.0986,
+       "brier": 0.6667
+      }
+     },
+     "paired": {
+      "source_minus_market_pre": {
+       "logloss_diff": 0.033,
+       "logloss_ci95": [
+        0.0192,
+        0.0491
+       ],
+       "brier_diff": 0.0217,
+       "brier_ci95": [
+        0.0127,
+        0.0324
+       ],
+       "verdict": "worse"
+      },
+      "source_minus_market_closing": {
+       "logloss_diff": 0.0377,
+       "logloss_ci95": [
+        0.0231,
+        0.0541
+       ],
+       "brier_diff": 0.0246,
+       "brier_ci95": [
+        0.0148,
+        0.0357
+       ],
+       "verdict": "worse"
+      },
+      "source_minus_doyen": {
+       "logloss_diff": 0.0173,
+       "logloss_ci95": [
+        0.0068,
+        0.0294
+       ],
+       "brier_diff": 0.0106,
+       "brier_ci95": [
+        0.0038,
+        0.0186
+       ],
+       "verdict": "worse"
+      },
+      "doyen_minus_market_pre": {
+       "logloss_diff": 0.0157,
+       "logloss_ci95": [
+        0.006,
+        0.0254
+       ],
+       "brier_diff": 0.0111,
+       "brier_ci95": [
+        0.0046,
+        0.0176
+       ],
+       "verdict": "worse"
+      }
+     },
+     "calibration": {
+      "source": {
+       "ece": 0.0067,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 358,
+         "predicted": 0.1417,
+         "observed": 0.1592
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 1310,
+         "predicted": 0.2836,
+         "observed": 0.2786
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 461,
+         "predicted": 0.4863,
+         "observed": 0.4837
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 153,
+         "predicted": 0.6829,
+         "observed": 0.6863
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 19,
+         "predicted": 0.8448,
+         "observed": 0.8947
+        }
+       ]
+      },
+      "market_pre": {
+       "ece": 0.0101,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 423,
+         "predicted": 0.1408,
+         "observed": 0.1395
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 1233,
+         "predicted": 0.2819,
+         "observed": 0.2733
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 439,
+         "predicted": 0.4861,
+         "observed": 0.4989
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 171,
+         "predicted": 0.6841,
+         "observed": 0.7193
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 35,
+         "predicted": 0.8413,
+         "observed": 0.8286
+        }
+       ]
+      },
+      "doyen": {
+       "ece": 0.0142,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 295,
+         "predicted": 0.1426,
+         "observed": 0.122
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 1368,
+         "predicted": 0.2819,
+         "observed": 0.277
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 488,
+         "predicted": 0.4807,
+         "observed": 0.4734
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 131,
+         "predicted": 0.6775,
+         "observed": 0.8015
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 19,
+         "predicted": 0.8377,
+         "observed": 0.8421
+        }
+       ]
+      }
+     },
+     "dependency": {
+      "mean_abs_diff_source_vs_doyen": 0.0386,
+      "mean_abs_diff_source_vs_market": 0.0513,
+      "mean_abs_diff_doyen_vs_market": 0.0418,
+      "corr_probabilities_source_vs_doyen": 0.921,
+      "corr_deviation_from_market_source_vs_doyen": 0.598,
+      "in_sample_pool_weight_on_source_vs_market": 0.0,
+      "in_sample_pool_weight_on_doyen_vs_market": 0.0
+     }
+    },
+    "published_promptly": {
+     "n": 317,
+     "min_n_for_a_verdict": 300,
+     "match_days": 23,
+     "kickoff_from": "2026-10-14",
+     "kickoff_to": "2026-11-08",
+     "models": {
+      "source": {
+       "logloss": 0.9747,
+       "brier": 0.5785
+      },
+      "market_pre": {
+       "logloss": 0.9491,
+       "brier": 0.56
+      },
+      "market_closing": {
+       "logloss": 0.9468,
+       "brier": 0.5581
+      },
+      "doyen": {
+       "logloss": 0.9672,
+       "brier": 0.5738
+      },
+      "doyen_dixon_coles": {
+       "logloss": 0.9673,
+       "brier": 0.5747
+      },
+      "doyen_elo": {
+       "logloss": 0.9738,
+       "brier": 0.5766
+      },
+      "uniform": {
+       "logloss": 1.0986,
+       "brier": 0.6667
+      }
+     },
+     "paired": {
+      "source_minus_market_pre": {
+       "logloss_diff": 0.0256,
+       "logloss_ci95": [
+        0.0048,
+        0.0501
+       ],
+       "brier_diff": 0.0186,
+       "brier_ci95": [
+        0.0037,
+        0.0354
+       ],
+       "verdict": "worse"
+      },
+      "source_minus_market_closing": {
+       "logloss_diff": 0.0279,
+       "logloss_ci95": [
+        0.0043,
+        0.0534
+       ],
+       "brier_diff": 0.0204,
+       "brier_ci95": [
+        0.0042,
+        0.0382
+       ],
+       "verdict": "worse"
+      },
+      "source_minus_doyen": {
+       "logloss_diff": 0.0075,
+       "logloss_ci95": [
+        -0.0056,
+        0.0235
+       ],
+       "brier_diff": 0.0048,
+       "brier_ci95": [
+        -0.0042,
+        0.0156
+       ],
+       "verdict": "inconclusive"
+      },
+      "doyen_minus_market_pre": {
+       "logloss_diff": 0.0182,
+       "logloss_ci95": [
+        -0.0002,
+        0.0349
+       ],
+       "brier_diff": 0.0138,
+       "brier_ci95": [
+        0.0015,
+        0.0255
+       ],
+       "verdict": "inconclusive"
+      }
+     },
+     "calibration": {
+      "source": {
+       "ece": 0.0404,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 156,
+         "predicted": 0.1396,
+         "observed": 0.1731
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 531,
+         "predicted": 0.2812,
+         "observed": 0.2524
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 187,
+         "predicted": 0.491,
+         "observed": 0.5615
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 65,
+         "predicted": 0.6754,
+         "observed": 0.6154
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 12,
+         "predicted": 0.848,
+         "observed": 0.9167
+        }
+       ]
+      },
+      "market_pre": {
+       "ece": 0.0274,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 169,
+         "predicted": 0.1463,
+         "observed": 0.1361
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 504,
+         "predicted": 0.2765,
+         "observed": 0.254
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 198,
+         "predicted": 0.4892,
+         "observed": 0.5253
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 70,
+         "predicted": 0.6803,
+         "observed": 0.7571
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 10,
+         "predicted": 0.8479,
+         "observed": 0.9
+        }
+       ]
+      },
+      "doyen": {
+       "ece": 0.0256,
+       "bins": [
+        {
+         "bin": "0.0-0.2",
+         "n": 119,
+         "predicted": 0.1454,
+         "observed": 0.1345
+        },
+        {
+         "bin": "0.2-0.4",
+         "n": 569,
+         "predicted": 0.281,
+         "observed": 0.2619
+        },
+        {
+         "bin": "0.4-0.6",
+         "n": 201,
+         "predicted": 0.4832,
+         "observed": 0.5124
+        },
+        {
+         "bin": "0.6-0.8",
+         "n": 55,
+         "predicted": 0.6687,
+         "observed": 0.7636
+        },
+        {
+         "bin": "0.8-1.0",
+         "n": 7,
+         "predicted": 0.8421,
+         "observed": 1.0
+        }
+       ]
+      }
+     },
+     "dependency": {
+      "mean_abs_diff_source_vs_doyen": 0.0352,
+      "mean_abs_diff_source_vs_market": 0.0493,
+      "mean_abs_diff_doyen_vs_market": 0.0414,
+      "corr_probabilities_source_vs_doyen": 0.949,
+      "corr_deviation_from_market_source_vs_doyen": 0.684,
+      "in_sample_pool_weight_on_source_vs_market": 0.0,
+      "in_sample_pool_weight_on_doyen_vs_market": 0.0
+     }
+    }
+   },
+   "unmatched_rows": [
+    "eredivisie 2026-09-08 FC Utrecht v Go Ahead Eagles: score_conflict",
+    "la-liga 2026-10-10 Rayo Vallecano v Athletic Club: no_doyen_fixture"
+   ],
+   "matched_with_identical_kickoff": 782,
+   "largest_kickoff_gap_hours": 24.0,
+   "kickoff_from": "2026-06-07T15:00:00+00:00",
+   "kickoff_to": "2026-11-14T23:30:00+00:00",
+   "hours_public_before_kickoff": {
+    "min": -3211.0,
+    "median": -692.0,
+    "max": -8.2
+   },
+   "revised_after_publication": 0,
+   "rows_with_more_than_one_pre_kickoff_version": 0
+  },
+  "skorbot": {
+   "registry": {
+    "name": "Skorbot",
+    "url": "https://skorbot.live/en/api/",
+    "repository": null,
+    "licence": "none published (site terms: content belongs to Skorbot)",
+    "attribution": "Skorbot (skorbot.live)",
+    "status": "blocked",
+    "method": "undisclosed AI model",
+    "blocker": "no open licence; the archive and the change feed needed to prove a pre-kick-off version are in the paid Pro tier; the free feed held 86 finished predictions and was last refreshed on 2026-11-05"
+   },
+   "rows": 0,
+   "sets": {}
+  }
+ },
+ "min_n_for_a_verdict": 300,
+ "kickoff_tolerance_hours": 36,
+ "doyen_fixtures_finished": {
+  "D1": 81,
+  "E0": 100,
+  "E1": 180,
+  "F1": 90,
+  "I1": 110,
+  "N1": 108,
+  "P1": 98,
+  "SP1": 119
+ },
+ "doyen_fixtures_priced": {
+  "D1": 78,
+  "E0": 98,
+  "E1": 176,
+  "F1": 88,
+  "I1": 110,
+  "N1": 106,
+  "P1": 96,
+  "SP1": 116
+ },
+ "generated_at": "2026-11-16T14:35:07+00:00"
+}

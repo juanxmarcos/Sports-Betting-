@@ -129,9 +129,11 @@ def test_even_perfect_legs_are_not_published_without_the_prerequisites():
     assert "Home 1" not in text and "p1" not in text and "BookA" not in text        # no legs, ids or books leak out
 
 
-def test_prerequisites_are_not_met():
-    """Guard: enabling either capability is a deliberate, reviewed change (docs/PARLAYS.md)."""
-    assert parlays.PREREQUISITES == {"combined_quote": None, "joint_calibration": None}
+def test_prerequisites_are_not_met_by_default():
+    """Without a verified quote and passing calibration evidence, both gates stay closed."""
+    assert parlays.PREREQUISITES == ("combined_quote", "joint_calibration")
+    b = parlays.build([_leg(1, prob=0.55), _leg(2, prob=0.55)], NOW, TZ, quotes=[], calibration=None)
+    assert {x["key"] for x in b["blockers"]} == {"combined_quote", "joint_calibration"}
 
 
 def test_audit_counts_exclusions_and_each_combination_once():
@@ -190,6 +192,8 @@ def test_site_export_carries_the_parlay_block_and_leaves_picks_alone(tmp_path, m
     assert p["recommendations"] == [] and p["status"] == "not_published"
     assert p["audit"]["straight_picks_seen"] == 2
     assert not [t for t in con.execute("SELECT name FROM sqlite_master WHERE name LIKE '%parlay%'")]
+    lite = json.loads((tmp_path / "docs" / "data" / "parlays.json").read_text())       # issue #27 homepage file
+    assert lite == {"generated": d["generated"], "default_timezone": d["default_timezone"], "parlays": p}
 
 
 # ---------- front end ----------
@@ -218,28 +222,27 @@ def _render(parlay_block, hash_="", range_="today", picks=()):
 
 
 def _section(html):
-    m = re.search(r'<section class="section" id="parlays">(.*?)</section>', html, re.S)
+    m = re.search(r'<section class="section[^"]*" id="parlays">(.*?)</section>', html, re.S)
     return m.group(1) if m else None
 
 
 @needs_node
-def test_home_shows_the_honest_empty_state_below_the_picks_today_only():
+def test_home_is_parlays_only_and_shows_the_honest_one_line_empty_state():
     picks = [_pick("a", "2026-11-13T20:00:00+00:00"), _pick("b", "2026-11-13T23:30:00+00:00")]
     html = _render(parlays.build([], NOW, TZ), picks=picks)
     par = _section(html)
-    assert par and "<h2>Recommended Parlays of the Day</h2>" in par and "No verified parlays today" in par
-    assert 'href="#/parlays"' in par
-    assert "<article" not in par and not re.search(r"\d\.\d\d", par) and "%" not in par      # no cards, odds or chances
-    assert html.index("#/pick/a") < html.index('id="parlays"') < html.index("Close to Value")
-    assert html.count("#/pick/a") >= 1 and html.count("#/pick/b") >= 1                       # straight picks still shown
-    assert _section(_render(parlays.build([], NOW, TZ), range_="tomorrow")) is None
-    assert _section(_render(parlays.build([], NOW, TZ), range_="week")) is None
+    assert "Recommended Parlays of the Day</h1>" in html and "Friday, November 13" in html
+    assert par and "No verified parlays today." in par and 'href="#/parlays"' in par
+    assert "<article" not in par and not re.search(r"\d\.\d\d", par) and "%" not in par and "$" not in par
+    # issue #27: no single picks, filters, close-to-value or watching widgets on the homepage
+    for gone in ("#/pick/a", "Close to Value", "Watching", 'class="chip', "Picks of the Day"):
+        assert gone not in html
 
 
 @needs_node
 def test_home_shows_the_same_empty_state_when_the_data_file_has_no_parlay_block():
     par = _section(_render(None))
-    assert par and "No verified parlays today" in par and "<article" not in par
+    assert par and "No verified parlays today." in par and "<article" not in par
 
 
 @needs_node

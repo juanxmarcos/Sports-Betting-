@@ -1,0 +1,51 @@
+# Sports Betting Doyen: zero-cost auto-merge gate (issue #29). Policy: docs/AUTO_MERGE.md.
+#
+# Merges a pull request only when automation/auto_merge.py finds every gate passed:
+# trusted same-repo claude/issue-N-* branch, ready-for-claude issue, no spend/CI/policy
+# signal (or the owner's direct approval label), all checks green, mergeable, not draft.
+#
+# Safety: workflow_run and pull_request_target always run THIS file and the gate script
+# from the default branch, never the pull request's version. No pull request code is
+# checked out or executed. No secrets are used; only the built-in GITHUB_TOKEN.
+# Does nothing but report until the repository variable AUTOMERGE_ENABLED is "true".
+# Cost: free on a public repository (standard GitHub-hosted runner, about 15 s per run).
+name: auto-merge
+on:
+  workflow_run:
+    workflows: [tests]
+    types: [completed]
+  pull_request_target:
+    types: [labeled, unlabeled, ready_for_review]
+    branches: [main]
+permissions: {}
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number || github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+jobs:
+  auto-merge-gate:
+    if: >-
+      github.repository == 'juanxmarcos/Sports-Betting-' &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write       # merge
+      pull-requests: write  # merge, label and comment on the pull request
+      issues: read          # linked issue and label history
+      checks: read
+      statuses: read
+    steps:
+      - name: Check out the gate script from the default branch only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: automation
+      - name: Evaluate and (if enabled) merge
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          AUTOMERGE_ENABLED: ${{ vars.AUTOMERGE_ENABLED }}
+          AUTOMERGE_REQUIRE_LABEL: ${{ vars.AUTOMERGE_REQUIRE_LABEL }}
+        run: python3 automation/auto_merge.py

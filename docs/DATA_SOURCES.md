@@ -9,6 +9,9 @@
 > [Quote-source audit 2026-11-16](#quote-source-audit-2026-11-16). Numbers come from
 > `python -m sbi quote-sources` (`reports/quote_sources.md`).
 
+> **Third-party forecast sites** (The Open Model, Football Analytics, Skorbot) were audited on
+> 2026-11-16 (issue #23). None is ingested. See [FORECAST_SOURCES.md](FORECAST_SOURCES.md).
+
 Every stored row carries `source`, `source_url` and a timestamp (`retrieved_at` for odds is
 the HTTP `Last-Modified` time of the file, i.e. when football-data published that snapshot).
 
