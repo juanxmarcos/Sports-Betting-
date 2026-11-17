@@ -1,7 +1,22 @@
 {
-  "generated": "2026-11-17T23:11:15+00:00",
+  "generated": "2026-11-17T23:48:25+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
+    {
+      "rec_id": "6f155d41be0cef5a",
+      "event_id": "nba:NBA:20261118:401910002",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-18T00:30:00+00:00",
+      "home": "Toronto Raptors",
+      "away": "New York Knicks",
+      "market": "ML",
+      "selection": "away",
+      "line": null,
+      "odds": 1.704225352112676,
+      "bookmaker": "DraftKings",
+      "final_prob": 0.6067825214685559,
+      "ev": 0.034094156305567225
+    },
     {
       "rec_id": "0795fb50263195c7",
       "event_id": "nfl:NFL:20261122:401873071",
@@ -35,20 +50,6 @@
   ],
   "upcoming_events": [
     {
-      "event_id": "football:INT:fifa.friendly:20261117:401930899",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T23:30:00+00:00",
-      "home": "Ecuador",
-      "away": "Bolivia"
-    },
-    {
-      "event_id": "football:INT:fifa.friendly:20261117:401932215",
-      "league": "INT:fifa.friendly",
-      "kickoff_utc": "2026-11-17T23:30:00+00:00",
-      "home": "Uruguay",
-      "away": "Dominican Republic"
-    },
-    {
       "event_id": "football:INT:concacaf.nations.league:20261118:401929765",
       "league": "INT:concacaf.nations.league",
       "kickoff_utc": "2026-11-18T00:00:00+00:00",
@@ -61,6 +62,13 @@
       "kickoff_utc": "2026-11-18T00:00:00+00:00",
       "home": "United States",
       "away": "Haiti"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186795",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T00:05:00+00:00",
+      "home": "Antonia Vergara Rivera",
+      "away": "Fernanda Labrana"
     },
     {
       "event_id": "nba:NBA:20261118:401910002",
@@ -119,13 +127,6 @@
       "away": "Charlotte Hornets"
     },
     {
-      "event_id": "tennis:WTA:20261118:186807",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
       "event_id": "tennis:WTA:20261118:186806",
       "league": "TENNIS:WTA",
       "kickoff_utc": "2026-11-18T05:00:00+00:00",
@@ -133,28 +134,7 @@
       "away": "TBD"
     },
     {
-      "event_id": "tennis:WTA:20261118:186805",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
       "event_id": "tennis:WTA:20261118:186804",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261118:186803",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261118:186802",
       "league": "TENNIS:WTA",
       "kickoff_utc": "2026-11-18T05:00:00+00:00",
       "home": "TBD",
@@ -210,11 +190,39 @@
       "away": "Carlos Alcaraz"
     },
     {
+      "event_id": "tennis:WTA:20261118:186805",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T14:30:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186803",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T16:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186807",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T17:30:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
       "event_id": "tennis:ATP:20261118:187514",
       "league": "TENNIS:ATP",
       "kickoff_utc": "2026-11-18T19:30:00+00:00",
       "home": "Frances Tiafoe",
       "away": "Flavio Cobolli"
+    },
+    {
+      "event_id": "tennis:WTA:20261118:186802",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-18T22:30:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
       "event_id": "nba:NBA:20261119:401910007",
@@ -313,6 +321,34 @@
       "kickoff_utc": "2026-11-19T05:00:00+00:00",
       "home": "Flavio Cobolli",
       "away": "Carlos Alcaraz"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186804",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186806",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T05:00:00+00:00",
+      "home": "Irene Burillo",
+      "away": "Anastasia Zolotareva"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186809",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T05:00:00+00:00",
+      "home": "Carole Monnet",
+      "away": "Lucia Bronzetti"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186808",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T05:00:00+00:00",
+      "home": "Veronika Erjavec",
+      "away": "Valeriya Strakhova"
     },
     {
       "event_id": "tennis:ATP:20261119:187507",
