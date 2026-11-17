@@ -11,8 +11,9 @@ A record only counts when `quote_problem` returns None:
 - the bookmaker quotes every leg's exact selection in Doyen's own stored prices;
 - the combined odds are consistent with that bookmaker's leg prices (a large gap means the
   wrong legs, a different market, a boost, or correlation pricing: all need a human look);
-- a timezone-aware `quoted_at`, not in the future, no older than the card limit
-  (`sbi.parlays.MAX_QUOTE_AGE_MINUTES`, 150 minutes: one site refresh plus build time).
+- a timezone-aware `quoted_at`, not in the future, on the same New York day as now (issue #53:
+  the site is rebuilt once a day, so a price from today's slip stays usable until the first leg
+  starts, and the card says when it was quoted). A price from a previous New York day never counts.
 An old quote is never relabelled as fresh: it simply stops counting.
 """
 from __future__ import annotations
@@ -22,6 +23,7 @@ import json
 from datetime import datetime
 from math import prod
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from . import config
 from .sources.books import normalize_book
@@ -32,6 +34,7 @@ ORIGIN = "owner_bet_slip"
 # Unrelated legs at one bookmaker are normally priced at (close to) the product. Outside this
 # band the record is rejected for review instead of guessed at.
 MIN_RATIO, MAX_RATIO = 0.85, 1.02
+NY = ZoneInfo("America/New_York")   # the site's publishing day: a quote counts only on its own day
 
 
 def path() -> Path:
@@ -96,8 +99,13 @@ def book_leg_prices(bookmaker: str, legs: list[dict]) -> list[float] | None:
     return out
 
 
-def quote_problem(rec, legs_by_id: dict, now: datetime, max_age_minutes: int) -> str | None:
-    """Why this owner-recorded quote cannot be used now. None = verified for use."""
+def same_ny_day(at: datetime, now: datetime) -> bool:
+    return at.astimezone(NY).date() == now.astimezone(NY).date()
+
+
+def quote_problem(rec, legs_by_id: dict, now: datetime, max_age_minutes: int | None = None) -> str | None:
+    """Why this owner-recorded quote cannot be used now. None = verified for use.
+    A quote counts only on its own New York day; `max_age_minutes` is an optional extra cap."""
     if not isinstance(rec, dict) or rec.get("kind") != KIND or rec.get("origin") != ORIGIN:
         return "not an owner-recorded bookmaker quote"
     if not isinstance(rec.get("bookmaker"), str) or not rec["bookmaker"].strip():
@@ -118,7 +126,9 @@ def quote_problem(rec, legs_by_id: dict, now: datetime, max_age_minutes: int) ->
     at = _ts(rec.get("quoted_at"))
     if at is None or at > now:
         return "quote has no valid time"
-    if (now - at).total_seconds() > max_age_minutes * 60:
+    if not same_ny_day(at, now):
+        return "quote is stale"
+    if max_age_minutes is not None and (now - at).total_seconds() > max_age_minutes * 60:
         return "quote is stale"
     prices = book_leg_prices(rec["bookmaker"], legs)
     if prices is None:

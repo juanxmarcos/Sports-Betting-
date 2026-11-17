@@ -28,7 +28,7 @@ never used to tune rules.
 | Rebrand + new site (Pick of the Day, cards, watching, upcoming, history, watchlist, Ask Doyen handoff) | **Done** |
 | Audit + three-strategy backtest (A1 identical-benchmark explained) | **Done** |
 | NFL (ESPN + nflverse + Odds API), NBA (ESPN + Odds API), tennis (ESPN + Odds API tournaments) | **Done** (models validated, weight 0 vs market) |
-| Pre-game reassessment statuses, 2-hourly schedule | **Done** |
+| Pre-game reassessment statuses, daily schedule with backups (#53; was 2-hourly) | **Done** |
 | Next | injury/QB availability feeds (free sources needed); per-sport calibration layer; in-page Ask Doyen once a zero-cost secure backend exists |
 
 ## Doyen v0.4 (2026-11-12)

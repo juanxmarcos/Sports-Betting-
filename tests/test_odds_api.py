@@ -38,10 +38,11 @@ def test_name_similarity():
 
 
 def test_budget():
-    now = datetime(2026, 11, 12, tzinfo=timezone.utc)  # 19 days left -> 38 runs
-    assert oa.budget(None, now) == oa.MAX_CREDITS_PER_RUN
-    assert oa.budget(420, now) == oa.MAX_CREDITS_PER_RUN      # daily (420-20)/19 = 21 -> capped at 8/run
-    assert oa.budget(420, now, spent_today=16) == 5            # (436-20)/19 = 21.9 - 16
+    now = datetime(2026, 11, 12, tzinfo=timezone.utc)  # 19 days left, one run a day (issue #53)
+    assert oa.budget(None, now) == oa.UNKNOWN_REMAINING_CAP == 12   # unknown remaining: old per-run cap
+    assert oa.budget(420, now) == 21                           # the single run spends the whole daily (420-20)/19
+    assert oa.budget(420, now, spent_today=16) == 5            # (436-20)/19 = 21.9 - 16: a second run gets the rest
+    assert oa.budget(10_000, now) == oa.MAX_CREDITS_PER_RUN    # hard per-run cap still applies
     assert oa.budget(100, now) == 4                            # (100-20)/19 = 4.2
     assert oa.budget(15, now) == 0
 

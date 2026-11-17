@@ -200,6 +200,8 @@ def main(argv=None) -> int:
         from .research import write_brief
         r = run_daily(con, now)
         write_brief(con, now)
+        from . import run_marker
+        run_marker.mark(now)          # backup crons skip once this reaches main (issue #53)
         a = r["analyse"]
         print(f"analysed {a.get('analysed_events', 0)} events, published {a.get('published', 0)}; "
               f"report {r.get('publish', '')}")
@@ -246,7 +248,7 @@ def main(argv=None) -> int:
         print(json.dumps({k: r[k] for k in ("ingest", "summary", "source")}, indent=1, default=str))
         print(r["report"])
     elif args.cmd == "parlay-quote":
-        from . import parlay_quotes, parlays, site
+        from . import parlay_quotes, site
         at = datetime.fromisoformat(args.quoted_at) if args.quoted_at else now
         if at.tzinfo is None:
             print("--quoted-at needs a timezone, e.g. 2026-11-16T18:05:00-05:00")
@@ -254,15 +256,15 @@ def main(argv=None) -> int:
         rec = parlay_quotes.make(args.bookmaker, args.odds, [x.strip() for x in args.legs.split(",") if x.strip()],
                                  at, args.source, now)
         legs = {leg["id"]: leg for leg in site.parlay_legs(con, now)}
-        why = parlay_quotes.quote_problem(rec, legs, now, parlays.MAX_QUOTE_AGE_MINUTES)
+        why = parlay_quotes.quote_problem(rec, legs, now)
         print(json.dumps({"quote": rec, "verified_now": why is None, "problem": why}, indent=1))
         if why or args.dry_run:
             return 0 if args.dry_run and why is None else 1
         print("recorded" if parlay_quotes.append(rec) else "duplicate: already recorded")
-        print(site.build(con, now))       # refresh docs/data now: the quote only counts for MAX_QUOTE_AGE_MINUTES
-        print("Commit and push data/parlay_quotes.json and docs/data/ to update the site. The quote stops "
-              f"counting {parlays.MAX_QUOTE_AGE_MINUTES} minutes after --quoted-at, and the page hides it then; "
-              "it is never relabelled fresh.")
+        print(site.build(con, now))       # refresh docs/data now: the next scheduled build is tomorrow morning
+        print("Commit and push data/parlay_quotes.json and docs/data/ to update the site. The quote counts only on "
+              "the New York day of --quoted-at and until the first leg starts; the page hides it then. "
+              "It is never relabelled fresh.")
     elif args.cmd == "parlay-candidates":
         from . import parlay_engine
         at = datetime.fromisoformat(args.as_of) if args.as_of else now

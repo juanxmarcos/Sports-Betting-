@@ -95,7 +95,7 @@ Report commands and results accurately. If something was not run, the PR says so
 
 ## Automated commits to `main` (existing behaviour)
 
-The scheduled workflow `.github/workflows/daily.yml` (every 2 hours) commits refreshed data, reports and site files **directly to `main`** as `sbi-bot`. The daily Claude research task does the same. This automated data flow is intentional and stays unchanged. **Code** changes go through PRs.
+The scheduled workflow `.github/workflows/daily.yml` (once a day at 9:47 AM EST, plus backup runs later that morning that exit early when that day's run already succeeded; issue #53) commits refreshed data, reports and site files **directly to `main`** as `sbi-bot`. The daily Claude research task does the same. This automated data flow is intentional and stays unchanged. **Code** changes go through PRs.
 
 ## Branch protection: recommendation (not enabled)
 

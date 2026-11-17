@@ -1,50 +1,126 @@
-"""Combined-quote freshness matches the site refresh cadence (issue #37).
+"""Once-a-day refresh with backups, and same-day price freshness (issue #53; replaces #37's 150 minutes).
 
-The static site is rebuilt by the scheduled job; a verified bookmaker quote must stay usable for
-at least one full refresh interval (plus build time), and the Python and browser limits must agree.
+The static site is rebuilt by one morning run (New York time) at an unusual minute, plus backup crons
+that exit early when that run already succeeded. A card built from today's run stays shown until its
+first leg starts and says when the price was taken; a price from a previous New York day never counts.
 """
+import json
 import re
+import shutil
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from sbi import parlay_quotes as pq
-from sbi import parlays
+from sbi import parlays, run_marker
 
 ROOT = Path(__file__).resolve().parents[1]
-NOW = datetime(2026, 11, 13, 15, 0, tzinfo=timezone.utc)
+NY = ZoneInfo("America/New_York")
+BUILT = datetime(2026, 11, 17, 9, 47, tzinfo=NY)            # the 9:47 AM EST primary run
+GAME = datetime(2026, 11, 17, 19, 30, tzinfo=NY)            # 7:30 PM EST start
+PRIMARY = "47 14 * * *"
 
 
-def _cron_interval_minutes() -> int:
-    text = (ROOT / ".github" / "workflows" / "daily.yml").read_text()
-    crons = re.findall(r'cron:\s*"([^"]+)"', text)
-    assert len(crons) == 1, crons
-    minute, hour = crons[0].split()[:2]
-    assert minute.isdigit(), "the refresh must run at a fixed minute"
-    m = re.fullmatch(r"\*/(\d+)", hour)
-    assert m, f"expected an every-N-hours schedule, got {hour!r}"
-    return int(m.group(1)) * 60
+def _crons() -> list[str]:
+    return re.findall(r'cron:\s*"([^"]+)"', (ROOT / ".github" / "workflows" / "daily.yml").read_text())
 
 
-def test_refresh_constant_matches_the_scheduled_job():
-    assert parlays.SITE_REFRESH_MINUTES == _cron_interval_minutes() == 120
+# ---------- schedule ----------
+def test_one_daily_primary_cron_at_an_odd_minute_plus_backups():
+    crons = _crons()
+    assert crons[0] == PRIMARY
+    for c in crons:
+        minute, hour, dom, month, dow = c.split()
+        assert minute.isdigit() and hour.isdigit(), f"each run is once a day at a fixed time: {c!r}"
+        assert int(minute) % 5 != 0, f"avoid round minutes, GitHub drops those most: {c!r}"
+        assert (dom, month, dow) == ("*", "*", "*")
+    hours = [int(c.split()[1]) for c in crons]
+    assert hours == sorted(hours) and len(set(hours)) == len(hours)
+    assert 1 <= len(crons) - 1 <= 2, "one or two backup crons"
+    # 14:47 UTC is a New York morning in both EST and EDT, and every backup is later that same morning/midday.
+    for h in hours:
+        for month in (1, 7):
+            local = datetime(2026, month, 15, h, 0, tzinfo=timezone.utc).astimezone(NY)
+            assert 9 <= local.hour <= 14
 
 
-def test_quote_limit_covers_one_full_refresh_plus_build_time():
-    assert parlays.MAX_QUOTE_AGE_MINUTES == parlays.SITE_REFRESH_MINUTES + parlays.QUOTE_BUILD_ALLOWANCE_MINUTES
-    assert parlays.MAX_QUOTE_AGE_MINUTES > _cron_interval_minutes()
-    assert parlays.MAX_QUOTE_AGE_MINUTES == 150
+def test_backup_crons_are_gated_and_the_primary_and_manual_runs_are_not():
+    wf = (ROOT / ".github" / "workflows" / "daily.yml").read_text()
+    assert "workflow_dispatch" in wf
+    assert f"github.event_name == 'schedule' && github.event.schedule != '{PRIMARY}'" in wf
+    assert "python -m sbi.run_marker >> \"$GITHUB_OUTPUT\"" in wf
+    for step in ("pip install -r requirements.txt", "python -m pytest -q", "python -m sbi daily", "git push"):
+        before = wf[:wf.index(step)]
+        assert before.rstrip().rfind("if: steps.gate.outputs.skip != 'true'") > before.rfind("- "), step
 
 
-def test_browser_limit_equals_python_limit():
+# ---------- skip logic (sbi.run_marker) ----------
+def test_backup_skips_only_after_a_successful_run_the_same_new_york_day(tmp_path):
+    p = tmp_path / "last_daily_run.json"
+    assert not run_marker.ran_today(BUILT, p)                                   # no marker yet: run
+    run_marker.mark(BUILT, p)
+    assert json.loads(p.read_text()) == {"completed_at": BUILT.isoformat(), "ny_date": "2026-11-17"}
+    assert run_marker.ran_today(BUILT + timedelta(hours=2), p)                  # 11:47 backup: skip
+    assert run_marker.ran_today(datetime(2026, 11, 17, 23, 59, tzinfo=NY), p)
+    assert not run_marker.ran_today(datetime(2026, 11, 18, 0, 1, tzinfo=NY), p)  # next New York day: run
+    # 9:47 PM EST is already the next day in UTC; it is still the same New York day.
+    run_marker.mark(datetime(2026, 11, 17, 21, 47, tzinfo=NY), p)
+    assert run_marker.ran_today(datetime(2026, 11, 17, 23, 0, tzinfo=NY), p)
+
+
+@pytest.mark.parametrize("content", ["", "not json", "{}", '{"completed_at": "2026-11-17T09:47:00"}',
+                                     '{"completed_at": "2026-11-17T23:00:00-05:00"}'])
+def test_unreadable_naive_or_future_marker_never_skips(tmp_path, content):
+    p = tmp_path / "last_daily_run.json"
+    p.write_text(content)
+    assert not run_marker.ran_today(BUILT, p)
+
+
+def test_cli_prints_a_github_output_line(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("SBI_DATA_DIR", str(tmp_path))
+    assert run_marker.main() == 0 and capsys.readouterr().out == "skip=false\n"
+    run_marker.mark(datetime.now(timezone.utc))
+    assert run_marker.main() == 0 and capsys.readouterr().out == "skip=true\n"
+
+
+# ---------- strict (verified quote) cards ----------
+def _card(quoted_at=BUILT, start=GAME):
+    legs = [{"event_id": f"e{i}", "title": f"Home {i} v Away {i}", "selection": f"Home {i}", "sport": "soccer",
+             "status": "active", "start_utc": (start + timedelta(minutes=30 * i)).astimezone(timezone.utc).isoformat()}
+            for i in range(2)]
+    return {"parlay_id": "q1", "date": "2026-11-17", "status": "active", "bookmaker": "BookA", "legs": legs,
+            "quote": {"kind": parlays.QUOTE_KIND, "bookmaker": "BookA", "source": "BookA bet slip",
+                      "decimal_odds": 4.8, "quoted_at": quoted_at.astimezone(timezone.utc).isoformat()}}
+
+
+def test_card_built_in_the_morning_is_shown_at_6pm_and_hidden_once_the_first_leg_starts():
+    six_pm = datetime(2026, 11, 17, 18, 0, tzinfo=NY)
+    assert parlays.card_problem(_card(), six_pm) is None
+    assert parlays.card_problem(_card(), GAME) == "leg has started"
+    assert parlays.card_problem(_card(), GAME + timedelta(minutes=1)) == "leg has started"
+
+
+def test_card_from_yesterdays_run_is_hidden():
+    yesterday = BUILT - timedelta(days=1)
+    rec = _card(quoted_at=yesterday)
+    assert parlays.card_problem(rec, datetime(2026, 11, 17, 8, 0, tzinfo=NY)) == "quote is stale"
+    rec["date"] = "2026-11-16"
+    assert parlays.card_problem(rec, datetime(2026, 11, 17, 8, 0, tzinfo=NY)) == "not today's parlay"
+
+
+def test_blocker_text_states_the_same_day_rule():
+    assert parlays.QUOTE_RULE == "same_ny_day"
+    assert "earlier today (New York time)" in parlays.BLOCKERS["combined_quote"]
+    assert "150" not in parlays.BLOCKERS["combined_quote"]
+
+
+def test_browser_applies_the_same_rule():
     js = (ROOT / "docs" / "assets" / "doyen.js").read_text()
-    m = re.search(r"maxQuoteMin:\s*(\d+)", js)
-    assert m and int(m.group(1)) == parlays.MAX_QUOTE_AGE_MINUTES
-
-
-def test_blocker_text_states_the_same_limit():
-    assert f"last {parlays.MAX_QUOTE_AGE_MINUTES} minutes" in parlays.BLOCKERS["combined_quote"]
+    assert 'quoteRule: "same_ny_day"' in js and "maxQuoteMin" not in js
+    assert 'if (nyKey(new Date(at)) !== day) return "quote is stale";' in js
 
 
 def _legs():
@@ -54,10 +130,39 @@ def _legs():
     return {x["id"]: x for x in (leg(1, "E0"), leg(2, "SP1"))}
 
 
-@pytest.mark.parametrize("age, ok", [(5, True), (119, True), (149, True), (150, True), (151, False), (240, False)])
-def test_owner_quote_counts_only_inside_the_limit(age, ok):
-    q = pq.make("BookA", 4.8, ["p1", "p2"], NOW - timedelta(minutes=age), "BookA bet slip", NOW)
-    why = pq.quote_problem(q, _legs(), NOW, parlays.MAX_QUOTE_AGE_MINUTES)
+@pytest.mark.parametrize("quoted, ok", [
+    (BUILT, True),
+    (datetime(2026, 11, 17, 0, 5, tzinfo=NY), True),           # early today: still today's price
+    (datetime(2026, 11, 16, 23, 55, tzinfo=NY), False),        # 18 h old but yesterday in New York
+    (BUILT - timedelta(days=1), False),
+])
+def test_owner_quote_counts_only_on_its_own_new_york_day(quoted, ok):
+    now = datetime(2026, 11, 17, 18, 0, tzinfo=NY)
+    q = pq.make("BookA", 4.8, ["p1", "p2"], quoted, "BookA bet slip", now)
+    why = pq.quote_problem(q, _legs(), now)
     assert (why is None) == ok, why
     if not ok:
         assert why == "quote is stale"
+
+
+# ---------- the real front end ----------
+def test_front_end_card_shows_price_as_of_time_until_the_first_leg_starts():
+    if not shutil.which("node"):
+        pytest.skip("node is not installed")
+    harness = ROOT / "tests" / "js" / "render_home.js"
+    block = {"date": "2026-11-17", "status": "published", "blockers": [], "recommendations": [_card()]}
+
+    def render(now):
+        data = {"generated": BUILT.isoformat(), "default_timezone": "America/New_York", "parlays": block,
+                "picks": [], "history": [], "events": [], "watching": [], "close_to_value": [], "briefing": {},
+                "funnel_7d": {}, "sports": {}, "record": {"won": 0, "lost": 0, "push": 0, "profit_units": 0, "open": 0}}
+        out = subprocess.run(["node", str(harness)], input=json.dumps({"data": data, "now": now.isoformat(), "hash": ""}),
+                             capture_output=True, text=True, timeout=30)
+        assert out.returncode == 0, out.stderr
+        return out.stdout
+
+    at_six = render(datetime(2026, 11, 17, 18, 0, tzinfo=NY))
+    assert 'data-parlay="q1"' in at_six
+    assert "Price as of 9:47 AM EST — check your book." in at_six
+    assert 'data-parlay="q1"' not in render(GAME + timedelta(minutes=1))
+    assert 'data-parlay="q1"' not in render(datetime(2026, 11, 18, 9, 0, tzinfo=NY))

@@ -3,9 +3,14 @@
 name: daily-research   # Sports Betting Doyen
 on:
   schedule:
-    # Every 2 hours: pre-game reassessments need fresh prices close to start times.
-    # Public repo => Actions minutes are free; The Odds API spend is budgeted per day in code.
-    - cron: "15 */2 * * *"
+    # Once a day (issue #53). GitHub drops many scheduled runs, most of all at the top of the hour,
+    # so the primary run is at an unusual minute: 14:47 UTC = 9:47 AM EST (10:47 AM EDT).
+    # Settles yesterday's games, then spends the day's Odds API allowance (today's games first).
+    - cron: "47 14 * * *"
+    # Backups later the same morning. They exit early (no Odds API call, no commit) when today's
+    # primary run already succeeded (data/last_daily_run.json, see sbi/run_marker.py).
+    - cron: "23 16 * * *"
+    - cron: "11 18 * * *"
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -22,20 +27,31 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+      # Backup crons only: skip when today's (New York) daily run already succeeded. Standard
+      # library only, before installing requirements. Manual runs and the primary cron always run.
+      - name: Backup run gate
+        id: gate
+        if: github.event_name == 'schedule' && github.event.schedule != '47 14 * * *'
+        run: python -m sbi.run_marker >> "$GITHUB_OUTPUT"
+      - if: steps.gate.outputs.skip != 'true'
+        run: pip install -r requirements.txt
       - name: Restore HTTP cache (avoids re-fetching past ESPN scoreboards)
+        if: steps.gate.outputs.skip != 'true'
         uses: actions/cache@v4
         with:
           path: data/cache
           key: http-cache-${{ github.run_id }}
           restore-keys: http-cache-
-      - run: python -m pytest -q
+      - if: steps.gate.outputs.skip != 'true'
+        run: python -m pytest -q
       - name: Daily pipeline
+        if: steps.gate.outputs.skip != 'true'
         env:
           SBI_TIMEZONE: ${{ vars.SBI_TIMEZONE || 'America/New_York' }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}   # optional; connector skips itself if empty
         run: python -m sbi daily
       - name: Commit results
+        if: steps.gate.outputs.skip != 'true'
         run: |
           git config user.name "sbi-bot"
           git config user.email "sbi-bot@users.noreply.github.com"
