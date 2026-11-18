@@ -130,7 +130,7 @@ def test_home_day_switcher_shows_today_and_three_dated_days():
     assert [d for d, _ in days] == [DAY] + DAYS
     assert [t for _, t in days] == ["Today · Fri, Nov 13", "Tomorrow · Sat, Nov 14", "+2 · Sun, Nov 15", "+3 · Mon, Nov 16"]
     assert 'class="on" data-f="hday" data-v="0"' in html and 'data-parlay="pe-t"' in html
-    assert 'href="#/history">Past days' in html and pe.PREVIEW_BADGE not in html
+    assert 'Past days' not in html and pe.PREVIEW_BADGE not in html
 
 
 @needs_node
