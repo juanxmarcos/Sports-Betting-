@@ -620,8 +620,12 @@
     const line = estRecordLine(E);
     const groups = R.by_legs && typeof R.by_legs === "object" ? Object.entries(R.by_legs) : [];
     const signed = (x) => { const v = Number(x); return isFinite(v) ? (v > 0 ? "+" : (v < 0 ? "−" : "")) + usd(Math.abs(v)) : "–"; };
-    const byLegs = groups.filter(([, g]) => g && typeof g.won === "number").map(([n, g]) =>
-      `<tr><td>${esc(n)} legs</td><td>${esc(g.won)}–${esc(g.lost)}</td><td>${esc(g.void || 0)}</td><td>${esc(g.open || 0)}</td><td>${signed(g.paper_pl)}</td></tr>`).join("");
+    // Issue #65: styled record-by-size table. Display only; every number comes from E.record as published.
+    const plCls = (x) => { const v = Number(x); return !isFinite(v) || v === 0 ? "zero" : (v > 0 ? "pos" : "neg"); };
+    const hit = (g) => { const n = (Number(g.won) || 0) + (Number(g.lost) || 0); return n ? Math.round((Number(g.won) || 0) / n * 100) + "%" : "–"; };
+    const sizeRow = (label, g, cls) => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${esc(label)}</th><td>${esc(g.won)}–${esc(g.lost)}</td><td>${hit(g)}</td><td>${esc(g.void || 0)}</td><td>${esc(g.open || 0)}</td><td class="pl ${plCls(g.paper_pl)}">${signed(g.paper_pl)}</td></tr>`;
+    const byLegs = groups.filter(([, g]) => g && typeof g.won === "number").map(([n, g]) => sizeRow(`${n} legs`, g)).join("");
+    const total = byLegs && typeof R.won === "number" && typeof R.lost === "number" ? sizeRow("Total", R, "total") : "";
     const RES = { won: "Won", lost: "Lost", void: "Void", open: "Open" };
     const mk = { won: " ✓", lost: " ✗", void: " (void)" };
     const list = rows.map((r) => {
@@ -632,7 +636,7 @@
         <ul class="ph-legs small">${legs}</ul>
         <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b></span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
     }).join("");
-    const table = byLegs ? `<table class="small" data-ph-by-legs><thead><tr><th>Size</th><th>Won–lost</th><th>Void</th><th>Open</th><th>Paper P/L</th></tr></thead><tbody>${byLegs}</tbody></table>` : "";
+    const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">Won–lost</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">Hit rate</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">Paper P/L</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
     return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
       <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void leg voids the whole parlay here. Nothing is edited or removed.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
