@@ -7,6 +7,11 @@
     * "leaders": team statistical leaders -> used to flag injured *key* players.
     * soccer "odds": extra bookmakers beyond DraftKings (e.g. Bet365) -> odds table.
     * soccer "rosters": starters -> lineup confirmation status.
+- Preview days (issue #61): games on the next PREVIEW_DAYS New York dates that start after the 36h
+  context window get a summary too, read for bookmaker prices only (soccer "odds", NFL/NBA
+  "pickcenter" moneylines) so the 3-day parlay previews can be priced. NFL/NBA summary prices are
+  stored only for games on a later New York date than the run, never for today's games, so today's
+  cards are built exactly as before. Responses are cached on disk for 0.9h (one request per game per run).
 Everything is stored with source URL and retrieval time. Nothing here changes probabilities:
 injuries/lineups/forecasts are context, risk flags and reassessment triggers.
 """
@@ -14,7 +19,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from .. import db
 from .books import normalize_book
@@ -22,6 +28,9 @@ from .http import fetch
 
 S = "https://site.api.espn.com/apis/site/v2/sports"
 PATHS = {"nba": "basketball/nba", "nfl": "football/nfl"}
+NY = ZoneInfo("America/New_York")
+PREVIEW_DAYS = 3                 # same as parlay_estimated.PREVIEW_DAYS (issue #58)
+SUMMARY_SOURCE = "espn.com (game summary)"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS injuries_current (
@@ -95,13 +104,60 @@ def _summary(path: str, espn_id: str) -> dict:
     return json.loads(content)
 
 
+def preview_end(now: datetime, days: int = PREVIEW_DAYS) -> datetime:
+    """End (exclusive) of the last previewed New York date: midnight after today + `days`."""
+    d = now.astimezone(NY).date() + timedelta(days=days + 1)
+    return datetime.combine(d, time(0), tzinfo=NY)
+
+
+def _store_quotes(con, event_id: str, name: str, market: str, prices: dict, url: str, ts: str) -> int:
+    """Insert-only: a quote already stored for this retrieval time is never overwritten."""
+    n = 0
+    for sel, px in prices.items():
+        cur = con.execute("""INSERT OR IGNORE INTO odds(event_id,bookmaker,market,selection,line,price,kind,
+                             source,source_url,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                          (event_id, name, market, sel, None, px, "pre", SUMMARY_SOURCE, url, ts))
+        n += cur.rowcount
+    return n
+
+
+def summary_quotes(s: dict, sport: str) -> list[tuple[str, str, dict]]:
+    """[(bookmaker, market, {selection: decimal price})] from a game summary. Soccer: the "odds"
+    block (1X2). NFL/NBA: the "pickcenter" moneylines (ML). Incomplete or live lines are skipped."""
+    from .international import american_to_decimal as a2d
+    out = []
+    block = s.get("odds") if sport == "soccer" else s.get("pickcenter")
+    for o in block or []:
+        if not isinstance(o, dict):
+            continue
+        name = normalize_book((o.get("provider") or {}).get("name", ""))
+        if not name or "live" in name.lower():
+            continue
+        h, a = o.get("homeTeamOdds") or {}, o.get("awayTeamOdds") or {}
+        if sport == "soccer":
+            market = "1X2"
+            prices = {"H": a2d(h.get("moneyLine")), "A": a2d(a.get("moneyLine")),
+                      "D": a2d((o.get("drawOdds") or {}).get("moneyLine"))}
+        else:
+            market = "ML"
+            prices = {"home": a2d(h.get("moneyLine")), "away": a2d(a.get("moneyLine"))}
+        if all(prices.values()):
+            out.append((name, market, prices))
+    return out
+
+
 def enrich_events(con, now: datetime, horizon_h: float = 36) -> dict:
-    """Per-game summaries for soon-starting NFL/NBA/soccer-international events."""
+    """Per-game summaries for soon-starting NFL/NBA/soccer-international events, plus price-only
+    summaries for later games on the previewed New York dates (issue #61)."""
     _ensure(con)
-    out = {"summaries": 0, "forecasts": 0, "extra_odds": 0, "lineups": 0, "errors": 0}
-    rows = con.execute("""SELECT event_id, league, home, away FROM events WHERE status='scheduled'
+    out = {"summaries": 0, "forecasts": 0, "extra_odds": 0, "lineups": 0, "errors": 0,
+           "preview_summaries": 0, "preview_odds": 0}
+    context_end = now + timedelta(hours=horizon_h)
+    end = max(context_end, preview_end(now))
+    today = now.astimezone(NY).date()
+    rows = con.execute("""SELECT event_id, league, home, away, kickoff_utc FROM events WHERE status='scheduled'
                           AND kickoff_utc BETWEEN ? AND ? AND (league IN ('NFL','NBA') OR league LIKE 'INT:%')""",
-                       (now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat())).fetchall()
+                       (now.isoformat(), end.isoformat())).fetchall()
     ts = db.utcnow()
     for r in rows:
         espn_id = r["event_id"].split(":")[-1]
@@ -111,9 +167,21 @@ def enrich_events(con, now: datetime, horizon_h: float = 36) -> dict:
             sport, path = "soccer", "soccer/" + r["league"].split(":", 1)[1]
         url = f"https://www.espn.com/{path.split('/')[0]}/game/_/gameId/{espn_id}"
         try:
+            kickoff = datetime.fromisoformat(r["kickoff_utc"])
+        except (TypeError, ValueError):
+            kickoff = None
+        in_context = kickoff is None or kickoff <= context_end
+        later_day = kickoff is not None and kickoff.astimezone(NY).date() > today
+        try:
             s = _summary(path, espn_id)
         except Exception:  # noqa: BLE001
             out["errors"] += 1
+            continue
+        if not in_context:
+            # preview-only game (issue #61): bookmaker prices, nothing else
+            out["preview_summaries"] += 1
+            for name, market, prices in summary_quotes(s, sport):
+                out["preview_odds"] += _store_quotes(con, r["event_id"], name, market, prices, url, ts)
             continue
         out["summaries"] += 1
         # ESPN Analytics predictor (external forecast)
@@ -141,22 +209,8 @@ def enrich_events(con, now: datetime, horizon_h: float = 36) -> dict:
                         con.execute("INSERT OR REPLACE INTO key_players VALUES (?,?,?,?,?)",
                                     (sport, tname, nm, cat.get("displayName") or cat.get("name"), ts))
         if sport == "soccer":
-            from .international import american_to_decimal as a2d
-            for o in s.get("odds") or []:
-                if not isinstance(o, dict):
-                    continue
-                name = normalize_book((o.get("provider") or {}).get("name", ""))
-                if not name or "live" in name.lower():
-                    continue
-                prices = {"H": a2d((o.get("homeTeamOdds") or {}).get("moneyLine")),
-                          "A": a2d((o.get("awayTeamOdds") or {}).get("moneyLine")),
-                          "D": a2d((o.get("drawOdds") or {}).get("moneyLine"))}
-                if all(prices.values()):
-                    for sel, px in prices.items():
-                        cur = con.execute("""INSERT OR IGNORE INTO odds(event_id,bookmaker,market,selection,line,price,kind,
-                                             source,source_url,retrieved_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                                          (r["event_id"], name, "1X2", sel, None, px, "pre", "espn.com (game summary)", url, ts))
-                        out["extra_odds"] += cur.rowcount
+            for name, market, prices in summary_quotes(s, sport):
+                out["extra_odds"] += _store_quotes(con, r["event_id"], name, market, prices, url, ts)
             for ro in s.get("rosters") or []:
                 tname = (ro.get("team") or {}).get("displayName")
                 starters = [p["athlete"]["displayName"] for p in ro.get("roster") or [] if p.get("starter") and p.get("athlete")]
@@ -164,6 +218,10 @@ def enrich_events(con, now: datetime, horizon_h: float = 36) -> dict:
                     con.execute("INSERT OR REPLACE INTO lineups VALUES (?,?,?,?,?)",
                                 (r["event_id"], tname, int(len(starters) == 11), json.dumps(starters), ts))
                     out["lineups"] += 1
+        elif later_day:
+            # NFL/NBA game on a previewed date inside the context window: its summary prices too
+            for name, market, prices in summary_quotes(s, sport):
+                out["preview_odds"] += _store_quotes(con, r["event_id"], name, market, prices, url, ts)
     con.commit()
     return out
 

@@ -1,0 +1,110 @@
+{
+ "events": [
+  {
+   "id": "9100",
+   "date": "2026-11-14T23:30Z",
+   "season": {
+    "type": 2
+   },
+   "status": {
+    "type": {
+     "state": "pre",
+     "completed": false
+    }
+   },
+   "competitions": [
+    {
+     "neutralSite": false,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "displayName": "Harbor Hawks",
+        "abbreviation": "HAR"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "displayName": "Delta Dunes",
+        "abbreviation": "DEL"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "provider": {
+        "name": "DraftKings"
+       },
+       "moneyline": {
+        "home": {
+         "close": {
+          "odds": "+120"
+         }
+        },
+        "away": {
+         "close": {
+          "odds": "-140"
+         }
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "9101",
+   "date": "2026-11-15T01:00Z",
+   "season": {
+    "type": 2
+   },
+   "status": {
+    "type": {
+     "state": "pre",
+     "completed": false
+    }
+   },
+   "competitions": [
+    {
+     "neutralSite": false,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "team": {
+        "displayName": "Summit Owls",
+        "abbreviation": "SUM"
+       }
+      },
+      {
+       "homeAway": "away",
+       "team": {
+        "displayName": "Canyon Foxes",
+        "abbreviation": "CAN"
+       }
+      }
+     ],
+     "odds": [
+      {
+       "provider": {
+        "name": "DraftKings"
+       },
+       "moneyline": {
+        "home": {
+         "close": {
+          "odds": "+120"
+         }
+        },
+        "away": {
+         "close": {
+          "odds": "-140"
+         }
+        }
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
