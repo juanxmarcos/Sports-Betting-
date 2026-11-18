@@ -45,7 +45,7 @@ def test_three_leg_card_shows_each_leg_price_and_they_multiply_to_the_combined_o
     assert card.count("<li>") == 3
     shown = prod(float(d) for _, _, d in got)
     assert shown == pytest.approx(rec["estimated_odds"], rel=0.005)       # within rounding
-    assert ">7.00<" in card and "<b>$10 bet pays $70.00</b>" in card       # combined odds and payout unchanged
+    assert ">7.00<" in card and "data-payout>$70.00<" in card              # combined odds and payout unchanged
 
 
 @needs_node
