@@ -430,7 +430,6 @@
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
       ${pricesRead(r)}
-      <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
       ${hit}
     </article>`;
   }
@@ -475,7 +474,7 @@
     const pub = isoT(r.first_seen);
     const at = pub != null ? ` (published ${esc(fmtAsOf(pub))})` : "";
     const gone = !started && !FINAL[r.result]
-      ? `<div class="pc-note">Price from publication time; it may have moved.</div>` : "";
+      ? "" : "";
     const closed = started || FINAL[r.result] ? `<div class="pc-note">Betting closed: a game in this parlay has started.</div>` : "";
     return `<article class="card parlay est recorded" data-parlay="${esc(r.parlay_id)}" data-kind="recorded" data-state="${esc(cls)}" data-odds="${esc(r.estimated_odds)}"${FINAL[r.result] ? ` data-result="${esc(r.result)}"` : ""}>
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
@@ -487,7 +486,6 @@
         <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), r.estimated_odds, r.result)}</div></div>
       </div>
       ${closed}${gone}
-      <div class="pc-note">Price at publication time${at}: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Results come from final scores; paper results only.</div>
     </article>`;
   }
   function parlayCard(r, i) {
@@ -502,7 +500,6 @@
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
       <div class="pc-note" data-prices-read>Price as of ${esc(fmtAsOf(isoT(r.quote.quoted_at)))} — check your book.</div>
-      <div class="pc-note">${esc(r.bookmaker)} combined price from the bet slip. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
     </article>`;
   }
   function home() {
