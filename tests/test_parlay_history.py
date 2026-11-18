@@ -171,7 +171,7 @@ def test_started_parlay_stays_on_home_marked_closed_and_yesterdays_does_not():
     assert "Estimated odds at publication" in card and "Price at publication time (published" in card
     assert '<span class="pill estimate">Estimate</span>' in card and "not a bet-slip quote" in card
     assert "pending" in card
-    assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" in html
+    assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" not in html
 
 
 @needs_node

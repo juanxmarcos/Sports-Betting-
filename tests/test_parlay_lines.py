@@ -190,8 +190,9 @@ def test_ledger_stores_market_selection_and_line_and_settles_by_market(con):  # 
     con.execute("UPDATE events SET status='finished', home_score=115, away_score=110 WHERE event_id='nba:2'")
     s = pe.settle(con)
     assert (s["won"], s["lost"]) == (0, 1)
-    assert s["by_market"] == {"Game total": {"legs": 1, "won": 0, "lost": 1, "void": 0, "open": 0},
-                              "Point spread": {"legs": 1, "won": 1, "lost": 0, "void": 0, "open": 0}}
+    assert s["by_market"] == {
+        "SPREAD": {"won": 1, "lost": 0, "push": 0, "void": 0, "open": 0, "label": "Point spread"},
+        "TOTAL": {"won": 0, "lost": 1, "push": 0, "void": 0, "open": 0, "label": "Game total"}}
 
 
 # ---------- browser ----------
@@ -208,13 +209,11 @@ def test_card_shows_the_line_odds_and_market_consensus_note(con):  # noqa: F811
 
 
 @needs_node
-def test_history_shows_the_record_by_market_type():
+def test_history_shows_no_record_by_market_table():
+    # The owner removed the parlay by-market table from History (#95); by_market stays data only.
     rec = ph._data([])
     rec["estimated_parlays"]["record"]["by_market"] = {
-        "Moneyline": {"legs": 3, "won": 2, "lost": 1, "void": 0, "open": 0},
-        "Point spread": {"legs": 2, "won": 1, "lost": 0, "void": 1, "open": 0}}
+        "ML": {"won": 2, "lost": 1, "push": 0, "void": 0, "open": 0, "label": "Moneyline"},
+        "SPREAD": {"won": 1, "lost": 0, "push": 0, "void": 1, "open": 0, "label": "Point spread"}}
     html = ph._run({"data": rec, "now": ph.NOW.isoformat(), "hash": "#/history"})
-    i = html.index("data-ph-by-market")
-    table = html[i:html.index("</table>", i)]
-    assert "<th scope=\"row\">Point spread</th><td>1–0</td><td>100%</td><td>1</td><td>0</td>" in table
-    assert "<th scope=\"row\">Moneyline</th><td>2–1</td><td>67%</td>" in table
+    assert "data-ph-by-market" not in html and "Point spread</th>" not in html

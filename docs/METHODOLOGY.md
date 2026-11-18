@@ -17,8 +17,10 @@ consensus, and de-vigged closing consensus (the hardest benchmark).
 
 ## 2. Markets and settlement
 1X2, Over/Under 2.5 and Asian handicap at football-data's quoted line are priced and settled.
-Double chance and BTTS are computed for display; they are not bet, because no free odds exist
-for them yet. Quarter lines are split into two half-stakes. Every selection is reduced to
+Double chance and BTTS are computed for display; they are not bet as single picks. Since issue #82
+they (and Draw No Bet) can be estimated-parlay legs where a stored price exists: Double Chance =
+sum of the covered 1X2 outcomes, Draw No Bet = P(win) / (1 − P(draw)) (a draw is a push), BTTS =
+P(home ≥ 1 and away ≥ 1), Over/Under from the total-goals distribution (see PARLAYS.md §11.6). Quarter lines are split into two half-stakes. Every selection is reduced to
 outcome shares (win, half-win, push, half-loss, loss), so
 
 `EV(o) = p_w(o−1) + p_hw(o−1)/2 − p_hl/2 − p_l = (A+B)(q·o − 1)`, with `A = p_w + p_hw/2`,
@@ -267,6 +269,8 @@ The homepage has a "Recommended Parlays of the Day" section that currently alway
 - **Arithmetic** (independent legs at one bookmaker only): combined odds and joint probability are products of the leg values, and `EV = P(all legs win) × parlay odds − 1`. Leg EVs are never multiplied or added.
 - **Screens** (`sbi/parlays.py`): legs must be active straight picks starting today with fresh quotes; no same game, shared team or same competition; one bookmaker must price every leg.
 - **Not published because** no feed gives a bookmaker-quoted parlay price, and there is no validated joint-probability estimate. Each run exports the audit counts with an empty recommendation list.
+
+Estimated parlays (labelled estimates, issue #47) can also use soccer Over/Under, BTTS, Double Chance and Draw No Bet legs since issue #82, each priced only from stored quotes, with probabilities from the same score matrix; at most one leg per game. Single-pick thresholds are unchanged.
 
 Audit, rules and the staged plan: [PARLAYS.md](PARLAYS.md).
 

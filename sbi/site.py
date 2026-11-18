@@ -319,6 +319,14 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,
                       "max_odds": config.RULES.max_odds, "min_bookmakers": config.RULES.min_bookmakers},
             "updated": {"pipeline": last_jobs.get("publish"), "providers": providers}}
+    # Issue #84: a readable competition on every pick and parlay leg (display only; rows untouched).
+    from . import competitions
+    try:
+        meta = {r[0]: r[1] for r in con.execute("SELECT event_id, competition FROM event_meta") if r[1]}
+    except Exception:                         # no event_meta table yet: map from league codes only
+        meta = {}
+    for k in ("picks", "history", "parlays", "estimated_parlays", "parlay_history"):
+        competitions.label_all(data[k], meta)
     out = config.ROOT / "docs" / "data"
     out.mkdir(parents=True, exist_ok=True)
     (out / "doyen.json").write_text(json.dumps(data, default=str))
