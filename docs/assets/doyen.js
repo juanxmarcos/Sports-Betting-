@@ -279,7 +279,8 @@
   const usd = (x) => (x == null ? "—" : "$" + x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   // ---------- editable bet amount (issue #76) ----------
   // Display-only: the owner's typed amount drives "Potential payout" on every parlay card and is
-  // remembered in localStorage. The paper record, P/L and History always use the recorded $10 stake.
+  // remembered in localStorage. The paper record, P/L and History always use the recorded $10 stake;
+  // issue #78: cards show only the entered amount, and History says once that the record uses $10.
   const BET = { max: 10000, key: "betAmount" };
   // A usable amount: a positive number up to BET.max, rounded to the cent. Null otherwise.
   function betAmount(v) {
@@ -303,7 +304,6 @@
   function betInput(i) {
     return `<label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0.01" max="${BET.max}" step="0.01" value="${esc(betStr(savedBet()))}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>`;
   }
-  const betNote = `<div class="pc-note" data-record-stake>Record uses $${PC.stake} paper stakes; changing the bet amount is display-only.</div>`;
   // ---------- estimated parlays (issue #47) ----------
   // Owner-approved estimates shown alongside the strict path. Mirrors sbi/parlay_estimated.py
   // card_problem: kind "estimated_product" (never a bookmaker quote), today in New York, 2-6 active
@@ -422,10 +422,8 @@
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(savedBet(), odds)}</div></div>
       </div>
-      <div class="pc-note" data-pays10><b>$${PC.stake} bet pays ${usd(grossPayout(PC.stake, odds))}</b> (estimated, ${r.legs.length} legs, if every leg wins).</div>
       ${pricesRead(r)}
       <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
-      ${betNote}
       ${hit}
     </article>`;
   }
@@ -453,12 +451,10 @@
     const now = Date.now();
     const first = Math.min(...r.legs.map((l) => isoT(l.start_utc)));
     const started = first <= now;
-    const stake = Number(r.stake) > 0 ? Number(r.stake) : PC.stake;
-    const pays = grossPayout(stake, r.estimated_odds);
-    const pl = Number(r.paper_pl), plTxt = isFinite(pl) ? (pl > 0 ? "+" : (pl < 0 ? "−" : "")) + usd(Math.abs(pl)) : "–";
+    // Issue #78: the state line names the result only; amounts come from the editable bet amount.
     let state, cls;
-    if (r.result === "won") { state = `Won: paid ${usd(pays)}`; cls = "won"; }
-    else if (r.result === "lost") { state = `Lost: lost ${usd(stake)}`; cls = "lost"; }
+    if (r.result === "won") { state = "Won"; cls = "won"; }
+    else if (r.result === "lost") { state = "Lost"; cls = "lost"; }
     else if (r.result === "void") { state = "Void: stake returned"; cls = "void"; }
     else if (started) { state = "Started, betting closed"; cls = "closed"; }
     else { state = `Open: first game at ${fmtClock(first)}`; cls = "open"; }
@@ -472,7 +468,7 @@
     const pub = isoT(r.first_seen);
     const at = pub != null ? ` (published ${esc(fmtAsOf(pub))})` : "";
     const gone = !started && !FINAL[r.result]
-      ? `<div class="pc-note">Recorded at publication; the price shown is from then and may have moved.</div>` : "";
+      ? `<div class="pc-note">Price from publication time; it may have moved.</div>` : "";
     const closed = started || FINAL[r.result] ? `<div class="pc-note">Betting closed: a game in this parlay has started.</div>` : "";
     return `<article class="card parlay est recorded" data-parlay="${esc(r.parlay_id)}" data-kind="recorded" data-state="${esc(cls)}" data-odds="${esc(r.estimated_odds)}"${FINAL[r.result] ? ` data-result="${esc(r.result)}"` : ""}>
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
@@ -483,12 +479,9 @@
         <div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>
         ${betInput(i)}
         <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(savedBet(), r.estimated_odds, r.result)}</div></div>
-        <div><div class="k">Recorded $${esc(stake)} bet pays</div><div class="v">${usd(pays)}</div></div>
-        ${FINAL[r.result] ? `<div><div class="k">Paper P/L</div><div class="v">${esc(plTxt)}</div></div>` : ""}
       </div>
       ${closed}${gone}
       <div class="pc-note">Price at publication time${at}: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Results come from final scores; paper results only.</div>
-      ${betNote}
     </article>`;
   }
   function parlayCard(r, i) {
@@ -505,7 +498,6 @@
       </div>
       <div class="pc-note" data-prices-read>Price as of ${esc(fmtAsOf(isoT(r.quote.quoted_at)))} — check your book.</div>
       <div class="pc-note">${esc(r.bookmaker)} combined price from the bet slip. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
-      ${betNote}
     </article>`;
   }
   function home() {
@@ -689,6 +681,7 @@
     const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">Won–lost</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">Hit rate</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">Paper P/L</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
     return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
       <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void leg voids the whole parlay here. Nothing is edited or removed.</p>
+      <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
       ${table}
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;

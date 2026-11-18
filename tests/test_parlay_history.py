@@ -164,12 +164,13 @@ def test_started_parlay_stays_on_home_marked_closed_and_yesterdays_does_not():
     assert recorded(html) == [("pe-today", "closed")]
     card = _card(html, "pe-today")
     assert "Started, betting closed" in card and "Betting closed: a game in this parlay has started." in card
-    # Issue #76: the display-only bet amount stays editable; the recorded $10 figures stay alongside.
-    assert "data-stake" in card and ">Bet amount<" in card and "Record uses $10 paper stakes" in card
+    # Issue #76: the display-only bet amount stays editable. Issue #78: no recorded-$10 line on the card.
+    assert "data-stake" in card and ">Bet amount<" in card and "Record uses $10 paper stakes" not in card
+    assert "Recorded" not in card and "bet pays" not in card and _payout(card) == "$40.00"
     assert "bet now" not in card.lower() and "check your book" not in card
     assert "Estimated odds at publication" in card and "Price at publication time (published" in card
     assert '<span class="pill estimate">Estimate</span>' in card and "not a bet-slip quote" in card
-    assert "pending" in card and "Recorded $10 bet pays" in card and "$40.00" in card
+    assert "pending" in card
     assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" in html
 
 
@@ -181,9 +182,11 @@ def test_settled_parlays_show_leg_marks_and_the_result():
     html = _run({"data": _data([won, lost]), "now": _iso(NOW)})
     assert sorted(recorded(html)) == [("pe-l", "lost"), ("pe-w", "won")]
     w = _card(html, "pe-w")
-    assert "Won: paid $40.00" in w and w.count("✓") == 2 and "Paper P/L" in w and "+$30.00" in w
+    assert "data-state-line>Won<" in w and w.count("✓") == 2 and _payout(w) == "Won: would have paid $40.00"
     lo = _card(html, "pe-l")
-    assert "Lost: lost $10.00" in lo and "✗" in lo and "pending" not in lo and "−$10.00" in lo
+    assert "data-state-line>Lost<" in lo and "✗" in lo and "pending" not in lo and _payout(lo) == "Lost $10.00"
+    for c in (w, lo):                                     # issue #78: no second recorded-$10 block on the card
+        assert "Recorded" not in c and "bet pays" not in c and "Paper P/L" not in c
 
 
 @needs_node
@@ -192,7 +195,8 @@ def test_open_recorded_card_and_live_card_are_not_duplicated():
     html = _run({"data": _data([_rec("pe-open", legs=later)]), "now": _iso(NOW)})
     card = _card(html, "pe-open")
     assert recorded(html) == [("pe-open", "open")]
-    assert re.search(r"Open: first game at 7:00\sPM", card) and "Recorded at publication; the price shown is from then" in card
+    assert re.search(r"Open: first game at 7:00\sPM", card) and "Price from publication time; it may have moved." in card
+    assert "Recorded" not in card and "bet pays" not in card
     # The same parlay_id still in the current block shows once, as the live card.
     live = {"parlay_id": "pe-open", "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",
             "n_legs": 2, "estimated_odds": 4.0, "stake": 10,
@@ -223,6 +227,7 @@ def test_history_page_lists_every_parlay_with_result_and_record():
     assert "<h2>Parlays</h2>" in html and "Record 1–1, paper P/L +$10.00" in html
     won = html[html.index('data-ph="pe-won"'):]
     assert "$10 bet pays <b>$30.00</b>" in won and "Paper P/L <b>+$20.00</b>" in won and "Thursday, November 12" in won
+    assert html.count("Record uses $10 paper stakes") == 1                   # issue #78: said once, on History
     assert "BookA · 2 legs" in won and "T1A to win ✓" in won
     # Issue #65: record-by-size table sits in a card, adds a hit rate, colours P/L and ends in a Total row.
     assert '<div class="card ph-rec"><table data-ph-by-legs>' in html
@@ -263,9 +268,9 @@ def test_saved_bet_amount_drives_every_card_but_never_the_record():
     assert 'value="25" data-stake' in started and _payout(started) == "$100.00"
     w, lo = _card(typed, "pe-w"), _card(typed, "pe-l")
     assert _payout(w) == "Won: would have paid $100.00" and _payout(lo) == "Lost $25.00"
-    # Recorded $10 results stay as published.
-    assert "Won: paid $40.00" in w and "+$30.00" in w and "Lost: lost $10.00" in lo and "−$10.00" in lo
-    assert "Recorded $10 bet pays" in started and "Record uses $10 paper stakes" in live
+    # Issue #78: no card repeats the recorded $10 figures; they stay on History (checked below).
+    for c in (live, started, w, lo):
+        assert "Recorded" not in c and "bet pays" not in c and "Record uses $10 paper stakes" not in c
     # Footer record line and History P/L are identical with or without a stored amount.
     for page in ({"footer": True}, {"hash": "#/history"}):
         a = _run({"data": data, "now": _iso(NOW), **page})
