@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-18 17:08 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-18 17:24 UTC)
 
 ## Opportunity funnel (next 7 days)
 
@@ -23,30 +23,30 @@
 - soccer: {'events_with_odds': 84, 'median_odds_age_h': 0.0, 'median_bookmakers': 1.0, 'share_3plus_books': 0.2}
 - nfl: {'events_with_odds': 13, 'median_odds_age_h': 0.0, 'median_bookmakers': 22, 'share_3plus_books': 1.0}
 - nba: {'events_with_odds': 12, 'median_odds_age_h': 0.0, 'median_bookmakers': 23.0, 'share_3plus_books': 1.0}
-- tennis: {'events_with_odds': 3, 'median_odds_age_h': 0.0, 'median_bookmakers': 16, 'share_3plus_books': 1.0}
+- tennis: {'events_with_odds': 3, 'median_odds_age_h': 0.2, 'median_bookmakers': 16, 'share_3plus_books': 1.0}
 
 ## The Odds API
 
-{'skipped': None, 'credits_remaining_after': '334', 'credits_spent': 5, 'fetched': ['tennis_atp_finals', 'soccer_germany_bundesliga', 'soccer_belgium_first_div'], 'matched': 20, 'unmatched': ['soccer_germany_bundesliga: Borussia Monchengladbach v Borussia Dortmund'], 'skipped_no_matching_event': [], 'bookmakers_requested': None, 'bookmakers_ignored': None, 'cost_mismatch': None}
+{'skipped': None, 'credits_remaining_after': '334', 'credits_spent': 0, 'fetched': [], 'matched': 0, 'unmatched': [], 'skipped_no_matching_event': [], 'bookmakers_requested': None, 'bookmakers_ignored': None, 'cost_mismatch': None}
 
 ## Providers
 
-- football-data:fixtures: last success 2026-11-18T17:08:35+00:00
-- football-data:E0: last success 2026-11-18T17:08:35+00:00
-- football-data:E1: last success 2026-11-18T17:08:35+00:00
-- football-data:SP1: last success 2026-11-18T17:08:35+00:00
-- football-data:D1: last success 2026-11-18T17:08:35+00:00
-- football-data:I1: last success 2026-11-18T17:08:35+00:00
-- football-data:F1: last success 2026-11-18T17:08:35+00:00
-- football-data:N1: last success 2026-11-18T17:08:35+00:00
-- football-data:P1: last success 2026-11-18T17:08:35+00:00
-- football-data:B1: last success 2026-11-18T17:08:35+00:00
-- football-data:SC0: last success 2026-11-18T17:08:35+00:00
-- espn:international: last success 2026-11-18T17:09:43+00:00
-- the-odds-api: last success 2026-11-18T17:10:00+00:00 · last error 2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED
-- espn:nfl: last success 2026-11-18T17:09:45+00:00
-- espn:nba: last success 2026-11-18T17:09:45+00:00
-- espn:tennis: last success 2026-11-18T17:10:54+00:00
+- football-data:fixtures: last success 2026-11-18T17:23:20+00:00
+- football-data:E0: last success 2026-11-18T17:23:20+00:00
+- football-data:E1: last success 2026-11-18T17:23:20+00:00
+- football-data:SP1: last success 2026-11-18T17:23:20+00:00
+- football-data:D1: last success 2026-11-18T17:23:20+00:00
+- football-data:I1: last success 2026-11-18T17:23:20+00:00
+- football-data:F1: last success 2026-11-18T17:23:20+00:00
+- football-data:N1: last success 2026-11-18T17:23:20+00:00
+- football-data:P1: last success 2026-11-18T17:23:20+00:00
+- football-data:B1: last success 2026-11-18T17:23:21+00:00
+- football-data:SC0: last success 2026-11-18T17:23:21+00:00
+- espn:international: last success 2026-11-18T17:24:00+00:00
+- the-odds-api: last success 2026-11-18T17:24:04+00:00 · last error 2026-11-12T21:48:27+00:00 422 Client Error: Unprocessable Entity for url: https://api.the-odds-api.com/v4/sports/soccer_uefa_nations_league/odds?regions=eu&markets=h2h%2Ctotals%2Cbtts&oddsFormat=decimal&dateFormat=iso&apiKey=REDACTED
+- espn:nfl: last success 2026-11-18T17:24:00+00:00
+- espn:nba: last success 2026-11-18T17:24:00+00:00
+- espn:tennis: last success 2026-11-18T17:24:15+00:00
 - espn:golf: last success 2026-11-12T20:55:40+00:00
-- espn:context: last success 2026-11-18T17:09:55+00:00
-- espn:club-fixtures: last success 2026-11-18T17:09:00+00:00
+- espn:context: last success 2026-11-18T17:24:01+00:00
+- espn:club-fixtures: last success 2026-11-18T17:23:36+00:00
