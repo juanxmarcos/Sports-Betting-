@@ -223,6 +223,10 @@ def test_history_page_lists_every_parlay_with_result_and_record():
     won = html[html.index('data-ph="pe-won"'):]
     assert "$10 bet pays <b>$30.00</b>" in won and "Paper P/L <b>+$20.00</b>" in won and "Thursday, November 12" in won
     assert "BookA · 2 legs" in won and "T1A to win ✓" in won
-    assert "<td>2 legs</td><td>1–0</td><td>0</td><td>1</td><td>+$20.00</td>" in html
-    assert "<td>3 legs</td><td>0–1</td><td>0</td><td>0</td><td>−$10.00</td>" in html
+    # Issue #65: record-by-size table sits in a card, adds a hit rate, colours P/L and ends in a Total row.
+    assert '<div class="card ph-rec"><table data-ph-by-legs>' in html
+    assert '<th scope="row">2 legs</th><td>1–0</td><td>100%</td><td>0</td><td>1</td><td class="pl pos">+$20.00</td>' in html
+    assert '<th scope="row">3 legs</th><td>0–1</td><td>0%</td><td>0</td><td>0</td><td class="pl neg">−$10.00</td>' in html
+    # Total row repeats the overall record line (1–1, +$10.00) and the overall open/void counts.
+    assert '<tfoot><tr class="total"><th scope="row">Total</th><td>1–1</td><td>50%</td><td>0</td><td>1</td><td class="pl pos">+$10.00</td></tr></tfoot>' in html
     assert 'href="/' not in html and 'src="/' not in html            # relative paths only

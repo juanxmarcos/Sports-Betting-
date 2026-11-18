@@ -294,6 +294,19 @@ table[data-by-legs] th, table[data-by-legs] td { padding: 4px 14px 4px 0; text-a
 .parlay.recorded[data-state="won"],.parlay.recorded[data-state="lost"],.parlay.recorded[data-state="void"],.parlay.recorded[data-state="closed"]{opacity:.92}
 .pill.open{color:var(--info);border-color:rgba(143,179,224,.3)}
 .ph-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+/* Issue #65: History record-by-size table in a Doyen card */
+.ph-rec{margin-top:12px;padding:4px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ph-rec table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.ph-rec th,.ph-rec td{padding:10px 16px;text-align:right;white-space:nowrap}
+.ph-rec th:first-child,.ph-rec td:first-child{text-align:left}
+.ph-rec thead th{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--line)}
+.ph-rec tbody th{font-weight:500;color:var(--ivory)}
+.ph-rec tbody tr+tr th,.ph-rec tbody tr+tr td{border-top:1px solid var(--line-2)}
+.ph-rec tbody td{color:var(--text)}
+.ph-rec tfoot th,.ph-rec tfoot td{font-weight:700;color:var(--ivory);border-top:1px solid var(--line)}
+.ph-rec .pl.pos{color:var(--pos)}.ph-rec .pl.neg{color:var(--neg)}.ph-rec .pl.zero{color:var(--muted)}
+@media (max-width:520px){.ph-rec th,.ph-rec td{padding:9px 7px}.ph-rec th:first-child,.ph-rec td:first-child{padding-left:12px}.ph-rec th:last-child,.ph-rec td:last-child{padding-right:12px}.ph-rec table{font-size:13px}.ph-rec thead th{font-size:9.5px;letter-spacing:.04em}}
+
 .ph{padding:12px 14px}
 .ph-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.ph-h .pill{margin-left:auto}
 .ph-h .t{font-weight:600;color:var(--ivory)}
