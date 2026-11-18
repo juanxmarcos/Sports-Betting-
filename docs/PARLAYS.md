@@ -454,7 +454,7 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 ### 11.2 Rules
 | Rule | Implementation |
 |---|---|
-| Sports | Soccer, NFL, NBA, Tennis only (result market: 1X2 / moneyline). |
+| Sports | Soccer, NFL, NBA, Tennis only (result market: 1X2 / moneyline; NBA and NFL also point spreads and game totals since #83, section 11.7). |
 | Games | Start later today (New York date) and have not started; status `scheduled`. |
 | One bookmaker | Every leg priced by that bookmaker; exchanges excluded (no accumulator slip). |
 | Fresh prices | Issue #51: that bookmaker's **latest stored price retrieved on the same New York day and before the game starts** (replaces the 150-minute limit). Checked when built and again in the browser; a leg drops out as soon as its game starts. The card shows "Price as of 9:47 AM EST — check your book." (issue #53). |
@@ -607,5 +607,38 @@ these legs besides the match result, in estimated mode only (the strict path is 
   as "settled at X after a push"; the recorded price is never edited). A parlay whose legs all push is
   void. A void or postponed game still voids the whole parlay here, as before.
 - **Record by market type.** `settle()` adds `by_market`, a **leg** record per market (match result,
-  moneyline, O/U, BTTS, DC, DNB): legs won, lost, push, void and open. History shows it as a table under
-  the by-size table.
+  moneyline, O/U, BTTS, DC, DNB): legs won, lost, push, void and open. It is data only: History shows
+  no by-market table (owner decision, #95).
+
+### 11.7 Point spreads and game totals for NBA and NFL (issue #83)
+
+**Owner request (2026-11-18).** NBA and NFL parlays may use point-spread and game-total (Over/Under points) legs
+alongside moneylines. Model and backtest: METHODOLOGY.md section 16.
+
+- **Prices.** Stored quotes only: the free ESPN scoreboard (DraftKings) and The Odds API `spreads` and `totals`,
+  which the NBA/NFL request already buys (`US_MARKETS = "h2h,spreads,totals"`), so no market or credit is added.
+  A spread line is stored from the home team's perspective for both selections.
+- **Candidates.** Each NBA/NFL game offers up to three candidate legs: its best moneyline selection, its best
+  spread selection and its best total selection (over all quoted lines), ranked by value at the pricing bookmaker
+  (`candidate_legs`). Soccer and tennis still offer one result-market leg per game. **At most one leg per game** in
+  a parlay (the search rejects two legs from the same game), and every rule in 11.2 still applies: same New York day,
+  one bookmaker, probability band 0.30–0.85, at most one weak leg, positive parlay value, per-size picks.
+- **Probability.** The backtest found no model better than the market, so spread and total legs use the de-vigged
+  market consensus at that line (the other bookmakers' when it exists, otherwise at least two independent
+  bookmakers including the pricing one). Each leg shows the muted line *"Probability: market consensus"*. If a
+  future backtest (`python -m sbi parlay-lines-backtest`) shows a model winning with confidence, the stored model
+  probability at that line is used instead (`parlay_lines.use_model`).
+- **Cards and History.** Leg text names the line: *"Lakers −4.5"*, *"Celtics +4.5"*, *"Over 228.5 points"*, with the
+  leg's odds (American and decimal, #74). Card legs carry `line`, `market_label` and `prob_note`; the card contract
+  (`card_problem`, browser `estProblem`) rejects a spread or total leg without a numeric line.
+- **Ledger.** Spread and total legs store `market`, `selection` and `line` in `ledger/estimated_parlays.csv`. The
+  `parlay_id` includes the line for these legs only, so result-market ids are unchanged.
+- **Settlement.** From final scores (`parlay_engine._leg_result`): a spread leg wins when margin + line > 0 for its
+  side, a total leg on total − line; a push on a whole-number line is a **void leg**, which voids the parlay here
+  (stake returned). A leg with no stored line stays open, never guessed.
+- **Record by market type.** `settle()` adds `by_market`: legs won, lost, void and open per market type
+  (`SPREAD` "Point spread" and `TOTAL` "Game total" join the 11.6 markets). It is data only: History shows no
+  by-market table (owner decision, #95).
+- **Limits.** The consensus probability makes a leg's value a price comparison between bookmakers, not a model
+  edge. Same-game correlation is not an issue (one leg per game), but alternate lines are not stored, so a bookmaker's
+  line can differ from the consensus line and then has fewer bookmakers to compare against.

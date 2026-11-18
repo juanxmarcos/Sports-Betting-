@@ -66,7 +66,7 @@ from math import prod
 
 from zoneinfo import ZoneInfo
 
-from . import config, parlay_engine, parlays
+from . import config, parlay_engine, parlay_lines, parlays
 from . import ev as evm
 from .sources.books import normalize_book
 from .sources.football_data import AGGREGATES, EXCHANGES
@@ -99,7 +99,8 @@ OU_LINES = (1.5, 2.5, 3.5)                   # soccer goal lines offered as legs
 EXTRA_MARKETS = {"OU": ["over", "under"], "BTTS": ["yes", "no"], "DC": ["HD", "DA", "HA"],
                  "DNB": ["home", "away"]}    # soccer markets beyond the match result (issue #82)
 MARKET_LABELS = {"1X2": "Match result", "ML": "Moneyline", "OU": "Over/Under", "BTTS": "Both teams to score",
-                 "DC": "Double chance", "DNB": "Draw no bet", "SPREAD": "Spread", "TOTAL": "Total"}
+                 "DC": "Double chance", "DNB": "Draw no bet",
+                 **{m: parlay_lines.market_label(m) for m in parlay_lines.MARKETS}}   # issue #83
 DISCLOSURE = ("Estimates for paper trading in a personal research project, never a guarantee. Parlays win less "
               "often than single picks, and every leg has to win.")
 
@@ -176,17 +177,47 @@ def risk_note_line(notes: list[str] | None) -> str | None:
 
 
 def screen_event(event: dict, books: dict, model: dict | None = None,
-                 notes: list[str] | None = None) -> tuple[list[dict], str | None]:
+                 notes: list[str] | None = None, line_model: dict | None = None) -> tuple[list[dict], str | None]:
     """Estimated-mode leg screen (#51). The strict/shadow screen `parlay_engine.screen_event` is
     unchanged. Per selection and per pricing bookmaker: price, probability used and its source.
     `notes` are the game's open injury/lineup note texts: carried on the leg, never a reason to
-    exclude it (owner decision, issue #68)."""
+    exclude it (owner decision, issue #68).
+    Issue #83: NBA and NFL games also offer point-spread and game-total legs, one candidate per
+    (market, line, selection) priced by the bookmaker. Their probability is the de-vigged market
+    consensus unless the stored backtest shows the model beating the market (`parlay_lines.use_model`),
+    in which case `line_model` {(market, selection, line): probability} supplies it."""
     sport = event.get("site_sport")
     if sport not in parlay_engine.RESULT_MARKET:
         return [], "unsupported sport"
     market = parlay_engine.RESULT_MARKET[sport]
-    sels = parlay_engine.SELECTIONS[market]
-    book = evm.clean(books.get((market, None)) or {}, sels)
+    groups = [(market, None, parlay_engine.SELECTIONS[market], model or {})]
+    if sport in parlay_lines.SPORTS:
+        lm = line_model or {}
+        for mk in parlay_lines.MARKETS:
+            use = parlay_lines.use_model(sport, mk)
+            for ln in sorted(l for (m, l) in books if m == mk and l is not None):
+                groups.append((mk, ln, parlay_lines.SELECTIONS[mk],
+                               {(mk, s): lm.get((mk, s, ln)) for s in parlay_lines.SELECTIONS[mk]} if use else {}))
+    legs, reasons, first_why = [], Counter(), None
+    for mk, ln, sels, mp in groups:
+        got, why = _screen_market(event, sport, books.get((mk, ln)) or {}, mk, ln, sels, mp, notes)
+        legs += got
+        if why and mk == market:
+            first_why = why
+        if isinstance(why, Counter):
+            reasons.update(why)
+    if not legs:
+        if isinstance(first_why, str):
+            return [], first_why
+        return [], (reasons.most_common(1)[0][0] if reasons else "no selection passed")
+    return legs, None
+
+
+def _screen_market(event: dict, sport: str, raw_book: dict, market: str, line, sels: list[str],
+                   model: dict, notes: list[str] | None):
+    """Legs for one (market, line) of one game: ([legs], None), ([], reason) for a market-level
+    failure, or ([], Counter of per-selection reasons)."""
+    book = evm.clean(raw_book, sels)
     book = {bk: q for bk, q in book.items() if bk not in AGGREGATES or bk == "Avg"}
     if not book:
         return [], "no fresh result-market prices"
@@ -224,16 +255,20 @@ def screen_event(event: dict, books: dict, model: dict | None = None,
         if not per:
             reasons["no model probability and no 2-bookmaker consensus"] += 1
             continue
-        legs.append({"event_id": event["event_id"], "sport": sport, "league": event["league"],
-                     "competition": event.get("competition") or event["league"],
-                     "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
-                     "title": f"{event['home']} v {event['away']}", "market": market, "line": None, "selection": s,
-                     "consensus_prob": round(q, 6), "model_prob": None if mp is None else round(float(mp), 6),
-                     "prob_source": "model" if mp is not None else next(iter(per.values()))["prob_source"],
-                     "books": per, "best_value": max(v["value"] for v in per.values()),
-                     "risk_note": risk_note_line(notes)})
+        leg = {"event_id": event["event_id"], "sport": sport, "league": event["league"],
+               "competition": event.get("competition") or event["league"],
+               "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
+               "title": f"{event['home']} v {event['away']}", "market": market, "line": None, "selection": s,
+               "consensus_prob": round(q, 6), "model_prob": None if mp is None else round(float(mp), 6),
+               "prob_source": "model" if mp is not None else next(iter(per.values()))["prob_source"],
+               "books": per, "best_value": max(v["value"] for v in per.values()),
+               "risk_note": risk_note_line(notes)}
+        if line is not None:                          # issue #83: spread / total legs
+            leg["line"] = float(line)
+            leg["prob_note"] = None if mp is not None else parlay_lines.PROB_NOTE_MARKET
+        legs.append(leg)
     if not legs:
-        return [], (reasons.most_common(1)[0][0] if reasons else "no selection passed")
+        return [], reasons
     return legs, None
 
 
@@ -307,34 +342,37 @@ def extra_market_legs(event: dict, books: dict, model: dict | None,
 
 
 def legs_for_event(event: dict, books: dict, model: dict | None,
-                   notes: list[str] | None = None) -> tuple[dict | None, str | None]:
+                   notes: list[str] | None = None, line_model: dict | None = None) -> tuple[dict | None, str | None]:
     """The single best candidate leg for one game (or None, reason): the highest value at any
     pricing bookmaker across `candidate_legs`. Kept for callers that want one leg per game."""
-    legs, why = candidate_legs(event, books, model, notes)
+    legs, why = candidate_legs(event, books, model, notes, line_model)
     if why:
         return None, why
     return max(legs, key=lambda x: (x["best_value"], x["selection"])), None
 
 
-def candidate_legs(event: dict, books: dict, model: dict | None,
-                   notes: list[str] | None = None) -> tuple[list[dict], str | None]:
+def candidate_legs(event: dict, books: dict, model: dict | None, notes: list[str] | None = None,
+                   line_model: dict | None = None) -> tuple[list[dict], str | None]:
     """Candidate legs for one game (or [], reason): the best selection (highest value at any pricing
     bookmaker) per market and line, so a soccer game can offer a match-result leg and, where priced,
-    Over/Under, BTTS, Double Chance and Draw No Bet legs (issue #82). A parlay still takes at most
+    Over/Under, BTTS, Double Chance and Draw No Bet legs (issue #82), and an NBA/NFL game the best
+point-spread and the best game-total selection over all lines (issue #83). A parlay still takes at most
     one leg per game (`linked`). Values may be negative here; the parlay-level check is in `search`.
     `model` is keyed (market, selection) as in `parlay_engine.model_probs`, or (market, line,
-    selection) as in `model_probs_full`; the match-result screen reads line-less entries."""
+    selection) as in `model_probs_full`; the match-result screen reads line-less entries.
+    `line_model` is `line_model_probs` for the spread/total legs."""
     full = {(k if len(k) == 3 else (k[0], None, k[1])): v for k, v in (model or {}).items()}
     flat = {(m, s): v for (m, ln, s), v in full.items() if ln is None}
-    legs, why = screen_event(event, books, flat, notes)
+    legs, why = screen_event(event, books, flat, notes, line_model)
     extra, reasons = extra_market_legs(event, books, full, notes)
     legs = list(legs) + extra
     if not legs:
         return [], why or (reasons.most_common(1)[0][0] if reasons else "no selection passed")
     best = {}
     for x in legs:
-        k = (x["market"], x.get("line"))
-        if k not in best or (x["best_value"], x["selection"]) > (best[k]["best_value"], best[k]["selection"]):
+        k = (x["market"],) if x["market"] in parlay_lines.MARKETS else (x["market"], x.get("line"))
+        rank = lambda y: (y["best_value"], y["selection"], -abs(y.get("line") or 0.0))
+        if k not in best or rank(x) > rank(best[k]):
             best[k] = x
     return sorted(best.values(), key=lambda x: (-x["best_value"], x["market"], x.get("line") or 0, x["selection"])), None
 
@@ -356,7 +394,7 @@ def build_pool(con, now: datetime, day: str | None = None) -> tuple[list[dict], 
             fresh += 1
             sp["with_prices"] += 1
         legs, why = candidate_legs(e, books, model_probs_full(con, e["event_id"], now),
-                                   risk_note_texts(con, e["event_id"]))
+                                   risk_note_texts(con, e["event_id"]), line_model_probs(con, e["event_id"], now))
         if why:
             excluded[why] += 1
             continue
@@ -369,6 +407,20 @@ def build_pool(con, now: datetime, day: str | None = None) -> tuple[list[dict], 
     if preview:                       # issue #61: which sports on a preview day have prices
         cov["by_sport"] = dict(sorted(by_sport.items()))
     return pool, cov
+
+
+def line_model_probs(con, event_id: str, now: datetime) -> dict:
+    """{(market, selection, line): stored model probability} for the event's latest recent run
+    (issue #83, SPREAD/TOTAL). Only read by `screen_event` when the backtest favours the model."""
+    row = con.execute("""SELECT run_id, MAX(created_at) c FROM predictions WHERE event_id=? AND market IN ('SPREAD','TOTAL')
+                         GROUP BY run_id ORDER BY c DESC LIMIT 1""", (event_id,)).fetchone()
+    if not row or not row["c"]:
+        return {}
+    if (now - datetime.fromisoformat(row["c"])).total_seconds() / 3600 > parlay_engine.MAX_PREDICTION_AGE_H:
+        return {}
+    return {(r["market"], r["selection"], float(r["line"])): r["model_prob"] for r in con.execute(
+        """SELECT market, selection, line, model_prob FROM predictions WHERE run_id=? AND event_id=?
+           AND market IN ('SPREAD','TOTAL') AND line IS NOT NULL""", (row["run_id"], event_id))}
 
 
 def _price_times(con, event_id: str, leg: dict, now: datetime) -> dict:
@@ -547,7 +599,8 @@ def card(c: dict, day: str, preview: bool = False) -> dict:
                       "prob": round(x["books"][bk]["prob"], 4),
                       "prob_source": x["books"][bk].get("prob_source", x["prob_source"]),
                       "price_at": x.get("price_ts", {}).get(bk),
-                      "risk_note": x.get("risk_note")} for x in legs]}
+                      "risk_note": x.get("risk_note"),
+                      **({"prob_note": x.get("prob_note")} if x["market"] in parlay_lines.MARKETS else {})} for x in legs]}
     if preview:
         out.update(preview=True, preview_badge=PREVIEW_BADGE)
     return out
@@ -555,8 +608,12 @@ def card(c: dict, day: str, preview: bool = False) -> dict:
 
 def market_selection_text(market: str | None, selection: str, line, home: str, away: str) -> str:
     """Plain leg text (issue #82), e.g. "Arsenal to win", "Over 2.5 goals", "Both teams to score: Yes",
-    "Arsenal or draw", "Arsenal (draw no bet)"."""
+    "Arsenal or draw", "Arsenal (draw no bet)", "Lakers −4.5", "Over 228.5 points"."""
     sel = str(selection or "")
+    if market in parlay_lines.MARKETS and line is not None:      # issue #83: spread / total legs
+        t = parlay_lines.selection_text(market, sel, line, home, away)
+        if t:
+            return t
     if market == "OU" and line is not None and sel in ("over", "under"):
         return f"{sel.capitalize()} {float(line):g} goals"
     if market == "BTTS" and sel in ("yes", "no"):
@@ -570,6 +627,7 @@ def market_selection_text(market: str | None, selection: str, line, home: str, a
     if sel in ("A", "away") and away:
         return f"{away} to win"
     return "Draw" if sel == "D" else sel
+
 
 
 def selection_text(leg: dict) -> str:
@@ -617,6 +675,8 @@ def card_problem(rec, now: datetime, day: str | None = None, preview: bool = Fal
         seen.add(leg["event_id"])
         if leg.get("sport") not in parlays.CARD_SPORTS:
             return "unsupported sport"
+        if leg.get("market") in parlay_lines.MARKETS and parlays._num(leg.get("line")) is None:
+            return "leg has no valid line"            # issue #83: a spread/total leg names its line
         if leg.get("status") != "active":
             return "leg is not active"
         start = parlays._ts(leg.get("start_utc"))
@@ -766,7 +826,8 @@ def record(block: dict, now: datetime, path=None) -> int:
         if c["parlay_id"] in seen:
             continue
         seen.add(c["parlay_id"])
-        legs = [{k: x[k] for k in ("event_id", "market", "selection", "price", "prob", "title", "start_utc")}
+        legs = [{**{k: x[k] for k in ("event_id", "market", "selection", "price", "prob", "title", "start_utc")},
+                 **({"line": x["line"]} if x.get("line") is not None else {})}       # issue #83
                 for x in c["legs"]]
         for leg, x in zip(legs, c["legs"]):          # issue #82: the line, only where the market has one
             if x.get("line") is not None:

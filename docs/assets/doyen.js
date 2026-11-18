@@ -245,6 +245,7 @@
       if (seen.has(l.event_id)) return "two legs on the same event";
       seen.add(l.event_id);
       if (!PC.sports.includes(l.sport)) return "unsupported sport";
+      if ((l.market === "SPREAD" || l.market === "TOTAL") && (typeof l.line !== "number" || !isFinite(l.line))) return "leg has no valid line";
       if (l.status !== "active") return "leg is not active";
       const t = isoT(l.start_utc);
       if (t == null) return "leg has no valid start time";
@@ -340,6 +341,7 @@
       if (seen.has(l.event_id)) return "two legs on the same event";
       seen.add(l.event_id);
       if (!PC.sports.includes(l.sport)) return "unsupported sport";
+      if ((l.market === "SPREAD" || l.market === "TOTAL") && (typeof l.line !== "number" || !isFinite(l.line))) return "leg has no valid line";
       if (l.status !== "active") return "leg is not active";
       const t = isoT(l.start_utc);
       if (t == null) return "leg has no valid start time";
@@ -416,7 +418,8 @@
   function estCard(r, i) {
     const odds = r.estimated_odds;
     // Issue #68: an open injury/lineup note is shown on the leg (muted), never used to hide it.
-    const note = (l) => str(l.risk_note) ? `<div class="lg-n" data-risk-note>${esc(l.risk_note)}</div>` : "";
+    const note = (l) => (str(l.prob_note) ? `<div class="lg-n" data-prob-note>${esc(l.prob_note)}</div>` : "")
+      + (str(l.risk_note) ? `<div class="lg-n" data-risk-note>${esc(l.risk_note)}</div>` : "");
     const legs = r.legs.map((l) => `<li><div class="lg-t">${legComp(l)}${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div>${legPrice(l)}${note(l)}</li>`).join("");
     const hit = typeof r.est_hit_chance === "number" && r.est_hit_chance > 0 && r.est_hit_chance < 1
       ? `<div class="pc-note">Estimated hit chance ${esc(pct(r.est_hit_chance))} (model estimate, unvalidated).</div>` : "";
@@ -606,6 +609,7 @@
       <ul class="small">
         <li>Two to five legs (cards of 2, 3 and 4–5 legs), one per game, all on games that haven't started. Different games in one competition are allowed; same-game combinations and legs sharing a team or player are not.</li>
         <li>Each leg uses Doyen's model probability. Where Doyen has no model (tennis) it uses a de-vigged market consensus of at least two bookmakers; a leg with neither is skipped.</li>
+        <li>NBA and NFL legs can also be a point spread (e.g. “Lakers −4.5”) or a game total (e.g. “Over 228.5 points”). Their probability is the de-vigged market consensus, because Doyen's model did not beat the market in testing; a push on a whole-number line voids the leg.</li>
         <li>The whole parlay must have positive estimated value (estimated hit chance × estimated odds above 1). At most one leg may be priced below Doyen's probability, and only inside a positive pair; no further leg may lower the parlay's value.</li>
         <li>Picked per size: the best 4–5 leg, 3-leg and 2-leg parlay, then a second of each while room remains. A size with nothing qualifying is skipped, never padded.</li>
         <li>Within a size, ranked by estimated hit chance × estimated value. The hit chance multiplies leg probabilities as if the legs were independent; it is unvalidated.</li>

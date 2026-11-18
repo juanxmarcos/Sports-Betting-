@@ -89,6 +89,8 @@ def main(argv=None) -> int:
                          "data/tennis_sackmann/manifest.json)")
     sub.add_parser("tennis-tour-audit", help="tennis ATP/WTA label audit (#49): changed labels, stored rows, walk-forward "
                                              "before/after (read-only); writes reports/tennis_tour_labels.md")
+    sub.add_parser("parlay-lines-backtest", help="NBA/NFL spread and total Normal-model backtest vs the de-vigged "
+                                                 "market (#83, read-only DB); writes data/backtest/parlay_lines.json")
     args = ap.parse_args(argv)
 
     from . import config, db
@@ -176,6 +178,16 @@ def main(argv=None) -> int:
         print(json.dumps({"labels": out["labels"], "stored_mislabelled": out["stored"]["mislabelled"],
                           "main": out["walk_forward_live"]["main"]}, indent=1))
         print(tennis_tour_audit.REPORT)
+        return 0
+    if args.cmd == "parlay-lines-backtest":   # read-only database; decides model vs market for spread/total legs
+        import sqlite3
+
+        from . import parlay_lines
+        ro = sqlite3.connect(f"file:{config.DB_PATH}?mode=ro", uri=True)
+        ro.row_factory = sqlite3.Row
+        rep = parlay_lines.backtest(ro)
+        print(json.dumps({s: {m: rep[s][m] for m in ("sd", "SPREAD", "TOTAL")} for s in parlay_lines.SPORTS}, indent=1))
+        print(json.dumps(rep["decision"], indent=1))
         return 0
     con = db.connect()
 
