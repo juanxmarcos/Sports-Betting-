@@ -2,8 +2,7 @@
 
 Display mapping only. Teams, prices and games below are test data, never real quotes."""
 import json
-import os
-import shutil
+from shutil import which as shutil_which
 import sqlite3
 import subprocess
 from datetime import datetime, timedelta, timezone
@@ -18,7 +17,6 @@ ROOT = Path(__file__).resolve().parent.parent
 HARNESS = ROOT / "tests" / "js" / "render_home.js"
 NOW = datetime(2026, 11, 13, 15, 0, tzinfo=timezone.utc)          # 10:00 in New York
 DAY = "2026-11-13"
-needs_node = pytest.mark.skipif(not shutil.which("node") and not os.environ.get("CI"), reason="node is not installed")
 
 
 # ---------- mapping ----------
@@ -59,8 +57,7 @@ def test_unknown_codes_fall_back_to_the_raw_name_never_blank():
 
 def test_every_league_in_the_database_maps_to_a_readable_name():
     path = ROOT / "data" / "sbi.sqlite"
-    if not path.exists():
-        pytest.skip("no data/sbi.sqlite in this checkout")
+    assert path.exists(), "data/sbi.sqlite is tracked in the repository"
     con = sqlite3.connect(path)
     leagues = [r[0] for r in con.execute("SELECT DISTINCT league FROM events")]
     assert leagues
@@ -128,6 +125,7 @@ def _data():
 
 
 def _run(hash_=""):
+    assert shutil_which("node"), "node is required for the site render tests"
     payload = {"data": _data(), "now": _iso(NOW), "hash": hash_}
     out = subprocess.run(["node", str(HARNESS)], input=json.dumps(payload), capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
@@ -139,7 +137,6 @@ def _card(html, pid):
     return html[i:html.index("</article>", i)]
 
 
-@needs_node
 def test_card_with_an_nba_and_a_premier_league_leg_shows_both_competitions():
     html = _run()
     for pid in ("pe-c", "pe-l"):                                   # today's card and the started ledger card
@@ -148,7 +145,6 @@ def test_card_with_an_nba_and_a_premier_league_leg_shows_both_competitions():
         assert '<span class="lg-c" data-comp>Premier League</span>Home 1 vs. Away 1' in card
 
 
-@needs_node
 def test_history_and_single_picks_show_the_competition():
     html = _run("#/history")
     assert '<span class="ph-c" data-comp>NBA · </span>Home 0 vs. Away 0' in html
