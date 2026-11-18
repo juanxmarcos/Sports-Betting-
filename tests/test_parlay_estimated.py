@@ -582,9 +582,9 @@ def test_home_renders_estimated_cards_with_labels_and_payout():
     assert "bet pays" not in card and "Recorded" not in card and "data-pays10" not in card     # issue #78
     assert "Parlay 1 · 2 legs" in card
     assert "Home 0 to win" in card and card.count("<li>") == 2
-    assert "Estimated hit chance 30% (model estimate, unvalidated)" in card
+    assert "Estimated hit chance" not in card      # footnotes removed (owner, 2026-11-18)
     assert "Combined odds" not in card and "Verified bookmaker quote" not in card
-    assert re.search(r"Prices? as of [^<]+ E[SD]T — check your book\.", card) and "data-prices-read" in card
+    assert "data-prices-read" not in card      # footnotes removed (owner, 2026-11-18)
     assert "No verified parlays today" not in html and pe.EMPTY_TEXT not in html
 
 
