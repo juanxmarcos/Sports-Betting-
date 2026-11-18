@@ -667,6 +667,15 @@
     return h;
   }
 
+  // Issue #92: one short muted note under each History statistics table. Break-even = 1 ÷ average decimal
+  // odds of the settled (won or lost) bets in that row or group; groups with none are skipped. Display only.
+  const LUCK = "Small sample, so luck swings results a lot.";
+  function beRate(odds) {
+    const v = odds.map(Number).filter((x) => isFinite(x) && x > 1);
+    return v.length ? Math.round(100 * v.length / v.reduce((a, x) => a + x, 0)) + "%" : "";
+  }
+  function tableNote(text, attr) { return `<p class="small muted tnote" ${attr}>${esc(text ? text + " " + LUCK : LUCK)}</p>`; }
+
   // Issue #57: every recorded parlay (ledger/estimated_parlays.csv), newest first, with its result.
   function parlayHistory() {
     const rows = (Array.isArray(S.data.parlay_history) ? S.data.parlay_history : [])
@@ -698,13 +707,23 @@
         <ul class="ph-legs small">${legs}</ul>
         <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b>${typeof r.settled_odds === "number" && r.settled_odds > 1 ? ` (settled at ${dec(r.settled_odds)} after a push)` : ""}</span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
     }).join("");
+    // Issue #92 notes: break-even per size (2, 3, 4–5 legs) and per leg market, from the settled parlays listed.
+    const done = rows.filter((r) => r.result === "won" || r.result === "lost");
+    const sizeOf = (r) => { const n = Number(r.n_legs) || r.legs.length; return n >= 4 ? "4–5" : String(n); };
+    const sizeBe = ["2", "3", "4–5"].map((k) => [k, beRate(done.filter((r) => sizeOf(r) === k).map((r) => r.estimated_odds))]).filter(([, b]) => b).map(([k, b]) => `${k} legs ${b}`);
+    const ew = Number(R.expected_wins_settled);
+    const ewTxt = isFinite(ew) && R.expected_wins_settled !== null && R.expected_wins_settled !== "" && typeof R.won === "number" ? ` Expected wins ${ew.toFixed(1)}, actual ${R.won}.` : "";
+    const sizeNote = byLegs ? tableNote((sizeBe.length ? `Break-even: ${sizeBe.join(" · ")}.` : "") + ewTxt, "data-note-by-legs") : "";
+    const legsDone = rows.flatMap((r) => r.legs).filter((l) => l && (l.result === "won" || l.result === "lost"));
+    const mktBe = mkts.filter(([, g]) => g && typeof g.won === "number").map(([m, g]) => [str(g.label) ? g.label : m, beRate(legsDone.filter((l) => l.market === m).map((l) => l.price))]).filter(([, b]) => b).map(([m, b]) => `${m} ${b}`);
+    const mktNote = byMarket ? tableNote(mktBe.length ? `Break-even per leg: ${mktBe.join(" · ")}.` : "", "data-note-by-market") : "";
     const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">Won–lost</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">Hit rate</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">Paper P/L</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
     return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
       <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void or postponed game voids the whole parlay here; a pushed leg (draw no bet on a draw) counts at odds 1.00 and the rest stands. Nothing is edited or removed.</p>
       <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
-      ${table}
-      ${mtable}
+      ${table}${sizeNote}
+      ${mtable}${mktNote}
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 
@@ -731,8 +750,10 @@
     const head = (first) => `<thead><tr><th scope="col">${first}</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="Won ÷ (won + lost); pushes, voids and open picks excluded">${lab("Hit rate", "Hit")}</th><th scope="col">${lab("Void/push", "Void")}</th><th scope="col" title="Not yet graded, including withdrawn picks">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th><th scope="col" title="Paper P/L ÷ units staked on graded picks">ROI</th></tr></thead>`;
     const bySport = SPORTS.slice(1).filter(([k]) => sportOk(k, S.hsport)).map(([k, name]) => row(name, tally(H.filter((p) => p.sport === k)))).join("");
     const T = row("Total", tally(H), "total");
+    const be = beRate(H.filter((p) => p.status && p.status.state === "settled" && (WON.includes(p.status.result) || LOST.includes(p.status.result))).map((p) => p.odds));
+    const singlesNote = tableNote(be ? `Break-even at these odds: about ${be}.` : "", "data-note-singles");
     return `<p class="small muted" data-singles-stake>Paper results at a flat 1-unit stake per pick (u = units).</p>
-      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>`;
+      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>${singlesNote}`;
   }
 
   function history() {
