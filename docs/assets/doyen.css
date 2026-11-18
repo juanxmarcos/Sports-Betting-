@@ -274,6 +274,7 @@ details.sec[open] summary::after{content:"–"}
 .lg-s{grid-column:1;color:var(--text);font-size:14px;margin-top:2px}
 .lg-m{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .lg-when{grid-column:2;grid-row:1;color:var(--faint);font-size:12.5px;white-space:nowrap}
+.lg-n{grid-column:1/-1;color:var(--muted);font-size:12px;margin-top:3px}
 .pc-foot{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding-top:12px;border-top:1px solid var(--line)}
 .pc-foot .k{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .pc-foot .v{font-weight:600;color:var(--ivory);margin-top:3px}

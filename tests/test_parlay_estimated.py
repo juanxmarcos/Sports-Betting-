@@ -107,13 +107,25 @@ def test_no_model_leg_uses_a_two_bookmaker_consensus_including_the_pricing_one()
     assert leg["books"]["Bet365"]["prob_source"] == "market_consensus_ex_book"
 
 
-def test_kept_screens_injury_note_disagreement_and_band():
-    assert pe.legs_for_event(_event(1), _two_way(), None, n_risk_notes=1)[1] == "open injury/lineup research note"
+def test_kept_screens_disagreement_and_band():
     assert pe.legs_for_event(_event(1), _two_way(), {("ML", "home"): 0.70, ("ML", "away"): 0.30})[1] == \
         "model and market disagree strongly"
     longshot = {("ML", None): {b: {"home": 1.10, "away": 7.0} for b in ("Pinnacle", "Bet365")}}
     assert pe.legs_for_event(_event(1), longshot, None)[1] == "probability outside research band"
     assert pe.legs_for_event(_event(1), {}, None)[1] == "no fresh result-market prices"
+
+
+def test_open_injury_note_is_shown_not_a_screen():
+    """Issue #68 (owner decision): an open injury/lineup note no longer excludes the leg; the leg
+    carries a short muted line instead."""
+    leg, why = pe.legs_for_event(_event(1), _two_way(), None, notes=["Star guard questionable (ankle)"])
+    assert why is None and leg["selection"] == "home"
+    assert leg["risk_note"] == "Injury/lineup note open: Star guard questionable (ankle)"
+    assert pe.legs_for_event(_event(1), _two_way(), None)[0]["risk_note"] is None
+    assert pe.risk_note_line([""]) == "Injury/lineup note open"
+    assert pe.risk_note_line(["a", "b"]) == "Injury/lineup note open: a (+1 more)"
+    long = pe.risk_note_line(["x" * 300])
+    assert long.endswith("…") and len(long) <= len("Injury/lineup note open: ") + pe.RISK_NOTE_MAX_CHARS
 
 
 # ---------- search ----------
@@ -420,6 +432,31 @@ def test_build_end_to_end_no_started_yesterday_or_tomorrow_legs(con):
     assert pe.build(con, NOW + timedelta(hours=8, minutes=1))["recommendations"] == []
 
 
+def test_build_keeps_a_leg_with_an_open_injury_note_and_shows_it(con):
+    """Issue #68: before, nba:1 was excluded ("open injury/lineup research note") and no card was
+    possible; now it appears with the note line, and coverage no longer counts that exclusion."""
+    fresh = NOW - timedelta(minutes=40)
+    _store(con, "nba:1", "nba", "NBA", NOW + timedelta(hours=8), "H1", "A1", _two_way(), fresh)
+    _store(con, "nba:2", "nba", "NBA", NOW + timedelta(hours=9), "H2", "A2", _two_way(), fresh)
+    con.execute("""INSERT INTO research_notes(event_id,category,claim,evidence_type,created_at)
+                   VALUES ('nba:1','injury','H1 starting centre listed out','verified_fact',?)""", (fresh.isoformat(),))
+    con.commit()
+    b = pe.build(con, NOW)
+    assert "open injury/lineup research note" not in b["coverage"]["excluded"] and b["coverage"]["legs"] == 2
+    [r] = b["recommendations"]
+    notes = {x["event_id"]: x["risk_note"] for x in r["legs"]}
+    assert notes == {"nba:1": "Injury/lineup note open: H1 starting centre listed out", "nba:2": None}
+    # Previews follow the same rule (the note is shown, not used to filter).
+    _store(con, "nba:3", "nba", "NBA", NOW + timedelta(days=1, hours=8), "H3", "A3", _two_way(), fresh)
+    _store(con, "nba:4", "nba", "NBA", NOW + timedelta(days=1, hours=9), "H4", "A4", _two_way(), fresh)
+    con.execute("""INSERT INTO research_notes(event_id,category,claim,evidence_type,created_at)
+                   VALUES ('nba:3','lineup','H3 lineup unconfirmed','interpretation',?)""", (fresh.isoformat(),))
+    con.commit()
+    p = pe.build_preview(con, NOW, "2026-11-14")
+    [r] = p["recommendations"]
+    assert {x["event_id"]: x["risk_note"] for x in r["legs"]}["nba:3"] == "Injury/lineup note open: H3 lineup unconfirmed"
+
+
 def test_build_with_nothing_today_is_an_honest_empty_block(con):
     b = pe.build(con, NOW)
     assert b["recommendations"] == [] and b["empty_text"] == pe.EMPTY_TEXT
@@ -550,6 +587,16 @@ def test_home_renders_estimated_cards_with_labels_and_payout():
     assert "Combined odds" not in card and "Verified bookmaker quote" not in card
     assert re.search(r"Prices? as of [^<]+ E[SD]T — check your book\.", card) and "data-prices-read" in card
     assert "No verified parlays today" not in html and pe.EMPTY_TEXT not in html
+
+
+@needs_node
+def test_home_shows_the_injury_note_line_on_the_leg():
+    rec = ecard("pe-n", prices=[1.9, 2.1])
+    rec["legs"][0]["risk_note"] = "Injury/lineup note open: <b>X</b> out"
+    card = render(eblock([rec]))
+    card = card[card.index("<article"):card.index("</article>")]
+    assert card.count("data-risk-note") == 1
+    assert '<div class="lg-n" data-risk-note>Injury/lineup note open: &lt;b&gt;X&lt;/b&gt; out</div>' in card
 
 
 @needs_node
