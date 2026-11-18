@@ -1,19 +1,19 @@
-# Sports Betting Doyen — Daily Report, 2026-11-17
+# Sports Betting Doyen — Daily Report, 2026-11-18
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 17 Nov 19:31 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Wed 18 Nov 09:54 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 109 |
-| Events with fresh odds | 24 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 23 |
-| Markets evaluated | 343 |
-| Events passing all rules | 2 |
-| Published today | **2** |
+| Events discovered | 110 |
+| Events with fresh odds | 28 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 28 |
+| Markets evaluated | 348 |
+| Events passing all rules | 1 |
+| Published today | **3** |
 | Highest estimated EV | +9.4% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -57,7 +57,38 @@ model rates this outcome 0.4 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/basketball_nba/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/basketball/game/_/gameId/401910015> 
 
 
-### 2. Minnesota Timberwolves to win — Minnesota Timberwolves v Portland Trail Blazers
+### 2. Los Angeles Chargers to win — Los Angeles Chargers v New York Jets
+
+| Field | Value |
+|---|---|
+| Sport / competition | NFL — NFL |
+| Kick-off | Sun 22 Nov 16:05 EST |
+| Market / selection | ML — **Los Angeles Chargers to win** |
+| Best price | **1.64** @ Marathon Bet |
+| Model probability (raw) | 60.5% (±0.0 pp param. sd; p10 60.5%) |
+| Market no-vig probability | 63.6% (Betfair Exchange) |
+| Final probability (blend) | 63.6% |
+| Fair odds | 1.57 |
+| Expected value | **+4.3%** (pessimistic +4.3%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Wed 18 Nov 09:55 EST |
+
+**Statistical evidence.** Projected score Los Angeles Chargers 22.7 – New York Jets 19.6. Doyen's ratings project Los Angeles Chargers 22.7 – New York Jets 19.6 pts (margin +3.0, total 42.3); power ranks 27 and 31 of 32.
+
+**Why it may be value.** The best available price (1.64) exceeds the estimated fair
+price (1.57). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model weight 0.00: the edge is the price versus the multi-bookmaker consensus, not a model opinion.
+
+Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/football/game/_/gameId/401873074> 
+
+
+### 3. Minnesota Timberwolves to win — Minnesota Timberwolves v Portland Trail Blazers
 
 | Field | Value |
 |---|---|
@@ -98,24 +129,7 @@ Sources: <https://api.the-odds-api.com/v4/sports/basketball_nba/odds?regions=eu&
 
 ## International fixtures — model monitoring (not recommendations)
 
-3 national-team matches analysed in the next 48h (model `dc-intl-0.1`,
-trained on 50106 internationals; 0 with multi-bookmaker odds).
-The model's gaps against bookmakers are **monitoring signals, not selections**: no free historical international
-odds exist to validate the model against the market, so it has weight 0. Real (paper) international selections
-appear in *Ranked selections* only when The Odds API supplies 3+ bookmakers and a price beats the sharp
-de-vigged consensus under the standard rules.
-
-| Kick-off | Competition | Match | Model H/D/A | Book H/D/A (no-vig) | Largest model–book gap |
-|---|---|---|---|---|---|
-| Tue 17 Nov 21:30 EST | CONCACAF Nations League | Mexico v Jamaica | 74/18/7 | 87/9/4 | 1X2 D @ 8.00: model EV +46.8% ⚠ bias |
-| Tue 17 Nov 20:00 EST | CONCACAF Nations League | El Salvador v Saint Martin | 64/23/14 | — |  |
-| Tue 17 Nov 22:00 EST | CONCACAF Nations League | Nicaragua v Montserrat | 67/21/12 | — |  |
-
-⚠ bias = the model is backing an underdog against a heavy bookmaker favourite (>70%). Out of sample the model
-is underconfident on heavy favourites, so these gaps are most likely model error, not value.
-
-
-
+No national-team fixtures in the next 48h.
 
 ## Track record (paper, fixed 1-unit stakes)
 
