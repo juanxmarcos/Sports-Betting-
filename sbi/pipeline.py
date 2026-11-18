@@ -316,6 +316,19 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
     with db.job(con, "ingest") as d:
         d.update(ingest(con, now))
         result["ingest"] = d
+    with db.job(con, "ingest-club-fixtures") as d:
+        # Issue #66: upcoming club games from the ESPN scoreboard, so the active leagues have events
+        # (and The Odds API can match them) on days football-data's fixtures.csv does not cover yet.
+        from .sources import espn_club
+        try:
+            d.update(espn_club.ingest(con, now))
+            db.provider_ok(con, "espn:club-fixtures", d.get("created", 0))
+            if d.get("errors"):
+                d["_status"] = "partial"
+        except Exception as e:  # noqa: BLE001 - one source failing must not stop the run
+            db.provider_err(con, "espn:club-fixtures", str(e))
+            d["error"] = f"{type(e).__name__}: {e}"
+            d["_status"] = "partial"
     with db.job(con, "settle") as d:
         d.update(settle.settle_all(con, now))
         result["settle"] = d
@@ -433,6 +446,16 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             d.update({"events_today": pr["coverage"]["events_today"], "pool_legs": pr["coverage"]["pool_legs"],
                       "evaluated": pr["search"]["evaluated"], "shortlist": len(pr["shortlist"])})
         except Exception as e:  # noqa: BLE001 - research only: must never stop the run
+            d["error"] = f"{type(e).__name__}: {e}"
+            d["_status"] = "partial"
+    with db.job(con, "preview-coverage") as d:
+        # Issue #66: per preview day, how many events exist and how many have usable prices, by sport,
+        # so an empty preview day is explainable from the run log. Reads stored data only.
+        from . import parlay_estimated
+        try:
+            d["days"] = parlay_estimated.preview_coverage(con, now)
+            result["preview_coverage"] = d["days"]
+        except Exception as e:  # noqa: BLE001 - reporting only: must never stop the run
             d["error"] = f"{type(e).__name__}: {e}"
             d["_status"] = "partial"
     with db.job(con, "http-requests") as d:            # issue #61: requests sent this run, per host

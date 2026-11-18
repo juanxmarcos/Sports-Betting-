@@ -207,6 +207,9 @@ def main(argv=None) -> int:
               f"report {r.get('publish', '')}")
         for w in a.get("warnings", [])[:20]:
             print("  warning:", w)
+        from .parlay_estimated import coverage_line
+        for day, c in (r.get("preview_coverage") or {}).items():
+            print("  preview", coverage_line(day, c))
     elif args.cmd in ("report", "dashboard"):
         from . import dashboard, report
         if args.cmd == "report":

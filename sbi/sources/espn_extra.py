@@ -12,6 +12,8 @@
   "pickcenter" moneylines) so the 3-day parlay previews can be priced. NFL/NBA summary prices are
   stored only for games on a later New York date than the run, never for today's games, so today's
   cards are built exactly as before. Responses are cached on disk for 0.9h (one request per game per run).
+- Club games (issue #66) with an ESPN id from the club scoreboard get a price-only summary read for
+  the same window (bookmaker 1X2 prices only, no forecasts or lineups).
 Everything is stored with source URL and retrieval time. Nothing here changes probabilities:
 injuries/lineups/forecasts are context, risk flags and reassessment triggers.
 """
@@ -158,7 +160,26 @@ def enrich_events(con, now: datetime, horizon_h: float = 36) -> dict:
     rows = con.execute("""SELECT event_id, league, home, away, kickoff_utc FROM events WHERE status='scheduled'
                           AND kickoff_utc BETWEEN ? AND ? AND (league IN ('NFL','NBA') OR league LIKE 'INT:%')""",
                        (now.isoformat(), end.isoformat())).fetchall()
+    out["club_summaries"] = out["club_odds"] = 0
     ts = db.utcnow()
+    # Issue #66: club games with a known ESPN id (sbi/sources/espn_club.py) on the same dates get a
+    # price-only summary read (soccer "odds" block), nothing else: no forecasts, lineups or leaders.
+    has_ids = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='espn_event_ids'").fetchone()
+    club = con.execute("""SELECT e.event_id, x.espn_id, x.espn_league FROM events e JOIN espn_event_ids x USING(event_id)
+                          WHERE e.status='scheduled' AND e.kickoff_utc BETWEEN ? AND ? AND e.league NOT LIKE 'INT:%'
+                          AND e.league NOT IN ('NFL','NBA')""",
+                       (now.isoformat(), end.isoformat())).fetchall() if has_ids else []
+    for r in club:
+        path = f"soccer/{r['espn_league']}"
+        url = f"https://www.espn.com/soccer/match/_/gameId/{r['espn_id']}"
+        try:
+            s = _summary(path, r["espn_id"])
+        except Exception:  # noqa: BLE001
+            out["errors"] += 1
+            continue
+        out["club_summaries"] += 1
+        for name, market, prices in summary_quotes(s, "soccer"):
+            out["club_odds"] += _store_quotes(con, r["event_id"], name, market, prices, url, ts)
     for r in rows:
         espn_id = r["event_id"].split(":")[-1]
         if r["league"] in ("NFL", "NBA"):

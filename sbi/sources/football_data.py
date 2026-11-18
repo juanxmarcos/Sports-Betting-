@@ -192,10 +192,34 @@ def parse_odds(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["idx", "bookmaker", "market", "selection", "line", "price", "kind"])
 
 
+ESPN_SOURCE = "espn.com (public scoreboard)"    # sbi/sources/espn_club.py (issue #66)
+
+
+def _espn_stub(con, event_id: str, div: str, home: str, away: str, ko: datetime, days: int = 3) -> str | None:
+    """An ESPN-created club event for the same game stored under a different date (issue #66).
+
+    The usual case is the same ID, which ON CONFLICT updates. This catches a game whose UTC date
+    differs between the two sources (moved kick-off), so football-data updates that event instead of
+    adding a duplicate."""
+    if con.execute("SELECT 1 FROM events WHERE event_id=?", (event_id,)).fetchone():
+        return None
+    r = con.execute("""SELECT event_id FROM events WHERE league=? AND home=? AND away=? AND source=?
+                        AND kickoff_utc BETWEEN ? AND ? ORDER BY kickoff_utc LIMIT 1""",
+                    (div, home, away, ESPN_SOURCE, (ko - pd.Timedelta(days=days)).isoformat(),
+                     (ko + pd.Timedelta(days=days)).isoformat())).fetchone()
+    return r[0] if r else None
+
+
 def upsert_events(con, matches: pd.DataFrame, source_url: str, finished: bool) -> int:
+    """Insert or update events. An ESPN-created stub for the same game is updated in place and its
+    event ID is written back into `matches`, so odds inserted afterwards attach to it."""
     now = db.utcnow()
     n = 0
-    for r in matches.itertuples():
+    for r in list(matches.itertuples()):
+        stub = _espn_stub(con, r.event_id, r.div, r.home, r.away, r.kickoff_utc.to_pydatetime())
+        if stub:
+            matches.loc[r.Index, "event_id"] = stub
+            r = r._replace(event_id=stub)
         done = finished and pd.notna(r.hg) and pd.notna(r.ag)
         con.execute("""
             INSERT INTO events(event_id,sport,league,season,kickoff_utc,home,away,status,
@@ -208,7 +232,7 @@ def upsert_events(con, matches: pd.DataFrame, source_url: str, finished: bool) -
               away_score=COALESCE(excluded.away_score, events.away_score),
               home_xg=COALESCE(excluded.home_xg, events.home_xg),
               away_xg=COALESCE(excluded.away_xg, events.away_xg),
-              source_url=excluded.source_url, updated_at=excluded.updated_at
+              source=excluded.source, source_url=excluded.source_url, updated_at=excluded.updated_at
         """, (r.event_id, "football", r.div, r.season, r.kickoff_utc.isoformat(), r.home, r.away,
               "finished" if done else "scheduled",
               int(r.hg) if done else None, int(r.ag) if done else None,
