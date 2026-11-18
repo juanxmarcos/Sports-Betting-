@@ -331,8 +331,6 @@ def test_history_shows_record_by_market_type():
                       {"event_id": "g2", "title": "Leeds v Fulham", "market": "OU", "line": 2.5, "selection": "over",
                        "selection_text": "Over 2.5 goals", "price": 1.8, "start_utc": NOW.isoformat(), "result": "won"}]}]
     html = _run({"data": _data(est, hist), "now": NOW.isoformat(), "hash": "#/history"})
-    assert "<table data-ph-by-market>" in html
-    assert '<tr data-market="OU"><th scope="row">Over/Under</th><td>1–0</td><td>100%</td><td>0</td><td>0</td></tr>' in html
-    assert '<tr data-market="DNB"><th scope="row">Draw no bet</th><td>0–0</td><td>–</td><td>1</td><td>0</td></tr>' in html
+    assert "data-ph-by-market" not in html          # owner removed the by-market table (2026-11-18)
     assert "Arsenal (draw no bet) (push)" in html and "Over 2.5 goals ✓" in html
     assert "(settled at 1.80 after a push)" in html

@@ -425,7 +425,6 @@
       ${r.preview === true ? `<div class="pc-note preview-note" data-preview><span class="pill preview">${esc(EC.previewBadge)}</span></div>` : ""}
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
-        <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Estimated combined odds</div><div class="v">${dec(odds)}</div></div>
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
@@ -483,7 +482,6 @@
       <div class="pc-state ${esc(cls)}" data-state-line>${esc(state)}</div>
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
-        <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>
         ${betInput(i)}
         <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), r.estimated_odds, r.result)}</div></div>
@@ -499,7 +497,6 @@
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill active">Verified bookmaker quote</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
-        <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Combined odds</div><div class="v">${dec(odds)}</div></div>
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
@@ -532,7 +529,7 @@
     let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${seg}`;
     h += `<section class="section first" id="parlays">`;
     if (cards.length) h += `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`;
-    if (est.length || rec.length) h += `<h2 class="est-h"${cards.length ? "" : ' style="margin-top:0"'}>Estimated parlays of the day</h2><div class="grid parlays">${est.map((r, i) => estCard(r, cards.length + i)).join("")}${rec.map((r, i) => ledgerCard(r, cards.length + est.length + i)).join("")}</div>`;
+    if (est.length || rec.length) h += `<div class="grid parlays"${cards.length ? ' style="margin-top:16px"' : ""}>${est.map((r, i) => estCard(r, cards.length + i)).join("")}${rec.map((r, i) => ledgerCard(r, cards.length + est.length + i)).join("")}</div>`;
     if (!cards.length && !est.length && !rec.length) {
       h += E && typeof E === "object" ? `<p class="zero">${esc(EC.empty)} <a href="#/parlays">Why?</a></p>`
         : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
@@ -725,7 +722,6 @@
       <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
       ${table}${table ? parlayNote(rows) : ""}
-      ${mtable}
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 
