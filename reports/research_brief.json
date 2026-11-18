@@ -1,21 +1,36 @@
 {
-  "generated": "2026-11-17T23:48:25+00:00",
+  "generated": "2026-11-18T00:31:51+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
-      "rec_id": "6f155d41be0cef5a",
-      "event_id": "nba:NBA:20261118:401910002",
+      "rec_id": "42ffd385c1214518",
+      "event_id": "nba:NBA:20261118:401910003",
       "league": "NBA",
-      "kickoff_utc": "2026-11-18T00:30:00+00:00",
-      "home": "Toronto Raptors",
-      "away": "New York Knicks",
+      "kickoff_utc": "2026-11-18T01:00:00+00:00",
+      "home": "Minnesota Timberwolves",
+      "away": "Portland Trail Blazers",
+      "market": "ML",
+      "selection": "home",
+      "line": null,
+      "odds": 1.7692307692307692,
+      "bookmaker": "DraftKings",
+      "final_prob": 0.6053441982910842,
+      "ev": 0.07099358159191826
+    },
+    {
+      "rec_id": "244a3bf8920901ae",
+      "event_id": "nba:NBA:20261119:401910015",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-19T02:30:00+00:00",
+      "home": "Denver Nuggets",
+      "away": "Boston Celtics",
       "market": "ML",
       "selection": "away",
       "line": null,
-      "odds": 1.704225352112676,
-      "bookmaker": "DraftKings",
-      "final_prob": 0.6067825214685559,
-      "ev": 0.034094156305567225
+      "odds": 1.93,
+      "bookmaker": "1xBet",
+      "final_prob": 0.567032910753276,
+      "ev": 0.09437351775382274
     },
     {
       "rec_id": "0795fb50263195c7",
@@ -49,34 +64,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261118:401929765",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-18T00:00:00+00:00",
-      "home": "French Guiana",
-      "away": "Saint Vincent and the Grenadines"
-    },
-    {
-      "event_id": "football:INT:concacaf.nations.league:20261118:401929766",
-      "league": "INT:concacaf.nations.league",
-      "kickoff_utc": "2026-11-18T00:00:00+00:00",
-      "home": "United States",
-      "away": "Haiti"
-    },
-    {
-      "event_id": "tennis:WTA:20261118:186795",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T00:05:00+00:00",
-      "home": "Antonia Vergara Rivera",
-      "away": "Fernanda Labrana"
-    },
-    {
-      "event_id": "nba:NBA:20261118:401910002",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-18T00:30:00+00:00",
-      "home": "Toronto Raptors",
-      "away": "New York Knicks"
-    },
     {
       "event_id": "football:INT:concacaf.nations.league:20261118:401929764",
       "league": "INT:concacaf.nations.league",
