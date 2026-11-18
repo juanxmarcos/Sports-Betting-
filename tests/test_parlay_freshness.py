@@ -176,6 +176,6 @@ def test_front_end_card_shows_price_as_of_time_until_the_first_leg_starts():
 
     at_six = render(datetime(2026, 11, 17, 18, 0, tzinfo=NY))
     assert 'data-parlay="q1"' in at_six
-    assert "Price as of 9:47 AM EST — check your book." in at_six
+    assert "check your book" not in at_six      # footnotes removed (owner, 2026-11-18)
     assert 'data-parlay="q1"' not in render(GAME + timedelta(minutes=1))
     assert 'data-parlay="q1"' not in render(datetime(2026, 11, 18, 9, 0, tzinfo=NY))

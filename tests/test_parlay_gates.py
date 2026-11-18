@@ -239,7 +239,7 @@ def test_front_end_renders_a_gated_backend_card_and_hides_it_once_the_first_leg_
         return out.stdout
 
     html = render(NOW)
-    assert "Home 1 vs. Away 1" in html and "BookA" in html and "48.00" in html and "4.80" in html
+    assert "Home 1 vs. Away 1" in html and "48.00" in html and "4.80" in html
     assert "Mock data" not in html
     assert "Home 1 vs. Away 1" in render(NOW + timedelta(hours=4))       # same-day quote: still shown (issue #53)
     later = render(NOW + timedelta(hours=5, minutes=1))                    # the first leg has started

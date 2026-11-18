@@ -203,8 +203,8 @@ def test_card_shows_legs_bookmaker_combined_odds_ten_dollar_stake_and_gross_payo
     assert card.count("<li>") == 3 and "Mock Home p1-0 vs. Mock Away p1-0" in card and "Mock Home p1-2 to win" in card
     assert ">Bookmaker<" not in card and ">6.50<" in card      # bookmaker block removed (owner, 2026-11-18)
     assert 'value="10"' in card and "data-stake" in card and ">$65.00<" in card
-    assert "Potential payout" in card and "includes the stake" in card and "only if every leg wins" in card
-    assert "illustrative" in card and "Mock data · testing only" in card
+    assert "Potential payout" in card and "includes the stake" not in card      # extra notes removed (owner, 2026-11-18)
+    assert "Mock data · testing only" in card
     for banned in ("Expected value", "Estimated chance", "guarantee", "%"):
         assert banned not in card
 

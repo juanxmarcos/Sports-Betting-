@@ -168,8 +168,8 @@ def test_started_parlay_stays_on_home_marked_closed_and_yesterdays_does_not():
     assert "data-stake" in card and ">Bet amount<" in card and "Record uses $10 paper stakes" not in card
     assert "Recorded" not in card and "bet pays" not in card and _payout(card) == "$40.00"
     assert "bet now" not in card.lower() and "check your book" not in card
-    assert "Estimated odds at publication" in card and "Price at publication time (published" in card
-    assert '<span class="pill estimate">Estimate</span>' in card and "not a bet-slip quote" in card
+    assert "Estimated odds at publication" in card and "Price at publication time" not in card
+    assert '<span class="pill estimate">Estimate</span>' in card
     assert "pending" in card
     assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" not in html
 
@@ -195,7 +195,7 @@ def test_open_recorded_card_and_live_card_are_not_duplicated():
     html = _run({"data": _data([_rec("pe-open", legs=later)]), "now": _iso(NOW)})
     card = _card(html, "pe-open")
     assert recorded(html) == [("pe-open", "open")]
-    assert re.search(r"Open: first game at 7:00\sPM", card) and "Price from publication time; it may have moved." in card
+    assert re.search(r"Open: first game at 7:00\sPM", card) and "Price from publication time" not in card
     assert "Recorded" not in card and "bet pays" not in card
     # The same parlay_id still in the current block shows once, as the live card.
     live = {"parlay_id": "pe-open", "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",

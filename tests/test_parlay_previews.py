@@ -130,7 +130,7 @@ def test_home_day_switcher_shows_today_and_three_dated_days():
     assert [d for d, _ in days] == [DAY] + DAYS
     assert [t for _, t in days] == ["Today · Fri, Nov 13", "Tomorrow · Sat, Nov 14", "+2 · Sun, Nov 15", "+3 · Mon, Nov 16"]
     assert 'class="on" data-f="hday" data-v="0"' in html and 'data-parlay="pe-t"' in html
-    assert 'href="#/history">Past days' in html and pe.PREVIEW_BADGE not in html
+    assert 'Past days' not in html and pe.PREVIEW_BADGE not in html
 
 
 @needs_node
@@ -139,7 +139,7 @@ def test_home_preview_day_shows_badge_and_price_time():
     assert 'data-parlay="pe-p"' in html and 'data-parlay="pe-t"' not in html
     card = html[html.index("<article"):html.index("</article>")]
     assert f'<span class="pill preview">{pe.PREVIEW_BADGE}</span>' in card and "Estimate</span>" in card
-    assert re.search(r"Prices? as of Thu, Nov 12, [^<]+ E[SD]T — check your book\.", card)
+    assert "check your book" not in card      # footnotes removed (owner, 2026-11-18)
     assert "Preview Parlays" in html and 'class="on" data-f="hday" data-v="1"' in html
 
 
