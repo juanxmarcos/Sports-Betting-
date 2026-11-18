@@ -123,9 +123,37 @@ def _store_quotes(con, event_id: str, name: str, market: str, prices: dict, url:
     return n
 
 
+DC_KEYS = {"HD": "preMatchDoubleChanceHomeOrDraw", "DA": "preMatchDoubleChanceDrawOrAway",
+           "HA": "preMatchDoubleChanceHomeOrAway"}
+
+
+def fractional_to_decimal(v) -> float | None:
+    """'4/1' -> 5.0, '1/9' -> 1.1111, 'EVS' -> 2.0. Anything else (missing, malformed) -> None."""
+    t = str(v or "").strip().lower()
+    if t in ("evs", "evens", "even"):
+        return 2.0
+    num, sep, den = t.partition("/")
+    try:
+        n, d = float(num), float(den)
+    except ValueError:
+        return None
+    if not sep or n <= 0 or d <= 0:
+        return None
+    return round(1.0 + n / d, 4)
+
+
+def double_chance(o: dict) -> dict | None:
+    """Double Chance prices {HD, DA, HA} from a soccer summary "odds" entry's free `bettingOdds`
+    block (issue #82; e.g. Bet365 shows 1X / X2 / 12 as fractional odds). None unless all three."""
+    team = ((o.get("bettingOdds") or {}).get("teamOdds") or {}) if isinstance(o, dict) else {}
+    prices = {sel: fractional_to_decimal((team.get(key) or {}).get("value")) for sel, key in DC_KEYS.items()}
+    return prices if all(p and p > 1.0 for p in prices.values()) else None
+
+
 def summary_quotes(s: dict, sport: str) -> list[tuple[str, str, dict]]:
     """[(bookmaker, market, {selection: decimal price})] from a game summary. Soccer: the "odds"
-    block (1X2). NFL/NBA: the "pickcenter" moneylines (ML). Incomplete or live lines are skipped."""
+    block (1X2, plus Double Chance "DC" where the free `bettingOdds` block lists it, issue #82).
+    NFL/NBA: the "pickcenter" moneylines (ML). Incomplete or live lines are skipped."""
     from .international import american_to_decimal as a2d
     out = []
     block = s.get("odds") if sport == "soccer" else s.get("pickcenter")
@@ -137,6 +165,9 @@ def summary_quotes(s: dict, sport: str) -> list[tuple[str, str, dict]]:
             continue
         h, a = o.get("homeTeamOdds") or {}, o.get("awayTeamOdds") or {}
         if sport == "soccer":
+            dc = double_chance(o)
+            if dc:
+                out.append((name, "DC", dc))
             market = "1X2"
             prices = {"H": a2d(h.get("moneyLine")), "A": a2d(a.get("moneyLine")),
                       "D": a2d((o.get("drawOdds") or {}).get("moneyLine"))}

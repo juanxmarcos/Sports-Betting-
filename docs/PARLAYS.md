@@ -569,3 +569,43 @@ its games starts, and every recommended parlay must appear in History with its r
 - **Not covered.** Verified-quote (strict) parlays have no published-parlay ledger yet (none has ever
   been published), so they are not listed in History; a started verified card still leaves the homepage.
 - Results on the page are as of the last data run; a game that finished after it shows "pending".
+
+
+### 11.6 More bet types in parlays, step 1: soccer markets (issue #82)
+
+**Owner request (2026-11-18).** Parlays should not only be "team to win". A soccer game can now offer
+these legs besides the match result, in estimated mode only (the strict path is unchanged):
+
+| Market | Selections | Leg text | Probability (same Dixon-Coles score matrix as 1X2) | Settlement |
+|---|---|---|---|---|
+| Over/Under goals | over / under, lines 1.5, 2.5, 3.5 (`OU_LINES`, half lines only) | "Over 2.5 goals" | stored model run, `P(home + away > L)` | on the line from the final score |
+| Both Teams To Score | yes / no | "Both teams to score: Yes" | stored model run when a BTTS price exists, `P(home ≥ 1 and away ≥ 1)` | from both scores |
+| Double Chance | 1X / X2 / 12 (`HD`, `DA`, `HA`) | "Arsenal or draw" | sum of the run's 1X2 outcomes | win if the result is covered |
+| Draw No Bet | home / away | "Arsenal (draw no bet)" | `P(win) / (1 − P(draw))` from the run's 1X2 | **push on a draw** |
+
+- **Prices: stored quotes only, never invented.** O/U is already stored (DraftKings via ESPN; Pinnacle and
+  others via The Odds API `totals`). ESPN's free game summary lists Bet365 **Double Chance** in its
+  `bettingOdds` block (fractional odds), so `espn_extra.summary_quotes` now stores those as market `DC`
+  with the summaries it already reads (no extra request). ESPN shows no BTTS or Draw No Bet prices, and
+  The Odds API's `btts` is a per-event market that costs extra credits, so it is not bought: BTTS and DNB
+  legs appear only if a stored price exists. No new secrets, no extra spend.
+- **Model required.** An extra-market leg needs a Doyen model probability for that market, line and
+  selection (`parlay_estimated.model_probs_full`); without one there is no leg (no market-only fallback).
+- **Screens unchanged.** The market reference must be inside the research band (0.30–0.85) and the model
+  within 0.12 of it. Reference: de-vigged consensus of the market's own two-way prices (O/U, BTTS, DNB);
+  for Double Chance the sum of the 1X2 consensus probabilities (DNB falls back to `H / (H + A)` of it).
+- **One leg per game, unchanged.** Each game offers its best selection per market and line as a candidate;
+  the search never puts two legs of one game in a parlay, so markets never stack within a game. All other
+  rules stay: same New York day, one bookmaker prices every leg, at most one weak leg, positive parlay
+  value, per-size picks. Match-result parlay ids are computed exactly as before (the line enters the id
+  only for legs that have one).
+- **Cards and History.** Each leg shows its market text and its own price, American and decimal (#74),
+  e.g. "Over 2.5 goals" with "-120 (1.83)". Ledger legs store `market`, `selection` and, where the market
+  has one, `line` (append-only; older rows are untouched).
+- **Pushes.** A pushed leg (Draw No Bet on a draw) is removed at odds 1.00 and the rest of the parlay
+  stands, as bookmakers settle it: settled odds = recorded odds ÷ the pushed leg's price (shown on History
+  as "settled at X after a push"; the recorded price is never edited). A parlay whose legs all push is
+  void. A void or postponed game still voids the whole parlay here, as before.
+- **Record by market type.** `settle()` adds `by_market`, a **leg** record per market (match result,
+  moneyline, O/U, BTTS, DC, DNB): legs won, lost, push, void and open. History shows it as a table under
+  the by-size table.

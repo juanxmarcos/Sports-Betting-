@@ -72,7 +72,7 @@ def settle_value(market: str, selection: str, line: float | None, hg: int, ag: i
     if market == "DC":
         res = "H" if hg > ag else ("A" if hg < ag else "D")
         return 1.0 if res in selection else -1.0
-    if market == "ML":
+    if market in ("ML", "DNB"):           # DNB: a draw is a push (stake returned)
         if hg == ag:
             return 0.0
         return 1.0 if (hg > ag) == (selection in ("home", "H")) else -1.0
@@ -104,6 +104,9 @@ def pnl(result: float, odds: float, stake: float = 1.0) -> float:
 def result_grid(g: int, market: str, selection: str, line: float | None) -> np.ndarray:
     """(g x g) array of settlement values r in {-1,-.5,0,.5,1} for each scoreline."""
     hg, ag = np.meshgrid(np.arange(g), np.arange(g), indexing="ij")
+    if market == "DNB":                   # draw no bet: win / push on a draw / loss
+        win = (hg > ag) if selection in ("home", "H") else (hg < ag)
+        return np.where(hg == ag, 0.0, np.where(win, 1.0, -1.0))
     if market in ("1X2", "DC", "BTTS"):
         if market == "1X2":
             mask = {"H": hg > ag, "D": hg == ag, "A": hg < ag}[selection]
@@ -142,6 +145,33 @@ def q_many(mats: np.ndarray, market: str, selection: str, line: float | None = N
     a = (mats * (vals == 1.0)).sum((1, 2)) + 0.5 * (mats * np.isclose(vals, 0.5)).sum((1, 2))
     b = (mats * (vals == -1.0)).sum((1, 2)) + 0.5 * (mats * np.isclose(vals, -0.5)).sum((1, 2))
     return a / np.maximum(a + b, 1e-12)
+
+
+def parlay_market_probs(m: np.ndarray, ou_lines=(1.5, 2.5, 3.5)) -> dict:
+    """Parlay-leg probabilities from one score matrix (issue #82), keyed (market, line, selection):
+      1X2   P(H), P(D), P(A)
+      DC    sum of the covered outcomes: HD = P(H)+P(D), DA = P(D)+P(A), HA = P(H)+P(A)
+      DNB   P(win) / (1 - P(draw)), the win chance once a draw (push) is set aside
+      BTTS  yes = P(home >= 1 and away >= 1); no = 1 - yes
+      OU    over L = P(home + away > L) from the total-goals distribution; under = 1 - over (x.5 lines)"""
+    o = {s: outcome(m, "1X2", s).pw for s in "HDA"}
+    out = {("1X2", None, s): o[s] for s in "HDA"}
+    out.update(dc_dnb_from_1x2(o["H"], o["D"], o["A"]))
+    yes = outcome(m, "BTTS", "yes").pw
+    out[("BTTS", None, "yes")], out[("BTTS", None, "no")] = yes, 1.0 - yes
+    for ln in ou_lines:
+        ov = outcome(m, "OU", "over", ln).pw
+        out[("OU", float(ln), "over")], out[("OU", float(ln), "under")] = ov, 1.0 - ov
+    return out
+
+
+def dc_dnb_from_1x2(ph: float, pd: float, pa: float) -> dict:
+    """Double Chance and Draw No Bet from 1X2 probabilities (exact sums of the same score matrix)."""
+    out = {("DC", None, "HD"): ph + pd, ("DC", None, "DA"): pd + pa, ("DC", None, "HA"): ph + pa}
+    if ph + pa > 0:
+        out[("DNB", None, "home")] = ph / (ph + pa)
+        out[("DNB", None, "away")] = pa / (ph + pa)
+    return out
 
 
 def standard_markets(m: np.ndarray) -> dict:
