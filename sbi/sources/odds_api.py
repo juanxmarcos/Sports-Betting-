@@ -282,7 +282,13 @@ def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:
         return age >= 4 or (hours_to <= 2.5 and age >= 1.5)   # final pre-game refresh
     if hours_to <= 36:
         return age >= 8                                        # day-before refresh
-    return last.date() != now.date()                           # weekly horizon: one look per day
+    # Weekly horizon: one look per New York day, plus one evening look when the only look that day was
+    # the morning run's (issue #66). The evening run spends what the morning left of the SAME daily
+    # allowance (budget() is unchanged), today's games are still bought first (plan_order), so this
+    # only decides where leftover credits go: future days instead of nothing.
+    if last.astimezone(NY).date() != now.astimezone(NY).date():
+        return True
+    return run_slot(now) == "evening" and run_slot(last) == "morning"
 
 
 def run_slot(now: datetime) -> str:

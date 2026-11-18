@@ -527,6 +527,23 @@ def build_preview(con, now: datetime, day: str) -> dict:
             "recommendations": recs}
 
 
+def preview_coverage(con, now: datetime) -> dict:
+    """Issue #66: {day: {"events", "with_prices", "legs", "by_sport": {sport: {"events", "with_prices"}}}}
+    for each preview day, from the same leg pool the previews use (stored data only)."""
+    out = {}
+    for day in preview_days(now):
+        _, cov = build_pool(con, now, day)
+        out[day] = {"events": cov["events_today"], "with_prices": cov["events_with_fresh_prices"],
+                    "legs": cov["legs"], "by_sport": cov.get("by_sport", {})}
+    return out
+
+
+def coverage_line(day: str, c: dict) -> str:
+    """One log line, e.g. '2026-11-21: 41 events, 30 with prices (soccer 30/38, nba 0/3)'."""
+    sports = ", ".join(f"{sp} {v['with_prices']}/{v['events']}" for sp, v in sorted(c.get("by_sport", {}).items()))
+    return f"{day}: {c['events']} events, {c['with_prices']} with prices" + (f" ({sports})" if sports else "")
+
+
 def build_previews(con, now: datetime) -> list[dict]:
     out = []
     for day in preview_days(now):
