@@ -3,18 +3,13 @@
 All picks below are test fixtures built for this test, never real recommendations. The browser test runs
 the real docs/assets/doyen.js in Node through tests/js/render_home.js."""
 import json
-import os
 import re
-import shutil
 import subprocess
 from pathlib import Path
-
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 HARNESS = ROOT / "tests" / "js" / "render_home.js"
 NOW = "2026-11-18T23:00:00+00:00"
-needs_node = pytest.mark.skipif(not shutil.which("node") and not os.environ.get("CI"), reason="node is not installed")
 
 
 def _pick(i, sport, market, state, result=None, pnl=None):
@@ -56,7 +51,6 @@ def _rows(html, attr):
             for m in re.findall(r'<tr[^>]*><th scope="row">([^<]+)</th>(.*?)</tr>', table)}
 
 
-@needs_node
 def test_single_pick_table_by_sport_and_total_matches_record():
     html = _render()
     sec = html[html.index('id="pick-history"'):]
@@ -78,7 +72,6 @@ def test_single_pick_table_by_sport_and_total_matches_record():
     assert 'class="pl pos">+1.25 u' in sec and 'class="pl neg">−1.00 u' in sec
 
 
-@needs_node
 def test_single_pick_table_by_market_hides_empty_markets():
     rows = _rows(_render(), "data-singles-by-market")
     assert list(rows) == ["Match result", "Moneyline", "Total goals", "Total"]
