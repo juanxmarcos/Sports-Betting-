@@ -1,0 +1,193 @@
+{
+  "method": "normal-margin-total-v1",
+  "created_at": "2026-11-18T20:48:43+00:00",
+  "metric_note": "Log loss and Brier on home cover and over, pushes excluded; market = de-vigged price; ci95 = bootstrap 95% interval of (model log loss - market log loss) per game.",
+  "nfl": {
+    "sport": "nfl",
+    "fit_sd_seasons": [
+      2018,
+      2022
+    ],
+    "test_seasons": [
+      2023,
+      2026
+    ],
+    "market": "nflverse closing spread and total with their prices, de-vigged (power method)",
+    "sd": {
+      "margin_ratings": 13.09,
+      "total_ratings": 13.83,
+      "margin_around_market_line": 12.78,
+      "n_fit": 1371
+    },
+    "pushes_excluded": {
+      "spread": 25,
+      "total": 7
+    },
+    "SPREAD": {
+      "n": 980,
+      "market_devig": {
+        "log_loss": 0.69331,
+        "brier": 0.25008
+      },
+      "cover_ratings": {
+        "log_loss": 0.72005,
+        "brier": 0.26254,
+        "logloss_minus_market": 0.02674,
+        "ci95": [
+          0.01466,
+          0.03896
+        ]
+      },
+      "cover_ml_implied": {
+        "log_loss": 0.69715,
+        "brier": 0.25198,
+        "logloss_minus_market": 0.00384,
+        "ci95": [
+          -0.00146,
+          0.00953
+        ]
+      }
+    },
+    "TOTAL": {
+      "n": 998,
+      "market_devig": {
+        "log_loss": 0.6934,
+        "brier": 0.25013
+      },
+      "over_ratings": {
+        "log_loss": 0.70729,
+        "brier": 0.25662,
+        "logloss_minus_market": 0.01389,
+        "ci95": [
+          0.00228,
+          0.02478
+        ]
+      },
+      "over_blend": {
+        "log_loss": 0.69628,
+        "brier": 0.25153,
+        "logloss_minus_market": 0.00288,
+        "ci95": [
+          -0.00285,
+          0.00817
+        ]
+      }
+    },
+    "decision": {
+      "SPREAD": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      },
+      "TOTAL": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      }
+    }
+  },
+  "nba": {
+    "sport": "nba",
+    "fit_sd_period": "2024-12-01 to 2025-06-30 (walk-forward, ESPN results)",
+    "test_period": "games from 2026-10-01 with stored pre-game quotes",
+    "market": "latest stored pre-game quote per bookmaker at the most-quoted line, de-vigged consensus (sbi.ev.consensus); moneyline consensus for the ML-implied margin",
+    "sd": {
+      "margin_ratings": 14.78,
+      "total_ratings": 18.3,
+      "margin_around_market_line": null,
+      "n_fit": 1018
+    },
+    "pushes_excluded": {
+      "spread": 0,
+      "total": 0
+    },
+    "SPREAD": {
+      "n": 40,
+      "market_devig": {
+        "log_loss": 0.68913,
+        "brier": 0.24799
+      },
+      "cover_ratings": {
+        "log_loss": 0.69443,
+        "brier": 0.25038,
+        "logloss_minus_market": 0.00531,
+        "ci95": [
+          -0.03955,
+          0.05125
+        ]
+      },
+      "cover_ml_implied": {
+        "log_loss": 0.71785,
+        "brier": 0.26223,
+        "logloss_minus_market": 0.02873,
+        "ci95": [
+          0.00076,
+          0.05793
+        ]
+      }
+    },
+    "TOTAL": {
+      "n": 40,
+      "market_devig": {
+        "log_loss": 0.69361,
+        "brier": 0.25023
+      },
+      "over_ratings": {
+        "log_loss": 0.69301,
+        "brier": 0.24876,
+        "logloss_minus_market": -0.0006,
+        "ci95": [
+          -0.05907,
+          0.06641
+        ]
+      },
+      "over_blend": {
+        "log_loss": 0.68842,
+        "brier": 0.24752,
+        "logloss_minus_market": -0.0052,
+        "ci95": [
+          -0.03334,
+          0.02552
+        ]
+      }
+    },
+    "decision": {
+      "SPREAD": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      },
+      "TOTAL": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      }
+    }
+  },
+  "decision": {
+    "nba": {
+      "SPREAD": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      },
+      "TOTAL": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      }
+    },
+    "nfl": {
+      "SPREAD": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      },
+      "TOTAL": {
+        "use_model": false,
+        "model": null,
+        "reason": "no model beats the de-vigged market (95% interval of the log-loss difference not below 0, or fewer than 100 games): legs use the market consensus"
+      }
+    }
+  }
+}

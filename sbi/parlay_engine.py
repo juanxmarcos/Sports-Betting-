@@ -403,7 +403,11 @@ def _leg_result(con, leg: dict) -> str:
         return "void"
     if e["status"] != "finished" or e["home_score"] is None:
         return "open"
-    r = settle_value(leg["market"], leg["selection"], None, e["home_score"], e["away_score"])
+    line = leg.get("line")                       # spread/total legs (issue #83); None for result markets
+    if leg["market"] in ("SPREAD", "TOTAL") and line is None:
+        return "open"                              # unknown line: never guess a result
+    r = settle_value(leg["market"], leg["selection"], None if line is None else float(line),
+                     e["home_score"], e["away_score"])
     return "won" if r > 0 else ("void" if r == 0 else "lost")
 
 

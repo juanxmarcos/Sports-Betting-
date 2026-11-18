@@ -317,3 +317,42 @@ In short: rule v2 would have changed no published pick and no historical bet, bu
 - Pinnacle sells its odds to other operators, so a bookmaker can carry Pinnacle-derived prices without any ownership link. No map detects that. The report's identical-price table is the only empirical check, and it can show dependence but cannot prove independence.
 - All multi-bookmaker prices outside club football come from one vendor (The Odds API), which is a single point of failure whatever the operator count.
 - An unverified bookmaker can still supply the best price. An outlier price at an obscure bookmaker is exactly where false value appears; rule v2 makes the reference honest but does not judge whether that price is obtainable.
+
+## 16. NBA and NFL point spreads and game totals in estimated parlays (issue #83)
+
+Code: `sbi/parlay_lines.py`; backtest: `python -m sbi parlay-lines-backtest` (read-only database) writes
+`data/backtest/parlay_lines.json`; tests: `tests/test_parlay_lines.py`.
+
+**Model.** Home margin ~ Normal(μ_m, σ_m) and game total ~ Normal(μ_t, σ_t) on integer points.
+- μ_m, μ_t: the existing points ratings (`sbi/models/ratings.py`, the NBA/NFL offence/defence fit),
+  μ_m = expected home − away points, μ_t = expected home + away points.
+- Second variants: μ_m read off the de-vigged moneyline, μ_m = σ × Φ⁻¹(P(home win)); μ_t = ½ ratings total + ½ market total.
+- σ fitted on stored history as the root-mean-square walk-forward residual: NFL σ_m = 13.09, σ_t = 13.83
+  (seasons 2018–2022, 1,371 games; the margin around the closing spread is 12.78); NBA σ_m = 14.78,
+  σ_t = 18.30 (2024-12-01 to 2025-06-30, 1,018 games). The issue's guide values were about 13.5 (NFL) and 12 (NBA);
+  the fitted NBA value is larger because it measures the ratings model's error, not the market's.
+- Cover (home line L, home perspective): win = P(margin + L > 0). Whole-number lines can push; a 0.5-point continuity
+  correction gives P(push), and the leg probability is P(win | no push) = win / (win + lose), because a pushed leg is void.
+  Totals work the same way on total − line.
+
+**Backtest (2026-11-18).** Log loss and Brier on home cover and over (pushes excluded), versus the market's de-vigged
+price (power method). NFL: nflverse closing spreads and totals with their prices, test seasons 2023–2026, weekly
+walk-forward refits. NBA: no free NBA odds history exists, so only games with stored pre-game quotes in
+`data/sbi.sqlite` (latest quote per bookmaker at the most-quoted line, de-vigged consensus): 40 games.
+
+| Sport, market | Games | Market (de-vigged): log loss / Brier | Ratings model (diff vs market, 95% CI) | Second variant (diff vs market, 95% CI) |
+|---|---|---|---|---|
+| NFL spread | 980 | 0.6933 / 0.2501 | 0.7200 / 0.2625 (+0.0267, CI +0.0147 to +0.0390) | ML-implied margin: 0.6972 / 0.2520 (+0.0038, CI −0.0015 to +0.0095) |
+| NFL total | 998 | 0.6934 / 0.2501 | 0.7073 / 0.2566 (+0.0139, CI +0.0023 to +0.0248) | 50/50 blend: 0.6963 / 0.2515 (+0.0029, CI −0.0029 to +0.0082) |
+| NBA spread | 40 | 0.6891 / 0.2480 | 0.6944 / 0.2504 (+0.0053, CI −0.0396 to +0.0512) | ML-implied margin: 0.7178 / 0.2622 (+0.0287, CI +0.0008 to +0.0579) |
+| NBA total | 40 | 0.6936 / 0.2502 | 0.6930 / 0.2488 (−0.0006, CI −0.0591 to +0.0664) | 50/50 blend: 0.6884 / 0.2475 (−0.0052, CI −0.0333 to +0.0255) |
+
+**Result.** No variant beats the market: the ratings model is clearly worse on NFL spreads and totals, the other
+variants are level within noise, and 40 NBA games are far too few to show anything. A model is used only if it has
+at least 100 test games and the 95% interval of (model − market) log loss lies entirely below 0. So spread and total
+legs use the **de-vigged market consensus** (as tennis does: the other bookmakers' consensus, or at least two
+independent bookmakers including the pricing one), and each such leg's card says "Probability: market consensus".
+A leg then has positive value only where the pricing bookmaker's price is better than the consensus.
+
+**Settlement.** From final scores: spread cover on margin + line, totals on total − line; a push (whole-number
+line landing exactly) is a void leg, which voids the parlay here, as before.
