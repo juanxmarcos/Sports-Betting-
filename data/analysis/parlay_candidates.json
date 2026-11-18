@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-18T21:58:50+00:00",
+ "generated": "2026-11-18T23:02:44+00:00",
  "date": "2026-11-18",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,26 +15,22 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 13,
+  "events_today": 12,
   "by_sport": {
    "nba": {
     "events": 12,
     "fresh_prices": 12,
     "stored_model": 12,
     "events_with_candidate_legs": 9
-   },
-   "tennis": {
-    "events": 1
    }
   },
   "candidate_legs": 15,
   "events_with_candidate_legs": 9,
-  "pool_legs": 3,
+  "pool_legs": 4,
   "excluded": {
    "event: model and market disagree strongly": 2,
-   "event: no fresh result-market prices": 1,
    "event: probability outside research band": 1,
-   "leg: no bookmaker at or above fair value": 6
+   "leg: no bookmaker at or above fair value": 5
   }
  },
  "search": {
@@ -60,14 +56,14 @@
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 5,
+  "straight_picks_seen": 6,
   "usable_legs_today": 0,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-18T22:00:28+00:00",
-  "credits_spent_last_run": 13,
+  "at": "2026-11-18T23:04:00+00:00",
+  "credits_spent_last_run": 0,
   "credits_remaining": "321"
  },
  "ledger_rows_added": 0,

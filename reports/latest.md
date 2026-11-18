@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-18
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Wed 18 Nov 16:58 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Wed 18 Nov 18:02 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -11,9 +11,9 @@ All times America/New_York. Generated Wed 18 Nov 16:58 EST. Model `dc-0.1`.*
 | Events discovered | 205 |
 | Events with fresh odds | 121 |
 | Events fully evaluated (3+ independent bookmakers, complete history) | 75 |
-| Markets evaluated | 1108 |
-| Events passing all rules | 4 |
-| Published today | **7** |
+| Markets evaluated | 1118 |
+| Events passing all rules | 5 |
+| Published today | **8** |
 | Highest estimated EV | +9.4% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -162,7 +162,38 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_france_ligue_one/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401876402> 
 
 
-### 5. Minnesota Timberwolves to win — Minnesota Timberwolves v Portland Trail Blazers
+### 5. Indiana Pacers to win — Indiana Pacers v Houston Rockets
+
+| Field | Value |
+|---|---|
+| Sport / competition | NBA — NBA |
+| Kick-off | Wed 18 Nov 19:00 EST |
+| Market / selection | ML — **Indiana Pacers to win** |
+| Best price | **3.93** @ DraftKings |
+| Model probability (raw) | 27.1% (±0.0 pp param. sd; p10 27.1%) |
+| Market no-vig probability | 27.0% (Betfair Exchange) |
+| Final probability (blend) | 27.0% |
+| Fair odds | 3.70 |
+| Expected value | **+6.2%** (pessimistic +6.2%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 20 |
+| Odds snapshot | Wed 18 Nov 18:03 EST |
+
+**Statistical evidence.** Projected score Indiana Pacers 108.3 – Houston Rockets 116.9. Doyen's ratings project Indiana Pacers 108.3 – Houston Rockets 116.9 pts (margin -8.7, total 225.2); power ranks 26 and 6 of 33.
+
+**Why it may be value.** The best available price (3.93) exceeds the estimated fair
+price (3.70). The
+model rates this outcome 0.1 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model weight 0.00: the edge is the price versus the multi-bookmaker consensus, not a model opinion.
+
+Sources: <https://api.the-odds-api.com/v4/sports/basketball_nba/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/basketball/game/_/gameId/401910008> 
+
+
+### 6. Minnesota Timberwolves to win — Minnesota Timberwolves v Portland Trail Blazers
 
 | Field | Value |
 |---|---|
@@ -193,7 +224,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/basketball_nba/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/basketball/game/_/gameId/401910003> 
 
 
-### 6. Ath Madrid to win — Getafe v Ath Madrid
+### 7. Ath Madrid to win — Getafe v Ath Madrid
 
 | Field | Value |
 |---|---|
@@ -230,7 +261,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882803> 
 
 
-### 7. Over 3.5 goals — Santander v Sociedad
+### 8. Over 3.5 goals — Santander v Sociedad
 
 | Field | Value |
 |---|---|

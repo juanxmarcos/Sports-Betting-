@@ -1,7 +1,22 @@
 {
-  "generated": "2026-11-18T22:00:52+00:00",
+  "generated": "2026-11-18T23:04:16+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
+    {
+      "rec_id": "955fb7ae9aa8edf8",
+      "event_id": "nba:NBA:20261119:401910008",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-19T00:00:00+00:00",
+      "home": "Indiana Pacers",
+      "away": "Houston Rockets",
+      "market": "ML",
+      "selection": "home",
+      "line": null,
+      "odds": 3.93,
+      "bookmaker": "DraftKings",
+      "final_prob": 0.2701507050774633,
+      "ev": 0.06169227095443075
+    },
     {
       "rec_id": "244a3bf8920901ae",
       "event_id": "nba:NBA:20261119:401910015",
@@ -124,13 +139,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261118:186802",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T22:30:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
     {
       "event_id": "nba:NBA:20261119:401910007",
       "league": "NBA",
