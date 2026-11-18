@@ -620,7 +620,7 @@
         <li>Picked per size: the best 4–5 leg, 3-leg and 2-leg parlay, then a second of each while room remains. A size with nothing qualifying is skipped, never padded.</li>
         <li>Within a size, ranked by estimated hit chance × estimated value. The hit chance multiplies leg probabilities as if the legs were independent; it is unvalidated.</li>
         <li>A verified bookmaker quote always replaces an estimate on the same games.</li></ul>
-      ${line ? `<p class="small"><b>${esc(line)}</b>${typeof r.open === "number" ? ` · ${esc(r.open)} open, ${esc(r.void || 0)} void` : ""}. Paper results at the $${PC.stake} display stake and the estimated price, settled from final scores; a void leg voids the whole parlay here.</p>${byLegs}` : ""}`;
+      ${line ? `<p class="small"><b>${esc(line)}</b>${typeof r.open === "number" ? ` · ${esc(r.open)} open, ${esc(r.void || 0)} void` : ""}. Paper results at the $${PC.stake} display stake and the estimated price, settled from final scores; a void game voids the whole parlay here, a pushed leg counts at odds 1.00.</p>${byLegs}` : ""}`;
     return sec("Estimated parlays", body);
   }
   function closeAllView() {
@@ -683,21 +683,28 @@
     const byLegs = groups.filter(([, g]) => g && typeof g.won === "number").map(([n, g]) => sizeRow(`${n} legs`, g)).join("");
     const total = byLegs && typeof R.won === "number" && typeof R.lost === "number" ? sizeRow("Total", R, "total") : "";
     const RES = { won: "Won", lost: "Lost", void: "Void", open: "Open" };
-    const mk = { won: " ✓", lost: " ✗", void: " (void)" };
+    const mk = { won: " ✓", lost: " ✗", void: " (void)", push: " (push)" };
+    // Issue #82: leg record by market type (1X2, O/U, BTTS, DC, DNB), every number from E.record.by_market.
+    const mkts = R.by_market && typeof R.by_market === "object" ? Object.entries(R.by_market) : [];
+    const mktRow = ([m, g]) => { const n = (Number(g.won) || 0) + (Number(g.lost) || 0);
+      return `<tr data-market="${esc(m)}"><th scope="row">${esc(str(g.label) ? g.label : m)}</th><td>${esc(g.won)}–${esc(g.lost)}</td><td>${n ? Math.round((Number(g.won) || 0) / n * 100) + "%" : "–"}</td><td>${esc((Number(g.push) || 0) + (Number(g.void) || 0))}</td><td>${esc(g.open || 0)}</td></tr>`; };
+    const byMarket = mkts.filter(([, g]) => g && typeof g.won === "number").map(mktRow).join("");
+    const mtable = byMarket ? `<div class="card ph-rec"><table data-ph-by-market><caption class="sr">Estimated parlay legs by market type</caption><thead><tr><th scope="col">Market (legs)</th><th scope="col">Won–lost</th><th scope="col" title="Legs won ÷ (won + lost)">Hit rate</th><th scope="col" title="Pushed (draw no bet on a draw) or void legs">Push/void</th><th scope="col">Open</th></tr></thead><tbody>${byMarket}</tbody></table></div>` : "";
     const list = rows.map((r) => {
       const legs = r.legs.map((l) => `<li>${legPrice(l, "span")}${compName(l) ? `<span class="ph-c" data-comp>${esc(compName(l))} · </span>` : ""}${vs(l.title)}: ${esc(l.selection_text || l.selection)}${mk[l.result] || ""}</li>`).join("");
       const res = RES[r.result] || "Open";
       return `<div class="card ph" data-ph="${esc(r.parlay_id)}" data-result="${esc(r.result || "open")}">
         <div class="ph-h"><span class="t">${esc(fmtDay(r.date))}</span><span>${esc(r.bookmaker)} · ${esc(r.n_legs || r.legs.length)} legs</span><span class="pill ${esc(r.result || "open")}">${esc(res)}</span></div>
         <ul class="ph-legs small">${legs}</ul>
-        <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b></span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
+        <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b>${typeof r.settled_odds === "number" && r.settled_odds > 1 ? ` (settled at ${dec(r.settled_odds)} after a push)` : ""}</span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
     }).join("");
     const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">Won–lost</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">Hit rate</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">Paper P/L</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
     return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
-      <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void leg voids the whole parlay here. Nothing is edited or removed.</p>
+      <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void or postponed game voids the whole parlay here; a pushed leg (draw no bet on a draw) counts at odds 1.00 and the rest stands. Nothing is edited or removed.</p>
       <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
       ${table}
+      ${mtable}
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 
