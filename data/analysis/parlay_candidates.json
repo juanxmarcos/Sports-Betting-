@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-18T17:08:33+00:00",
+ "generated": "2026-11-18T17:23:19+00:00",
  "date": "2026-11-18",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -68,8 +68,8 @@
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-18T17:09:57+00:00",
-  "credits_spent_last_run": 5,
+  "at": "2026-11-18T17:24:01+00:00",
+  "credits_spent_last_run": 0,
   "credits_remaining": "334"
  },
  "ledger_rows_added": 0,
