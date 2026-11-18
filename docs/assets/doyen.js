@@ -515,8 +515,7 @@
     const sel = ["1", "2", "3"].includes(S.hday) ? Number(S.hday) : 0;
     const label = (n) => (n === 0 ? "Today" : (n === 1 ? "Tomorrow" : "+" + n));
     const seg = `<div class="seg days" role="group" aria-label="Day">${[today, ...future].map((k, n) =>
-      `<button class="${sel === n ? "on" : ""}" data-f="hday" data-v="${n}" aria-pressed="${sel === n}" data-day="${esc(k)}">${label(n)} · ${esc(shortDay(k))}</button>`).join("")}</div>
-      <p class="small muted daynav"><a href="#/history">Past days: History</a></p>`;
+      `<button class="${sel === n ? "on" : ""}" data-f="hday" data-v="${n}" aria-pressed="${sel === n}" data-day="${esc(k)}">${label(n)} · ${esc(shortDay(k))}</button>`).join("")}</div>`;
     if (sel > 0) {
       const day = future[sel - 1], prev = shownPreview(E, day);
       let p = `<div class="eyebrow">${esc(fmtDay(day))}</div><h1 style="margin-top:6px">Preview Parlays</h1>${seg}`;
