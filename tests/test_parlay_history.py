@@ -164,11 +164,12 @@ def test_started_parlay_stays_on_home_marked_closed_and_yesterdays_does_not():
     assert recorded(html) == [("pe-today", "closed")]
     card = _card(html, "pe-today")
     assert "Started, betting closed" in card and "Betting closed: a game in this parlay has started." in card
-    assert "data-stake" not in card and "<input" not in card          # never looks bettable
+    # Issue #76: the display-only bet amount stays editable; the recorded $10 figures stay alongside.
+    assert "data-stake" in card and ">Bet amount<" in card and "Record uses $10 paper stakes" in card
     assert "bet now" not in card.lower() and "check your book" not in card
     assert "Estimated odds at publication" in card and "Price at publication time (published" in card
     assert '<span class="pill estimate">Estimate</span>' in card and "not a bet-slip quote" in card
-    assert "pending" in card and "$10 bet pays" in card and "$40.00" in card
+    assert "pending" in card and "Recorded $10 bet pays" in card and "$40.00" in card
     assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" in html
 
 
@@ -230,3 +231,65 @@ def test_history_page_lists_every_parlay_with_result_and_record():
     # Total row repeats the overall record line (1–1, +$10.00) and the overall open/void counts.
     assert '<tfoot><tr class="total"><th scope="row">Total</th><td>1–1</td><td>50%</td><td>0</td><td>1</td><td class="pl pos">+$10.00</td></tr></tfoot>' in html
     assert 'href="/' not in html and 'src="/' not in html            # relative paths only
+
+
+# ---------- issue #76: editable, display-only bet amount on every parlay card ----------
+def _live(pid, odds_legs=(2.0, 2.0)):
+    later = [(f"L{i}H v L{i}A", f"L{i}H to win", NOW + timedelta(hours=1 + i)) for i in range(len(odds_legs))]
+    return {"parlay_id": pid, "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",
+            "n_legs": len(later), "estimated_odds": round(odds_legs[0] * odds_legs[1], 4), "stake": 10,
+            "legs": [{"event_id": f"ev-{pid}-{i}", "sport": "nba", "title": t, "selection": "home", "selection_text": s,
+                      "start_utc": _iso(ko), "status": "active", "price": p, "prob": 0.55,
+                      "price_at": _iso(NOW - timedelta(minutes=30))} for i, ((t, s, ko), p) in enumerate(zip(later, odds_legs))]}
+
+
+def _payout(card):
+    return re.search(r'data-payout>([^<]*)<', card).group(1)
+
+
+@needs_node
+def test_saved_bet_amount_drives_every_card_but_never_the_record():
+    won = _rec("pe-w", result="won", paper_pl="30.00", leg_results=["won", "won"],
+               legs=[("A v B", "A to win", NOW - timedelta(hours=4)), ("C v D", "C to win", NOW - timedelta(hours=3))])
+    lost = _rec("pe-l", result="lost", paper_pl="-10.00", leg_results=["lost", "open"])
+    hist = [won, lost]
+    data = _data([_rec("pe-started"), won, lost], recs=[_live("pe-live")], history=hist)
+    base = _run({"data": data, "now": _iso(NOW)})
+    typed = _run({"data": data, "now": _iso(NOW), "storage": {"doyen.betAmount": "25"}})
+    # Default $10 with nothing stored; the stored amount on every card's input and payout.
+    assert _payout(_card(base, "pe-live")) == "$40.00" and _payout(_card(base, "pe-started")) == "$40.00"
+    live, started = _card(typed, "pe-live"), _card(typed, "pe-started")
+    assert 'value="25" data-stake' in live and _payout(live) == "$100.00"
+    assert 'value="25" data-stake' in started and _payout(started) == "$100.00"
+    w, lo = _card(typed, "pe-w"), _card(typed, "pe-l")
+    assert _payout(w) == "Won: would have paid $100.00" and _payout(lo) == "Lost $25.00"
+    # Recorded $10 results stay as published.
+    assert "Won: paid $40.00" in w and "+$30.00" in w and "Lost: lost $10.00" in lo and "−$10.00" in lo
+    assert "Recorded $10 bet pays" in started and "Record uses $10 paper stakes" in live
+    # Footer record line and History P/L are identical with or without a stored amount.
+    for page in ({"footer": True}, {"hash": "#/history"}):
+        a = _run({"data": data, "now": _iso(NOW), **page})
+        b = _run({"data": data, "now": _iso(NOW), "storage": {"doyen.betAmount": "25"}, **page})
+        assert a == b
+    hp = _run({"data": data, "now": _iso(NOW), "storage": {"doyen.betAmount": "25"}, "hash": "#/history"})
+    assert "data-stake" not in hp and "$10 bet pays <b>$40.00</b>" in hp
+
+
+@needs_node
+@pytest.mark.parametrize("stored", ["0", "-3", "\"abc\"", "99999", "true", "not json"])
+def test_bad_stored_bet_amount_falls_back_to_ten(stored):
+    html = _run({"data": _data([_rec("pe-started")], recs=[_live("pe-live")]), "now": _iso(NOW),
+                 "storage": {"doyen.betAmount": stored}})
+    assert 'value="10" data-stake' in _card(html, "pe-live") and _payout(_card(html, "pe-started")) == "$40.00"
+
+
+@needs_node
+@pytest.mark.parametrize("value,result,want,saved", [
+    ("25", None, "$100.00", "25"), ("25", "won", "Won: would have paid $100.00", "25"),
+    ("25", "lost", "Lost $25.00", "25"), ("7.5", "void", "Void: $7.50 returned", "7.5"),
+    ("12.345", None, "$49.40", "12.35"), ("0", None, "—", None), ("", "won", "—", None), ("20000", None, "—", None)])
+def test_typing_on_open_and_ledger_cards_updates_payout_and_remembers_amount(value, result, want, saved):
+    stake = {"value": value, "odds": 4.0, "dump": True, **({"result": result} if result else {})}
+    out = json.loads(_run({"data": {}, "now": _iso(NOW), "stake": stake}))
+    assert out["payout"] == want
+    assert out["storage"].get("doyen.betAmount") == saved

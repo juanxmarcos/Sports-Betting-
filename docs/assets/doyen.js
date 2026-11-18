@@ -277,6 +277,33 @@
     return Math.round(s * odds * 100 + 1e-7) / 100;
   }
   const usd = (x) => (x == null ? "—" : "$" + x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  // ---------- editable bet amount (issue #76) ----------
+  // Display-only: the owner's typed amount drives "Potential payout" on every parlay card and is
+  // remembered in localStorage. The paper record, P/L and History always use the recorded $10 stake.
+  const BET = { max: 10000, key: "betAmount" };
+  // A usable amount: a positive number up to BET.max, rounded to the cent. Null otherwise.
+  function betAmount(v) {
+    if (v === "" || v == null || typeof v === "boolean") return null;
+    const n = Number(v);
+    if (!isFinite(n) || n <= 0 || n > BET.max) return null;
+    const c = Math.round(n * 100 + 1e-7) / 100;
+    return c > 0 ? c : null;
+  }
+  const savedBet = () => betAmount(store.get(BET.key, PC.stake)) || PC.stake;
+  const betStr = (x) => (Number.isInteger(x) ? String(x) : x.toFixed(2));
+  // Payout line for the entered amount; a settled card shows what that amount would have done.
+  function betText(amount, odds, result) {
+    const a = betAmount(amount);
+    if (a == null) return "—";
+    if (result === "won") return `Won: would have paid ${usd(grossPayout(a, odds))}`;
+    if (result === "lost") return `Lost ${usd(a)}`;
+    if (result === "void") return `Void: ${usd(a)} returned`;
+    return usd(grossPayout(a, odds));
+  }
+  function betInput(i) {
+    return `<label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0.01" max="${BET.max}" step="0.01" value="${esc(betStr(savedBet()))}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>`;
+  }
+  const betNote = `<div class="pc-note" data-record-stake>Record uses $${PC.stake} paper stakes; changing the bet amount is display-only.</div>`;
   // ---------- estimated parlays (issue #47) ----------
   // Owner-approved estimates shown alongside the strict path. Mirrors sbi/parlay_estimated.py
   // card_problem: kind "estimated_product" (never a bookmaker quote), today in New York, 2-6 active
@@ -392,12 +419,13 @@
       <div class="pc-foot">
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Estimated combined odds</div><div class="v">${dec(odds)}</div></div>
-        <label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0" step="1" value="${PC.stake}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>
-        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${usd(grossPayout(PC.stake, odds))}</div></div>
+        ${betInput(i)}
+        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(savedBet(), odds)}</div></div>
       </div>
       <div class="pc-note" data-pays10><b>$${PC.stake} bet pays ${usd(grossPayout(PC.stake, odds))}</b> (estimated, ${r.legs.length} legs, if every leg wins).</div>
       ${pricesRead(r)}
-      <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
+      <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
+      ${betNote}
       ${hit}
     </article>`;
   }
@@ -446,18 +474,21 @@
     const gone = !started && !FINAL[r.result]
       ? `<div class="pc-note">Recorded at publication; the price shown is from then and may have moved.</div>` : "";
     const closed = started || FINAL[r.result] ? `<div class="pc-note">Betting closed: a game in this parlay has started.</div>` : "";
-    return `<article class="card parlay est recorded" data-parlay="${esc(r.parlay_id)}" data-kind="recorded" data-state="${esc(cls)}">
+    return `<article class="card parlay est recorded" data-parlay="${esc(r.parlay_id)}" data-kind="recorded" data-state="${esc(cls)}" data-odds="${esc(r.estimated_odds)}"${FINAL[r.result] ? ` data-result="${esc(r.result)}"` : ""}>
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
       <div class="pc-state ${esc(cls)}" data-state-line>${esc(state)}</div>
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>
-        <div><div class="k">$${esc(stake)} bet pays</div><div class="v">${usd(pays)}</div></div>
+        ${betInput(i)}
+        <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(savedBet(), r.estimated_odds, r.result)}</div></div>
+        <div><div class="k">Recorded $${esc(stake)} bet pays</div><div class="v">${usd(pays)}</div></div>
         ${FINAL[r.result] ? `<div><div class="k">Paper P/L</div><div class="v">${esc(plTxt)}</div></div>` : ""}
       </div>
       ${closed}${gone}
       <div class="pc-note">Price at publication time${at}: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Results come from final scores; paper results only.</div>
+      ${betNote}
     </article>`;
   }
   function parlayCard(r, i) {
@@ -469,11 +500,12 @@
       <div class="pc-foot">
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Combined odds</div><div class="v">${dec(odds)}</div></div>
-        <label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0" step="1" value="${PC.stake}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>
-        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${usd(grossPayout(PC.stake, odds))}</div></div>
+        ${betInput(i)}
+        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(savedBet(), odds)}</div></div>
       </div>
       <div class="pc-note" data-prices-read>Price as of ${esc(fmtAsOf(isoT(r.quote.quoted_at)))} — check your book.</div>
-      <div class="pc-note">${esc(r.bookmaker)} combined price from the bet slip. Payout includes the stake and is paid only if every leg wins. $${PC.stake} is illustrative, not advice to bet.</div>
+      <div class="pc-note">${esc(r.bookmaker)} combined price from the bet slip. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
+      ${betNote}
     </article>`;
   }
   function home() {
@@ -512,7 +544,18 @@
     if (!inp) return;
     const card = inp.closest("[data-parlay]");
     const out = card && card.querySelector("[data-payout]");
-    if (out) out.textContent = usd(grossPayout(inp.value, Number(card.dataset.odds)));
+    if (out) out.textContent = betText(inp.value, Number(card.dataset.odds), card.dataset.result);
+    const a = betAmount(inp.value);
+    if (a == null) return;
+    store.set(BET.key, a);                                   // remembered, display-only (issue #76)
+    // Keep every other card on the page at the same amount.
+    const all = $app.querySelectorAll ? $app.querySelectorAll("[data-stake]") : [];
+    for (const o of all) {
+      if (o === inp) continue;
+      o.value = betStr(a);
+      const c = o.closest("[data-parlay]"), t = c && c.querySelector("[data-payout]");
+      if (t) t.textContent = betText(a, Number(c.dataset.odds), c.dataset.result);
+    }
   });
   function parlaysDetail() {
     const P = S.data.parlays || {};

@@ -3,7 +3,9 @@
 // Input (stdin): {"data": {...}, "now": ISO, "range": "today|tomorrow|week", "hash": "#/parlays",
 //   "allowMock": true (render fixtures marked mock), "noLite": true (data/parlays.json missing),
 //   "footer": true (print the footer's estimated-parlay record line instead),
-//   "stake": {"value": "25", "odds": 6.5} (simulate typing a bet amount; prints the payout text),
+//   "stake": {"value": "25", "odds": 6.5, "result": "won"} (simulate typing a bet amount on a card with
+//   those data-odds/data-result; prints the payout text, or {"payout", "storage"} with "dump": true),
+//   "storage": {"doyen.betAmount": "25"} (seed localStorage; issue #76),
 //   "hday": "1" (click the homepage day switcher: 0 today, 1-3 the preview days; issue #58)}.
 "use strict";
 const fs = require("fs");
@@ -24,7 +26,8 @@ const els = { app, tz: stub(), updated: stub(), estrec: stub() };
 global.document = { getElementById: (id) => els[id] || stub(), querySelectorAll: () => [], title: "" };
 global.window = { addEventListener() {}, scrollTo() {}, __DOYEN_ALLOW_MOCK: input.allowMock === true };
 global.location = { hash: input.hash || "" };
-global.localStorage = { getItem: () => null, setItem() {} };
+const mem = Object.assign({}, input.storage || {});
+global.localStorage = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); } };
 const fetched = [];
 global.fetch = (url) => {
   fetched.push(url);
@@ -40,10 +43,12 @@ require(path.join(__dirname, "..", "..", "docs", "assets", "doyen.js"));
 setTimeout(() => {
   if (input.stake) {
     const out = { textContent: "" };
-    const card = { dataset: { odds: String(input.stake.odds) }, querySelector: () => out };
+    const ds = { odds: String(input.stake.odds) };
+    if (input.stake.result) ds.result = input.stake.result;
+    const card = { dataset: ds, querySelector: () => out };
     const inp = { value: input.stake.value, closest: (sel) => (sel === "[data-parlay]" ? card : inp) };
     listeners.input({ target: inp });
-    process.stdout.write(out.textContent);
+    process.stdout.write(input.stake.dump ? JSON.stringify({ payout: out.textContent, storage: mem }) : out.textContent);
     return;
   }
   if (input.footer) { process.stdout.write(JSON.stringify({ estrec: els.estrec.textContent, hidden: els.estrec.hidden })); return; }
