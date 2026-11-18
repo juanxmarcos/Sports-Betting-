@@ -701,7 +701,8 @@
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 
-  // Issue #85: single-pick record by sport (and by market) in the same styled card as the parlay table.
+  // Issue #85: single-pick record by sport in the same styled card as the parlay table
+  // (the by-market single-pick table was removed in #90).
   // Display only, computed from the listed picks exactly like the record line above it, so the Total row
   // always equals that line. Singles are graded at a flat 1-unit stake (status.pnl, in units).
   function singlesTable(H) {
@@ -722,12 +723,9 @@
     const lab = (long, short) => `<span class="lg">${long}</span><span class="sh" aria-hidden="true">${short}</span>`;
     const head = (first) => `<thead><tr><th scope="col">${first}</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="Won ÷ (won + lost); pushes, voids and open picks excluded">${lab("Hit rate", "Hit")}</th><th scope="col">${lab("Void/push", "Void")}</th><th scope="col" title="Not yet graded, including withdrawn picks">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th><th scope="col" title="Paper P/L ÷ units staked on graded picks">ROI</th></tr></thead>`;
     const bySport = SPORTS.slice(1).filter(([k]) => sportOk(k, S.hsport)).map(([k, name]) => row(name, tally(H.filter((p) => p.sport === k)))).join("");
-    const mkts = {}; H.forEach((p) => { const m = str(p.market) ? p.market.trim() : "Other"; (mkts[m] = mkts[m] || []).push(p); });
-    const byMarket = Object.keys(mkts).sort().map((m) => row(m, tally(mkts[m]))).join("");
     const T = row("Total", tally(H), "total");
     return `<p class="small muted" data-singles-stake>Paper results at a flat 1-unit stake per pick (u = units).</p>
-      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>
-      ${Object.keys(mkts).length > 1 ? `<div class="card ph-rec sg-rec"><table data-singles-by-market><caption class="sr">Single-pick record by market</caption>${head("Market")}<tbody>${byMarket}</tbody><tfoot>${T}</tfoot></table></div>` : ""}`;
+      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>`;
   }
 
   function history() {
