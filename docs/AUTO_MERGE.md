@@ -1,4 +1,4 @@
-# Zero-cost auto-merge (issue #29)
+# Zero-cost auto-merge (issues #29 and #71)
 
 **Status: built, off by default, not yet verified end to end.** Until the owner finishes the
 setup below and one real PR has been merged by the gate, no automatic merge is guaranteed.
@@ -10,6 +10,22 @@ Every PR still needs a manual merge until then.
 > that would require the owner to pay money (paid API, hosting or service subscription,
 > metered usage, billed upgrade, spend of any kind) must **not** be approved, enabled or
 > merged automatically. The owner alone approves spending.
+
+## Owner rule restated (2026-11-18, issue #71)
+
+> "if all requirements are met, auto merge. Same thing for deployments."
+
+So the spend gate routes a change to the owner only on a **real spend signal**, not merely
+because it touches a data connector or contains a URL. PR #70 (free ESPN club-soccer fixtures)
+was zero-cost with green tests but went to the owner only because it touched `sbi/sources/`
+and contained `https://` URLs; under the #71 rules it passes.
+
+**Deployments.** The site is served by GitHub Pages from `main` (`docs/`). Pages deploys
+automatically on every push to `main`, at no cost on a public repository, so a merged PR is
+deployed with no extra step. Changes under `docs/` keep auto-merging like other code. What
+still goes to the owner is a new hosting or deployment target that could bill (Vercel,
+Netlify, Heroku, AWS, GCP, Azure, Firebase, Cloudflare Workers…, their config files, or a
+`CNAME` pointing the site somewhere else).
 
 ## How it works
 
@@ -60,21 +76,48 @@ zero cost. It is a fail-closed router that sends anything that *might* involve m
 owner, and lets the rest through:
 
 - **Protected paths, any change (including a rename from or to them):** `.github/` (CI,
-  workflows, this gate's workflow), `automation/` (agent prompts, this gate), dependency and
-  test-config files (`requirements*.txt`, `pyproject.toml`, `conftest.py`, `pytest.ini`…),
-  `sbi/sources/` (external data connectors), deployment and secret files (`.env*`,
-  `Dockerfile`, `vercel.json`, `CNAME`…) and `.gitignore`/`.gitattributes`.
-- **Content signals on added *and* removed lines** of code (removing a quota guard can raise
-  spend): money and billing words (billing, subscription, paid plan, upgrade, credits, quota,
-  cost, purchase…); credentials (`secrets.`, API keys, tokens, `os.environ`); network and
-  process calls (`https://`, `requests.`, `urllib`, `subprocess`, `curl`…); The Odds API;
-  scheduling or deployment. Identifiers are also split (`remainingCredits`,
-  `extra_usage_credits`) so naming style can't dodge the check.
-- **Site files (`docs/`)** are checked only for network calls and credentials, since text on
-  a page can't bill anyone.
+  workflows, this gate's workflow) and `automation/` (agent prompts, this gate), because a PR
+  must not be able to weaken the gate or CI itself; dependency and test-config files
+  (`requirements*.txt`, `pyproject.toml`, `conftest.py`, `pytest.ini`…); deployment and
+  secret files (`.env*`, `Dockerfile`, `vercel.json`, `netlify.toml`, `wrangler.toml`,
+  `firebase.json`, `*.tf`, `CNAME`…) and `.gitignore`/`.gitattributes`.
+  **`sbi/sources/` is no longer protected (#71):** connectors are treated like other code.
+- **Content signals on added *and* removed lines** of code (removing a guard can raise spend):
+  - money and billing words, also in comments: billing, invoice, subscription, paid
+    plan/tier/API, pricing tier, premium plan, metered, overage, payment, checkout, Stripe,
+    PayPal, credit card, purchase, upgrade;
+  - metering words **in code only** (not in `#`/`//` comments): cost, credits, quota, spend,
+    usage-based. `credits_used += 3` is flagged; a comment explaining how credits are shared
+    is not;
+  - credentials: `secrets.`, API keys, tokens, `authorization`, passwords, `os.environ`,
+    `getenv`;
+  - **URLs only to new hosts (added lines):** a URL to a host the project already uses or a
+    free public endpoint (`site.api.espn.com`, `www.espn.com`, `raw.githubusercontent.com`,
+    `github.com`, `www.football-data.co.uk`, Google Fonts, cdnjs…; the full list is
+    `KNOWN_HOSTS` in `automation/auto_merge.py`) is not a signal, and neither is an HTTP
+    library call (`urllib`, `requests`) by itself. A URL to any other host, a computed host
+    (`https://{host}/…`) or a URL with embedded credentials goes to the owner. Adding a host
+    to the list changes `automation/`, so the owner decides;
+  - process or shell execution (`subprocess`, `os.system`, `curl`, `wget`);
+  - The Odds API: any line naming it (`odds_api`, `the-odds-api`) or its credit headers
+    (`x-requests-*`);
+  - **The Odds API budget:** a change to `MAX_CREDITS_PER_RUN`, `MAX_CREDITS_PER_DAY`,
+    `UNKNOWN_REMAINING_CAP` or `MORNING_SHARE` that raises the value, a change to `RESERVE`
+    that lowers it, a value the gate cannot read as a number, a removed cap, any other changed
+    line that uses one of these constants, and any code edit inside `budget()`. Lowering a cap
+    (or raising the reserve) passes;
+  - paid hosting or deployment targets (Vercel, Netlify, Heroku, AWS, GCP, Azure, Firebase,
+    Fly.io, Render, Railway, DigitalOcean, Cloudflare Workers/Pages).
+
+  Identifiers are also split (`remainingCredits`, `extra_usage_credits`) so naming style
+  can't dodge the check.
+- **Site files (`docs/`)** are checked only for credentials and URLs to new hosts, since text
+  on a page can't bill anyone. Site changes otherwise keep auto-merging.
 - **Tests (`tests/`)** run only in CI with no secrets, so their content is checked only for
   edits that lower checks: new `skip`/`skipif`/`xfail`, `__test__ = False`, `collect_ignore`,
-  `addopts`. Deleting a test file or moving it out of `tests/` also goes to the owner.
+  `addopts`, and a file that ends up with fewer `test_` functions than before (renaming or
+  rewriting a test is fine). Deleting a test file or moving it out of `tests/` also goes to
+  the owner.
 - **Fail closed:** binary or oversized diffs outside generated data, unknown change types, an
   incomplete file list, or a file count that doesn't match GitHub's all go to the owner.
 - **Not scanned:** Markdown and generated outputs (`data/`, `reports/`, `ledger/`,
@@ -89,9 +132,22 @@ Replayed on the diffs of 13 earlier `claude/issue-*` branches (spend gate only, 
   with `owner-approved-spend`. (Links to this repository's own GitHub pages are not counted as
   network calls.)
 
+Replayed on recent merged PRs with the #71 rules (spend gate only, 2026-11-18, squash diffs
+from `main`):
+- **#62 (free ESPN future odds, `claude/issue-61-future-odds`): passes** (before #71: owner,
+  for `sbi/sources/` paths and an `urllib` import).
+- **#70 (free ESPN club-soccer fixtures, `claude/issue-66-club-soccer-fixtures`): passes**
+  (before #71: owner, for `sbi/sources/` paths, ESPN URLs and the word "credits" in a comment).
+- #56, #60, #67 and #69 pass, as before.
+- #64 (two daily runs) and #55 (daily refresh) still go to the owner, correctly: both change
+  `.github/workflows/` and The Odds API budget (#55 raised `MAX_CREDITS_PER_RUN` 12 → 40).
+- #59 still goes to the owner for a new `skipif` in a browser test (known false positive).
+
 **What it cannot catch.** A change that raises cost through ordinary-looking logic (for
-example, a loop that calls an existing connector more often, written without any flagged
-word, outside `sbi/sources/`) could pass. So could a test edit that weakens an assertion
+example, a loop that calls an existing free connector more often, or code that spends
+leftover Odds API credits that used to go unused, as #70 does within the unchanged daily
+allowance) could pass. The daily and per-run caps and `budget()` are what bound Odds API
+spend, which is why any change that loosens them is gated. So could a test edit that weakens an assertion
 without skipping it. Running the scheduled job more often needs a `.github/` change, which is
 always gated. The existing free-plan setup also limits the damage: The Odds API key is on the
 free tier (requests past the quota are refused, not billed), and Actions minutes are free on

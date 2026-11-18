@@ -10,9 +10,12 @@ Design rules
 - Pull request text (title, body, commit messages) never grants anything. Authority comes
   from: the branch living in this repository, the PR author, the linked issue carrying the
   `ready-for-claude` label, and labels the owner applied directly (not through an app).
-- The spend gate cannot prove a change costs nothing. It routes every change that *might*
-  touch money, credentials, external services, CI or this policy to the owner. All other
+- The spend gate cannot prove a change costs nothing. It routes every change that shows a
+  real spend signal (billing words, new credentials, new external hosts, higher Odds API
+  budget, paid hosting) or touches CI, this policy or dependencies to the owner. All other
   changes are merged once every check is green (unless strict mode is on, see below).
+  Owner rule 2026-11-18 (issue #71): "if all requirements are met, auto merge. Same thing
+  for deployments." Data connectors under `sbi/sources/` are ordinary code since #71.
 - Disabled until the owner sets the repository variable `AUTOMERGE_ENABLED=true`. Until
   then it runs in dry-run mode: it writes its decision to the job summary and changes
   nothing.
@@ -67,10 +70,12 @@ PROTECTED_PATTERNS = (
     "pyproject.toml", "setup.py", "setup.cfg", "Pipfile", "Pipfile.lock", "poetry.lock",
     "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
     "pytest.ini", "tox.ini", "conftest.py", "*/conftest.py", ".coveragerc",
-    "sbi/sources/*",                # external data connectors (where a paid API would live)
     ".env*", "*/.env*", "*.pem", "*.key",
     "Dockerfile", "docker-compose*", "vercel.json", "netlify.toml", "Procfile",
     "CNAME", "*/CNAME", "app.yaml", "fly.toml", "render.yaml",
+    "now.json", "app.json", "wrangler.toml", "serverless.yml", "serverless.yaml",
+    "firebase.json", ".firebaserc", "amplify.yml", "railway.json", "railway.toml",
+    "cloudbuild.yaml", "azure-pipelines.yml", "*.tf", "*.tfvars", "*/.vercel/*", ".vercel/*",
     ".gitattributes", ".gitmodules", ".gitignore",
 )
 
@@ -86,20 +91,71 @@ IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 BOT_DATA_PATTERNS = ("data/*", "reports/*", "ledger/*", "docs/data/*", "docs/dev/*")
 
 # Content signals, checked on added AND removed lines (removing a guard can raise spend).
+# Issue #71: only real spend signals. A URL to a host the project already uses is not one.
 SPEND_SIGNALS = (
-    ("money or billing", r"\b(billing|billed|bill(s)?|invoice\w*|subscri(be|bed|ption\w*)|"
-                         r"paid[ _-]?(plan|tier|api|service|account)|metered|overage|payment\w*|"
-                         r"checkout|stripe|paypal|credit[ _-]?card|purchase\w*|buy(ing)?|"
-                         r"upgrade|spend\w*|costs?|credits?|quota\w*|usage[ _-]?(credits|based))\b"),
+    # Billing words: flagged anywhere, comments included.
+    ("money or billing", r"\b(billing|billed|invoice\w*|subscri(be|bed|bes|bing|ption\w*)|"
+                         r"paid[ _-]?(plan|tier|api|service|account|version|subscription)s?|"
+                         r"pricing[ _-]?(tier|plan)s?|premium[ _-]?(plan|tier|account)s?|metered|"
+                         r"overage\w*|payment\w*|checkout|stripe|paypal|credit[ _-]?cards?|"
+                         r"purchas\w*|upgrad(e|es|ed|ing))\b"),
     ("credentials or secrets", r"(secrets\.|\bsecret\b|api[_-]?key|apikey|access[_-]?token|"
                                r"\btoken\b|authorization|bearer\s|password|client[_-]?secret|"
                                r"os\.environ|getenv|process\.env)"),
-    ("network or external service", r"(https?://|\burlopen\b|\burllib\b|\brequests\.|\bhttpx\b|"
-                                    r"\baiohttp\b|\bsocket\b|websocket|XMLHttpRequest|"
-                                    r"sendBeacon|\bsubprocess\b|os\.system|\bcurl\b|\bwget\b)"),
-    ("paid-capable data provider", r"(odds[_-]?api|the-odds-api|x-requests)"),
-    ("scheduling or deployment", r"(\bcron\b|schedule:|workflow_dispatch|deploy\w*)"),
+    ("process or shell execution", r"(\bsubprocess\b|os\.system|os\.popen|\bcurl\b|\bwget\b)"),
+    ("Odds API call or credit accounting", r"(odds[_-]?api|the-odds-api|x-requests)"),
+    ("paid hosting or deployment target", r"\b(vercel|netlify|heroku\w*|amazonaws|aws|gcp|gcloud|"
+                                          r"google[ _-]?cloud|cloud\.google|azure\w*|firebase\w*|"
+                                          r"fly\.io|flyctl|render\.com|railway|digitalocean|"
+                                          r"cloudflare[ _-]?(workers|pages)|wrangler)\b"),
 )
+# Metering words: flagged in code only (the part of a line before a # or // comment), so a
+# comment explaining how credits are shared is not a signal but `credits_used += 3` is.
+METERING_SIGNAL = ("metered usage in code", re.compile(
+    r"\b(costs?|credits?|quota\w*|spend\w*|usage[ _-]?(credits|based)|bill(s)?|buy(ing)?)\b", re.IGNORECASE))
+
+# Hosts the project already uses (code and site on main, 2026-11-18) plus free public
+# endpoints. URLs to any other host, with a placeholder host, or with credentials in the URL
+# go to the owner. Exact host names only: no wildcard subdomains.
+KNOWN_HOSTS = frozenset({
+    # this project
+    "github.com", "juanxmarcos.github.io", "raw.githubusercontent.com", "localhost", "127.0.0.1",
+    # free public data and site assets
+    "site.api.espn.com", "site.web.api.espn.com", "sports.core.api.espn.com", "www.espn.com",
+    "espnpressroom.com", "www.football-data.co.uk", "football-data.co.uk", "huggingface.co",
+    "fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com", "creativecommons.org",
+    "claude.ai",
+    # The Odds API: its spend is governed by the budget constants below and the
+    # "Odds API call or credit accounting" signal, not by the host name.
+    "api.the-odds-api.com", "the-odds-api.com",
+    # reference links already in the code (documentation and press, not fetched)
+    "bettingdataapi.com", "cdcgaming.com", "developer.opticodds.com", "docs.kalshi.com",
+    "docs.polymarket.com", "docs.smarkets.com", "entreprise.pmu.fr", "europeangaming.eu",
+    "flutter.com", "footballanalytics.pro", "gamingandco.substack.com", "group.banijay.com",
+    "igamingbusiness.com", "igamingfuture.com", "kansspelautoriteit.nl", "lgcb.dps.louisiana.gov",
+    "live.euronext.com", "mfn.se", "polymarket.com", "rubypayeur.com", "sbcamericas.com",
+    "sbcnews.co.uk", "skorbot.live", "sportsapis.dev", "sportsgameodds.com",
+    "support.developer.betfair.com", "theopenmodel.com", "www.betssonab.com",
+    "www.boardroomalpha.com", "www.evokeplc.com", "www.fdjunited.com", "www.fox2detroit.com",
+    "www.gambling.com", "www.gamblingcommission.gov.uk", "www.inderes.fi",
+    "www.legalsportsreport.com", "www.lobbyregister.bundestag.de", "www.pinnacle.com", "www.sec.gov",
+})
+URL_RE = re.compile(r"\b(?:https?|wss?|ftp)://([^/?#\s\"'<>)`\]]*)", re.IGNORECASE)
+HOST_RE = re.compile(r"^[a-z0-9.-]+$")
+
+# The Odds API budget (sbi/sources/odds_api.py). Direction +1: a higher value spends more;
+# -1: a lower value spends more (the reserve kept back). Any change that raises spend, any
+# change whose direction cannot be read, and any edit inside budget() goes to the owner.
+BUDGET_CONSTANTS = {"MAX_CREDITS_PER_RUN": 1, "MAX_CREDITS_PER_DAY": 1, "UNKNOWN_REMAINING_CAP": 1,
+                    "MORNING_SHARE": 1, "RESERVE": -1}
+BUDGET_FUNCTIONS = frozenset({"budget"})
+_CONST_RE = re.compile(r"\b(" + "|".join(BUDGET_CONSTANTS) + r")\b")
+_ASSIGN_RE = re.compile(r"^\s*(?:[A-Za-z_][\w.]*\.)?(" + "|".join(BUDGET_CONSTANTS) +
+                        r")\s*(?::[^=]+)?=(?!=)\s*([^#]*?)\s*(?:#.*)?$")
+_TOPLEVEL_DEF_RE = re.compile(r"^(?:async\s+)?def\s+(\w+)")
+_HUNK_RE = re.compile(r"^@@[^@]*@@\s?(.*)$")
+TEST_DEF_RE = re.compile(r"^\s*(?:async\s+)?def\s+(test_\w+)")
+
 OWN_URL_RE = re.compile(r"https://(github\.com/juanxmarcos/Sports-Betting-|"
                         r"juanxmarcos\.github\.io/Sports-Betting-)(?=[/\"'#)\s]|$)[^\s\"'<>)]*")
 TEST_WEAKENING = re.compile(
@@ -110,15 +166,93 @@ _SPEND_RES = tuple((name, re.compile(rx, re.IGNORECASE)) for name, rx in SPEND_S
 # Which content signals apply where. Tests run only in CI (no secrets, nothing billed), so
 # only check-lowering edits matter there. Site files can only cost money by calling out to
 # an external host or embedding a credential, so prose about money is not flagged there.
-SITE_SIGNALS = frozenset({"credentials or secrets", "network or external service"})
+SITE_SIGNALS = frozenset({"credentials or secrets"})
 
 
 def _signals_for(path: str):
+    """(word signals, check metering words, check URL hosts) for a path."""
     if path.startswith("tests/"):
-        return ()
+        return (), False, False
     if path.startswith("docs/"):
-        return tuple((n, rx) for n, rx in _SPEND_RES if n in SITE_SIGNALS)
-    return _SPEND_RES
+        return tuple((n, rx) for n, rx in _SPEND_RES if n in SITE_SIGNALS), False, True
+    return _SPEND_RES, True, True
+
+
+def url_flags(text: str) -> list[str]:
+    """Reasons a line's URLs need the owner: unknown host, placeholder host or credentials."""
+    out = []
+    for m in URL_RE.finditer(text):
+        authority = m.group(1)
+        if "@" in authority:
+            out.append("credentials embedded in a URL")
+            continue
+        host = authority.lower().rsplit(":", 1)[0] if authority.count(":") == 1 else authority.lower()
+        host = host.rstrip(".")
+        if not host or not HOST_RE.match(host):
+            out.append("URL with an unreadable or computed host")
+        elif host not in KNOWN_HOSTS:
+            out.append(f"new external host {host}")
+    return out
+
+
+def _code_part(line: str) -> str:
+    """The line before a trailing # or // comment (a rough cut; strings with # are rare)."""
+    for marker in ("#", "//"):
+        i = line.find(marker)
+        if i >= 0 and not line[max(0, i - 1):i + 3].startswith((":/", "://")):
+            line = line[:i]
+    return line
+
+
+def _num(value: str):
+    try:
+        return float(value.replace("_", ""))
+    except ValueError:
+        return None
+
+
+def budget_flags(path: str, patch: str) -> list[str]:
+    """Flags for edits that could raise The Odds API spend (issue #71)."""
+    flags: list[str] = []
+    old: dict[str, list] = {}
+    new: dict[str, list] = {}
+    func = None
+    for line in patch.splitlines():
+        if line.startswith(("+++", "---")):
+            continue
+        h = _HUNK_RE.match(line)
+        if h:
+            d = _TOPLEVEL_DEF_RE.match(h.group(1))
+            func = d.group(1) if d else None
+            continue
+        if not line[:1] in {"+", "-", " "}:
+            continue
+        body = line[1:]
+        if body[:1].strip() and not body.startswith(("#", ")", "]", "}")):
+            d = _TOPLEVEL_DEF_RE.match(body)  # a top-level statement ends the current function
+            func = d.group(1) if d else None
+        if line[0] == " " or not body.strip():
+            continue
+        if func in BUDGET_FUNCTIONS and _code_part(body).strip():
+            flags.append(f"{path}: {func}() changed (Odds API budget formula: owner decides)")
+        a = _ASSIGN_RE.match(body)
+        if a:
+            (new if line[0] == "+" else old).setdefault(a.group(1), []).append(_num(a.group(2)))
+        elif _CONST_RE.search(_code_part(body)):
+            flags.append(f"{path}: use of {_CONST_RE.search(_code_part(body)).group(1)} changed "
+                         "(Odds API budget: owner decides)")
+    for name in sorted(old.keys() | new.keys()):
+        o, n, sign = old.get(name, []), new.get(name, []), BUDGET_CONSTANTS[name]
+        if not n:
+            flags.append(f"{path}: {name} removed (Odds API budget cap)")
+        elif not o:
+            flags.append(f"{path}: {name} set (Odds API budget cap: owner decides)")
+        elif None in o or None in n:
+            flags.append(f"{path}: {name} changed to a value the gate cannot read")
+        elif (sign > 0 and max(n) > min(o)) or (sign < 0 and min(n) < max(o)):
+            flags.append(f"{path}: {name} raises Odds API spend ({min(o) if sign > 0 else max(o):g} -> "
+                         f"{max(n) if sign > 0 else min(n):g})")
+    return flags
 
 
 MERGE, OWNER_DECISION, WAIT, SKIP = "merge", "owner", "wait", "skip"
@@ -211,19 +345,38 @@ def classify_files(files, expected_count) -> list[str]:
                 continue  # pure rename, path rules above already applied
             flags.append(f"{path}: binary or too-large diff cannot be inspected (fail closed)")
             continue
-        signals = _signals_for(path)
+        signals, metering, hosts = _signals_for(path)
+        if not path.startswith(("tests/", "docs/")):
+            flags.extend(budget_flags(path, patch))
+        removed_tests, added_tests = set(), set()
         for line in patch.splitlines():
             if line.startswith(("+++", "---")) or not line[:1] in {"+", "-"}:
                 continue
+            kind = "added" if line[0] == "+" else "removed"
             body = OWN_URL_RE.sub("", line[1:])  # links to this repository cost nothing
             # Also scan with identifiers split (remaining_credits, apiCost -> words) so word
             # boundaries cannot be dodged by naming style.
             split = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", body).replace("_", " ")
             for name, rx in signals:
                 if rx.search(body) or rx.search(split):
-                    flags.append(f"{path}: {name} ({'added' if line[0] == '+' else 'removed'} line)")
-            if line[0] == "+" and path.startswith("tests/") and TEST_WEAKENING.search(body):
-                flags.append(f"{path}: skips or disables tests (could lower checks)")
+                    flags.append(f"{path}: {name} ({kind} line)")
+            if metering:
+                code = _CONST_RE.sub("", _code_part(body))  # budget constants: budget_flags()
+                code_split = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", code).replace("_", " ")
+                if METERING_SIGNAL[1].search(code) or METERING_SIGNAL[1].search(code_split):
+                    flags.append(f"{path}: {METERING_SIGNAL[0]} ({kind} line)")
+            if hosts and line[0] == "+":
+                flags.extend(f"{path}: {why} (added line)" for why in url_flags(body))
+            if path.startswith("tests/"):
+                t = TEST_DEF_RE.match(body)
+                if t:
+                    (added_tests if line[0] == "+" else removed_tests).add(t.group(1))
+                if line[0] == "+" and TEST_WEAKENING.search(body):
+                    flags.append(f"{path}: skips or disables tests (could lower checks)")
+        gone, new_tests = removed_tests - added_tests, added_tests - removed_tests
+        if len(gone) > len(new_tests):  # renaming or rewriting a test is fine; fewer tests is not
+            flags.append(f"{path}: {len(gone) - len(new_tests)} test function(s) deleted, e.g. "
+                         f"{sorted(gone)[0]} (could lower checks)")
     return sorted(set(flags))
 
 

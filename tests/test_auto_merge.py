@@ -200,11 +200,12 @@ def test_spend_or_check_lowering_content_goes_to_owner(path, patch):
     {"filename": "automation/auto_merge.py", "status": "modified", "changes": 1, "patch": "@@\n+x = 1"},
     {"filename": "requirements.txt", "status": "modified", "changes": 1, "patch": "@@\n+stripe"},
     {"filename": "tests/conftest.py", "status": "modified", "changes": 1, "patch": "@@\n+x = 1"},
-    {"filename": "sbi/sources/new_feed.py", "status": "added", "changes": 1, "patch": "@@\n+x = 1"},
+    {"filename": "pyproject.toml", "status": "added", "changes": 1, "patch": "@@\n+x = 1"},
+    {"filename": "vercel.json", "status": "added", "changes": 1, "patch": "@@\n+{}"},
     {"filename": "tests/test_parlays.py", "status": "removed", "changes": 10},
     # hostile rename: moving a protected file to an innocent-looking name
-    {"filename": "sbi/helpers.py", "previous_filename": "sbi/sources/odds_api.py", "status": "renamed", "changes": 0},
-    {"filename": "notes.md", "previous_filename": "sbi/sources/odds_api.py", "status": "renamed", "changes": 0},
+    {"filename": "sbi/helpers.py", "previous_filename": "automation/auto_merge.py", "status": "renamed", "changes": 0},
+    {"filename": "notes.md", "previous_filename": ".github/workflows/tests.yml", "status": "renamed", "changes": 0},
     {"filename": "docs/notes.md", "previous_filename": "tests/test_parlays.py", "status": "renamed", "changes": 0},
     # binary or oversized diff outside generated data: cannot be inspected
     {"filename": "sbi/blob.bin", "status": "added", "changes": 0},
@@ -379,7 +380,7 @@ def test_links_to_this_repository_are_not_network_signals():
     f = good_facts()
     f["files"][0]["patch"] += '\n+const U = "https://github.com/juanxmarcos/Sports-Betting-/blob/main/docs/PARLAYS.md";'
     assert decide(f).action == am.MERGE
-    for url in ("https://github.com/juanxmarcos/Sports-Betting-evil/x", "https://github.com.evil.io/juanxmarcos/Sports-Betting-/",
+    for url in ("https://github.com.evil.io/juanxmarcos/Sports-Betting-/",
                 "https://api.paid.example/?r=https://github.com/juanxmarcos/Sports-Betting-"):
         g = good_facts()
         g["files"][0]["patch"] += f'\n+const U = "{url}";'
@@ -423,3 +424,132 @@ def test_main_end_to_end_dry_run_with_fake_api(tmp_path, monkeypatch):
     text = summary.read_text(encoding="utf-8")
     assert "dry run" in text and "PR #40: merge" in text
     assert all(m == "GET" for m, _ in calls)
+
+
+# --- issue #71: only real spend signals ---------------------------------------------------
+def facts_with(*entries):
+    f = good_facts()
+    f["files"].extend(entries)
+    f["pr"]["changed_files"] = len(f["files"])
+    return f
+
+
+def entry(path, patch, status="modified"):
+    return {"filename": path, "status": status, "changes": patch.count("\n"), "patch": patch}
+
+
+ESPN_SOURCE = (
+    "@@ -0,0 +1,9 @@\n"
+    "+\"\"\"Free ESPN club-soccer scoreboard (issue #66).\"\"\"\n"
+    "+from urllib.request import Request, urlopen\n"
+    "+BASE = \"https://site.api.espn.com/apis/site/v2/sports/soccer\"\n"
+    "+def fetch(league):\n"
+    "+    url = f\"https://site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard\"\n"
+    "+    link = f\"https://www.espn.com/soccer/match/_/gameId/{league}\"\n"
+    "+    # one call per league; the Odds API daily credits are untouched\n"
+    "+    with urlopen(Request(url), timeout=20) as resp:\n"
+    "+        return resp.read()\n")
+
+
+def test_free_espn_connector_in_sources_merges():
+    f = facts_with(entry("sbi/sources/espn_club.py", ESPN_SOURCE, "added"))
+    d = decide(f)
+    assert d.action == am.MERGE, d.spend_flags
+    assert not am._match("sbi/sources/espn_club.py", am.PROTECTED_PATTERNS)
+
+
+def test_replayed_pr70_odds_comment_about_credits_merges():
+    patch = ("@@ -282,7 +282,9 @@ def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:\n"
+             "-    return last.date() != now.date()\n"
+             "+    # The evening run spends what the morning left of the SAME daily allowance (budget() is\n"
+             "+    # unchanged), so this only decides where leftover credits go.\n"
+             "+    return run_slot(now) == \"evening\" and run_slot(last) == \"morning\"\n")
+    assert decide(facts_with(entry("sbi/sources/odds_api.py", patch))).action == am.MERGE
+
+
+@pytest.mark.parametrize("name, old, new", [
+    ("MAX_CREDITS_PER_DAY", "40", "80"),
+    ("MAX_CREDITS_PER_RUN", "40", "41"),
+    ("UNKNOWN_REMAINING_CAP", "12", "20"),
+    ("MORNING_SHARE", "0.5", "0.75"),
+    ("RESERVE", "20", "5"),                 # a smaller reserve spends more
+    ("MAX_CREDITS_PER_DAY", "40", "int(os.environ.get('CAP', 40))"),  # unreadable value
+])
+def test_raising_odds_api_spend_goes_to_owner(name, old, new):
+    patch = f"@@ -49,1 +49,1 @@\n-{name} = {old}  # cap\n+{name} = {new}  # cap"
+    d = decide(facts_with(entry("sbi/sources/odds_api.py", patch)))
+    assert d.action == am.OWNER_DECISION
+    assert any(name in fl for fl in d.spend_flags), d.spend_flags
+
+
+@pytest.mark.parametrize("name, old, new", [
+    ("MAX_CREDITS_PER_DAY", "40", "30"), ("RESERVE", "20", "25"), ("MORNING_SHARE", "0.5", "0.5")])
+def test_lowering_odds_api_spend_merges(name, old, new):
+    patch = f"@@ -49,1 +49,1 @@\n-{name} = {old}   # old note\n+{name} = {new}  # new note"
+    assert decide(facts_with(entry("sbi/sources/odds_api.py", patch))).action == am.MERGE
+
+
+@pytest.mark.parametrize("patch", [
+    # edit inside budget(), found from the hunk header
+    "@@ -309,3 +309,3 @@ def budget(remaining, now, spent_today=0, slot=None) -> int:\n"
+    "-    share = 0.5 if slot == 'morning' else 1.0\n+    share = 0.9 if slot == 'morning' else 1.0",
+    # edit inside budget(), found from a context line
+    "@@ -297,6 +297,6 @@\n \n def budget(remaining, now):\n     days = 3\n-    return days\n+    return days * 2",
+    # a constant removed, or used differently elsewhere
+    "@@ -49,2 +49,1 @@\n-MAX_CREDITS_PER_RUN = 40\n x = 1",
+    "@@ -319,1 +319,1 @@\n-    if remaining - expected < odds_api.RESERVE:\n+    if remaining - expected < odds_api.RESERVE - 15:",
+    # monkeypatched at runtime from another module
+    "@@ -1,0 +1,1 @@\n+odds_api.MAX_CREDITS_PER_DAY = 500",
+])
+def test_budget_formula_and_constant_uses_go_to_owner(patch):
+    assert decide(facts_with(entry("sbi/quote_sources.py", patch))).action == am.OWNER_DECISION
+
+
+def test_function_after_budget_is_not_budget():
+    patch = ("@@ -299,8 +299,8 @@ def budget(remaining, now):\n     return 1\n \n \n def run_slot(now):\n"
+             "-    return 'a'\n+    return 'b'")
+    assert decide(facts_with(entry("sbi/sources/odds_api.py", patch))).action == am.MERGE
+
+
+@pytest.mark.parametrize("line", [
+    "+TOKEN = secrets.ODDS_KEY",
+    "+key = os.environ['NEW_API_KEY']",
+    "+# needs a paid plan for live odds",
+    "+# switch to the subscription tier",
+    "+PRICE_URL = 'https://api.newdata.example/v1/odds'",     # new external host
+    "+url = f'https://{host}/v1/odds'",                         # computed host
+    "+url = 'https://user:pw@site.api.espn.com/x'",            # credentials in a URL
+    "+resp = urlopen('https://api.the-odds-api.com/v4/sports')",  # Odds API call
+    "+DEPLOY = 'vercel'",
+    "+    credits_used += 3",
+])
+def test_real_spend_signals_still_go_to_owner(line):
+    d = decide(facts_with(entry("sbi/sources/new_feed.py", "@@ -0,0 +1,1 @@\n" + line, "added")))
+    assert d.action == am.OWNER_DECISION and d.spend_flags
+
+
+def test_site_url_to_unknown_host_flagged_known_host_merges():
+    ok = entry("docs/index.html", '@@ -1 +1 @@\n+<link href="https://fonts.googleapis.com/css2?family=Inter">')
+    assert decide(facts_with(ok)).action == am.MERGE
+    bad = entry("docs/index.html", '@@ -1 +1 @@\n+<script src="https://ads.example.net/t.js"></script>')
+    assert decide(facts_with(bad)).action == am.OWNER_DECISION
+
+
+def test_site_changes_still_auto_merge():
+    f = facts_with(entry("docs/assets/doyen.js", "@@ -1 +1 @@\n-const N = 3;\n+const N = 4;"))
+    assert decide(f).action == am.MERGE
+
+
+def test_github_and_automation_changes_are_still_protected():
+    for path in (".github/workflows/deploy.yml", "automation/claude_issue_agent.md", "requirements-dev.txt"):
+        assert decide(facts_with(entry(path, "@@ -1 +1 @@\n+# harmless"))).action == am.OWNER_DECISION, path
+
+
+def test_deleting_a_test_function_goes_to_owner():
+    patch = "@@ -1,4 +1,1 @@\n-def test_ev_is_positive():\n-    assert ev() > 0\n-\n x = 1"
+    d = decide(facts_with(entry("tests/test_ev_model.py", patch)))
+    assert d.action == am.OWNER_DECISION and any("deleted" in fl for fl in d.spend_flags)
+    moved = "@@ -1,2 +1,2 @@\n-def test_ev_is_positive():\n+def test_ev_is_positive():  # renamed fixture"
+    assert decide(facts_with(entry("tests/test_ev_model.py", moved))).action == am.MERGE
+    renamed = "@@ -1,2 +1,2 @@\n-def test_ev_is_positive():\n+def test_ev_is_positive_after_vig():"
+    assert decide(facts_with(entry("tests/test_ev_model.py", renamed))).action == am.MERGE
