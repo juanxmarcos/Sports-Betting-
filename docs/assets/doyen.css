@@ -309,6 +309,9 @@ table[data-by-legs] th, table[data-by-legs] td { padding: 4px 14px 4px 0; text-a
 .ph-rec tfoot th,.ph-rec tfoot td{font-weight:700;color:var(--ivory);border-top:1px solid var(--line)}
 .ph-rec .pl.pos{color:var(--pos)}.ph-rec .pl.neg{color:var(--neg)}.ph-rec .pl.zero{color:var(--muted)}
 @media (max-width:520px){.ph-rec th,.ph-rec td{padding:9px 7px}.ph-rec th:first-child,.ph-rec td:first-child{padding-left:12px}.ph-rec th:last-child,.ph-rec td:last-child{padding-right:12px}.ph-rec table{font-size:13px}.ph-rec thead th{font-size:9.5px;letter-spacing:.04em}}
+/* Issue #85: single-pick record tables reuse .ph-rec; short headers and tighter cells on phones */
+.sg-rec .sh{display:none}
+@media (max-width:520px){.sg-rec .lg{display:none}.sg-rec .sh{display:inline}.sg-rec table{font-size:12px}.sg-rec th,.sg-rec td{padding:8px 4px}.sg-rec th:first-child,.sg-rec td:first-child{padding-left:10px;white-space:normal}.sg-rec th:last-child,.sg-rec td:last-child{padding-right:10px}}
 
 .ph{padding:12px 14px}
 .ph-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.ph-h .pill{margin-left:auto}

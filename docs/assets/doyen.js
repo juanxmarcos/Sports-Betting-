@@ -697,6 +697,35 @@
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 
+  // Issue #85: single-pick record by sport (and by market) in the same styled card as the parlay table.
+  // Display only, computed from the listed picks exactly like the record line above it, so the Total row
+  // always equals that line. Singles are graded at a flat 1-unit stake (status.pnl, in units).
+  function singlesTable(H) {
+    const WON = ["won", "half_won"], LOST = ["lost", "half_lost"];
+    const tally = (ps) => {
+      const st = ps.filter((p) => p.status && p.status.state === "settled");
+      const won = st.filter((p) => WON.includes(p.status.result)).length;
+      const lost = st.filter((p) => LOST.includes(p.status.result)).length;
+      const pl = Math.round(st.reduce((a, p) => a + (Number(p.status.pnl) || 0), 0) * 100) / 100;
+      return { n: ps.length, won, lost, push: st.length - won - lost, open: ps.length - st.length, staked: st.length, pl };
+    };
+    const units = (v) => (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v).toFixed(2) + " u";
+    const plCls = (v) => (v === 0 ? "zero" : (v > 0 ? "pos" : "neg"));
+    const row = (label, g, cls) => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${esc(label)}</th><td>${g.won}–${g.lost}</td>`
+      + `<td>${g.won + g.lost ? Math.round(g.won / (g.won + g.lost) * 100) + "%" : "–"}</td><td>${g.push}</td><td>${g.open}</td>`
+      + `<td class="pl ${g.staked ? plCls(g.pl) : "zero"}">${g.staked ? units(g.pl) : "–"}</td>`
+      + `<td class="pl ${g.staked ? plCls(g.pl) : "zero"}">${g.staked ? (g.pl > 0 ? "+" : (g.pl < 0 ? "−" : "")) + Math.abs(Math.round(g.pl / g.staked * 1000) / 10).toFixed(1) + "%" : "–"}</td></tr>`;
+    const lab = (long, short) => `<span class="lg">${long}</span><span class="sh" aria-hidden="true">${short}</span>`;
+    const head = (first) => `<thead><tr><th scope="col">${first}</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="Won ÷ (won + lost); pushes, voids and open picks excluded">${lab("Hit rate", "Hit")}</th><th scope="col">${lab("Void/push", "Void")}</th><th scope="col" title="Not yet graded, including withdrawn picks">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th><th scope="col" title="Paper P/L ÷ units staked on graded picks">ROI</th></tr></thead>`;
+    const bySport = SPORTS.slice(1).filter(([k]) => sportOk(k, S.hsport)).map(([k, name]) => row(name, tally(H.filter((p) => p.sport === k)))).join("");
+    const mkts = {}; H.forEach((p) => { const m = str(p.market) ? p.market.trim() : "Other"; (mkts[m] = mkts[m] || []).push(p); });
+    const byMarket = Object.keys(mkts).sort().map((m) => row(m, tally(mkts[m]))).join("");
+    const T = row("Total", tally(H), "total");
+    return `<p class="small muted" data-singles-stake>Paper results at a flat 1-unit stake per pick (u = units).</p>
+      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>
+      ${Object.keys(mkts).length > 1 ? `<div class="card ph-rec sg-rec"><table data-singles-by-market><caption class="sr">Single-pick record by market</caption>${head("Market")}<tbody>${byMarket}</tbody><tfoot>${T}</tfoot></table></div>` : ""}`;
+  }
+
   function history() {
     const now = Date.now();
     const H = S.data.history.filter((p) => sportOk(p.sport, S.hsport) && (S.hrange === "all" || (now - new Date(p.published_at)) / 864e5 <= (S.hrange === "7" ? 7 : 30)));
@@ -709,7 +738,8 @@
       + parlayHistory()
       + `<section class="section" id="pick-history"><div class="section-h"><h2>Single picks</h2></div>
       ${filters(true, "hsport", "hrange", [["7", "7 days"], ["30", "30 days"], ["all", "All time"]])}
-      <div class="brief"><span>Record <b>${W}–${L}${P ? "–" + P : ""}</b></span><span class="dot"></span><span><b>${H.length - settled.length}</b> awaiting result</span></div>`;
+      <div class="brief"><span>Record <b>${W}–${L}${P ? "–" + P : ""}</b></span><span class="dot"></span><span><b>${H.length - settled.length}</b> awaiting result</span></div>`
+      + (H.length ? singlesTable(H) : "");
     if (!H.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No picks in this period</h3><p>Quiet periods are normal: Doyen only publishes when the evidence clears its bar.</p></div></section>`;
     const res = (p) => p.status.state === "settled" ? statusPill(p.status) : `<span class="pill">${p.status.state === "withdrawn" ? "Withdrawn" : "Pending"}</span>`;
     return h + `<div class="rows hist" style="margin-top:14px">` + H.map((p) => `<div class="row" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
