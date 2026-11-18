@@ -305,10 +305,23 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
     return summary
 
 
+def build_clock(now: datetime, started_mono: float, mono_now: float) -> datetime:
+    """The run's start time advanced by how long the run has taken (whole seconds, rounded up)."""
+    return now + timedelta(seconds=int(max(0.0, mono_now - started_mono)) + 1)
+
+
 def run_daily(con=None, now: datetime | None = None) -> dict:
     from . import report, settle, dashboard
     con = con or db.connect()
     now = now or _now()
+    import time as _time
+    t0 = _time.monotonic()
+    # Quotes fetched during this run are stamped with the real clock, i.e. AFTER `now`. Parlay and site
+    # builds read only quotes retrieved at or before their build time, so they use `now` advanced by the
+    # time this run has taken; otherwise every price fetched by this run would be invisible until the
+    # next run (2026-11-18: Saturday's previews saw 8 of 52 priced soccer games instead of 52).
+    def _build_now() -> datetime:
+        return build_clock(now, t0, _time.monotonic())
     from .run_marker import slot as _slot
     result = {"slot": _slot(now)}                       # "morning" or "evening" New York run (issue #63)
     from .sources import http as _http
@@ -453,7 +466,7 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
         # so an empty preview day is explainable from the run log. Reads stored data only.
         from . import parlay_estimated
         try:
-            d["days"] = parlay_estimated.preview_coverage(con, now)
+            d["days"] = parlay_estimated.preview_coverage(con, _build_now())
             result["preview_coverage"] = d["days"]
         except Exception as e:  # noqa: BLE001 - reporting only: must never stop the run
             d["error"] = f"{type(e).__name__}: {e}"
@@ -463,7 +476,7 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
         result["http_requests"] = {k: d[k] for k in ("network", "cache", "stale")}
     with db.job(con, "publish") as d:
         from . import site
-        d["site"] = str(site.build(con, now, write_shadow=True))          # builds diagnostics first ...
+        d["site"] = str(site.build(con, _build_now(), write_shadow=True))          # builds diagnostics first ...
         d["report"] = str(report.write_daily(con, now, result["analyse"]))   # ... so the report uses the same numbers
         d["dashboard"] = str(dashboard.build(con))
         result["publish"] = d["report"]
