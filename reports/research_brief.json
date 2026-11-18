@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-18T17:24:16+00:00",
+  "generated": "2026-11-18T22:00:52+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -33,6 +33,36 @@
       "ev": 0.03308391828554868
     },
     {
+      "rec_id": "6324d1677211dbd1",
+      "event_id": "football:F1:20261121:lille:lyon",
+      "league": "F1",
+      "kickoff_utc": "2026-11-21T19:45:00+00:00",
+      "home": "Lille",
+      "away": "Lyon",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.6,
+      "bookmaker": "1xBet",
+      "final_prob": 0.2913098464826459,
+      "ev": 0.04871544733752531
+    },
+    {
+      "rec_id": "4ca65467b33f3d0f",
+      "event_id": "football:SP1:20261122:santander:sociedad",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-22T15:15:00+00:00",
+      "home": "Santander",
+      "away": "Sociedad",
+      "market": "OU",
+      "selection": "over",
+      "line": 3.5,
+      "odds": 2.05,
+      "bookmaker": "1xBet",
+      "final_prob": 0.5026962091634783,
+      "ev": 0.03052722878513059
+    },
+    {
       "rec_id": "0795fb50263195c7",
       "event_id": "nfl:NFL:20261122:401873071",
       "league": "NFL",
@@ -63,6 +93,21 @@
       "ev": 0.03720405690241657
     },
     {
+      "rec_id": "4bdd1cd21bcd57e4",
+      "event_id": "football:SP1:20261122:getafe:ath-madrid",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-22T20:00:00+00:00",
+      "home": "Getafe",
+      "away": "Ath Madrid",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 1.66,
+      "bookmaker": "1xBet",
+      "final_prob": 0.6225523663163899,
+      "ev": 0.03343692808520715
+    },
+    {
       "rec_id": "d6a9ad32def67355",
       "event_id": "nfl:NFL:20261122:401873074",
       "league": "NFL",
@@ -79,20 +124,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261118:186807",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-18T17:50:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:ATP:20261118:187514",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-18T19:30:00+00:00",
-      "home": "Frances Tiafoe",
-      "away": "Flavio Cobolli"
-    },
     {
       "event_id": "tennis:WTA:20261118:186802",
       "league": "TENNIS:WTA",
@@ -199,34 +230,6 @@
       "away": "Carlos Alcaraz"
     },
     {
-      "event_id": "tennis:WTA:20261119:186804",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-19T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261119:186806",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-19T05:00:00+00:00",
-      "home": "Irene Burillo",
-      "away": "Anastasia Zolotareva"
-    },
-    {
-      "event_id": "tennis:WTA:20261119:186809",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-19T05:00:00+00:00",
-      "home": "Carole Monnet",
-      "away": "Lucia Bronzetti"
-    },
-    {
-      "event_id": "tennis:WTA:20261119:186808",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-19T05:00:00+00:00",
-      "home": "Veronika Erjavec",
-      "away": "Valeriya Strakhova"
-    },
-    {
       "event_id": "tennis:ATP:20261119:187507",
       "league": "TENNIS:ATP",
       "kickoff_utc": "2026-11-19T13:00:00+00:00",
@@ -234,11 +237,39 @@
       "away": "Ben Shelton"
     },
     {
+      "event_id": "tennis:WTA:20261119:186809",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T14:30:00+00:00",
+      "home": "Carole Monnet",
+      "away": "Lucia Bronzetti"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186808",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T16:00:00+00:00",
+      "home": "Veronika Erjavec",
+      "away": "Valeriya Strakhova"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186806",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T18:30:00+00:00",
+      "home": "Irene Burillo",
+      "away": "Anastasia Zolotareva"
+    },
+    {
       "event_id": "tennis:ATP:20261119:187504",
       "league": "TENNIS:ATP",
       "kickoff_utc": "2026-11-19T19:30:00+00:00",
       "home": "Arthur Fils",
       "away": "Alexander Zverev"
+    },
+    {
+      "event_id": "tennis:WTA:20261119:186804",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-19T22:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
       "event_id": "nba:NBA:20261120:401910019",
@@ -304,18 +335,46 @@
       "away": "TBD"
     },
     {
+      "event_id": "tennis:ATP:20261120:187510",
+      "league": "TENNIS:ATP",
+      "kickoff_utc": "2026-11-20T13:00:00+00:00",
+      "home": "Flavio Cobolli",
+      "away": "Carlos Alcaraz"
+    },
+    {
       "event_id": "tennis:ATP:20261120:187513",
       "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-20T05:00:00+00:00",
+      "kickoff_utc": "2026-11-20T19:30:00+00:00",
       "home": "Frances Tiafoe",
       "away": "Daniil Medvedev"
     },
     {
-      "event_id": "tennis:ATP:20261120:187510",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-20T05:00:00+00:00",
-      "home": "Flavio Cobolli",
-      "away": "Carlos Alcaraz"
+      "event_id": "football:D1:20261120:bayern-munich:fc-koln",
+      "league": "D1",
+      "kickoff_utc": "2026-11-20T19:30:00+00:00",
+      "home": "Bayern Munich",
+      "away": "FC Koln"
+    },
+    {
+      "event_id": "football:F1:20261120:troyes:le-havre",
+      "league": "F1",
+      "kickoff_utc": "2026-11-20T19:45:00+00:00",
+      "home": "Troyes",
+      "away": "Le Havre"
+    },
+    {
+      "event_id": "football:B1:20261120:cercle-brugge:westerlo",
+      "league": "B1",
+      "kickoff_utc": "2026-11-20T19:45:00+00:00",
+      "home": "Cercle Brugge",
+      "away": "Westerlo"
+    },
+    {
+      "event_id": "football:SP1:20261120:ath-bilbao:espanol",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-20T20:00:00+00:00",
+      "home": "Ath Bilbao",
+      "away": "Espanol"
     }
   ]
 }
