@@ -246,10 +246,11 @@ def test_current_production_data_renders_the_empty_state():
     data = json.loads((ROOT / "docs" / "data" / "doyen.json").read_text())
     when = datetime.fromisoformat(data["parlays"]["generated"])
     html = _run({"data": data, "now": _iso(when), "allowMock": True})
-    # No verified (strict) card. Since #47 the same section may hold labelled estimates instead.
+    # No verified (strict) card. Since #47 the same section may hold labelled estimates instead, and
+    # since #57 today's recorded estimates stay on the page after their games start.
     assert articles(html) == []
     assert ("No verified parlays today." in html or "No parlays today:" in html
-            or 'data-kind="estimate"' in html)
+            or 'data-kind="estimate"' in html or 'data-kind="recorded"' in html)
 
 
 @needs_node
