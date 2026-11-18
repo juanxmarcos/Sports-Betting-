@@ -373,11 +373,16 @@
     const one = fmt(Math.min(...ts)) === hi;
     return `<div class="pc-note" data-prices-read>${one ? `Price as of ${esc(hi)}` : `Prices as of ${esc(lo)} – ${esc(hi)}`} — check your book.</div>`;
   }
+  // Issue #74: each leg's own price (legs[].price, the pricing bookmaker's decimal odds), American first
+  // with decimal alongside. A leg without a valid price shows nothing, never a made-up value.
+  const american = (d) => (d >= 2 ? "+" + Math.round((d - 1) * 100) : "-" + Math.round(100 / (d - 1)));
+  const legPrice = (l, tag = "div") => (typeof l.price === "number" && isFinite(l.price) && l.price > 1
+    ? `<${tag} class="lg-p" data-leg-price="${esc(l.price)}">${esc(american(l.price))} (${dec(l.price)})</${tag}>` : "");
   function estCard(r, i) {
     const odds = r.estimated_odds;
     // Issue #68: an open injury/lineup note is shown on the leg (muted), never used to hide it.
     const note = (l) => str(l.risk_note) ? `<div class="lg-n" data-risk-note>${esc(l.risk_note)}</div>` : "";
-    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div>${note(l)}</li>`).join("");
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div>${legPrice(l)}${note(l)}</li>`).join("");
     const hit = typeof r.est_hit_chance === "number" && r.est_hit_chance > 0 && r.est_hit_chance < 1
       ? `<div class="pc-note">Estimated hit chance ${esc(pct(r.est_hit_chance))} (model estimate, unvalidated).</div>` : "";
     return `<article class="card parlay est" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}" data-kind="estimate">
@@ -435,7 +440,7 @@
       if (l.result === "void") return '<span class="lg-r void">void</span>';
       return isoT(l.start_utc) <= now ? '<span class="lg-r">pending</span>' : "";
     };
-    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))} ${mark(l)}</div></li>`).join("");
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))} ${mark(l)}</div>${legPrice(l)}</li>`).join("");
     const pub = isoT(r.first_seen);
     const at = pub != null ? ` (published ${esc(fmtAsOf(pub))})` : "";
     const gone = !started && !FINAL[r.result]
@@ -457,7 +462,7 @@
   }
   function parlayCard(r, i) {
     const odds = r.quote.decimal_odds;
-    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${l.market ? `<span class="lg-m">${esc(l.market)}</span> ` : ""}${esc(l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${l.market ? `<span class="lg-m">${esc(l.market)}</span> ` : ""}${esc(l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div>${legPrice(l)}</li>`).join("");
     return `<article class="card parlay" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}">
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill active">Verified bookmaker quote</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
       <ol class="legs">${legs}</ol>
@@ -631,7 +636,7 @@
     const RES = { won: "Won", lost: "Lost", void: "Void", open: "Open" };
     const mk = { won: " ✓", lost: " ✗", void: " (void)" };
     const list = rows.map((r) => {
-      const legs = r.legs.map((l) => `<li>${vs(l.title)}: ${esc(l.selection_text || l.selection)}${mk[l.result] || ""}</li>`).join("");
+      const legs = r.legs.map((l) => `<li>${legPrice(l, "span")}${vs(l.title)}: ${esc(l.selection_text || l.selection)}${mk[l.result] || ""}</li>`).join("");
       const res = RES[r.result] || "Open";
       return `<div class="card ph" data-ph="${esc(r.parlay_id)}" data-result="${esc(r.result || "open")}">
         <div class="ph-h"><span class="t">${esc(fmtDay(r.date))}</span><span>${esc(r.bookmaker)} · ${esc(r.n_legs || r.legs.length)} legs</span><span class="pill ${esc(r.result || "open")}">${esc(res)}</span></div>

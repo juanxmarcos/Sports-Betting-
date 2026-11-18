@@ -275,6 +275,7 @@ details.sec[open] summary::after{content:"–"}
 .lg-m{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .lg-when{grid-column:2;grid-row:1;color:var(--faint);font-size:12.5px;white-space:nowrap}
 .lg-n{grid-column:1/-1;color:var(--muted);font-size:12px;margin-top:3px}
+.lg-p{grid-column:2;grid-row:2;align-self:end;text-align:right;color:var(--text);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px}
 .pc-foot{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding-top:12px;border-top:1px solid var(--line)}
 .pc-foot .k{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .pc-foot .v{font-weight:600;color:var(--ivory);margin-top:3px}
@@ -312,4 +313,5 @@ table[data-by-legs] th, table[data-by-legs] td { padding: 4px 14px 4px 0; text-a
 .ph-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.ph-h .pill{margin-left:auto}
 .ph-h .t{font-weight:600;color:var(--ivory)}
 .ph-legs{margin:8px 0;padding-left:18px}
+.ph-legs li::after{content:"";display:table;clear:both}.ph-legs .lg-p{float:right;margin-left:10px;margin-top:0;font-size:inherit}
 .ph-f{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--muted)}
