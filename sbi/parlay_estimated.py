@@ -22,8 +22,12 @@ What an estimated parlay is (rules loosened by the owner in issue #51, estimated
   leg may sit below Doyen's probability only as part of a positive-value pair; every further leg
   must not lower the parlay's estimated value (probability x price >= 1). Legs are never forced.
 - Kept screens: consensus probability inside the research band of `sbi.parlay_engine`
-  (0.30-0.85), the stored model within 0.12 of the market (data sanity), no open injury/lineup
-  note. No single-pick threshold is read or changed here.
+  (0.30-0.85), the stored model within 0.12 of the market (data sanity). No single-pick threshold
+  is read or changed here.
+- Open injury/lineup research notes (owner decision, issue #68): no longer a screen. A leg whose
+  game has an open `injury` or `lineup` note is kept, and the card shows a small muted line on that
+  leg ("Injury/lineup note open", plus the note's short text) so the owner can judge. Shown, never
+  used to filter. The strict/shadow screen `parlay_engine.screen_event` is unchanged.
 - At most ONE leg per parlay may be "weak", i.e. below its own probability bar (probability x
   price < 1 at the pricing bookmaker); the parlay as a whole must still have positive value (#54).
 - Ranking: score = estimated joint probability (product of leg probabilities, independence
@@ -81,6 +85,8 @@ PREVIEW_DAYS = 3                             # next New York dates previewed (is
 PREVIEW_BADGE = "Preview: may change at the next daily update"
 PREVIEW_EMPTY_TEXT = "No preview yet for this day"
 PREVIEW_PRICE_RULE = "latest stored price from that bookmaker at the time of the run, retrieved before the game starts"
+RISK_NOTE_LABEL = "Injury/lineup note open"
+RISK_NOTE_MAX_CHARS = 120                    # short text of one note shown on the leg (issue #68)
 DISCLOSURE = ("Estimates for paper trading in a personal research project, never a guarantee. Parlays win less "
               "often than single picks, and every leg has to win.")
 
@@ -114,10 +120,33 @@ def fresh_books(con, event_id: str, now: datetime, start: datetime | None = None
     return books_from_rows([(v["market"], v["line"], v["bk"], v["selection"], v["price"]) for v in latest.values()])
 
 
+def risk_note_texts(con, event_id: str) -> list[str]:
+    """Claims of the event's open `injury`/`lineup` research notes (issue #68), oldest first.
+    Information only: shown on the leg, never used to exclude it."""
+    cats = parlay_engine.RISK_CATEGORIES
+    q = ",".join("?" * len(cats))
+    return [str(r[0] or "").strip() for r in con.execute(
+        f"SELECT claim FROM research_notes WHERE event_id=? AND category IN ({q}) ORDER BY created_at, id",
+        (event_id, *cats))]
+
+
+def risk_note_line(notes: list[str] | None) -> str | None:
+    """The muted leg line for open injury/lineup notes, or None when there are none."""
+    if not notes:
+        return None
+    text = next((n for n in notes if n), "")
+    if len(text) > RISK_NOTE_MAX_CHARS:
+        text = text[:RISK_NOTE_MAX_CHARS - 1].rstrip() + "…"
+    more = f" (+{len(notes) - 1} more)" if len(notes) > 1 else ""
+    return f"{RISK_NOTE_LABEL}: {text}{more}" if text else f"{RISK_NOTE_LABEL}{more}"
+
+
 def screen_event(event: dict, books: dict, model: dict | None = None,
-                 n_risk_notes: int = 0) -> tuple[list[dict], str | None]:
+                 notes: list[str] | None = None) -> tuple[list[dict], str | None]:
     """Estimated-mode leg screen (#51). The strict/shadow screen `parlay_engine.screen_event` is
-    unchanged. Per selection and per pricing bookmaker: price, probability used and its source."""
+    unchanged. Per selection and per pricing bookmaker: price, probability used and its source.
+    `notes` are the game's open injury/lineup note texts: carried on the leg, never a reason to
+    exclude it (owner decision, issue #68)."""
     sport = event.get("site_sport")
     if sport not in parlay_engine.RESULT_MARKET:
         return [], "unsupported sport"
@@ -130,8 +159,6 @@ def screen_event(event: dict, books: dict, model: dict | None = None,
     pricing = sorted(bk for bk in book if bk not in AGGREGATES and bk not in EXCHANGES)
     if len(pricing) < MIN_PRICING_BOOKS:
         return [], "no bookmaker that offers a parlay slip"
-    if n_risk_notes:
-        return [], "open injury/lineup research note"
     ref, ref_src = evm.consensus(book, sels)          # market reference for the band and sanity screens
     if not ref:
         return [], "no market reference"
@@ -169,16 +196,18 @@ def screen_event(event: dict, books: dict, model: dict | None = None,
                      "title": f"{event['home']} v {event['away']}", "market": market, "selection": s,
                      "consensus_prob": round(q, 6), "model_prob": None if mp is None else round(float(mp), 6),
                      "prob_source": "model" if mp is not None else next(iter(per.values()))["prob_source"],
-                     "books": per, "best_value": max(v["value"] for v in per.values())})
+                     "books": per, "best_value": max(v["value"] for v in per.values()),
+                     "risk_note": risk_note_line(notes)})
     if not legs:
         return [], (reasons.most_common(1)[0][0] if reasons else "no selection passed")
     return legs, None
 
 
-def legs_for_event(event: dict, books: dict, model: dict | None, n_risk_notes: int = 0) -> tuple[dict | None, str | None]:
+def legs_for_event(event: dict, books: dict, model: dict | None,
+                   notes: list[str] | None = None) -> tuple[dict | None, str | None]:
     """The single best leg for one game (or None, reason): the selection with the highest value at
     any pricing bookmaker. The value may be negative here; the parlay-level check is in `search`."""
-    legs, why = screen_event(event, books, model, n_risk_notes)
+    legs, why = screen_event(event, books, model, notes)
     if why:
         return None, why
     return max(legs, key=lambda x: (x["best_value"], x["selection"])), None
@@ -201,7 +230,7 @@ def build_pool(con, now: datetime, day: str | None = None) -> tuple[list[dict], 
             fresh += 1
             sp["with_prices"] += 1
         leg, why = legs_for_event(e, books, parlay_engine.model_probs(con, e["event_id"], now),
-                                  parlay_engine.risk_notes(con, e["event_id"]))
+                                  risk_note_texts(con, e["event_id"]))
         if why:
             excluded[why] += 1
             continue
@@ -377,7 +406,8 @@ def card(c: dict, day: str, preview: bool = False) -> dict:
                       "start_utc": x["start_utc"], "status": "active", "price": x["books"][bk]["price"],
                       "prob": round(x["books"][bk]["prob"], 4),
                       "prob_source": x["books"][bk].get("prob_source", x["prob_source"]),
-                      "price_at": x.get("price_ts", {}).get(bk)} for x in legs]}
+                      "price_at": x.get("price_ts", {}).get(bk),
+                      "risk_note": x.get("risk_note")} for x in legs]}
     if preview:
         out.update(preview=True, preview_badge=PREVIEW_BADGE)
     return out

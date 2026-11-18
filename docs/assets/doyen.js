@@ -375,7 +375,9 @@
   }
   function estCard(r, i) {
     const odds = r.estimated_odds;
-    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div></li>`).join("");
+    // Issue #68: an open injury/lineup note is shown on the leg (muted), never used to hide it.
+    const note = (l) => str(l.risk_note) ? `<div class="lg-n" data-risk-note>${esc(l.risk_note)}</div>` : "";
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div>${note(l)}</li>`).join("");
     const hit = typeof r.est_hit_chance === "number" && r.est_hit_chance > 0 && r.est_hit_chance < 1
       ? `<div class="pc-note">Estimated hit chance ${esc(pct(r.est_hit_chance))} (model estimate, unvalidated).</div>` : "";
     return `<article class="card parlay est" data-parlay="${esc(r.parlay_id)}" data-odds="${esc(odds)}" data-kind="estimate">
