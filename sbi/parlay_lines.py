@@ -17,7 +17,7 @@ Leg probability: the backtest (data/backtest/parlay_lines.json) compares each mo
 market's de-vigged probability on stored history. Where the model is not better than the market,
 the leg uses the de-vigged market consensus (as tennis does) and the card says so
 ("Probability: market consensus"). `use_model` reads that decision; nothing here changes a
-single-pick threshold, and no network request or API credit is used at parlay-build time.
+single-pick threshold, and parlay building reads stored quotes only (no network request).
 """
 from __future__ import annotations
 
