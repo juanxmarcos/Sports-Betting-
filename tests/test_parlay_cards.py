@@ -256,7 +256,8 @@ def test_current_production_data_renders_the_empty_state():
 @needs_node
 @pytest.mark.parametrize("value,odds,want", [("10", 6.5, "$65.00"), ("25", 6.5, "$162.50"), ("", 6.5, "—"),
                                              ("-5", 6.5, "—"), ("abc", 6.5, "—"), ("10", 1.005, "$10.05"),
-                                             ("12.5", 12.345, "$154.31"), ("1000", 12.345, "$12,345.00"), ("0", 3.0, "$0.00")])
+                                             ("12.5", 12.345, "$154.31"), ("1000", 12.345, "$12,345.00"), ("0", 3.0, "—"),
+                                             ("10001", 3.0, "—")])
 def test_editing_the_stake_recalculates_gross_payout_to_the_cent(value, odds, want):
     assert render(block([]), stake={"value": value, "odds": odds}) == want
     if want != "—":
