@@ -483,18 +483,28 @@ def shown(block: dict | None, now: datetime, blocked_events: set | None = None, 
 
 
 # ---------- orchestration ----------
-def build(con, now: datetime, verified_cards: list[dict] | None = None) -> dict:
+def build(con, now: datetime, verified_cards: list[dict] | None = None,
+          recorded_today: list[dict] | None = None) -> dict:
+    """Today's estimated parlays. `recorded_today` (issue #63) are the ledger rows already recorded
+    for today's New York date, e.g. by the morning run: they are never rebuilt or repriced here.
+    New cards may only use games outside them (so a recorded card can't come back at a new price
+    under the same parlay_id) and only fill what is left of the day's `MAX_CARDS` cap, so a second
+    run a day adds parlays from games that have not started without raising the daily volume."""
     day = parlay_engine._day(now)
     blocked = {leg.get("event_id") for c in verified_cards or [] for leg in c.get("legs", [])}
+    recorded = [r for r in recorded_today or [] if r.get("date") == day]
+    blocked |= {leg.get("event_id") for r in recorded for leg in r.get("legs", [])}
+    limit = max(0, MAX_CARDS - len(verified_cards or []) - len({r.get("parlay_id") for r in recorded}))
     pool, cov = build_pool(con, now)
     cands = search(pool)
-    picked = [card(c, day) for c in select(cands, MAX_CARDS - len(verified_cards or []), blocked)]
+    picked = [card(c, day) for c in select(cands, limit, blocked)] if limit else []
     recs = [r for r in picked if card_problem(r, now, day) is None]
     return {"status": "estimated", "method": METHOD, "kind": ESTIMATE_KIND, "date": day,
             "timezone": parlays.CARD_TIMEZONE, "generated": now.isoformat(), "badge": BADGE,
             "verified_badge": VERIFIED_BADGE, "empty_text": EMPTY_TEXT, "disclosure": DISCLOSURE,
             "price_rule": PRICE_RULE, "default_stake": DEFAULT_STAKE,
-            "coverage": {**cov, "combinations_kept": len(cands)}, "recommendations": recs}
+            "coverage": {**cov, "combinations_kept": len(cands)}, "recorded_earlier_today": len(recorded),
+            "recommendations": recs}
 
 
 def preview_days(now: datetime, n: int = PREVIEW_DAYS) -> list[str]:

@@ -437,7 +437,7 @@
     const pub = isoT(r.first_seen);
     const at = pub != null ? ` (published ${esc(fmtAsOf(pub))})` : "";
     const gone = !started && !FINAL[r.result]
-      ? `<div class="pc-note">No longer in today's current picks; the price shown is from publication and may have moved.</div>` : "";
+      ? `<div class="pc-note">Recorded at publication; the price shown is from then and may have moved.</div>` : "";
     const closed = started || FINAL[r.result] ? `<div class="pc-note">Betting closed: a game in this parlay has started.</div>` : "";
     return `<article class="card parlay est recorded" data-parlay="${esc(r.parlay_id)}" data-kind="recorded" data-state="${esc(cls)}">
       <div class="pc-h"><span class="pc-n">Parlay ${i + 1} · ${r.legs.length} legs</span><span class="pill estimate">Estimate</span>${r.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
@@ -647,15 +647,18 @@
     const W = settled.filter((p) => ["won", "half_won"].includes(p.status.result)).length;
     const L = settled.filter((p) => ["lost", "half_lost"].includes(p.status.result)).length;
     const P = settled.length - W - L;
-    let h = `<h1>Pick History</h1><p class="lead">Every published pick at its original odds. Nothing is edited or removed.</p>
+    // Issue #63: Parlays come first on History; single picks follow under their own heading.
+    let h = `<h1>Pick History</h1><p class="lead">Every published parlay and pick at its original odds. Nothing is edited or removed.</p>`
+      + parlayHistory()
+      + `<section class="section" id="pick-history"><div class="section-h"><h2>Single picks</h2></div>
       ${filters(true, "hsport", "hrange", [["7", "7 days"], ["30", "30 days"], ["all", "All time"]])}
       <div class="brief"><span>Record <b>${W}–${L}${P ? "–" + P : ""}</b></span><span class="dot"></span><span><b>${H.length - settled.length}</b> awaiting result</span></div>`;
-    if (!H.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No picks in this period</h3><p>Quiet periods are normal: Doyen only publishes when the evidence clears its bar.</p></div>` + parlayHistory();
+    if (!H.length) return h + `<div class="card empty-cc" style="margin-top:16px"><h3>No picks in this period</h3><p>Quiet periods are normal: Doyen only publishes when the evidence clears its bar.</p></div></section>`;
     const res = (p) => p.status.state === "settled" ? statusPill(p.status) : `<span class="pill">${p.status.state === "withdrawn" ? "Withdrawn" : "Pending"}</span>`;
     return h + `<div class="rows hist" style="margin-top:14px">` + H.map((p) => `<div class="row" data-go="#/pick/${esc(p.id)}" role="link" tabindex="0">
         <div class="t">${esc(fmtMon(p.published_at))}</div>
         <div class="ev"><b>${vs(p.title)}</b><span>${esc(p.selection)}</span></div>
-        <div class="t r">${dec(p.odds)}</div>${res(p)}</div>`).join("") + `</div>` + parlayHistory();
+        <div class="t r">${dec(p.odds)}</div>${res(p)}</div>`).join("") + `</div></section>`;
   }
 
   function watchlist() {

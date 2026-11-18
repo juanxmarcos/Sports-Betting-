@@ -142,7 +142,7 @@ The grid was nearly flat: log loss ranged from 1.0100 to 1.0132.
 - NFL/NBA: moneyline, spread, total (discrete margin/total distributions handle pushes on whole-number lines).
 - Tennis: match winner only. Set handicaps and total games are excluded because they are not modelled reliably.
 
-**Pre-game reassessment.** Every run (once a day since issue #53; yesterday's games settle in the same morning run) re-prices open picks against the latest odds and appends a status: *active* (still qualifies), *updated* (edge narrowed), *withdrawn* (no longer value) or *expired* (started). These go to the append-only `rec_updates` table. The original pick, its odds and its timestamp never change, and withdrawn picks are still settled and counted in Pick History.
+**Pre-game reassessment.** Every run (twice a day since issue #63: yesterday's games settle in the morning run, games finished earlier today in the evening run) re-prices open picks against the latest odds and appends a status: *active* (still qualifies), *updated* (edge narrowed), *withdrawn* (no longer value) or *expired* (started). These go to the append-only `rec_updates` table. The original pick, its odds and its timestamp never change, and withdrawn picks are still settled and counted in Pick History.
 
 ## 11. Doyen v0.3: diagnostics, context and feature tests
 
