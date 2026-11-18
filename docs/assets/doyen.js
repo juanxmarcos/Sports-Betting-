@@ -429,8 +429,6 @@
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
-      ${pricesRead(r)}
-      ${hit}
     </article>`;
   }
   // ---------- today's recorded parlays (issue #57) ----------
@@ -499,7 +497,6 @@
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
-      <div class="pc-note" data-prices-read>Price as of ${esc(fmtAsOf(isoT(r.quote.quoted_at)))} — check your book.</div>
     </article>`;
   }
   function home() {

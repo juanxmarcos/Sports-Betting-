@@ -139,7 +139,7 @@ def test_home_preview_day_shows_badge_and_price_time():
     assert 'data-parlay="pe-p"' in html and 'data-parlay="pe-t"' not in html
     card = html[html.index("<article"):html.index("</article>")]
     assert f'<span class="pill preview">{pe.PREVIEW_BADGE}</span>' in card and "Estimate</span>" in card
-    assert re.search(r"Prices? as of Thu, Nov 12, [^<]+ E[SD]T — check your book\.", card)
+    assert "check your book" not in card      # footnotes removed (owner, 2026-11-18)
     assert "Preview Parlays" in html and 'class="on" data-f="hday" data-v="1"' in html
 
 
