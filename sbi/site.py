@@ -347,8 +347,15 @@ def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False
     estimated-parlay ledger before the read-only settlement summary is computed. Previews for the
     next New York dates (issue #58) are added under "previews" and are never recorded."""
     from . import parlay_estimated as pe
+    today = now.astimezone(pe.NY).date().isoformat()
     try:
-        block = pe.build(con, now, parlays.shown_cards(parlay_block, now))
+        # Issue #63: parlays recorded earlier today (morning run) stay exactly as recorded; a later
+        # run only adds cards from other games that have not started.
+        try:
+            earlier = pe.ledger_rows(con, day=today)
+        except Exception:                     # unreadable ledger: build as if nothing was recorded
+            earlier = []
+        block = pe.build(con, now, parlays.shown_cards(parlay_block, now), recorded_today=earlier)
     except Exception as e:                    # never take the site down; show the truthful empty state
         block = {"status": "unavailable", "kind": pe.ESTIMATE_KIND, "date": None, "recommendations": [],
                  "empty_text": pe.EMPTY_TEXT, "error": type(e).__name__}
@@ -363,5 +370,5 @@ def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False
         block["previews"] = []
     # Issue #57: every estimate recorded for today's New York date, as first published, so a card
     # stays on the homepage after its games start (marked closed, then settled). Never rebuilt or repriced.
-    block["ledger_today"] = pe.ledger_rows(con, day=now.astimezone(pe.NY).date().isoformat())
+    block["ledger_today"] = pe.ledger_rows(con, day=today)
     return block

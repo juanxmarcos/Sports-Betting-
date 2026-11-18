@@ -1,16 +1,27 @@
 # Free scheduling: GitHub Actions (public repos: free; private: 2,000 free min/month,
-# this job uses ~2-4 min/run). No API keys required. Never places bets.
+# this job uses ~2-4 min/run, two runs a day). No API keys required. Never places bets.
 name: daily-research   # Sports Betting Doyen
 on:
   schedule:
-    # Once a day (issue #53). GitHub drops many scheduled runs, most of all at the top of the hour,
-    # so the primary run is at an unusual minute: 14:47 UTC = 9:47 AM EST (10:47 AM EDT).
-    # Settles yesterday's games, then spends the day's Odds API allowance (today's games first).
-    - cron: "47 14 * * *"
-    # Backups later the same morning. They exit early (no Odds API call, no commit) when today's
-    # primary run already succeeded (data/last_daily_run.json, see sbi/run_marker.py).
-    - cron: "23 16 * * *"
-    - cron: "11 18 * * *"
+    # Twice a day (issue #63; was once a day since #53). GitHub drops many scheduled runs, most of all
+    # at the top of the hour, and often starts them late, so each primary run is at an unusual minute
+    # shortly before the target time.
+    # Cron is UTC and does not follow daylight saving time: in winter (EST) the primaries land at
+    # 5:47 AM / 5:47 PM New York time; in summer (EDT) one hour later, at 6:47 AM / 6:47 PM. Accepted.
+    # Morning slot: settles yesterday's games, builds and records today's parlays, builds previews,
+    # and spends about half of the day's Odds API allowance (today's games first).
+    - cron: "47 10 * * *"
+    # Evening slot: settles games finished today, refreshes prices with the rest of the allowance,
+    # rebuilds previews and only ADDS parlays from games not yet started (recorded ones never change).
+    - cron: "47 22 * * *"
+    # Backups. Each exits early (no Odds API call, no commit) when its own slot (morning = before
+    # 2 PM New York, evening = after) already succeeded that New York day (data/last_daily_run.json,
+    # see sbi/run_marker.py). Morning backups: 12:29 and 14:13 UTC. Evening backups: 23:29 and 01:13 UTC
+    # (01:13 UTC is still the previous evening in New York).
+    - cron: "29 12 * * *"
+    - cron: "13 14 * * *"
+    - cron: "29 23 * * *"
+    - cron: "13 1 * * *"
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -27,11 +38,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      # Backup crons only: skip when today's (New York) daily run already succeeded. Standard
-      # library only, before installing requirements. Manual runs and the primary cron always run.
+      # Backup crons only: skip when this slot's (New York) run already succeeded today. Standard
+      # library only, before installing requirements. Manual runs and the two primary crons always run.
       - name: Backup run gate
         id: gate
-        if: github.event_name == 'schedule' && github.event.schedule != '47 14 * * *'
+        if: github.event_name == 'schedule' && github.event.schedule != '47 10 * * *' && github.event.schedule != '47 22 * * *'
         run: python -m sbi.run_marker >> "$GITHUB_OUTPUT"
       - if: steps.gate.outputs.skip != 'true'
         run: pip install -r requirements.txt

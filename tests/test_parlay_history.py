@@ -191,7 +191,7 @@ def test_open_recorded_card_and_live_card_are_not_duplicated():
     html = _run({"data": _data([_rec("pe-open", legs=later)]), "now": _iso(NOW)})
     card = _card(html, "pe-open")
     assert recorded(html) == [("pe-open", "open")]
-    assert re.search(r"Open: first game at 7:00\sPM", card) and "No longer in today's current picks" in card
+    assert re.search(r"Open: first game at 7:00\sPM", card) and "Recorded at publication; the price shown is from then" in card
     # The same parlay_id still in the current block shows once, as the live card.
     live = {"parlay_id": "pe-open", "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",
             "n_legs": 2, "estimated_odds": 4.0, "stake": 10,

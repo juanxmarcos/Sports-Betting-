@@ -203,14 +203,26 @@ and leg counts being published. Changing a criterion needs new out-of-sample evi
 
 ### 7.4 Freshness
 
-- **Rule (issue #53, replaces #37's 150 minutes):** the site is rebuilt **once a day**, by the
-  morning run of `daily.yml` (`47 14 * * *` = 9:47 AM EST), with backup crons later that morning
-  (`23 16 * * *`, `11 18 * * *`) that exit early, with no Odds API call and no commit, when that day's
-  run already succeeded (`data/last_daily_run.json`, `sbi/run_marker.py`). A combined quote therefore
-  counts from `quoted_at` until the first leg starts, provided it was quoted on the **same New York
-  day**. A quote from a previous New York day never counts. The browser applies the same rule
-  (`PC.quoteRule` and `parlayProblem` in `docs/assets/doyen.js`); `tests/test_parlay_freshness.py`
-  covers the schedule, the backup skip logic and both limits.
+- **Rule (issue #53, replaces #37's 150 minutes; two runs a day since #63):** the site is rebuilt
+  **twice a day** by `daily.yml`: a morning run (`47 10 * * *` = 5:47 AM EST / 6:47 AM EDT) and an
+  evening run (`47 22 * * *` = 5:47 PM EST / 6:47 PM EDT). Cron is UTC, so in daylight saving time both
+  land one hour later in New York; that is accepted. Each slot has backup crons (morning `29 12 * * *`,
+  `13 14 * * *`; evening `29 23 * * *`, `13 1 * * *`) that exit early, with no Odds API call and no
+  commit, when **that slot** (morning = before 2 PM New York, evening = after) already succeeded that
+  New York day (`data/last_daily_run.json`, `sbi/run_marker.py`). A morning success never skips an
+  evening backup. A combined quote counts from `quoted_at` until the first leg starts, provided it was
+  quoted on the **same New York day**. A quote from a previous New York day never counts. The browser
+  applies the same rule (`PC.quoteRule` and `parlayProblem` in `docs/assets/doyen.js`);
+  `tests/test_parlay_freshness.py` and `tests/test_twice_daily.py` cover the schedule, the per-slot
+  backup skip logic and both limits.
+- **Morning and evening runs (issue #63).** The morning run settles yesterday's games, builds and
+  records today's parlays and builds the 3-day previews. The evening run settles games already
+  finished today, refreshes prices, rebuilds the previews and may **add** estimated parlays, recorded
+  append-only, built only from games that have not started and are not in a parlay recorded earlier
+  that day. A parlay recorded in the morning is never rebuilt, changed or repriced; the evening only
+  fills what is left of the day's cap of 5 cards (`MAX_CARDS`), so the daily volume does not grow.
+  The free Odds API allowance is split: the morning run spends at most half of the day's allowance,
+  the evening run the rest (`sbi/sources/odds_api.py: budget`).
 - **Why it changed.** GitHub skipped most 2-hourly scheduled runs on 2026-11-17 (only 04:30 and 16:04 UTC
   ran), so cards built from good prices were hidden by the 150-minute limit. The owner decided one
   reliable daily refresh is enough.
@@ -219,9 +231,9 @@ and leg counts being published. Changing a criterion needs new out-of-sample evi
   stored leg prices. Every card says when its price was taken ("Price as of 9:47 AM EST — check your
   book."), so a morning price is never presented as live. A quote is never re-stamped or relabelled as
   fresh.
-- **Trade-off.** Prices can move between the morning run and the game. The card states the time, and the
+- **Trade-off.** Prices can move between a run and the game. The card states the time, and the
   reader is told to check the book. A more frequent refresh would need the 2-hourly schedule GitHub did
-  not run reliably, or a paid service.
+  not run reliably, or a paid service; two runs a day (#63) is the compromise.
 - Leg prices keep their source-specific limits in `sbi/odds_policy.py` (up to 6 hours near the start
   for The Odds API). They are used only to check the quote's consistency, never displayed as the
   combined price.
@@ -457,7 +469,7 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Selection | Issue #54: score alone almost always favours 2-leg combinations, so cards are picked per size bucket — **2**, **3** and **4–5** legs (6-leg combinations are no longer shown). Round 1 takes the best-scoring card of each size. Because a game can be in one card only, the sizes can pick games in any order: every order is tried and the one that covers the **most sizes** wins (ties: bigger sizes covered, then higher total score, then 4–5 picking first). For example, five games give a 3-leg and a 2-leg card rather than one 4-leg card. Round 2 takes a second of each size, 4–5 first. At most 2 per size (`PER_SIZE`) and 5 in total. A size with no qualifying combination is skipped, never padded. |
 
 No single-pick threshold is read or changed. The run makes no network request and spends no API
-credit: it reads prices the once-a-day `daily.yml` job already stored, and writes
+credit: it reads prices the twice-daily `daily.yml` job already stored, and writes
 `docs/data/parlays.json` (block `estimated_parlays`) and `docs/data/doyen.json`.
 
 ### 11.3 Tracking
@@ -525,7 +537,7 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
   when the best combinations all share games.
 - **Thin coverage.** Many games lack prices from today on the free Odds API quota, so several
   days may show few or no cards. Since #51 the ingest buys competitions with a game later
-  today (New York) first, inside the per-day budget and quota safeguards (#25; since #53 the single daily run may spend the whole day's allowance); its run
+  today (New York) first, inside the per-day budget and quota safeguards (#25; since #63 the morning run spends at most half of the day's allowance and the evening run the rest); its run
   output reports `planned_today_first` and `today` (events in the responses / events priced). The
   block's `coverage` reports `events_today`, `events_with_fresh_prices` and `legs`.
 
@@ -544,8 +556,8 @@ its games starts, and every recommended parlay must appear in History with its r
   today that is not also a live card renders as published: same legs, bookmaker and estimated odds,
   never rebuilt or repriced. The browser checks the row (`ledgerOk` in `docs/assets/doyen.js`: estimate
   kind, today's date, 2–6 legs with valid start times, odds > 1) and shows one status:
-  - *"Open: first game at 7:30 PM"*: no leg has started (plus "No longer in today's current picks; the
-    price shown is from publication and may have moved" when the parlay has left the current block);
+  - *"Open: first game at 7:30 PM"*: no leg has started (plus "Recorded at publication; the price shown
+    is from then and may have moved" when the parlay is not in the current block, e.g. after the evening run);
   - *"Started, betting closed"*: any leg has started and the result is not final;
   - *"Won: paid $X"*, *"Lost: lost $10.00"* or *"Void: stake returned"* when final, with paper P/L.
   Each leg shows ✓ (won), ✗ (lost), "void", or "pending" once started. Recorded cards have no stake

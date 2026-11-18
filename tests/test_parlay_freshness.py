@@ -1,7 +1,8 @@
-"""Once-a-day refresh with backups, and same-day price freshness (issue #53; replaces #37's 150 minutes).
+"""Twice-a-day refresh with backups, and same-day price freshness (issue #53, two slots since #63;
+replaces #37's 150 minutes).
 
-The static site is rebuilt by one morning run (New York time) at an unusual minute, plus backup crons
-that exit early when that run already succeeded. A card built from today's run stays shown until its
+The static site is rebuilt by a morning and an evening run (New York time) at unusual minutes, plus
+backup crons that exit early when their own slot's run already succeeded. A card built from today's run stays shown until its
 first leg starts and says when the price was taken; a price from a previous New York day never counts.
 """
 import json
@@ -21,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NY = ZoneInfo("America/New_York")
 BUILT = datetime(2026, 11, 17, 9, 47, tzinfo=NY)            # the 9:47 AM EST primary run
 GAME = datetime(2026, 11, 17, 19, 30, tzinfo=NY)            # 7:30 PM EST start
-PRIMARY = "47 14 * * *"
+PRIMARIES = ("47 10 * * *", "47 22 * * *")    # issue #63: morning and evening
 
 
 def _crons() -> list[str]:
@@ -29,46 +30,58 @@ def _crons() -> list[str]:
 
 
 # ---------- schedule ----------
-def test_one_daily_primary_cron_at_an_odd_minute_plus_backups():
+def test_two_daily_primary_crons_at_odd_minutes_plus_backups():
     crons = _crons()
-    assert crons[0] == PRIMARY
+    assert tuple(crons[:2]) == PRIMARIES
     for c in crons:
         minute, hour, dom, month, dow = c.split()
         assert minute.isdigit() and hour.isdigit(), f"each run is once a day at a fixed time: {c!r}"
         assert int(minute) % 5 != 0, f"avoid round minutes, GitHub drops those most: {c!r}"
         assert (dom, month, dow) == ("*", "*", "*")
-    hours = [int(c.split()[1]) for c in crons]
-    assert hours == sorted(hours) and len(set(hours)) == len(hours)
-    assert 1 <= len(crons) - 1 <= 2, "one or two backup crons"
-    # 14:47 UTC is a New York morning in both EST and EDT, and every backup is later that same morning/midday.
-    for h in hours:
+    assert len(set(crons)) == len(crons) and 2 <= len(crons) - 2 <= 4, "one or two backups per slot"
+    # Every morning cron is a New York morning (before 2 PM) and every evening cron is after 2 PM, in
+    # both EST and EDT, so each backup is gated by its own slot.
+    for c in crons:
+        h, m = int(c.split()[1]), int(c.split()[0])
+        slots = {run_marker.slot(datetime(2026, month, 15, h, m, tzinfo=timezone.utc)) for month in (1, 7)}
+        assert len(slots) == 1, f"{c!r} changes slot with daylight saving time"
+    morning = [c for c in crons if run_marker.slot(datetime(2026, 1, 15, int(c.split()[1]), 0, tzinfo=timezone.utc)) == "morning"]
+    assert morning[0] == PRIMARIES[0] and 1 <= len(morning) - 1 <= 2
+    assert 1 <= len(crons) - len(morning) - 1 <= 2
+    # The primaries land around 6 AM / 6 PM New York time (5:47 in EST, 6:47 in EDT).
+    for c, target in zip(PRIMARIES, (6, 18)):
         for month in (1, 7):
-            local = datetime(2026, month, 15, h, 0, tzinfo=timezone.utc).astimezone(NY)
-            assert 9 <= local.hour <= 14
+            local = datetime(2026, month, 15, int(c.split()[1]), 47, tzinfo=timezone.utc).astimezone(NY)
+            assert target - 1 <= local.hour <= target
 
 
 def test_backup_crons_are_gated_and_the_primary_and_manual_runs_are_not():
     wf = (ROOT / ".github" / "workflows" / "daily.yml").read_text()
     assert "workflow_dispatch" in wf
-    assert f"github.event_name == 'schedule' && github.event.schedule != '{PRIMARY}'" in wf
+    assert ("github.event_name == 'schedule' && github.event.schedule != '47 10 * * *'"
+            " && github.event.schedule != '47 22 * * *'") in wf
     assert "python -m sbi.run_marker >> \"$GITHUB_OUTPUT\"" in wf
+    assert "daylight saving" in wf
     for step in ("pip install -r requirements.txt", "python -m pytest -q", "python -m sbi daily", "git push"):
         before = wf[:wf.index(step)]
         assert before.rstrip().rfind("if: steps.gate.outputs.skip != 'true'") > before.rfind("- "), step
 
 
 # ---------- skip logic (sbi.run_marker) ----------
-def test_backup_skips_only_after_a_successful_run_the_same_new_york_day(tmp_path):
+def test_backup_skips_only_after_a_successful_run_in_the_same_slot_and_new_york_day(tmp_path):
     p = tmp_path / "last_daily_run.json"
-    assert not run_marker.ran_today(BUILT, p)                                   # no marker yet: run
+    assert not run_marker.ran_this_slot(BUILT, p)                               # no marker yet: run
     run_marker.mark(BUILT, p)
-    assert json.loads(p.read_text()) == {"completed_at": BUILT.isoformat(), "ny_date": "2026-11-17"}
-    assert run_marker.ran_today(BUILT + timedelta(hours=2), p)                  # 11:47 backup: skip
-    assert run_marker.ran_today(datetime(2026, 11, 17, 23, 59, tzinfo=NY), p)
-    assert not run_marker.ran_today(datetime(2026, 11, 18, 0, 1, tzinfo=NY), p)  # next New York day: run
-    # 9:47 PM EST is already the next day in UTC; it is still the same New York day.
+    assert json.loads(p.read_text()) == {"completed_at": BUILT.isoformat(), "ny_date": "2026-11-17",
+                                         "slot": "morning", "runs": {"morning": BUILT.isoformat()}}
+    assert run_marker.ran_this_slot(BUILT + timedelta(hours=2), p)              # 11:47 morning backup: skip
+    assert not run_marker.ran_this_slot(datetime(2026, 11, 17, 18, 29, tzinfo=NY), p)  # evening: run
+    assert not run_marker.ran_this_slot(datetime(2026, 11, 18, 7, 29, tzinfo=NY), p)   # next New York day: run
+    # 9:47 PM EST is already the next day in UTC; it is still the same New York day (evening slot).
     run_marker.mark(datetime(2026, 11, 17, 21, 47, tzinfo=NY), p)
-    assert run_marker.ran_today(datetime(2026, 11, 17, 23, 0, tzinfo=NY), p)
+    assert run_marker.ran_this_slot(datetime(2026, 11, 17, 23, 0, tzinfo=NY), p)
+    assert run_marker.ran_this_slot(datetime(2026, 11, 17, 12, 0, tzinfo=NY), p)    # morning kept
+    assert set(json.loads(p.read_text())["runs"]) == {"morning", "evening"}
 
 
 @pytest.mark.parametrize("content", ["", "not json", "{}", '{"completed_at": "2026-11-17T09:47:00"}',
@@ -76,7 +89,7 @@ def test_backup_skips_only_after_a_successful_run_the_same_new_york_day(tmp_path
 def test_unreadable_naive_or_future_marker_never_skips(tmp_path, content):
     p = tmp_path / "last_daily_run.json"
     p.write_text(content)
-    assert not run_marker.ran_today(BUILT, p)
+    assert not run_marker.ran_this_slot(BUILT, p)
 
 
 def test_cli_prints_a_github_output_line(tmp_path, monkeypatch, capsys):

@@ -11,8 +11,8 @@ A record only counts when `quote_problem` returns None:
 - the bookmaker quotes every leg's exact selection in Doyen's own stored prices;
 - the combined odds are consistent with that bookmaker's leg prices (a large gap means the
   wrong legs, a different market, a boost, or correlation pricing: all need a human look);
-- a timezone-aware `quoted_at`, not in the future, on the same New York day as now (issue #53:
-  the site is rebuilt once a day, so a price from today's slip stays usable until the first leg
+- a timezone-aware `quoted_at`, not in the future, on the same New York day as now (issue #53;
+  the site is rebuilt twice a day since #63, so a price from today's slip stays usable until the first leg
   starts, and the card says when it was quoted). A price from a previous New York day never counts.
 An old quote is never relabelled as fresh: it simply stops counting.
 """

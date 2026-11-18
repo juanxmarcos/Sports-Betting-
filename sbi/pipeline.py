@@ -309,7 +309,8 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
     from . import report, settle, dashboard
     con = con or db.connect()
     now = now or _now()
-    result = {}
+    from .run_marker import slot as _slot
+    result = {"slot": _slot(now)}                       # "morning" or "evening" New York run (issue #63)
     from .sources import http as _http
     _http.reset_stats()                                 # request counts for this run (issue #61)
     with db.job(con, "ingest") as d:
@@ -379,6 +380,12 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
             db.provider_err(con, "the-odds-api", str(e))
             d["error"] = str(e)
             d["_status"] = "partial"
+    # Issue #63: the evening run settles games that finished earlier today. The first settle pass
+    # runs before the ESPN sport feeds above are refreshed; this pass uses their new final scores.
+    # Settlement is idempotent (open picks only), so on a morning run it usually finds nothing new.
+    with db.job(con, "settle-late") as d:
+        d.update(settle.settle_all(con, now))
+        result["settle_late"] = d
     with db.job(con, "analyse") as d:
         s = analyse(con, now)
         d.update({k: v for k, v in s.items() if k != "top_candidates"})

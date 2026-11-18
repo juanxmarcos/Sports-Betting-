@@ -7,9 +7,11 @@ Credit model (v4): /sports and /sports/{key}/events are free; /sports/{key}/odds
 len(markets) x len(regions) credits. We query regions=eu (includes Pinnacle and Betfair
 Exchange - the sharp references) and markets h2h,totals = 2 credits per competition.
 
-Budgeting: daily allowance = (remaining - RESERVE) / days left this month. Since issue #53 there is
-one data run a day, so that run may spend the whole allowance (capped at MAX_CREDITS_PER_RUN); when the
-remaining credits are unknown it spends at most UNKNOWN_REMAINING_CAP.
+Budgeting: daily allowance = (remaining - RESERVE) / days left this month, capped at
+MAX_CREDITS_PER_DAY (UNKNOWN_REMAINING_CAP when the remaining credits are unknown). Since issue #63
+there are two data runs a day: the morning run (before 14:00 New York) may spend MORNING_SHARE of the
+day's allowance, the evening run what is left of it. The total per New York day never exceeds the
+allowance, so two runs spend no more than the single run did (issue #53).
 Competitions with a stored event starting LATER TODAY (America/New_York) are bought first, so the
 estimated parlays of the day get fresh prices (issue #51); then future days. Within each group,
 internationals, US and tennis come first (they have no other multi-bookmaker source), then club
@@ -44,8 +46,11 @@ BASE = "https://api.the-odds-api.com/v4"
 SOURCE = "the-odds-api.com"
 REGIONS = "eu"
 MARKETS = "h2h,totals"   # btts is not offered on the bulk /odds endpoint (HTTP 422), only per event
-MAX_CREDITS_PER_RUN = 40   # one run a day (issue #53): the DAILY allowance below is the real limit
-UNKNOWN_REMAINING_CAP = 12  # remaining credits unknown: spend no more than the old per-run cap
+MAX_CREDITS_PER_RUN = 40   # hard per-run cap; the DAILY allowance below is the real limit
+MAX_CREDITS_PER_DAY = 40   # the single daily run's old cap (#53): two runs a day share it (#63)
+UNKNOWN_REMAINING_CAP = 12  # remaining credits unknown: at most this many per New York day
+MORNING_SHARE = 0.5         # issue #63: the morning run spends about half, the evening run the rest
+EVENING_FROM_HOUR = 14      # New York hour where the evening run's slot starts (sbi/run_marker.py)
 RESERVE = 20  # never spend the last credits of the month
 NY = ZoneInfo("America/New_York")   # the parlay day (issue #51): today's games are refreshed first
 
@@ -280,24 +285,40 @@ def _due(con, sport_key: str, soonest: datetime, now: datetime) -> bool:
     return last.date() != now.date()                           # weekly horizon: one look per day
 
 
-def budget(remaining: int | None, now: datetime, spent_today: int = 0) -> int:
-    """Daily allowance = (remaining - reserve) / days left in the month; a run may spend what is
-    left of today's allowance, capped per run. The once-a-day run normally spends the whole
-    allowance; any extra run that day (manual) gets only what is left."""
+def run_slot(now: datetime) -> str:
+    """"morning" before 14:00 New York time, otherwise "evening" (same rule as sbi/run_marker.py)."""
+    return "morning" if now.astimezone(NY).hour < EVENING_FROM_HOUR else "evening"
+
+
+def budget(remaining: int | None, now: datetime, spent_today: int = 0, slot: str | None = None) -> int:
+    """Daily allowance = (remaining - reserve) / days left in the month, capped at MAX_CREDITS_PER_DAY
+    (UNKNOWN_REMAINING_CAP when remaining is unknown). Issue #63: the morning run may spend up to
+    MORNING_SHARE of it, the evening run (or any later run that day) what is left. `spent_today` is
+    what earlier runs spent that New York day, so the day's total never exceeds the allowance."""
+    slot = slot or run_slot(now)
     if remaining is None:
-        return UNKNOWN_REMAINING_CAP
-    days_left = calendar.monthrange(now.year, now.month)[1] - now.day + 1
-    daily = (remaining + spent_today - RESERVE) / max(days_left, 1)
-    return int(max(0, min(MAX_CREDITS_PER_RUN, daily - spent_today)))
+        daily = UNKNOWN_REMAINING_CAP
+    else:
+        days_left = calendar.monthrange(now.year, now.month)[1] - now.day + 1
+        daily = min(MAX_CREDITS_PER_DAY, (remaining + spent_today - RESERVE) / max(days_left, 1))
+    share = MORNING_SHARE if slot == "morning" else 1.0
+    return int(max(0, min(MAX_CREDITS_PER_RUN, daily * share - spent_today)))
 
 
 def spent_today(con, now: datetime) -> int:
+    """Credits spent by earlier runs on `now`'s New York day (both slots, issue #63)."""
     import json as _j
+    day = now.astimezone(NY).date()
+    utc_days = sorted({(now.astimezone(timezone.utc) + timedelta(days=k)).strftime("%Y-%m-%d") for k in (-1, 0, 1)})
     tot = 0
-    for (d,) in con.execute("SELECT details FROM job_runs WHERE job='ingest-odds-api' AND substr(started_at,1,10)=?",
-                            (now.strftime("%Y-%m-%d"),)):
+    for started, d in con.execute(
+            "SELECT started_at, details FROM job_runs WHERE job='ingest-odds-api' AND substr(started_at,1,10) IN (?,?,?)",
+            utc_days):
         try:
-            tot += int((_j.loads(d or "{}")).get("credits_spent") or 0)
+            t = datetime.fromisoformat(started)
+            t = t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+            if t.astimezone(NY).date() == day:
+                tot += int((_j.loads(d or "{}")).get("credits_spent") or 0)
         except (ValueError, TypeError):
             pass
     return tot
@@ -348,7 +369,7 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
     plan = plan_order(plan)
     remaining = int(usage["remaining"]) if usage.get("remaining") not in (None, "") else None
     allowed = budget(remaining, now, spent_today(con, now))
-    out = {"credits_remaining_before": remaining, "budget_credits": allowed, "planned": [p[2] for p in plan],
+    out = {"credits_remaining_before": remaining, "budget_credits": allowed, "slot": run_slot(now), "planned": [p[2] for p in plan],
            "fetched": [], "matched": 0, "unmatched": [], "odds_rows": 0, "coverage": {},
            "skipped_no_matching_event": no_match, "planned_today_first": [p[2] for p in plan if p[4]],
            "today": {"events_in_responses": 0, "events_priced": 0}}
