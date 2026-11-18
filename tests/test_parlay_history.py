@@ -253,15 +253,16 @@ def _payout(card):
 
 
 @needs_node
-def test_saved_bet_amount_drives_every_card_but_never_the_record():
+def test_typed_bet_amount_drives_every_card_but_never_the_record():
     won = _rec("pe-w", result="won", paper_pl="30.00", leg_results=["won", "won"],
                legs=[("A v B", "A to win", NOW - timedelta(hours=4)), ("C v D", "C to win", NOW - timedelta(hours=3))])
     lost = _rec("pe-l", result="lost", paper_pl="-10.00", leg_results=["lost", "open"])
     hist = [won, lost]
     data = _data([_rec("pe-started"), won, lost], recs=[_live("pe-live")], history=hist)
     base = _run({"data": data, "now": _iso(NOW)})
-    typed = _run({"data": data, "now": _iso(NOW), "storage": {"doyen.betAmount": "25"}})
-    # Default $10 with nothing stored; the stored amount on every card's input and payout.
+    # Type 25 on one card, then re-render: the amount holds for the rest of this page view (issue #80).
+    typed = _run({"data": data, "now": _iso(NOW), "stake": {"value": "25", "odds": 4.0, "rerender": True}})
+    # Default $10; the typed amount on every card's input and payout.
     assert _payout(_card(base, "pe-live")) == "$40.00" and _payout(_card(base, "pe-started")) == "$40.00"
     live, started = _card(typed, "pe-live"), _card(typed, "pe-started")
     assert 'value="25" data-stake' in live and _payout(live) == "$100.00"
@@ -281,11 +282,16 @@ def test_saved_bet_amount_drives_every_card_but_never_the_record():
 
 
 @needs_node
-@pytest.mark.parametrize("stored", ["0", "-3", "\"abc\"", "99999", "true", "not json"])
-def test_bad_stored_bet_amount_falls_back_to_ten(stored):
-    html = _run({"data": _data([_rec("pe-started")], recs=[_live("pe-live")]), "now": _iso(NOW),
-                 "storage": {"doyen.betAmount": stored}})
-    assert 'value="10" data-stake' in _card(html, "pe-live") and _payout(_card(html, "pe-started")) == "$40.00"
+@pytest.mark.parametrize("stored", ["10.17", "25", "0", "-3", "\"abc\"", "99999", "true", "not json"])
+def test_fresh_load_always_starts_at_ten_whatever_was_stored(stored):
+    # Issue #80: an old saved amount (e.g. a wheel-drifted 10.17) is ignored and cleared.
+    out = json.loads(_run({"data": _data([_rec("pe-started")], recs=[_live("pe-live")]), "now": _iso(NOW),
+                           "storage": {"doyen.betAmount": stored}, "dumpStorage": True}))
+    html = out["html"]
+    for pid in ("pe-live", "pe-started"):
+        assert 'value="10" data-stake' in _card(html, pid) and _payout(_card(html, pid)) == "$40.00"
+    assert html.count('step="1"') == html.count("data-stake") == 2 and 'step="0.01"' not in html
+    assert "doyen.betAmount" not in out["storage"]
 
 
 @needs_node
@@ -293,8 +299,15 @@ def test_bad_stored_bet_amount_falls_back_to_ten(stored):
     ("25", None, "$100.00", "25"), ("25", "won", "Won: would have paid $100.00", "25"),
     ("25", "lost", "Lost $25.00", "25"), ("7.5", "void", "Void: $7.50 returned", "7.5"),
     ("12.345", None, "$49.40", "12.35"), ("0", None, "—", None), ("", "won", "—", None), ("20000", None, "—", None)])
-def test_typing_on_open_and_ledger_cards_updates_payout_and_remembers_amount(value, result, want, saved):
+def test_typing_on_open_and_ledger_cards_updates_payout_but_never_saves_amount(value, result, want, saved):
     stake = {"value": value, "odds": 4.0, "dump": True, **({"result": result} if result else {})}
     out = json.loads(_run({"data": {}, "now": _iso(NOW), "stake": stake}))
     assert out["payout"] == want
-    assert out["storage"].get("doyen.betAmount") == saved
+    assert "doyen.betAmount" not in out["storage"]   # issue #80: not persisted across visits
+
+
+@needs_node
+@pytest.mark.parametrize("focused", [True, False])
+def test_wheel_over_bet_amount_does_not_change_it(focused):
+    out = json.loads(_run({"data": {}, "now": _iso(NOW), "wheel": {"value": "10", "focused": focused}}))
+    assert out["value"] == "10" and out["focused"] is False and out["blurred"] is focused

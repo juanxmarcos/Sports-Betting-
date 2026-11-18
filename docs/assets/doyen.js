@@ -278,10 +278,13 @@
   }
   const usd = (x) => (x == null ? "—" : "$" + x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   // ---------- editable bet amount (issue #76) ----------
-  // Display-only: the owner's typed amount drives "Potential payout" on every parlay card and is
-  // remembered in localStorage. The paper record, P/L and History always use the recorded $10 stake;
+  // Display-only: the owner's typed amount drives "Potential payout" on every parlay card for the
+  // rest of this page view. The paper record, P/L and History always use the recorded $10 stake;
   // issue #78: cards show only the entered amount, and History says once that the record uses $10.
+  // Issue #80: every page load starts at $10. The amount is no longer saved across visits (a drifted
+  // value like $10.17 was being remembered), and an old saved value is cleared.
   const BET = { max: 10000, key: "betAmount" };
+  try { localStorage.removeItem("doyen." + BET.key); } catch (e) { /* storage unavailable */ }
   // A usable amount: a positive number up to BET.max, rounded to the cent. Null otherwise.
   function betAmount(v) {
     if (v === "" || v == null || typeof v === "boolean") return null;
@@ -290,7 +293,8 @@
     const c = Math.round(n * 100 + 1e-7) / 100;
     return c > 0 ? c : null;
   }
-  const savedBet = () => betAmount(store.get(BET.key, PC.stake)) || PC.stake;
+  let pageBet = null;                                        // typed this page view; null = $10
+  const currentBet = () => pageBet || PC.stake;
   const betStr = (x) => (Number.isInteger(x) ? String(x) : x.toFixed(2));
   // Payout line for the entered amount; a settled card shows what that amount would have done.
   function betText(amount, odds, result) {
@@ -302,7 +306,7 @@
     return usd(grossPayout(a, odds));
   }
   function betInput(i) {
-    return `<label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="0.01" max="${BET.max}" step="0.01" value="${esc(betStr(savedBet()))}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>`;
+    return `<label><span class="k">Bet amount</span><span class="stake">$<input type="number" inputmode="decimal" min="1" max="${BET.max}" step="1" value="${esc(betStr(currentBet()))}" data-stake aria-label="Bet amount in dollars for parlay ${i + 1}"></span></label>`;
   }
   // ---------- estimated parlays (issue #47) ----------
   // Owner-approved estimates shown alongside the strict path. Mirrors sbi/parlay_estimated.py
@@ -420,7 +424,7 @@
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Estimated combined odds</div><div class="v">${dec(odds)}</div></div>
         ${betInput(i)}
-        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(savedBet(), odds)}</div></div>
+        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
       ${pricesRead(r)}
       <div class="pc-note">Estimated price: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Your slip may pay less. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
@@ -478,7 +482,7 @@
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>
         ${betInput(i)}
-        <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(savedBet(), r.estimated_odds, r.result)}</div></div>
+        <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), r.estimated_odds, r.result)}</div></div>
       </div>
       ${closed}${gone}
       <div class="pc-note">Price at publication time${at}: product of ${esc(r.bookmaker)}'s single-game odds, not a bet-slip quote. Results come from final scores; paper results only.</div>
@@ -494,7 +498,7 @@
         <div><div class="k">Bookmaker</div><div class="v">${esc(r.bookmaker)}</div></div>
         <div><div class="k">Combined odds</div><div class="v">${dec(odds)}</div></div>
         ${betInput(i)}
-        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(savedBet(), odds)}</div></div>
+        <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
       <div class="pc-note" data-prices-read>Price as of ${esc(fmtAsOf(isoT(r.quote.quoted_at)))} — check your book.</div>
       <div class="pc-note">${esc(r.bookmaker)} combined price from the bet slip. Payout includes the stake and is paid only if every leg wins. The bet amount is illustrative, not advice to bet.</div>
@@ -539,7 +543,7 @@
     if (out) out.textContent = betText(inp.value, Number(card.dataset.odds), card.dataset.result);
     const a = betAmount(inp.value);
     if (a == null) return;
-    store.set(BET.key, a);                                   // remembered, display-only (issue #76)
+    pageBet = a;                                             // this page view only (issue #80)
     // Keep every other card on the page at the same amount.
     const all = $app.querySelectorAll ? $app.querySelectorAll("[data-stake]") : [];
     for (const o of all) {
@@ -549,6 +553,12 @@
       if (t) t.textContent = betText(a, Number(c.dataset.odds), c.dataset.result);
     }
   });
+  // Issue #80: a mouse wheel or trackpad over a focused amount must not nudge it; blurring the input
+  // before the browser's default action leaves the value alone and lets the page scroll as usual.
+  $app.addEventListener("wheel", (e) => {
+    const inp = e.target && e.target.closest ? e.target.closest("[data-stake]") : null;
+    if (inp && document.activeElement === inp && inp.blur) inp.blur();
+  }, { passive: true });
   function parlaysDetail() {
     const P = S.data.parlays || {};
     const a = P.audit;
