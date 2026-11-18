@@ -1,4 +1,4 @@
-"""Issue #85: History shows a single-pick statistics table by sport (and market), like the parlay table.
+"""Issue #85: History shows a single-pick statistics table by sport (by-market table removed in #90), like the parlay table.
 
 All picks below are test fixtures built for this test, never real recommendations. The browser test runs
 the real docs/assets/doyen.js in Node through tests/js/render_home.js."""
@@ -72,8 +72,9 @@ def test_single_pick_table_by_sport_and_total_matches_record():
     assert 'class="pl pos">+1.25 u' in sec and 'class="pl neg">−1.00 u' in sec
 
 
-def test_single_pick_table_by_market_hides_empty_markets():
-    rows = _rows(_render(), "data-singles-by-market")
-    assert list(rows) == ["Match result", "Moneyline", "Total goals", "Total"]
-    assert rows["Total goals"] == ["0–1", "0%", "1", "0", "−1.00 u", "−50.0%"]
-    assert rows["Match result"] == ["1–1", "50%", "0", "1", "0.00 u", "0.0%"]
+def test_no_single_pick_table_by_market():
+    # Issue #90: the by-market single-pick table is no longer rendered; the by-sport one stays.
+    html = _render()
+    assert "data-singles-by-market" not in html
+    assert "Single-pick record by market" not in html
+    assert "data-singles-by-sport" in html
