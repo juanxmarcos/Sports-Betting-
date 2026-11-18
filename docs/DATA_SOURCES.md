@@ -69,6 +69,14 @@ the HTTP `Last-Modified` time of the file, i.e. when football-data published tha
   - ESPN Analytics matchup predictor, stored separately as an *external forecast* (`external_forecasts`).
   - Team statistical leaders, used to flag injured *key* players.
   - Soccer: extra bookmakers (e.g. Bet365) and starting lineups (`lineups`, confirmed when 11 starters are listed).
+- **Preview-day prices (issue #61):** games on the next 3 New York dates that start after the 36h
+  window get a summary too, read for bookmaker prices only (soccer `odds`, NFL/NBA `pickcenter`
+  moneylines). NFL/NBA summary prices are stored only for games on a later New York date than the run,
+  never for today's games. One request per game per run (0.9h disk cache). Finding on 2026-11-17:
+  ESPN publishes NBA and tennis odds only for the current day (tomorrow's NBA scoreboard, summary and
+  core-API odds were all empty), while NFL odds are listed about a week ahead and were already stored.
+- **Request counts:** every `python -m sbi daily` run logs job `http-requests` with the number of
+  network requests, disk-cache answers and stale-cache fallbacks, per host (no query strings, no keys).
 - **Discrepancies:** when ESPN Analytics differs from the bookmakers or Doyen's model by ≥ 10 points, the gap is flagged on the match's Details page. It is never resolved by picking a side.
 - **Bookmaker normalisation** (`sbi/sources/books.py`): the same bookmaker from two feeds counts once (e.g. "Bet 365" = "Bet365"), and in-play feeds are excluded.
 

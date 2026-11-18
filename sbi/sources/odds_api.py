@@ -146,6 +146,8 @@ def key() -> str | None:
 
 
 def _get(path: str, params: dict, api_key: str) -> tuple[object, dict]:
+    from .http import count
+    count(BASE, "network")      # host only: the key is never recorded
     r = requests.get(f"{BASE}{path}", params={**params, "apiKey": api_key},
                      headers={"User-Agent": config.USER_AGENT}, timeout=30)
     if r.status_code in (401, 403):

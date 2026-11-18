@@ -189,13 +189,17 @@ def build_pool(con, now: datetime, day: str | None = None) -> tuple[list[dict], 
     preview = day is not None and day != parlay_engine._day(now)
     events = parlay_engine.todays_events(con, now, day)
     excluded, pool, fresh = Counter(), [], 0
+    by_sport: dict[str, dict[str, int]] = {}
     for e in events:
         if e["site_sport"] is None:
             excluded["unsupported sport"] += 1
             continue
         books = fresh_books(con, e["event_id"], now, parlays._ts(e["kickoff_utc"]), same_day=not preview)
+        sp = by_sport.setdefault(e["site_sport"], {"events": 0, "with_prices": 0})
+        sp["events"] += 1
         if books:
             fresh += 1
+            sp["with_prices"] += 1
         leg, why = legs_for_event(e, books, parlay_engine.model_probs(con, e["event_id"], now),
                                   parlay_engine.risk_notes(con, e["event_id"]))
         if why:
@@ -204,8 +208,11 @@ def build_pool(con, now: datetime, day: str | None = None) -> tuple[list[dict], 
         leg["price_ts"] = _price_times(con, e["event_id"], leg, now)
         pool.append(leg)
     pool.sort(key=lambda x: (-x["best_value"], x["event_id"]))
-    return pool, {"events_today": len(events), "events_with_fresh_prices": fresh, "legs": len(pool),
-                  "excluded": dict(sorted(excluded.items()))}
+    cov = {"events_today": len(events), "events_with_fresh_prices": fresh, "legs": len(pool),
+           "excluded": dict(sorted(excluded.items()))}
+    if preview:                       # issue #61: which sports on a preview day have prices
+        cov["by_sport"] = dict(sorted(by_sport.items()))
+    return pool, cov
 
 
 def _price_times(con, event_id: str, leg: dict, now: datetime) -> dict:

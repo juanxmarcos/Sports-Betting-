@@ -499,6 +499,12 @@ credit: it reads prices the once-a-day `daily.yml` job already stored, and write
   today's card, and today's card is never valid as a preview.
 - **Limit.** The odds table stores a price only when it changes, so an unchanged preview price can
   show an earlier "as of" time, sometimes from an earlier day. The card shows that time.
+- **Prices for later days (issue #61).** ESPN scoreboards are read for today and the next 7 days
+  (NFL, NBA, internationals), and ESPN game summaries for the 3 preview days (section "ESPN game
+  context" in DATA_SOURCES.md). Each preview's `coverage.by_sport` shows, per sport, how many games
+  that day have a stored price. A day stays empty when no free source lists prices yet: ESPN posts
+  NBA and tennis odds only on game day, and on 2026-11-17 the Odds API NBA response (all 3 paid
+  reads that day) listed only that day's games.
 
 ### 11.5 Limits
 - **Not a quote.** A bookmaker may price a combination below the product of its single prices, or

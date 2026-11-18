@@ -310,6 +310,8 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
     con = con or db.connect()
     now = now or _now()
     result = {}
+    from .sources import http as _http
+    _http.reset_stats()                                 # request counts for this run (issue #61)
     with db.job(con, "ingest") as d:
         d.update(ingest(con, now))
         result["ingest"] = d
@@ -426,6 +428,9 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
         except Exception as e:  # noqa: BLE001 - research only: must never stop the run
             d["error"] = f"{type(e).__name__}: {e}"
             d["_status"] = "partial"
+    with db.job(con, "http-requests") as d:            # issue #61: requests sent this run, per host
+        d.update(_http.stats())
+        result["http_requests"] = {k: d[k] for k in ("network", "cache", "stale")}
     with db.job(con, "publish") as d:
         from . import site
         d["site"] = str(site.build(con, now, write_shadow=True))          # builds diagnostics first ...
