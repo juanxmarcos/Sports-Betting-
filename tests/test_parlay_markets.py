@@ -1,11 +1,10 @@
 """Issue #82: more bet types in parlays, step 1 (soccer Over/Under, BTTS, Double Chance, Draw No Bet).
 
 Every game, price, probability and bookmaker below is test data built for these tests, never a real
-quote. Database tests use a temporary database; browser tests run the real docs/assets/doyen.js."""
+quote. Database tests use a temporary database; browser tests run the real docs/assets/doyen.js with node
+(always run, never skipped)."""
 import csv
 import json
-import os
-import shutil
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -21,7 +20,6 @@ ROOT = Path(__file__).resolve().parent.parent
 HARNESS = ROOT / "tests" / "js" / "render_home.js"
 NOW = datetime(2026, 11, 13, 15, 0, tzinfo=timezone.utc)          # 10:00 in New York
 DAY = "2026-11-13"
-needs_node = pytest.mark.skipif(not shutil.which("node") and not os.environ.get("CI"), reason="node is not installed")
 
 # A known 3x3 score matrix (home goals = row, away goals = column), sums to 1.
 M = np.array([[0.10, 0.08, 0.02],
@@ -309,7 +307,6 @@ def _data(est, history=None):
             "record": {"won": 0, "lost": 0, "push": 0, "profit_units": 0, "open": 0}}
 
 
-@needs_node
 def test_home_card_shows_the_market_and_leg_odds(con):
     _two_games(con)
     b = pe.build(con, NOW)
@@ -319,7 +316,6 @@ def test_home_card_shows_the_market_and_leg_odds(con):
     assert card.count('data-leg-price="1.83">-120 (1.83)<') == 2
 
 
-@needs_node
 def test_history_shows_record_by_market_type():
     rec = {"rows": 2, "won": 1, "lost": 1, "void": 0, "open": 0, "paper_pl": "-2.00", "staked": "20.00",
            "by_legs": {"2": {"rows": 2, "won": 1, "lost": 1, "void": 0, "open": 0, "paper_pl": "-2.00"}},
