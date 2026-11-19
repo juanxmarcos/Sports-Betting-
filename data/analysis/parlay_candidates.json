@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-19T08:43:35+00:00",
+ "generated": "2026-11-19T19:10:35+00:00",
  "date": "2026-11-19",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,7 +15,7 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 11,
+  "events_today": 7,
   "by_sport": {
    "nba": {
     "events": 4,
@@ -29,19 +29,19 @@
     "stored_model": 1
    },
    "tennis": {
-    "events": 6,
-    "fresh_prices": 2,
-    "events_with_candidate_legs": 2
+    "events": 2,
+    "fresh_prices": 1,
+    "events_with_candidate_legs": 1
    }
   },
-  "candidate_legs": 5,
-  "events_with_candidate_legs": 4,
+  "candidate_legs": 4,
+  "events_with_candidate_legs": 3,
   "pool_legs": 1,
   "excluded": {
    "event: model and market disagree strongly": 1,
-   "event: no fresh result-market prices": 4,
+   "event: no fresh result-market prices": 1,
    "event: probability outside research band": 2,
-   "leg: no bookmaker at or above fair value": 3
+   "leg: no bookmaker at or above fair value": 2
   }
  },
  "search": {
@@ -67,15 +67,15 @@
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 5,
+  "straight_picks_seen": 7,
   "usable_legs_today": 0,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-19T08:44:50+00:00",
-  "credits_spent_last_run": 11,
-  "credits_remaining": "309"
+  "at": "2026-11-19T19:12:11+00:00",
+  "credits_spent_last_run": 13,
+  "credits_remaining": "296"
  },
  "ledger_rows_added": 0,
  "shadow_settlement": {
