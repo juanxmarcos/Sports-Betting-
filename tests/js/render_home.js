@@ -25,7 +25,8 @@ const listeners = {};
 const app = { innerHTML: "", addEventListener: (t, f) => { listeners[t] = f; } };
 const stub = () => ({ innerHTML: "", textContent: "", addEventListener() {} });
 const els = { app, tz: stub(), updated: stub(), estrec: stub() };
-global.document = { getElementById: (id) => els[id] || stub(), querySelectorAll: () => [], title: "", activeElement: null };
+global.document = { getElementById: (id) => els[id] || stub(), querySelectorAll: () => [], title: "", activeElement: null,
+                    currentScript: input.scriptSrc ? { src: input.scriptSrc } : null };   // "scriptSrc": issue #98 build id
 global.window = { addEventListener() {}, scrollTo() {}, __DOYEN_ALLOW_MOCK: input.allowMock === true };
 global.location = { hash: input.hash || "" };
 const mem = Object.assign({}, input.storage || {});
@@ -34,7 +35,7 @@ global.localStorage = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k,
 const fetched = [];
 global.fetch = (url) => {
   fetched.push(url);
-  if (/parlays\.json$/.test(url)) {
+  if (/parlays\.json(\?|$)/.test(url)) {
     if (input.noLite) return Promise.resolve({ ok: false, status: 404 });
     const d = input.data || {};
     return Promise.resolve({ ok: true, json: () => Promise.resolve({ generated: d.generated, default_timezone: d.default_timezone, parlays: d.parlays, estimated_parlays: d.estimated_parlays, singles: d.singles }) });
