@@ -6,7 +6,9 @@ watched/upcoming events for all five sports, pick history, sport operational sta
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 from datetime import datetime, timedelta, timezone
 
 from . import config, db, parlays
@@ -336,7 +338,35 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
         {"generated": data["generated"], "default_timezone": data["default_timezone"], "parlays": data["parlays"],
          "estimated_parlays": data["estimated_parlays"]},
         default=str))
+    stamp_assets(config.ROOT / "docs" / "index.html", data["generated"])
     return out / "doyen.json"
+
+
+ASSET_RE = re.compile(r'(assets/doyen\.(?:css|js))(?:\?v=[^"]*)?"')
+
+
+def build_id(generated: str, docs) -> str:
+    """Short id that changes on every build (new `generated` time) and whenever the code changes."""
+    h = hashlib.sha256(str(generated).encode())
+    for name in ("doyen.css", "doyen.js"):
+        f = docs / "assets" / name
+        if f.exists():
+            h.update(f.read_bytes())
+    return h.hexdigest()[:12]
+
+
+def stamp_assets(index, generated: str) -> str | None:
+    """Issue #98: version the stylesheet and script referenced from docs/index.html with ?v=<build id>,
+    so a normal refresh loads the latest code. Paths stay relative (GitHub Pages base path). The front
+    end reads the same id from its script tag and adds it to the data fetches."""
+    if not index.exists():
+        return None
+    v = build_id(generated, index.parent)
+    html = index.read_text()
+    new = ASSET_RE.sub(lambda m: f'{m.group(1)}?v={v}"', html)
+    if new != html:
+        index.write_text(new)
+    return v
 
 
 def pe_history(con) -> list[dict]:
@@ -379,4 +409,10 @@ def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False
     # Issue #57: every estimate recorded for today's New York date, as first published, so a card
     # stays on the homepage after its games start (marked closed, then settled). Never rebuilt or repriced.
     block["ledger_today"] = pe.ledger_rows(con, day=today)
+    # Issue #98: the previous New York date's rows, for the homepage's one-line "Yesterday" result.
+    yesterday = (now.astimezone(pe.NY).date() - timedelta(days=1)).isoformat()
+    try:
+        block["ledger_yesterday"] = pe.ledger_rows(con, day=yesterday)
+    except Exception:                         # never take the site down
+        block["ledger_yesterday"] = []
     return block
