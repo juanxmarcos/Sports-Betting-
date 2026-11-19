@@ -1,6 +1,6 @@
 {
- "generated": "2026-11-19T03:53:22+00:00",
- "date": "2026-11-18",
+ "generated": "2026-11-19T08:43:35+00:00",
+ "date": "2026-11-19",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
  "price_kind": "computed_product_not_a_quote",
@@ -15,13 +15,33 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 0,
-  "by_sport": {},
-  "candidate_legs": 0,
-  "events_with_candidate_legs": 0,
-  "pool_legs": 0,
+  "events_today": 11,
+  "by_sport": {
+   "nba": {
+    "events": 4,
+    "fresh_prices": 4,
+    "stored_model": 4,
+    "events_with_candidate_legs": 2
+   },
+   "nfl": {
+    "events": 1,
+    "fresh_prices": 1,
+    "stored_model": 1
+   },
+   "tennis": {
+    "events": 6,
+    "fresh_prices": 2,
+    "events_with_candidate_legs": 2
+   }
+  },
+  "candidate_legs": 5,
+  "events_with_candidate_legs": 4,
+  "pool_legs": 1,
   "excluded": {
-   "leg: no bookmaker at or above fair value": 0
+   "event: model and market disagree strongly": 1,
+   "event: no fresh result-market prices": 4,
+   "event: probability outside research band": 2,
+   "leg: no bookmaker at or above fair value": 3
   }
  },
  "search": {
@@ -53,9 +73,9 @@
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-19T03:55:00+00:00",
-  "credits_spent_last_run": 1,
-  "credits_remaining": "320"
+  "at": "2026-11-19T08:44:50+00:00",
+  "credits_spent_last_run": 11,
+  "credits_remaining": "309"
  },
  "ledger_rows_added": 0,
  "shadow_settlement": {
@@ -76,7 +96,7 @@
  },
  "why_not_3_to_5": [
   "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
-  "Only 0 leg(s) are at or above fair value at any bookmaker.",
+  "Only 1 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]

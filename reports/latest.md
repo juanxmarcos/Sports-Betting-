@@ -1,7 +1,7 @@
-# Sports Betting Doyen — Daily Report, 2026-11-18
+# Sports Betting Doyen — Daily Report, 2026-11-19
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Wed 18 Nov 22:53 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Thu 19 Nov 03:43 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -9,10 +9,10 @@ All times America/New_York. Generated Wed 18 Nov 22:53 EST. Model `dc-0.1`.*
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
 | Events discovered | 202 |
-| Events with fresh odds | 113 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 64 |
-| Markets evaluated | 722 |
-| Events passing all rules | 4 |
+| Events with fresh odds | 116 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 70 |
+| Markets evaluated | 798 |
+| Events passing all rules | 3 |
 | Published today | **0** |
 | Highest estimated EV | — |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
@@ -50,8 +50,8 @@ No national-team fixtures in the next 48h.
 
 ## Track record (paper, fixed 1-unit stakes)
 
-Settled 20 · W 6 / L 13 / P 1 ·
-profit -6.67u · yield -33.3%
-(95% CI -74.2% to +15.9%) ·
-avg CLV +0.8% · max drawdown 8.2u.
-*Only 20 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*
+Settled 21 · W 6 / L 14 / P 1 ·
+profit -7.67u · yield -36.5%
+(95% CI -75.8% to +11.1%) ·
+avg CLV +1.2% · max drawdown 8.2u.
+*Only 21 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*
