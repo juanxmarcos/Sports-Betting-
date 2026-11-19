@@ -170,7 +170,7 @@ def test_started_parlay_stays_on_home_marked_closed_and_yesterdays_does_not():
     assert "bet now" not in card.lower() and "check your book" not in card
     assert "Estimated odds at publication" in card and "Price at publication time" not in card
     assert '<span class="pill estimate">Estimate</span>' in card
-    assert "pending" in card
+    assert "⏳" in card and re.search(r"lg-when\">[^<]*PM<span", card) and ">pending<" not in card   # issue #98
     assert pe.EMPTY_TEXT not in html and "Estimated parlays of the day" not in html
 
 

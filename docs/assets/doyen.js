@@ -7,7 +7,7 @@
     set(k, v) { try { localStorage.setItem("doyen." + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
   };
   const S = { data: null, lite: null, sport: store.get("sport", "all"), range: "today", hrange: "all", hsport: "all",
-              tz: store.get("tz", null), hday: "0", watch: new Set(store.get("watch", [])) };
+              hday: "0", watch: new Set(store.get("watch", [])) };
 
   const SPORTS = [["all", "All Sports"], ["soccer", "Soccer"], ["nfl", "NFL"], ["nba", "NBA"], ["tennis", "Tennis"]];
   const ICON = {
@@ -26,7 +26,7 @@
   const pct = (x, d = 0) => (x == null || isNaN(x) ? "—" : (x * 100).toFixed(d) + "%");
   const dec = (x) => (x == null ? "—" : Number(x).toFixed(2));
   const D0 = () => S.data || S.lite;
-  const tz = () => S.tz || (D0() && D0().default_timezone) || "America/New_York";
+  const tz = () => "America/New_York";             // issue #98: the site shows Eastern time only
   const dkey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: tz(), year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const addDays = (key, n) => { const [y, m, d] = key.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1, d + n)); return t.toISOString().slice(0, 10); };
   const when = (x) => fmtTime(x.start_utc);
@@ -465,13 +465,15 @@
     else if (r.result === "void") { state = "Void: stake returned"; cls = "void"; }
     else if (started) { state = "Started, betting closed"; cls = "closed"; }
     else { state = `Open: first game at ${fmtClock(first)}`; cls = "open"; }
+    // Issue #98: a small badge per leg, apart from the start time: ✓ won, ✗ lost, ⏳ started and
+    // awaiting a result, "void"/"push" in small text, nothing before the game starts.
     const mark = (l) => {
-      if (l.result === "won") return '<span class="lg-r won" title="Leg won">✓</span>';
-      if (l.result === "lost") return '<span class="lg-r lost" title="Leg lost">✗</span>';
-      if (l.result === "void") return '<span class="lg-r void">void</span>';
-      return isoT(l.start_utc) <= now ? '<span class="lg-r">pending</span>' : "";
+      if (l.result === "won") return '<span class="lg-r won" data-leg-result="won" title="Leg won" aria-label="Leg won">✓</span>';
+      if (l.result === "lost") return '<span class="lg-r lost" data-leg-result="lost" title="Leg lost" aria-label="Leg lost">✗</span>';
+      if (l.result === "void" || l.result === "push") return `<span class="lg-r ${l.result}" data-leg-result="${l.result}">${l.result}</span>`;
+      return isoT(l.start_utc) <= now ? '<span class="lg-r" data-leg-result="pending" title="Awaiting result" aria-label="Awaiting result">⏳</span>' : "";
     };
-    const legs = r.legs.map((l) => `<li><div class="lg-t">${legComp(l)}${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))} ${mark(l)}</div>${legPrice(l)}</li>`).join("");
+    const legs = r.legs.map((l) => `<li><div class="lg-t">${legComp(l)}${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}${mark(l)}</div>${legPrice(l)}</li>`).join("");
     const pub = isoT(r.first_seen);
     const at = pub != null ? ` (published ${esc(fmtAsOf(pub))})` : "";
     const gone = !started && !FINAL[r.result]
@@ -522,8 +524,14 @@
       return p + `</section>`;
     }
     const rec = recordedToday(E, est.map((r) => r.parlay_id));     // issue #57: started and settled cards stay
-    let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${seg}`;
+    let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${yesterdayLine(E)}${seg}`;
     h += `<section class="section first" id="parlays">`;
+    // Issue #98: every parlay for today has started or settled and none is open: point to the next day.
+    const openRec = rec.some((r) => !FINAL[r.result] && Math.min(...r.legs.map((l) => isoT(l.start_utc))) > Date.now());
+    if (rec.length && !cards.length && !est.length && !openRec) {
+      const n = [1, 2, 3].find((k) => shownPreview(E, future[k - 1]).length) || 1;
+      h += `<p class="next-day" data-next-day="${n}">All of today's parlays have started. <button class="linkbtn" data-f="hday" data-v="${n}">See ${n === 1 ? "tomorrow's" : esc(shortDay(future[n - 1])) + "'s"} →</button></p>`;
+    }
     if (cards.length) h += `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`;
     if (est.length || rec.length) h += `<div class="grid parlays"${cards.length ? ' style="margin-top:16px"' : ""}>${est.map((r, i) => estCard(r, cards.length + i)).join("")}${rec.map((r, i) => ledgerCard(r, cards.length + est.length + i)).join("")}</div>`;
     if (!cards.length && !est.length && !rec.length) {
@@ -531,6 +539,26 @@
         : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
     }
     return h + `</section>`;
+  }
+  // Issue #98: one line under the title with the previous New York date's results, from the ledger
+  // rows the build exports (estimated_parlays.ledger_yesterday). Hidden when there were none.
+  function yesterdayLine(E) {
+    const day = addDays(nyKey(new Date()), -1);
+    const rows = E && Array.isArray(E.ledger_yesterday) ? E.ledger_yesterday.filter((r) => r && r.date === day && (!(r.mock || r.test) || allowMock())) : [];
+    if (!rows.length) return "";
+    const c = (k) => rows.filter((r) => r.result === k).length;
+    const won = c("won"), lost = c("lost"), vd = c("void"), open = rows.length - won - lost - vd;
+    const stakes = [...new Set(rows.map((r) => Number(r.stake)).filter((x) => isFinite(x) && x > 0))];
+    const each = stakes.length === 1 ? stakes[0] : PC.stake;
+    const parts = [];
+    if (won + lost + vd) {
+      const pl = rows.filter((r) => FINAL[r.result]).reduce((a, r) => a + Math.round(Number(r.paper_pl) * 100), 0) / 100;
+      if (won + lost) parts.push(`${won} of ${won + lost} parlay${won + lost === 1 ? "" : "s"} won`);
+      parts.push(`${pl > 0 ? "+" : (pl < 0 ? "−" : "")}${usd(Math.abs(pl))} (paper, ${usd(each).replace(/\.00$/, "")} each)`);
+      if (vd) parts.push(`${vd} void`);
+    }
+    if (open) parts.push(parts.length ? `${open} still open` : `${open} parlay${open === 1 ? "" : "s"}, still open`);
+    return `<p class="yday" data-yesterday>Yesterday: ${esc(parts.join(" · "))}</p>`;
   }
   $app.addEventListener("input", (e) => {
     const inp = e.target && e.target.closest ? e.target.closest("[data-stake]") : null;
@@ -943,20 +971,11 @@
   window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
   $app.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-go]")) { e.preventDefault(); location.hash = e.target.dataset.go; } });
 
-  function tzSelect() {
-    const sel = document.getElementById("tz");
-    const zones = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "America/Phoenix", "America/Anchorage", "Pacific/Honolulu", "America/Toronto", "America/Mexico_City", "America/Sao_Paulo", "Europe/London", "Europe/Madrid", "Europe/Paris", "Europe/Berlin", "Africa/Johannesburg", "Asia/Dubai", "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney", "UTC"];
-    const cur = tz();
-    if (!zones.includes(cur)) zones.unshift(cur);
-    sel.innerHTML = zones.map((z) => `<option value="${z}" ${z === cur ? "selected" : ""}>${z.replace("_", " ")}</option>`).join("");
-    sel.addEventListener("change", () => { S.tz = sel.value; store.set("tz", sel.value); render(); });
-  }
-
   // The homepage needs only the small parlay file; every other route loads the full research file.
-  const getJSON = (u) => fetch(u, { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
-  let tzReady = false;
+  // Issue #98: the build stamps ?v=<build id> on this script's URL; data fetches reuse it.
+  const BUILD = (() => { try { const m = /[?&]v=([\w-]+)/.exec((document.currentScript || {}).src || ""); return m ? m[1] : ""; } catch (e) { return ""; } })();
+  const getJSON = (u) => fetch(BUILD ? u + "?v=" + BUILD : u, { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
   function ready(d) {
-    if (!tzReady) { tzReady = true; tzSelect(); }
     document.getElementById("updated").textContent = "· Updated " + ago(d.generated);
     const rec = document.getElementById("estrec");      // issue #47: one-line estimated-parlay record in the footer
     if (rec) { const line = estRecordLine(d.estimated_parlays); rec.textContent = line; rec.hidden = !line; }
