@@ -83,7 +83,7 @@ parameter uncertainty), so that thinly estimated edges rank below robust ones.
 | Kick-off | {{ r.ko }} |
 | Market / selection | {{ r.market }} — **{{ r.desc }}** |
 | Best price | **{{ "%.2f"|format(r.odds) }}** @ {{ r.bookmaker }}{% if r.net_odds != r.odds %} (net {{ "%.3f"|format(r.net_odds) }} after commission){% endif %} |
-| Model probability (raw) | {{ "%.1f"|format(r.model_prob*100) }}% (±{{ "%.1f"|format((r.prob_sd or 0)*100) }} pp param. sd; p10 {{ "%.1f"|format(r.ev_d.model_q_p10*100) }}%) |
+| Model probability (raw) | {% if r.model_prob is not none %}{{ "%.1f"|format(r.model_prob*100) }}%{% if r.ev_d.model_q_p10 is defined and r.ev_d.model_q_p10 is not none %} (±{{ "%.1f"|format((r.prob_sd or 0)*100) }} pp param. sd; p10 {{ "%.1f"|format(r.ev_d.model_q_p10*100) }}%){% endif %}{% else %}n/a ({{ r.ev_d.consensus_source or "market consensus" }}){% endif %} |
 | Market no-vig probability | {{ "%.1f"|format(r.market_prob*100) if r.market_prob is not none else "n/a" }}% ({{ r.ev_d.consensus_source }}) |
 | Final probability (blend) | {{ "%.1f"|format(r.final_prob*100) }}% |
 | Fair odds | {{ "%.2f"|format(r.fair_odds) }} |
@@ -101,7 +101,7 @@ O2.5 {{ "%.0f"|format(r.ev_d.model_markets["OU:over:2.5"]*100) }}%, BTTS {{ "%.0
 {% else %}**Statistical evidence.** {% if r.ev_d.projection %}Projected score {{ r.home }} {{ r.ev_d.projection.home }} – {{ r.away }} {{ r.ev_d.projection.away }}. {% endif %}{{ r.ev_d.context or "No further model detail is stored for this pick." }}
 {% endif %}
 **Why it may be value.** The best available price ({{ "%.2f"|format(r.odds) }}) exceeds the estimated fair
-price ({{ "%.2f"|format(r.fair_odds) }}). {% if r.market_prob is not none and r.model_prob > r.market_prob %}The
+price ({{ "%.2f"|format(r.fair_odds) }}). {% if r.market_prob is not none and r.model_prob is not none and r.model_prob > r.market_prob %}The
 model rates this outcome {{ "%.1f"|format((r.model_prob-r.market_prob)*100) }} pp above the de-vigged consensus.{% else %}The edge
 comes mainly from the price being out of line with the consensus of other bookmakers.{% endif %}
 
