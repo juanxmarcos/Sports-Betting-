@@ -1,37 +1,7 @@
 {
-  "generated": "2026-11-18T23:04:16+00:00",
+  "generated": "2026-11-19T03:55:15+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
-    {
-      "rec_id": "955fb7ae9aa8edf8",
-      "event_id": "nba:NBA:20261119:401910008",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:00:00+00:00",
-      "home": "Indiana Pacers",
-      "away": "Houston Rockets",
-      "market": "ML",
-      "selection": "home",
-      "line": null,
-      "odds": 3.93,
-      "bookmaker": "DraftKings",
-      "final_prob": 0.2701507050774633,
-      "ev": 0.06169227095443075
-    },
-    {
-      "rec_id": "244a3bf8920901ae",
-      "event_id": "nba:NBA:20261119:401910015",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T02:30:00+00:00",
-      "home": "Denver Nuggets",
-      "away": "Boston Celtics",
-      "market": "ML",
-      "selection": "away",
-      "line": null,
-      "odds": 1.93,
-      "bookmaker": "1xBet",
-      "final_prob": 0.567032910753276,
-      "ev": 0.09437351775382274
-    },
     {
       "rec_id": "c482fff4eef8f18b",
       "event_id": "football:D1:20261121:union-berlin:rb-leipzig",
@@ -139,90 +109,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "nba:NBA:20261119:401910007",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:00:00+00:00",
-      "home": "Cleveland Cavaliers",
-      "away": "Memphis Grizzlies"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910008",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:00:00+00:00",
-      "home": "Indiana Pacers",
-      "away": "Houston Rockets"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910009",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:00:00+00:00",
-      "home": "Miami Heat",
-      "away": "Milwaukee Bucks"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910010",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:00:00+00:00",
-      "home": "Orlando Magic",
-      "away": "Philadelphia 76ers"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910011",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:30:00+00:00",
-      "home": "Brooklyn Nets",
-      "away": "Chicago Bulls"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910012",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T00:30:00+00:00",
-      "home": "Toronto Raptors",
-      "away": "Washington Wizards"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910013",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T01:00:00+00:00",
-      "home": "New Orleans Pelicans",
-      "away": "Detroit Pistons"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910014",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T01:00:00+00:00",
-      "home": "Oklahoma City Thunder",
-      "away": "Atlanta Hawks"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910016",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T01:00:00+00:00",
-      "home": "Dallas Mavericks",
-      "away": "Golden State Warriors"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910015",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T02:30:00+00:00",
-      "home": "Denver Nuggets",
-      "away": "Boston Celtics"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910017",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T03:00:00+00:00",
-      "home": "Los Angeles Lakers",
-      "away": "Utah Jazz"
-    },
-    {
-      "event_id": "nba:NBA:20261119:401910018",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-19T03:00:00+00:00",
-      "home": "Sacramento Kings",
-      "away": "Phoenix Suns"
-    },
     {
       "event_id": "tennis:ATP:20261119:187513",
       "league": "TENNIS:ATP",
@@ -383,6 +269,69 @@
       "kickoff_utc": "2026-11-20T20:00:00+00:00",
       "home": "Ath Bilbao",
       "away": "Espanol"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909305",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T00:00:00+00:00",
+      "home": "Atlanta Hawks",
+      "away": "Charlotte Hornets"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909306",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T00:30:00+00:00",
+      "home": "Brooklyn Nets",
+      "away": "Orlando Magic"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909307",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T00:30:00+00:00",
+      "home": "Cleveland Cavaliers",
+      "away": "Indiana Pacers"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909308",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T00:30:00+00:00",
+      "home": "Detroit Pistons",
+      "away": "Toronto Raptors"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909309",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T01:00:00+00:00",
+      "home": "Chicago Bulls",
+      "away": "Washington Wizards"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909310",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T01:00:00+00:00",
+      "home": "Oklahoma City Thunder",
+      "away": "New Orleans Pelicans"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909311",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T02:30:00+00:00",
+      "home": "Utah Jazz",
+      "away": "Phoenix Suns"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909312",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T03:00:00+00:00",
+      "home": "Denver Nuggets",
+      "away": "Houston Rockets"
+    },
+    {
+      "event_id": "nba:NBA:20261121:401909313",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-21T03:00:00+00:00",
+      "home": "Los Angeles Lakers",
+      "away": "Sacramento Kings"
     }
   ]
 }

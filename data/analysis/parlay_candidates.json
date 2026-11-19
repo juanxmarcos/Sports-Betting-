@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-18T23:02:44+00:00",
+ "generated": "2026-11-19T03:53:22+00:00",
  "date": "2026-11-18",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,28 +15,19 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 12,
-  "by_sport": {
-   "nba": {
-    "events": 12,
-    "fresh_prices": 12,
-    "stored_model": 12,
-    "events_with_candidate_legs": 9
-   }
-  },
-  "candidate_legs": 15,
-  "events_with_candidate_legs": 9,
-  "pool_legs": 4,
+  "events_today": 0,
+  "by_sport": {},
+  "candidate_legs": 0,
+  "events_with_candidate_legs": 0,
+  "pool_legs": 0,
   "excluded": {
-   "event: model and market disagree strongly": 2,
-   "event: probability outside research band": 1,
-   "leg: no bookmaker at or above fair value": 5
+   "leg: no bookmaker at or above fair value": 0
   }
  },
  "search": {
-  "evaluated": 1,
+  "evaluated": 0,
   "by_size": {
-   "2": 1,
+   "2": 0,
    "3": 0,
    "4": 0,
    "5": 0,
@@ -49,22 +40,22 @@
    "5": 0,
    "6": 0
   },
-  "rejected_linked": 1,
+  "rejected_linked": 0,
   "truncated": false,
-  "bookmakers": 1
+  "bookmakers": 0
  },
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 6,
+  "straight_picks_seen": 5,
   "usable_legs_today": 0,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-18T23:04:00+00:00",
-  "credits_spent_last_run": 0,
-  "credits_remaining": "321"
+  "at": "2026-11-19T03:55:00+00:00",
+  "credits_spent_last_run": 1,
+  "credits_remaining": "320"
  },
  "ledger_rows_added": 0,
  "shadow_settlement": {
@@ -85,6 +76,7 @@
  },
  "why_not_3_to_5": [
   "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
+  "Only 0 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]
