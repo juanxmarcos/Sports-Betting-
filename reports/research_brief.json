@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-19T08:45:06+00:00",
+  "generated": "2026-11-19T14:02:39+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -109,13 +109,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:ATP:20261119:187507",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-19T13:00:00+00:00",
-      "home": "Rafael Jodar",
-      "away": "Ben Shelton"
-    },
     {
       "event_id": "tennis:WTA:20261119:186809",
       "league": "TENNIS:WTA",
@@ -346,6 +339,55 @@
       "kickoff_utc": "2026-11-21T05:00:00+00:00",
       "home": "TBD",
       "away": "TBD"
+    },
+    {
+      "event_id": "football:E0:20261121:man-city:fulham",
+      "league": "E0",
+      "kickoff_utc": "2026-11-21T12:30:00+00:00",
+      "home": "Man City",
+      "away": "Fulham"
+    },
+    {
+      "event_id": "football:E1:20261121:millwall:qpr",
+      "league": "E1",
+      "kickoff_utc": "2026-11-21T12:30:00+00:00",
+      "home": "Millwall",
+      "away": "QPR"
+    },
+    {
+      "event_id": "football:E1:20261121:norwich:cardiff",
+      "league": "E1",
+      "kickoff_utc": "2026-11-21T12:30:00+00:00",
+      "home": "Norwich",
+      "away": "Cardiff"
+    },
+    {
+      "event_id": "football:E1:20261121:southampton:derby",
+      "league": "E1",
+      "kickoff_utc": "2026-11-21T12:30:00+00:00",
+      "home": "Southampton",
+      "away": "Derby"
+    },
+    {
+      "event_id": "football:SP1:20261121:alaves:la-coruna",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-21T13:00:00+00:00",
+      "home": "Alaves",
+      "away": "La Coruna"
+    },
+    {
+      "event_id": "football:I1:20261121:como:cagliari",
+      "league": "I1",
+      "kickoff_utc": "2026-11-21T14:00:00+00:00",
+      "home": "Como",
+      "away": "Cagliari"
+    },
+    {
+      "event_id": "football:I1:20261121:lazio:lecce",
+      "league": "I1",
+      "kickoff_utc": "2026-11-21T14:00:00+00:00",
+      "home": "Lazio",
+      "away": "Lecce"
     }
   ]
 }

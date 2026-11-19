@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-19 08:45 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-19 14:03 UTC)
 
 ## Opportunity funnel (next 7 days)
 
@@ -14,16 +14,16 @@
   - market rejections: EV below threshold (35), too few bookmakers (24), odds outside range (3)
   - primary blocker per event: no bookmaker prices yet (44), prices are in line with the sharp market (3), value only at long odds outside the allowed range (1)
 
-**TENNIS**: events discovered 42 → complete history 8 → valid forecast 42 → fresh odds available 4 → stale odds only 0 → three plus bookmakers 4 → fully evaluated 4 → markets evaluated 8 → markets positive ev 4 → events positive ev 3 → events passing all rules 0 → final recommendations 0
-  - market rejections: EV below threshold (6), odds outside range (2)
-  - primary blocker per event: no bookmaker prices yet (38), prices are in line with the sharp market (3), value only at long odds outside the allowed range (1)
+**TENNIS**: events discovered 41 → complete history 7 → valid forecast 41 → fresh odds available 3 → stale odds only 0 → three plus bookmakers 3 → fully evaluated 3 → markets evaluated 6 → markets positive ev 3 → events positive ev 2 → events passing all rules 0 → final recommendations 0
+  - market rejections: EV below threshold (4), odds outside range (2)
+  - primary blocker per event: no bookmaker prices yet (38), prices are in line with the sharp market (2), value only at long odds outside the allowed range (1)
 
 ## Odds freshness (events in next 48h)
 
-- soccer: {'events_with_odds': 94, 'median_odds_age_h': 0.0, 'median_bookmakers': 7.0, 'share_3plus_books': 0.59}
-- nfl: {'events_with_odds': 14, 'median_odds_age_h': 0.0, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
-- nba: {'events_with_odds': 4, 'median_odds_age_h': 0.0, 'median_bookmakers': 23.0, 'share_3plus_books': 1.0}
-- tennis: {'events_with_odds': 4, 'median_odds_age_h': 0.0, 'median_bookmakers': 15.5, 'share_3plus_books': 1.0}
+- soccer: {'events_with_odds': 94, 'median_odds_age_h': 5.3, 'median_bookmakers': 7.0, 'share_3plus_books': 0.59}
+- nfl: {'events_with_odds': 14, 'median_odds_age_h': 5.3, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
+- nba: {'events_with_odds': 4, 'median_odds_age_h': 5.3, 'median_bookmakers': 23.0, 'share_3plus_books': 1.0}
+- tennis: {'events_with_odds': 3, 'median_odds_age_h': 5.3, 'median_bookmakers': 15, 'share_3plus_books': 1.0}
 
 ## The Odds API
 
