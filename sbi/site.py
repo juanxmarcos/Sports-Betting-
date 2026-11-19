@@ -71,6 +71,7 @@ def _pick(con, r, now) -> dict:
         "why": x["why"], "why_short": x["why_short"], "risk": x["risk"], "risks": x["risks"],
         "odds_updated": ts, "stale": age_h is not None and age_h > 24,
         "status": _status(con, r), "model_version": r["model_version"],
+        "rules_version": e.get("rules_version") or "singles-v1", "risk_note": e.get("risk_note"),
         "updates": [dict(u) for u in con.execute(
             "SELECT checked_at,status,best_odds,best_bookmaker,ev_now,note FROM rec_updates WHERE rec_id=? ORDER BY id", (r["rec_id"],))],
         "detail": {"consensus_source": e.get("consensus_source"), "n_bookmakers": e.get("n_bookmakers"),
@@ -315,7 +316,7 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
     data = {"brand": "Sports Betting Doyen", "briefing": {"sentence": diag["briefing"]}, "generated": now.isoformat(), "default_timezone": config.TIMEZONE,
             "pick_of_the_day": potd, "picks": current, "history": picks_all, "record": rec,
             "parlays": parlay_block, "estimated_parlays": estimated,
-            "parlay_history": pe_history(con),
+            "parlay_history": pe_history(con), "singles": singles_block(con, now, picks_all),
             "events": events, "watching": watching, "close_to_value": close_ids, "sports": sports,
             "funnel_7d": {k: v["funnel"] for k, v in diag["funnel_7d"].items()},
             "rules": {"min_ev": config.RULES.min_ev, "min_odds": config.RULES.min_odds,
@@ -327,7 +328,7 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
         meta = {r[0]: r[1] for r in con.execute("SELECT event_id, competition FROM event_meta") if r[1]}
     except Exception:                         # no event_meta table yet: map from league codes only
         meta = {}
-    for k in ("picks", "history", "parlays", "estimated_parlays", "parlay_history"):
+    for k in ("picks", "history", "parlays", "estimated_parlays", "parlay_history", "singles"):
         competitions.label_all(data[k], meta)
     out = config.ROOT / "docs" / "data"
     out.mkdir(parents=True, exist_ok=True)
@@ -336,10 +337,21 @@ def build(con, now: datetime | None = None, write_shadow: bool = False):
     # research file. Same parlay block, nothing added.
     (out / "parlays.json").write_text(json.dumps(
         {"generated": data["generated"], "default_timezone": data["default_timezone"], "parlays": data["parlays"],
-         "estimated_parlays": data["estimated_parlays"]},
+         "estimated_parlays": data["estimated_parlays"], "singles": data["singles"]},
         default=str))
     stamp_assets(config.ROOT / "docs" / "index.html", data["generated"])
     return out / "doyen.json"
+
+
+def singles_block(con, now: datetime, picks_all: list[dict]) -> dict:
+    """Single picks for the Today page (issue #99). Never takes the site down."""
+    from . import singles_loose
+    try:
+        return singles_loose.block(con, now, picks_all)
+    except Exception as e:                    # noqa: BLE001
+        return {"rules_version": singles_loose.RULES_VERSION, "days": {}, "previews": [],
+                "empty_text": singles_loose.EMPTY_TEXT, "preview_empty_text": singles_loose.PREVIEW_EMPTY_TEXT,
+                "error": type(e).__name__}
 
 
 ASSET_RE = re.compile(r'(assets/doyen\.(?:css|js))(?:\?v=[^"]*)?"')

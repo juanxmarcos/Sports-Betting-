@@ -38,7 +38,7 @@ global.fetch = (url) => {
   if (/parlays\.json(\?|$)/.test(url)) {
     if (input.noLite) return Promise.resolve({ ok: false, status: 404 });
     const d = input.data || {};
-    return Promise.resolve({ ok: true, json: () => Promise.resolve({ generated: d.generated, default_timezone: d.default_timezone, parlays: d.parlays, estimated_parlays: d.estimated_parlays }) });
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ generated: d.generated, default_timezone: d.default_timezone, parlays: d.parlays, estimated_parlays: d.estimated_parlays, singles: d.singles }) });
   }
   return Promise.resolve({ ok: true, json: () => Promise.resolve(input.data) });
 };

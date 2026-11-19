@@ -194,7 +194,8 @@ def test_site_export_carries_the_parlay_block_and_leaves_picks_alone(tmp_path, m
     assert not [t for t in con.execute("SELECT name FROM sqlite_master WHERE name LIKE '%parlay%'")]
     lite = json.loads((tmp_path / "docs" / "data" / "parlays.json").read_text())       # issue #27 homepage file
     assert lite == {"generated": d["generated"], "default_timezone": d["default_timezone"], "parlays": p,
-                    "estimated_parlays": d["estimated_parlays"]}                      # issue #47, same block
+                    "estimated_parlays": d["estimated_parlays"],                      # issue #47, same block
+                    "singles": d["singles"]}                                          # issue #99, single picks
     assert d["estimated_parlays"]["status"] == "estimated" and d["estimated_parlays"]["recommendations"] == []
 
 

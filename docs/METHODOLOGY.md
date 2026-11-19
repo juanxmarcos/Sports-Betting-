@@ -360,3 +360,43 @@ A leg then has positive value only where the pricing bookmaker's price is better
 
 **Settlement.** From final scores: spread cover on margin + line, totals on total − line; a push (whole-number
 line landing exactly) is a void leg, which voids the parlay here, as before.
+
+## 17. Single picks: loosened rules `singles-v2` (issue #99)
+
+**Owner decision (2026-11-19).** The single-pick page was almost always empty. The owner approved loosening the
+single-pick rules the same way estimated parlays were loosened (#51, #68), and moved single picks onto the Today
+page under the parlays. The Single picks tab is gone from the top menu; `#/picks` still works by URL.
+
+The new rules apply to **new picks only**. Each one stores `rules_version: "singles-v2"` in its immutable
+`evidence_json`. Picks published before have no version (shown as `singles-v1`) and keep their old rules, odds and
+results. Nothing published is edited or deleted. Code: `sbi/singles_loose.py` (job `singles-v2` in the daily run).
+
+| Rule | singles-v2 |
+|---|---|
+| Games | Soccer, NFL, NBA, Tennis; later today (New York date), not started |
+| Price | One bookmaker's latest stored price, retrieved on the same New York day before the game starts. One bookmaker is enough; exchanges are never the pricing book |
+| Probability | Doyen's stored model probability; otherwise the other bookmakers' de-vigged consensus; otherwise the consensus of at least 2 independent bookmakers including the pricing one (as parlays, #51) |
+| Value | Probability × price > 1, no extra margin |
+| Kept screens | Market probability 0.30–0.85; stored model within 0.12 of the market |
+| Injury/lineup notes | Not a screen; the open note is stored and shown on the card (#68) |
+| Volume | Best by estimated value; one pick per game; at most 5 for games on one New York day (picks already published for that day count). A game with any published pick gets no second one. Zero is normal |
+| Markets | Match result / moneyline, soccer over/under and BTTS, NBA/NFL spreads and totals. Double chance and draw no bet are not used for singles (settlement has no market reference for them) |
+
+The original rules (section 4, `config.SelectionRules`) are unchanged and still run. Picks published under the
+loosened rules are not re-checked against them before the start (they would read as "withdrawn" against a 3% bar
+they were never meant to clear); they keep their published status until the game starts and are graded as usual.
+Their `ev_lower` equals `ev` because no pessimistic estimate is made.
+
+**Today page.** Below the parlays, a "Single picks" section lists that day's published picks as compact cards
+(competition, matchup, pick, American and decimal odds, bookmaker, bet amount and payout, status and result).
+The Tomorrow/+2/+3 tabs show published picks for that day plus **previews**: what the same rules would choose from
+the latest stored prices (#58 preview price rule). Previews are labelled, replaced at every run, and never published
+or recorded.
+
+**Tracking.** History keeps the single-pick table by sport (all picks). One muted line under it shows the record of
+`singles-v2` picks since the first one, so the two rule sets can be compared. The site block `singles.record` holds
+the same tally.
+
+**Limits.** Weaker evidence per pick than the original rules: one bookmaker, no margin above fair value, and a
+market-consensus probability that can include the pricing bookmaker. Expect more picks and a smaller, less certain
+estimated edge. No network request and no API credit is used: the job reads prices the daily run already stored.

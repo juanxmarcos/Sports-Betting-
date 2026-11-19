@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from . import config, db
+from . import config, db, singles_loose
 from . import ev as evm
 from .engine import SELECTIONS, books_from_rows
 from .markets import pnl, settle_value
@@ -94,6 +94,11 @@ def reassess_open(con, now: datetime) -> dict:
                 con.execute("""INSERT INTO rec_updates(rec_id,checked_at,status,note) VALUES (?,?,?,?)""",
                             (r["rec_id"], now.isoformat(), "expired", "Event started; awaiting result."))
                 out["appended"] += 1
+            continue
+        if singles_loose.is_loose(r):
+            # Issue #99: a loosened-rules pick is valued against Doyen's probability at one bookmaker, so
+            # the original rules' market re-check (EV >= 3% vs consensus) would misreport it. It keeps
+            # its published status until the game starts; the result is graded as usual.
             continue
         out["checked"] += 1
         books, ts, _ = _latest_books(con, r["event_id"], rules.max_odds_age_hours, now)
