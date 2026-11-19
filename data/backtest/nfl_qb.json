@@ -2,17 +2,17 @@
   "tune": {
     "n": 798,
     "base": 0.62812,
-    "with_qb_change": 0.62625,
-    "qb_change_points_coef": -4.09
+    "with_qb_change": 0.6274,
+    "qb_change_points_coef": -2.93
   },
   "test": {
     "n": 1003,
     "base": 0.63828,
-    "with_qb_change": 0.63866,
-    "qb_change_points_coef": -2.32,
+    "with_qb_change": 0.63882,
+    "qb_change_points_coef": -2.24,
     "diff_ci95": [
-      -0.00338,
-      0.00433
+      -0.00301,
+      0.00422
     ]
   },
   "adopt": false

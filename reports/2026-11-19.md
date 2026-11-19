@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-19
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Thu 19 Nov 14:10 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Thu 19 Nov 16:41 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -10,10 +10,10 @@ All times America/New_York. Generated Thu 19 Nov 14:10 EST. Model `dc-0.1`.*
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
 | Events discovered | 199 |
 | Events with fresh odds | 116 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 69 |
-| Markets evaluated | 782 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 68 |
+| Markets evaluated | 790 |
 | Events passing all rules | 3 |
-| Published today | **1** |
+| Published today | **3** |
 | Highest estimated EV | +3.9% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -56,6 +56,68 @@ model rates this outcome 5.7 pp above the de-vigged consensus.
 - Model and market disagree by +5.7%.
 
 Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/football/game/_/gameId/401873072> 
+
+
+### 2. Under 227.5 points — Milwaukee Bucks v Portland Trail Blazers
+
+| Field | Value |
+|---|---|
+| Sport / competition | NBA — NBA |
+| Kick-off | Thu 19 Nov 20:00 EST |
+| Market / selection | TOTAL — **Under 227.5 points** |
+| Best price | **2.01** @ Pinnacle |
+| Model probability (raw) | 50.0% |
+| Market no-vig probability | 48.1% (other bookmakers' consensus) |
+| Final probability (blend) | 50.0% |
+| Fair odds | 2.00 |
+| Expected value | **+0.5%** (pessimistic +0.5%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 14 |
+| Odds snapshot | Thu 19 Nov 03:44 EST |
+
+**Statistical evidence.** No further model detail is stored for this pick.
+
+**Why it may be value.** The best available price (2.01) exceeds the estimated fair
+price (2.00). The
+model rates this outcome 1.9 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Selected under the loosened single-pick rules (issue #99): one bookmaker's price is enough and the only value check is probability x price > 1, so the estimated edge is smaller and less certain than under the original rules.
+
+Sources: 
+
+
+### 3. New York Knicks to win — Minnesota Timberwolves v New York Knicks
+
+| Field | Value |
+|---|---|
+| Sport / competition | NBA — NBA |
+| Kick-off | Thu 19 Nov 20:00 EST |
+| Market / selection | ML — **New York Knicks to win** |
+| Best price | **1.93** @ Pinnacle |
+| Model probability (raw) | 52.0% |
+| Market no-vig probability | 50.9% (Doyen model) |
+| Final probability (blend) | 52.0% |
+| Fair odds | 1.92 |
+| Expected value | **+0.4%** (pessimistic +0.4%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 21 |
+| Odds snapshot | Thu 19 Nov 14:12 EST |
+
+**Statistical evidence.** No further model detail is stored for this pick.
+
+**Why it may be value.** The best available price (1.93) exceeds the estimated fair
+price (1.92). The
+model rates this outcome 1.2 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Selected under the loosened single-pick rules (issue #99): one bookmaker's price is enough and the only value check is probability x price > 1, so the estimated edge is smaller and less certain than under the original rules.
+
+Sources: 
 
 
 

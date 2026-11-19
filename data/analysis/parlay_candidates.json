@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-19T19:10:35+00:00",
+ "generated": "2026-11-19T21:41:07+00:00",
  "date": "2026-11-19",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,7 +15,7 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 7,
+  "events_today": 6,
   "by_sport": {
    "nba": {
     "events": 4,
@@ -29,14 +29,12 @@
     "stored_model": 1
    },
    "tennis": {
-    "events": 2,
-    "fresh_prices": 1,
-    "events_with_candidate_legs": 1
+    "events": 1
    }
   },
-  "candidate_legs": 4,
-  "events_with_candidate_legs": 3,
-  "pool_legs": 1,
+  "candidate_legs": 3,
+  "events_with_candidate_legs": 2,
+  "pool_legs": 0,
   "excluded": {
    "event: model and market disagree strongly": 1,
    "event: no fresh result-market prices": 1,
@@ -67,14 +65,14 @@
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 7,
-  "usable_legs_today": 0,
+  "straight_picks_seen": 9,
+  "usable_legs_today": 1,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-19T19:12:11+00:00",
-  "credits_spent_last_run": 13,
+  "at": "2026-11-19T21:42:42+00:00",
+  "credits_spent_last_run": 0,
   "credits_remaining": "296"
  },
  "ledger_rows_added": 0,
@@ -96,7 +94,7 @@
  },
  "why_not_3_to_5": [
   "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
-  "Only 1 leg(s) are at or above fair value at any bookmaker.",
+  "Only 0 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]
