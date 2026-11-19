@@ -519,7 +519,7 @@
       p += `<section class="section first" id="parlays" data-preview-day="${esc(day)}">`;
       if (prev.length) p += `<p class="small muted">Estimates for ${esc(fmtDay(day))}, built from the latest stored prices. Previews are replaced at every daily update and are not recorded; this day's parlays become final on the day itself.</p><div class="grid parlays">${prev.map((r, i) => estCard(r, i)).join("")}</div>`;
       else p += `<p class="zero" data-preview-empty>${esc(EC.previewEmpty)}</p>`;
-      return p + `</section>`;
+      return p + `</section>` + singlesSection(day, true);
     }
     const rec = recordedToday(E, est.map((r) => r.parlay_id));     // issue #57: started and settled cards stay
     let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${seg}`;
@@ -530,6 +530,63 @@
       h += E && typeof E === "object" ? `<p class="zero">${esc(EC.empty)} <a href="#/parlays">Why?</a></p>`
         : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
     }
+    return h + `</section>` + singlesSection(today, false);
+  }
+  // ---------- single picks on the Today page (issue #99) ----------
+  // Published single picks for the selected New York date (singles.days[day], every rules version,
+  // shown as published: original odds, then status and result), plus, on the Tomorrow/+2/+3 tabs,
+  // previews the loosened rules would pick from the latest stored prices (never published or recorded).
+  const SG = { empty: "No single picks today.", previewEmpty: "No single picks for this day yet." };
+  function singleOk(p, day) {
+    if (!p || typeof p !== "object") return false;
+    if ((p.mock || p.test) && !allowMock()) return false;
+    const t = isoT(p.start_utc);
+    if (!str(p.id) || !str(p.title) || !str(p.selection) || t == null || nyKey(new Date(t)) !== day) return false;
+    return typeof p.odds === "number" && isFinite(p.odds) && p.odds > 1;
+  }
+  function shownSingles(day, preview) {
+    const G = (D0() || {}).singles;
+    if (!G || typeof G !== "object") return null;
+    const pub = (G.days && Array.isArray(G.days[day]) ? G.days[day] : []).filter((p) => singleOk(p, day) && p.preview !== true);
+    const seen = new Set(pub.map((p) => p.event_id));
+    const pv = preview ? ((Array.isArray(G.previews) ? G.previews : []).find((x) => x && x.date === day) || {}).recommendations : [];
+    const prev = (Array.isArray(pv) ? pv : []).filter((p) => singleOk(p, day) && p.preview === true && !seen.has(p.event_id) && (seen.add(p.event_id), true));
+    const by = (a, b) => isoT(a.start_utc) - isoT(b.start_utc) || String(a.title).localeCompare(String(b.title));
+    return pub.sort(by).concat(prev.sort(by));
+  }
+  const SG_RESULT = { won: "won", lost: "lost", void: "void", push: "void" };
+  function singleCard(p, i) {
+    const now = Date.now(), st = p.status || {}, start = isoT(p.start_utc);
+    const res = st.state === "settled" ? SG_RESULT[st.result] : undefined;
+    let state, cls;
+    if (p.preview === true) { state = `Preview: starts ${fmtClock(start)}`; cls = "open"; }
+    else if (st.state === "settled") { state = str(st.label) ? st.label : "Settled"; cls = res || "closed"; }
+    else if (start <= now) { state = "Started, betting closed"; cls = "closed"; }
+    else if (st.state === "withdrawn") { state = "Withdrawn: not a current recommendation"; cls = "closed"; }
+    else { state = `Open: starts at ${fmtClock(start)}`; cls = "open"; }
+    const asOf = isoT(p.price_at);
+    const priceNote = p.preview === true
+      ? `<div class="pc-note preview-note" data-preview><span class="pill preview">${esc(EC.previewBadge)}</span></div>`
+      : (asOf != null ? `<div class="pc-note">Odds at publication (price as of ${esc(fmtAsOf(asOf))}).</div>` : "");
+    const note = str(p.risk_note) ? `<div class="lg-n" data-risk-note>${esc(p.risk_note)}</div>` : "";
+    return `<article class="card parlay single" data-single="${esc(p.id)}" data-parlay="${esc(p.id)}" data-odds="${esc(p.odds)}" data-state="${esc(cls)}"${res ? ` data-result="${esc(res)}"` : ""}>
+      <div class="pc-h"><span class="pc-n">Single ${i + 1}</span>${p.preview === true ? "" : statusPill(st)}${p.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
+      <div class="pc-state ${esc(cls)}" data-state-line>${esc(state)}</div>
+      <ol class="legs"><li><div class="lg-t">${legComp(p)}${vs(p.title)}</div><div class="lg-s">${str(p.market) ? `<span class="lg-m">${esc(p.market)}</span> ` : ""}${esc(p.selection)}</div><div class="lg-when">${esc(fmtClock(start))}${str(p.bookmaker) ? " · " + esc(p.bookmaker) : ""}</div>${note}</li></ol>
+      <div class="pc-foot">
+        <div><div class="k">Odds</div><div class="v" data-single-odds>${esc(american(p.odds))} (${dec(p.odds)})</div></div>
+        ${betInput(i)}
+        <div><div class="k">${res ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), p.odds, res)}</div></div>
+      </div>
+      ${priceNote}
+    </article>`;
+  }
+  function singlesSection(day, preview) {
+    const list = shownSingles(day, preview);
+    if (list === null) return "";
+    let h = `<section class="section" id="singles" data-singles-day="${esc(day)}"><div class="section-h"><h2>Single picks</h2>${list.length ? `<span class="count">${list.length}</span>` : ""}</div>`;
+    if (list.length) h += `${preview && list.some((p) => p.preview === true) ? `<p class="small muted">Previews use the latest stored prices and may change at the next daily update; they are published only on the day itself.</p>` : ""}<div class="grid parlays">${list.map(singleCard).join("")}</div>`;
+    else h += `<p class="zero" data-singles-empty>${esc(preview ? SG.previewEmpty : SG.empty)}</p>`;
     return h + `</section>`;
   }
   $app.addEventListener("input", (e) => {
@@ -745,8 +802,13 @@
     const head = (first) => `<thead><tr><th scope="col">${first}</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="Won ÷ (won + lost); pushes, voids and open picks excluded">${lab("Hit rate", "Hit")}</th><th scope="col">${lab("Void/push", "Void")}</th><th scope="col" title="Not yet graded, including withdrawn picks">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th><th scope="col" title="Paper P/L ÷ units staked on graded picks">ROI</th></tr></thead>`;
     const bySport = SPORTS.slice(1).filter(([k]) => sportOk(k, S.hsport)).map(([k, name]) => row(name, tally(H.filter((p) => p.sport === k)))).join("");
     const T = row("Total", tally(H), "total");
+    // Issue #99: one muted line with the record since the loosened rules (singles-v2) started, from the same picks.
+    const V2 = H.filter((p) => p.rules_version === "singles-v2");
+    const g2 = tally(V2);
+    const since = V2.reduce((a, p) => (!a || p.published_at < a ? p.published_at : a), null);
+    const v2line = V2.length ? `<p class="small muted" data-singles-v2>Since the loosened rules (${since ? esc(fmtDate(since)) : "issue #99"}): ${g2.won}–${g2.lost}${g2.push ? `, ${g2.push} void/push` : ""}, ${g2.open} open, paper P/L ${g2.staked ? units(g2.pl) : "–"}. Earlier picks used the original rules.</p>` : "";
     return `<p class="small muted" data-singles-stake>Paper results at a flat 1-unit stake per pick (u = units).</p>
-      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>${singlesNote(H)}`;
+      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>${v2line}${singlesNote(H)}`;
   }
 
   function history() {

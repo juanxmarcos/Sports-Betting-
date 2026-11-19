@@ -60,6 +60,8 @@ def _form_sentence(team: str, f: dict | None) -> str | None:
 def explain(r: dict, e: dict) -> dict:
     """r: recommendation row (dict), e: evidence dict. Returns {'why': str, 'risk': str, 'risks': [...]}."""
     sel = selection_label(r)
+    if e.get("rules_version") == "singles-v2":          # issue #99: loosened rules, value vs Doyen's probability
+        return _explain_loose(r, e, sel)
     prices = e.get("all_prices") or {}
     quotes = [q.get(r["selection"]) for q in prices.values() if isinstance(q, dict) and q.get(r["selection"])]
     median = statistics.median(quotes) if quotes else None
@@ -115,6 +117,31 @@ def explain(r: dict, e: dict) -> dict:
     return {"why": " ".join(parts) or "The available price is above Doyen's estimate of fair value.",
             "why_short": short_reason(r, e),
             "risk": main, "risks": risks}
+
+
+_PROB_SOURCE = {"model": "Doyen's model", "market_consensus_ex_book": "the other bookmakers' de-vigged consensus",
+                "market_consensus_incl_book": "the de-vigged consensus of the bookmakers, this one included"}
+
+
+def _explain_loose(r: dict, e: dict, sel: str) -> dict:
+    """Plain-language reason for a pick selected under the loosened rules (issue #99). Every number
+    comes from the stored row and evidence."""
+    p, odds = r["final_prob"], r["odds"]
+    src = _PROB_SOURCE.get(e.get("prob_source"), "Doyen's estimate")
+    parts = [f"{r['bookmaker']} offers {odds:.2f} on {sel}. Doyen's probability is {_pct(p, 1)} ({src}), "
+             f"fair odds {1 / p:.2f}, so the estimated value is {(p * odds - 1) * 100:+.1f}%."]
+    mk = r.get("market_prob")
+    if mk is not None and e.get("prob_source") == "model":
+        parts.append(f"The bookmakers' de-vigged consensus is {_pct(mk, 1)}.")
+    parts.append("Selected under the loosened single-pick rules: one bookmaker's price is enough and there is no "
+                 "extra margin above fair value.")
+    short = f"{odds:.2f} vs Doyen's fair price of {1 / p:.2f} ({(p * odds - 1) * 100:+.1f}% est. value)."
+    main = e.get("risk_note") or {"soccer": "Lineups aren't confirmed yet; a late absence can move this price quickly.",
+                                  "nfl": "Quarterback and injury news isn't modelled; check the final injury report.",
+                                  "nba": "Late scratches and rest decisions aren't modelled; check availability before tip-off.",
+                                  "tennis": "Fitness and withdrawals aren't modelled; check for late injury news."
+                                  }.get(r.get("sport", "soccer"), "Unmodelled news can move this price.")
+    return {"why": " ".join(parts), "why_short": short, "risk": main, "risks": list(e.get("risks") or [])}
 
 
 def short_reason(r: dict, e: dict) -> str:
