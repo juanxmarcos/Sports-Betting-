@@ -1,0 +1,429 @@
+{
+ "method": "parlay-leg-calibration-v1",
+ "generated": "2026-11-23T19:43:40+00:00",
+ "leg_rule": {
+  "method": "parlay-leg-shrink-v1",
+  "shrink_markets": [
+   "OU",
+   "BTTS",
+   "DC",
+   "DNB"
+  ],
+  "shrink_model_weight": 0.25,
+  "max_over_market": 0.05
+ },
+ "ledger": {
+  "ledger_rows": 28,
+  "by_market": {
+   "1X2": {
+    "label": "Match result",
+    "legs_settled": 12,
+    "won": 5,
+    "lost": 7,
+    "excluded_push_void": 0,
+    "open": 2,
+    "mean_prob_used": 0.565,
+    "mean_raw_prob": 0.565,
+    "expected_wins": 6.78,
+    "hit_rate": 0.4167,
+    "hit_rate_ci95": [
+     0.1933,
+     0.6805
+    ],
+    "mean_market_prob": 0.5016,
+    "market_prob_n": 12,
+    "market_prob_source": {
+     "reconstructed": 12
+    },
+    "gap_used_minus_hit": 0.1483
+   },
+   "ML": {
+    "label": "Moneyline",
+    "legs_settled": 29,
+    "won": 15,
+    "lost": 14,
+    "excluded_push_void": 0,
+    "open": 6,
+    "mean_prob_used": 0.6358,
+    "mean_raw_prob": 0.6358,
+    "expected_wins": 18.439,
+    "hit_rate": 0.5172,
+    "hit_rate_ci95": [
+     0.3443,
+     0.6861
+    ],
+    "mean_market_prob": 0.5965,
+    "market_prob_n": 29,
+    "market_prob_source": {
+     "reconstructed": 29
+    },
+    "gap_used_minus_hit": 0.1186
+   },
+   "OU": {
+    "label": "Over/Under",
+    "legs_settled": 16,
+    "won": 5,
+    "lost": 11,
+    "excluded_push_void": 0,
+    "open": 1,
+    "mean_prob_used": 0.6075,
+    "mean_raw_prob": 0.6075,
+    "expected_wins": 9.72,
+    "hit_rate": 0.3125,
+    "hit_rate_ci95": [
+     0.1416,
+     0.556
+    ],
+    "mean_market_prob": 0.5362,
+    "market_prob_n": 11,
+    "market_prob_source": {
+     "reconstructed": 11
+    },
+    "gap_used_minus_hit": 0.295
+   },
+   "DC": {
+    "label": "Double chance",
+    "legs_settled": 4,
+    "won": 1,
+    "lost": 3,
+    "excluded_push_void": 0,
+    "open": 0,
+    "mean_prob_used": 0.7015,
+    "mean_raw_prob": 0.7015,
+    "expected_wins": 2.806,
+    "hit_rate": 0.25,
+    "hit_rate_ci95": [
+     0.0456,
+     0.6994
+    ],
+    "mean_market_prob": 0.6373,
+    "market_prob_n": 4,
+    "market_prob_source": {
+     "reconstructed": 4
+    },
+    "gap_used_minus_hit": 0.4515
+   },
+   "SPREAD": {
+    "label": "Point spread",
+    "legs_settled": 2,
+    "won": 2,
+    "lost": 0,
+    "excluded_push_void": 0,
+    "open": 1,
+    "mean_prob_used": 0.5285,
+    "mean_raw_prob": 0.5285,
+    "expected_wins": 1.057,
+    "hit_rate": 1.0,
+    "hit_rate_ci95": [
+     0.3424,
+     1.0
+    ],
+    "mean_market_prob": 0.5207,
+    "market_prob_n": 2,
+    "market_prob_source": {
+     "reconstructed": 2
+    },
+    "gap_used_minus_hit": -0.4715
+   },
+   "TOTAL": {
+    "label": "Game total",
+    "legs_settled": 2,
+    "won": 0,
+    "lost": 2,
+    "excluded_push_void": 0,
+    "open": 0,
+    "mean_prob_used": 0.5064,
+    "mean_raw_prob": 0.5064,
+    "expected_wins": 1.013,
+    "hit_rate": 0.0,
+    "hit_rate_ci95": [
+     0.0,
+     0.6576
+    ],
+    "mean_market_prob": 0.4831,
+    "market_prob_n": 2,
+    "market_prob_source": {
+     "reconstructed": 2
+    },
+    "gap_used_minus_hit": 0.5064
+   }
+  },
+  "overall": {
+   "label": "All markets",
+   "legs_settled": 65,
+   "won": 28,
+   "lost": 37,
+   "excluded_push_void": 0,
+   "open": 10,
+   "mean_prob_used": 0.6125,
+   "mean_raw_prob": 0.6125,
+   "expected_wins": 39.815,
+   "hit_rate": 0.4308,
+   "hit_rate_ci95": [
+    0.3176,
+    0.5517
+   ],
+   "mean_market_prob": 0.5629,
+   "market_prob_n": 60,
+   "market_prob_source": {
+    "reconstructed": 60
+   },
+   "gap_used_minus_hit": 0.1817
+  }
+ },
+ "weight_backtest": {
+  "OU": {
+   "all": {
+    "n": 163,
+    "events": 134,
+    "hit_rate": 0.5583,
+    "mean_model": 0.4712,
+    "mean_market": 0.5124,
+    "best_w_model_by_log_loss": 0.0,
+    "at": {
+     "0.0": {
+      "log_loss": 0.67005,
+      "brier": 0.23825
+     },
+     "0.25": {
+      "log_loss": 0.67736,
+      "brier": 0.2418
+     },
+     "0.5": {
+      "log_loss": 0.68724,
+      "brier": 0.24661
+     },
+     "0.75": {
+      "log_loss": 0.69986,
+      "brier": 0.25269
+     },
+     "1.0": {
+      "log_loss": 0.7156,
+      "brier": 0.26003
+     }
+    }
+   },
+   "model_above_market": {
+    "n": 56,
+    "events": 47,
+    "hit_rate": 0.4643,
+    "mean_model": 0.5612,
+    "mean_market": 0.5093,
+    "best_w_model_by_log_loss": 0.2,
+    "at": {
+     "0.0": {
+      "log_loss": 0.66875,
+      "brier": 0.23826
+     },
+     "0.2": {
+      "log_loss": 0.66848,
+      "brier": 0.2381
+     },
+     "0.25": {
+      "log_loss": 0.66852,
+      "brier": 0.23811
+     },
+     "0.5": {
+      "log_loss": 0.66934,
+      "brier": 0.23845
+     },
+     "0.75": {
+      "log_loss": 0.6712,
+      "brier": 0.23927
+     },
+     "1.0": {
+      "log_loss": 0.67408,
+      "brier": 0.24058
+     }
+    }
+   }
+  },
+  "DC": {
+   "all": {
+    "n": 621,
+    "events": 207,
+    "hit_rate": 0.6667,
+    "mean_model": 0.6667,
+    "mean_market": 0.6667,
+    "best_w_model_by_log_loss": 0.0,
+    "at": {
+     "0.0": {
+      "log_loss": 0.49524,
+      "brier": 0.16281
+     },
+     "0.25": {
+      "log_loss": 0.49827,
+      "brier": 0.1638
+     },
+     "0.5": {
+      "log_loss": 0.50265,
+      "brier": 0.16544
+     },
+     "0.75": {
+      "log_loss": 0.50834,
+      "brier": 0.16774
+     },
+     "1.0": {
+      "log_loss": 0.51543,
+      "brier": 0.17069
+     }
+    }
+   },
+   "model_above_market": {
+    "n": 270,
+    "events": 207,
+    "hit_rate": 0.5111,
+    "mean_model": 0.5897,
+    "mean_market": 0.5319,
+    "best_w_model_by_log_loss": 0.0,
+    "at": {
+     "0.0": {
+      "log_loss": 0.55589,
+      "brier": 0.18903
+     },
+     "0.25": {
+      "log_loss": 0.56005,
+      "brier": 0.19062
+     },
+     "0.5": {
+      "log_loss": 0.56589,
+      "brier": 0.19312
+     },
+     "0.75": {
+      "log_loss": 0.57352,
+      "brier": 0.19652
+     },
+     "1.0": {
+      "log_loss": 0.58322,
+      "brier": 0.20083
+     }
+    }
+   }
+  },
+  "DNB": {
+   "all": {
+    "n": 168,
+    "events": 168,
+    "hit_rate": 0.6012,
+    "mean_model": 0.5953,
+    "mean_market": 0.598,
+    "best_w_model_by_log_loss": 0.0,
+    "at": {
+     "0.0": {
+      "log_loss": 0.46045,
+      "brier": 0.15149
+     },
+     "0.25": {
+      "log_loss": 0.46192,
+      "brier": 0.15182
+     },
+     "0.5": {
+      "log_loss": 0.46591,
+      "brier": 0.1533
+     },
+     "0.75": {
+      "log_loss": 0.47223,
+      "brier": 0.15593
+     },
+     "1.0": {
+      "log_loss": 0.48093,
+      "brier": 0.1597
+     }
+    }
+   },
+   "model_above_market": {
+    "n": 75,
+    "events": 75,
+    "hit_rate": 0.4533,
+    "mean_model": 0.502,
+    "mean_market": 0.4305,
+    "best_w_model_by_log_loss": 0.25,
+    "at": {
+     "0.0": {
+      "log_loss": 0.541,
+      "brier": 0.18552
+     },
+     "0.25": {
+      "log_loss": 0.53919,
+      "brier": 0.18474
+     },
+     "0.5": {
+      "log_loss": 0.54065,
+      "brier": 0.1854
+     },
+     "0.75": {
+      "log_loss": 0.54518,
+      "brier": 0.18749
+     },
+     "1.0": {
+      "log_loss": 0.55295,
+      "brier": 0.19102
+     }
+    }
+   }
+  },
+  "pooled": {
+   "all": {
+    "n": 952,
+    "events": 207,
+    "hit_rate": 0.6366,
+    "mean_model": 0.6206,
+    "mean_market": 0.6281,
+    "best_w_model_by_log_loss": 0.0,
+    "at": {
+     "0.0": {
+      "log_loss": 0.51903,
+      "brier": 0.17373
+     },
+     "0.25": {
+      "log_loss": 0.52252,
+      "brier": 0.17504
+     },
+     "0.5": {
+      "log_loss": 0.52777,
+      "brier": 0.1772
+     },
+     "0.75": {
+      "log_loss": 0.53476,
+      "brier": 0.1802
+     },
+     "1.0": {
+      "log_loss": 0.54361,
+      "brier": 0.18405
+     }
+    }
+   },
+   "model_above_market": {
+    "n": 401,
+    "events": 207,
+    "hit_rate": 0.4938,
+    "mean_model": 0.5693,
+    "mean_market": 0.5098,
+    "best_w_model_by_log_loss": 0.0,
+    "at": {
+     "0.0": {
+      "log_loss": 0.56887,
+      "brier": 0.19525
+     },
+     "0.25": {
+      "log_loss": 0.57129,
+      "brier": 0.19615
+     },
+     "0.5": {
+      "log_loss": 0.57561,
+      "brier": 0.19801
+     },
+     "0.75": {
+      "log_loss": 0.58186,
+      "brier": 0.2008
+     },
+     "1.0": {
+      "log_loss": 0.59024,
+      "brier": 0.20455
+     }
+    }
+   }
+  },
+  "note": "Finished soccer games in the database with a model run stored before kick-off and pre-match prices retrieved before kick-off. BTTS has no stored model run and is not tested."
+ }
+}

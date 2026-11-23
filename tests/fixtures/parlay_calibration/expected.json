@@ -1,0 +1,108 @@
+{
+ "by_market": {
+  "1X2": {
+   "excluded_push_void": 0,
+   "expected_wins": 0.3,
+   "gap_used_minus_hit": -0.7,
+   "hit_rate": 1.0,
+   "hit_rate_ci95": [
+    0.2065,
+    1.0
+   ],
+   "label": "Match result",
+   "legs_settled": 1,
+   "lost": 0,
+   "market_prob_n": 1,
+   "market_prob_source": {
+    "stored": 1
+   },
+   "mean_market_prob": 0.28,
+   "mean_prob_used": 0.3,
+   "mean_raw_prob": 0.3,
+   "open": 0,
+   "won": 1
+  },
+  "DC": {
+   "excluded_push_void": 0,
+   "expected_wins": 1.32,
+   "gap_used_minus_hit": 0.16,
+   "hit_rate": 0.5,
+   "hit_rate_ci95": [
+    0.0945,
+    0.9055
+   ],
+   "label": "Double chance",
+   "legs_settled": 2,
+   "lost": 1,
+   "market_prob_n": 2,
+   "market_prob_source": {
+    "stored": 2
+   },
+   "mean_market_prob": 0.64,
+   "mean_prob_used": 0.66,
+   "mean_raw_prob": 0.73,
+   "open": 0,
+   "won": 1
+  },
+  "DNB": {
+   "excluded_push_void": 1,
+   "expected_wins": 0,
+   "gap_used_minus_hit": null,
+   "hit_rate": null,
+   "hit_rate_ci95": null,
+   "label": "Draw no bet",
+   "legs_settled": 0,
+   "lost": 0,
+   "market_prob_n": 0,
+   "market_prob_source": {},
+   "mean_market_prob": null,
+   "mean_prob_used": null,
+   "mean_raw_prob": null,
+   "open": 0,
+   "won": 0
+  },
+  "OU": {
+   "excluded_push_void": 0,
+   "expected_wins": 1.21,
+   "gap_used_minus_hit": 0.105,
+   "hit_rate": 0.5,
+   "hit_rate_ci95": [
+    0.0945,
+    0.9055
+   ],
+   "label": "Over/Under",
+   "legs_settled": 2,
+   "lost": 1,
+   "market_prob_n": 0,
+   "market_prob_source": {},
+   "mean_market_prob": null,
+   "mean_prob_used": 0.605,
+   "mean_raw_prob": 0.605,
+   "open": 1,
+   "won": 1
+  }
+ },
+ "ledger_rows": 3,
+ "overall": {
+  "excluded_push_void": 1,
+  "expected_wins": 2.83,
+  "gap_used_minus_hit": -0.034,
+  "hit_rate": 0.6,
+  "hit_rate_ci95": [
+   0.2307,
+   0.8824
+  ],
+  "label": "All markets",
+  "legs_settled": 5,
+  "lost": 2,
+  "market_prob_n": 3,
+  "market_prob_source": {
+   "stored": 3
+  },
+  "mean_market_prob": 0.52,
+  "mean_prob_used": 0.566,
+  "mean_raw_prob": 0.594,
+  "open": 1,
+  "won": 3
+ }
+}

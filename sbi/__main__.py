@@ -89,6 +89,8 @@ def main(argv=None) -> int:
                          "data/tennis_sackmann/manifest.json)")
     sub.add_parser("tennis-tour-audit", help="tennis ATP/WTA label audit (#49): changed labels, stored rows, walk-forward "
                                              "before/after (read-only); writes reports/tennis_tour_labels.md")
+    sub.add_parser("parlay-calibration", help="estimated-parlay leg calibration per market and the shrink-weight "
+                                              "backtest (#106, read-only DB); writes data/backtest/parlay_calibration.json")
     sub.add_parser("parlay-lines-backtest", help="NBA/NFL spread and total Normal-model backtest vs the de-vigged "
                                                  "market (#83, read-only DB); writes data/backtest/parlay_lines.json")
     args = ap.parse_args(argv)
@@ -178,6 +180,21 @@ def main(argv=None) -> int:
         print(json.dumps({"labels": out["labels"], "stored_mislabelled": out["stored"]["mislabelled"],
                           "main": out["walk_forward_live"]["main"]}, indent=1))
         print(tennis_tour_audit.REPORT)
+        return 0
+    if args.cmd == "parlay-calibration":      # read-only database; leg calibration evidence (issue #106)
+        import sqlite3
+
+        from . import parlay_leg_calibration as plc
+        ro = sqlite3.connect(f"file:{config.DB_PATH}?mode=ro", uri=True)
+        ro.row_factory = sqlite3.Row
+        rep = plc.write(ro, now)
+        print(json.dumps({m: {k: v[k] for k in ("legs_settled", "won", "lost", "mean_prob_used", "hit_rate",
+                                                "hit_rate_ci95", "mean_market_prob")}
+                          for m, v in rep["ledger"]["by_market"].items()}, indent=1))
+        print(json.dumps({m: {k: rep["weight_backtest"][m][k].get("best_w_model_by_log_loss")
+                              for k in ("all", "model_above_market")}
+                          for m in ("OU", "DC", "DNB", "pooled")}, indent=1))
+        print(plc.out_path())
         return 0
     if args.cmd == "parlay-lines-backtest":   # read-only database; decides model vs market for spread/total legs
         import sqlite3

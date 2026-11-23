@@ -417,7 +417,7 @@ def test_build_end_to_end_no_started_yesterday_or_tomorrow_legs(con):
     con.commit()
     b = pe.build(con, NOW)
     assert b["status"] == "estimated" and b["kind"] == "estimated_product" and b["date"] == DAY
-    assert b["method"] == "parlay-estimated-v2" and "same New York day" in b["price_rule"]
+    assert b["method"] == "parlay-estimated-v3" and "same New York day" in b["price_rule"]
     cov = b["coverage"]
     assert cov["events_today"] == 3 and cov["events_with_fresh_prices"] == 2
     assert cov["excluded"] == {"no fresh result-market prices": 1} and cov["legs"] == 2

@@ -109,9 +109,11 @@ def _predict(con, eid, probs, created):
 
 
 ONE_X_TWO = {b: {"H": 2.0, "D": 3.6, "A": 3.9} for b in ("Pinnacle", "Bet365", "DraftKings")}
-OU25 = {"DraftKings": {"over": 1.83, "under": 2.00}}            # -120 over 2.5 goals at DraftKings
+# +100 over 2.5 goals at DraftKings. Issue #106: the model (0.58) is shrunk toward the de-vigged
+# market (about 0.478) before value is checked, so the price must beat the SHRUNK probability.
+OU25 = {"DraftKings": {"over": 2.00, "under": 1.83}}
 MODEL = {("1X2", None, "H"): 0.47, ("1X2", None, "D"): 0.27, ("1X2", None, "A"): 0.26,
-         ("OU", 2.5, "over"): 0.60, ("OU", 2.5, "under"): 0.40}
+         ("OU", 2.5, "over"): 0.58, ("OU", 2.5, "under"): 0.42}
 
 
 def _two_games(con, ou=True):
@@ -130,7 +132,7 @@ def _two_games(con, ou=True):
 def test_model_probs_full_reads_lines_and_derives_dc_dnb(con):
     _two_games(con)
     p = pe.model_probs_full(con, "football:E0:1", NOW)
-    assert p[("OU", 2.5, "over")] == 0.60 and p[("1X2", None, "H")] == 0.47
+    assert p[("OU", 2.5, "over")] == 0.58 and p[("1X2", None, "H")] == 0.47
     assert p[("DC", None, "HD")] == pytest.approx(0.74) and p[("DNB", None, "home")] == pytest.approx(0.47 / 0.73)
     assert pe.model_probs_full(con, "football:E0:1", NOW + timedelta(hours=40)) == {}     # stale run: none
 
@@ -142,8 +144,8 @@ def test_two_same_day_ou_quotes_build_an_over_under_parlay(con):
     assert r["bookmaker"] == "DraftKings" and r["n_legs"] == 2
     assert [x["market"] for x in r["legs"]] == ["OU", "OU"]
     assert {x["selection_text"] for x in r["legs"]} == {"Over 2.5 goals"}
-    assert all(x["line"] == 2.5 and x["price"] == 1.83 and x["market_label"] == "Over/Under" for x in r["legs"])
-    assert r["estimated_odds"] == pytest.approx(1.83 * 1.83, abs=1e-4)
+    assert all(x["line"] == 2.5 and x["price"] == 2.00 and x["market_label"] == "Over/Under" for x in r["legs"])
+    assert r["estimated_odds"] == pytest.approx(2.00 * 2.00, abs=1e-4)
     assert pe.card_problem(r, NOW) is None
     # The pool offers several legs per game (match result and O/U), yet no parlay holds two of one game.
     pool, _ = pe.build_pool(con, NOW)
@@ -313,7 +315,7 @@ def test_home_card_shows_the_market_and_leg_odds(con):
     html = _run({"data": _data(b), "now": NOW.isoformat()})
     card = html[html.index("<article"):html.index("</article>")]
     assert card.count('<div class="lg-s">Over 2.5 goals</div>') == 2
-    assert card.count('data-leg-price="1.83">-120 (1.83)<') == 2
+    assert card.count('data-leg-price="2">+100 (2.00)<') == 2
 
 
 def test_history_shows_record_by_market_type():
