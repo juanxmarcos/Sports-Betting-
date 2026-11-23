@@ -1,19 +1,19 @@
 # Sports Betting Doyen — Daily Report, 2026-11-23
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Mon 23 Nov 10:13 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Mon 23 Nov 15:15 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 231 |
-| Events with fresh odds | 127 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 82 |
-| Markets evaluated | 1171 |
-| Events passing all rules | 13 |
-| Published today | **17** |
+| Events discovered | 227 |
+| Events with fresh odds | 130 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 109 |
+| Markets evaluated | 1376 |
+| Events passing all rules | 22 |
+| Published today | **27** |
 | Highest estimated EV | +27.5% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -130,7 +130,44 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879229> 
 
 
-### 4. Swansea to win — Swansea v Cardiff
+### 4. Draw — Antwerp v Anderlecht
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Belgium Pro League |
+| Kick-off | Sun 29 Nov 10:00 EST |
+| Market / selection | 1X2 — **Draw** |
+| Best price | **4.21** @ Pinnacle |
+| Model probability (raw) | 27.4% (±2.3 pp param. sd; p10 23.5%) |
+| Market no-vig probability | 26.0% (Betfair Exchange) |
+| Final probability (blend) | 26.0% |
+| Fair odds | 3.85 |
+| Expected value | **+9.4%** (pessimistic +9.4%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 12 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 1.32–1.31;
+model strength rank 11 vs 7 (of 22).
+Recent form — Antwerp: LLLWLD (GF 8, GA 14, xG 1.71/2.24);
+Anderlecht: WWWLWD (GF 11, GA 7, xG 1.55/1.18).
+Model 1X2: 34/27/39%,
+O2.5 49%, BTTS 54%.
+
+**Why it may be value.** The best available price (4.21) exceeds the estimated fair
+price (3.85). The
+model rates this outcome 1.4 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_belgium_first_div/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401878928> 
+
+
+### 5. Swansea to win — Swansea v Cardiff
 
 | Field | Value |
 |---|---|
@@ -166,7 +203,7 @@ model rates this outcome 1.5 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880128> 
 
 
-### 5. Charlotte Hornets to win — Charlotte Hornets v Memphis Grizzlies
+### 6. Charlotte Hornets to win — Charlotte Hornets v Memphis Grizzlies
 
 | Field | Value |
 |---|---|
@@ -197,7 +234,7 @@ model rates this outcome 10.4 pp above the de-vigged consensus.
 Sources: 
 
 
-### 6. Birmingham to win — Birmingham v Bolton
+### 7. Birmingham to win — Birmingham v Bolton
 
 | Field | Value |
 |---|---|
@@ -235,7 +272,45 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880136> 
 
 
-### 7. Draw — Betis v Vallecano
+### 8. Ein Frankfurt to win — Stuttgart v Ein Frankfurt
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Germany Bundesliga |
+| Kick-off | Sat 28 Nov 12:30 EST |
+| Market / selection | 1X2 — **Ein Frankfurt to win** |
+| Best price | **4.50** @ Unibet |
+| Model probability (raw) | 18.9% (±6.9 pp param. sd; p10 11.5%) |
+| Market no-vig probability | 24.1% (Betfair Exchange) |
+| Final probability (blend) | 24.1% |
+| Fair odds | 4.15 |
+| Expected value | **+8.4%** (pessimistic +8.4%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 2.51–1.35;
+model strength rank 5 vs 10 (of 24).
+Recent form — Stuttgart: LWLLWW (GF 9, GA 7, xG 1.75/1.77);
+Ein Frankfurt: DLWLWD (GF 8, GA 12, xG 1.67/2.12).
+Model 1X2: 60/21/19%,
+O2.5 74%, BTTS 68%.
+
+**Why it may be value.** The best available price (4.50) exceeds the estimated fair
+price (4.15). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by -5.2%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401884726> 
+
+
+### 9. Draw — Betis v Vallecano
 
 | Field | Value |
 |---|---|
@@ -272,7 +347,7 @@ model rates this outcome 0.6 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882796> 
 
 
-### 8. Fiorentina to win — Monza v Fiorentina
+### 10. Fiorentina to win — Monza v Fiorentina
 
 | Field | Value |
 |---|---|
@@ -303,7 +378,7 @@ model rates this outcome 4.3 pp above the de-vigged consensus.
 Sources: 
 
 
-### 9. Barcelona to win — La Coruna v Barcelona
+### 11. Barcelona to win — La Coruna v Barcelona
 
 | Field | Value |
 |---|---|
@@ -341,7 +416,44 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882794> 
 
 
-### 10. Wrexham to win — Wrexham v Portsmouth
+### 12. Zwolle to win — Zwolle v AZ Alkmaar
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Netherlands Eredivisie |
+| Kick-off | Sun 29 Nov 10:45 EST |
+| Market / selection | 1X2 — **Zwolle to win** |
+| Best price | **6.00** @ Unibet |
+| Model probability (raw) | 21.8% (±7.4 pp param. sd; p10 14.5%) |
+| Market no-vig probability | 17.8% (Pinnacle) |
+| Final probability (blend) | 17.8% |
+| Fair odds | 5.63 |
+| Expected value | **+6.5%** (pessimistic +6.5%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 14 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 1.12–1.8;
+model strength rank 19 vs 5 (of 24).
+Recent form — Zwolle: LLWDWD (GF 7, GA 7, xG 1.05/1.3);
+AZ Alkmaar: WLDLLW (GF 7, GA 10, xG 1.96/1.43).
+Model 1X2: 22/26/52%,
+O2.5 56%, BTTS 57%.
+
+**Why it may be value.** The best available price (6.00) exceeds the estimated fair
+price (5.63). The
+model rates this outcome 4.0 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875532> 
+
+
+### 13. Wrexham to win — Wrexham v Portsmouth
 
 | Field | Value |
 |---|---|
@@ -377,7 +489,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880125> 
 
 
-### 11. Levante to win — Levante v Elche
+### 14. Levante to win — Levante v Elche
 
 | Field | Value |
 |---|---|
@@ -408,7 +520,44 @@ model rates this outcome 2.6 pp above the de-vigged consensus.
 Sources: 
 
 
-### 12. Draw — Man United v Brentford
+### 15. Draw — Venezia v Bologna
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Italy Serie A |
+| Kick-off | Fri 27 Nov 14:45 EST |
+| Market / selection | 1X2 — **Draw** |
+| Best price | **3.58** @ 1xBet |
+| Model probability (raw) | 25.0% (±4.0 pp param. sd; p10 19.6%) |
+| Market no-vig probability | 29.4% (Betfair Exchange) |
+| Final probability (blend) | 29.4% |
+| Fair odds | 3.41 |
+| Expected value | **+5.1%** (pessimistic +5.1%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 19 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 0.86–1.51;
+model strength rank 23 vs 10 (of 25).
+Recent form — Venezia: LWLLLW (GF 4, GA 8, xG 1.48/1.63);
+Bologna: WLWWWW (GF 13, GA 8, xG 2.05/1.7).
+Model 1X2: 18/25/57%,
+O2.5 42%, BTTS 45%.
+
+**Why it may be value.** The best available price (3.58) exceeds the estimated fair
+price (3.41). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_italy_serie_a/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875004> 
+
+
+### 16. Draw — Man United v Brentford
 
 | Field | Value |
 |---|---|
@@ -445,7 +594,44 @@ model rates this outcome 0.4 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879226> 
 
 
-### 13. Blackburn to win — Watford v Blackburn
+### 17. Augsburg to win — Hoffenheim v Augsburg
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Germany Bundesliga |
+| Kick-off | Sun 29 Nov 11:30 EST |
+| Market / selection | 1X2 — **Augsburg to win** |
+| Best price | **4.36** @ 1xBet |
+| Model probability (raw) | 24.3% (±7.7 pp param. sd; p10 15.5%) |
+| Market no-vig probability | 24.1% (Betfair Exchange) |
+| Final probability (blend) | 24.1% |
+| Fair odds | 4.15 |
+| Expected value | **+5.0%** (pessimistic +5.0%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 2.17–1.43;
+model strength rank 8 vs 12 (of 24).
+Recent form — Hoffenheim: LLWWLW (GF 10, GA 10, xG 1.78/1.15);
+Augsburg: LDLDLL (GF 11, GA 17, xG 2.09/2.7).
+Model 1X2: 52/24/24%,
+O2.5 70%, BTTS 68%.
+
+**Why it may be value.** The best available price (4.36) exceeds the estimated fair
+price (4.15). The
+model rates this outcome 0.2 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401884725> 
+
+
+### 18. Blackburn to win — Watford v Blackburn
 
 | Field | Value |
 |---|---|
@@ -481,7 +667,44 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880137> 
 
 
-### 14. Draw — Nott'm Forest v Chelsea
+### 19. Draw — St. Gilloise v Gent
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Belgium Pro League |
+| Kick-off | Sun 29 Nov 13:15 EST |
+| Market / selection | 1X2 — **Draw** |
+| Best price | **4.60** @ Tipico |
+| Model probability (raw) | 20.0% (±3.9 pp param. sd; p10 17.2%) |
+| Market no-vig probability | 22.7% (Betfair Exchange) |
+| Final probability (blend) | 22.7% |
+| Fair odds | 4.41 |
+| Expected value | **+4.3%** (pessimistic +4.3%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 12 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 1.83–0.66;
+model strength rank 1 vs 5 (of 22).
+Recent form — St. Gilloise: WWDWWW (GF 16, GA 4, xG 1.99/0.78);
+Gent: DWWWLW (GF 10, GA 4, xG 1.42/1.17).
+Model 1X2: 68/20/12%,
+O2.5 46%, BTTS 41%.
+
+**Why it may be value.** The best available price (4.60) exceeds the estimated fair
+price (4.41). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_belgium_first_div/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401878925> 
+
+
+### 20. Draw — Nott'm Forest v Chelsea
 
 | Field | Value |
 |---|---|
@@ -518,7 +741,45 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879225> 
 
 
-### 15. Draw — Sunderland v Tottenham
+### 21. Telstar to win — Excelsior v Telstar
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Netherlands Eredivisie |
+| Kick-off | Sat 28 Nov 10:30 EST |
+| Market / selection | 1X2 — **Telstar to win** |
+| Best price | **3.55** @ Unibet |
+| Model probability (raw) | 37.9% (±10.0 pp param. sd; p10 27.8%) |
+| Market no-vig probability | 29.2% (Betfair Exchange) |
+| Final probability (blend) | 29.2% |
+| Fair odds | 3.42 |
+| Expected value | **+3.7%** (pessimistic +3.7%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 15 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 1.51–1.61;
+model strength rank 17 vs 12 (of 24).
+Recent form — Excelsior: DLLLLL (GF 3, GA 22, xG 0.82/2.46);
+Telstar: LDLLWD (GF 13, GA 14, xG 1.44/2.01).
+Model 1X2: 35/28/38%,
+O2.5 60%, BTTS 63%.
+
+**Why it may be value.** The best available price (3.55) exceeds the estimated fair
+price (3.42). The
+model rates this outcome 8.7 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by +8.7%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875537> 
+
+
+### 22. Draw — Sunderland v Tottenham
 
 | Field | Value |
 |---|---|
@@ -555,7 +816,43 @@ model rates this outcome 0.1 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879224> 
 
 
-### 16. Draw — Valencia v Osasuna
+### 23. RB Leipzig to win — Freiburg v RB Leipzig
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Germany Bundesliga |
+| Kick-off | Sun 29 Nov 09:30 EST |
+| Market / selection | 1X2 — **RB Leipzig to win** |
+| Best price | **2.55** @ Unibet |
+| Model probability (raw) | 39.0% (±9.5 pp param. sd; p10 27.7%) |
+| Market no-vig probability | 40.5% (Betfair Exchange) |
+| Final probability (blend) | 40.5% |
+| Fair odds | 2.47 |
+| Expected value | **+3.4%** (pessimistic +3.4%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 1.65–1.69;
+model strength rank 6 vs 3 (of 24).
+Recent form — Freiburg: DWLLWW (GF 10, GA 9, xG 1.71/1.43);
+RB Leipzig: LWLWWW (GF 18, GA 10, xG 2.43/1.74).
+Model 1X2: 35/26/39%,
+O2.5 65%, BTTS 66%.
+
+**Why it may be value.** The best available price (2.55) exceeds the estimated fair
+price (2.47). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401884724> 
+
+
+### 24. Draw — Valencia v Osasuna
 
 | Field | Value |
 |---|---|
@@ -592,7 +889,44 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882787> 
 
 
-### 17. Draw — Brentford v Everton
+### 25. Draw — Lyon v Monaco
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — France Ligue 1 |
+| Kick-off | Sun 29 Nov 14:45 EST |
+| Market / selection | 1X2 — **Draw** |
+| Best price | **3.62** @ 1xBet |
+| Model probability (raw) | 24.9% (±2.6 pp param. sd; p10 21.5%) |
+| Market no-vig probability | 28.5% (Betfair Exchange) |
+| Final probability (blend) | 28.5% |
+| Fair odds | 3.50 |
+| Expected value | **+3.3%** (pessimistic +3.3%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 17 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 1.66–1.24;
+model strength rank 5 vs 6 (of 24).
+Recent form — Lyon: WLWLWL (GF 9, GA 7, xG 1.54/1.29);
+Monaco: WDLDLD (GF 7, GA 9, xG 1.2/1.43).
+Model 1X2: 46/25/29%,
+O2.5 55%, BTTS 58%.
+
+**Why it may be value.** The best available price (3.62) exceeds the estimated fair
+price (3.50). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_france_ligue_one/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401876389> 
+
+
+### 26. Draw — Brentford v Everton
 
 | Field | Value |
 |---|---|
@@ -629,22 +963,60 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879237> <https://www.football-data.co.uk/fixtures.csv> 
 
 
+### 27. Cambuur to win — Cambuur v Sparta Rotterdam
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Netherlands Eredivisie |
+| Kick-off | Sat 28 Nov 15:00 EST |
+| Market / selection | 1X2 — **Cambuur to win** |
+| Best price | **2.30** @ Unibet |
+| Model probability (raw) | 53.0% (±12.8 pp param. sd; p10 38.3%) |
+| Market no-vig probability | 44.8% (Betfair Exchange) |
+| Final probability (blend) | 44.8% |
+| Fair odds | 2.23 |
+| Expected value | **+3.1%** (pessimistic +3.1%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 15 |
+| Odds snapshot | Mon 23 Nov 15:16 EST |
+
+**Statistical evidence.** Expected goals 2.38–1.55;
+model strength rank 10 vs 15 (of 24).
+Recent form — Cambuur: DWDWWL (GF 16, GA 9, xG 1.2/1.45);
+Sparta Rotterdam: LDWLWL (GF 11, GA 16, xG 2.05/1.58).
+Model 1X2: 53/24/23%,
+O2.5 75%, BTTS 72%.
+
+**Why it may be value.** The best available price (2.30) exceeds the estimated fair
+price (2.23). The
+model rates this outcome 8.2 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by +8.2%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Thin data: a team has only 12 matches in the training window.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875530> 
+
+
 
 
 ## Closest candidates (transparency)
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
+| Frosinone v Parma (I1) | 1X2 A | 6.40 Unibet | 17.1% | +9.6% | +9.6% | odds outside range |
+| Antwerp v Anderlecht (B1) | 1X2 D | 4.21 Pinnacle | 26.0% | +9.4% | +9.4% | ok |
+| Stuttgart v Ein Frankfurt (D1) | 1X2 A | 4.50 Unibet | 24.1% | +8.4% | +8.4% | ok |
 | West Ham v Stoke (E1) | 1X2 A | 6.75 LeoVegas | 16.0% | +8.0% | +8.0% | odds outside range |
 | Millwall v Burnley (E1) | 1X2 A | 3.40 LeoVegas | 31.5% | +7.1% | +7.1% | ok |
 | Swansea v Cardiff (E1) | 1X2 H | 2.06 LeoVegas | 51.9% | +7.0% | +7.0% | ok |
+| Zwolle v AZ Alkmaar (N1) | 1X2 H | 6.00 Unibet | 17.8% | +6.5% | +6.5% | ok |
 | Betis v Vallecano (SP1) | 1X2 D | 4.70 Unibet | 22.6% | +6.4% | +6.4% | ok |
 | Wrexham v Portsmouth (E1) | 1X2 H | 2.14 LeoVegas | 49.5% | +5.9% | +5.9% | ok |
-| Real Madrid v Alaves (SP1) | 1X2 A | 19.50 1xBet | 5.4% | +5.4% | +5.4% | odds outside range |
-| Man United v Brentford (E0) | 1X2 D | 4.08 1xBet | 25.8% | +5.3% | +5.3% | ok |
-| Watford v Blackburn (E1) | 1X2 A | 2.95 LeoVegas | 35.7% | +5.2% | +5.2% | ok |
-| Nott'm Forest v Chelsea (E0) | 1X2 D | 3.73 1xBet | 28.0% | +4.6% | +4.6% | ok |
-| Sunderland v Tottenham (E0) | 1X2 D | 3.65 1xBet | 28.6% | +4.5% | +4.5% | ok |
+| Man United v Brentford (E0) | 1X2 D | 4.08 1xBet | 26.0% | +5.9% | +5.9% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)

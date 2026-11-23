@@ -1,4 +1,4 @@
-# Parlay candidates (shadow) — 2026-11-23 10:13 New York
+# Parlay candidates (shadow) — 2026-11-23 15:15 New York
 
 Developer-only. **Nothing here is published.** Prices are computed products of single-market quotes (`computed_product_not_a_quote`), not bookmaker combined quotes. Method `parlay-fullslate-shadow-v1`; no network request, no API credit.
 
@@ -6,19 +6,17 @@ Developer-only. **Nothing here is published.** Prices are computed products of s
 
 | Measure | Stage-1 (published picks) | Full-slate engine |
 |---|---|---|
-| Legs considered today | 17 picks | 19 events |
-| Usable legs | 5 | 1 (candidate legs 15, events with a leg 11) |
-| Combinations checked | 26 | 0 (bounded; truncated: False) |
-| Passed leg/combination screens | 18 | 0 |
+| Legs considered today | 24 picks | 11 events |
+| Usable legs | 1 | 1 (candidate legs 13, events with a leg 9) |
+| Combinations checked | 0 | 0 (bounded; truncated: False) |
+| Passed leg/combination screens | 0 | 0 |
 
 | Sport | Events today | Fresh prices | Stored model prob | Events with candidate legs |
 |---|---|---|---|---|
-| nba | 10 | 10 | 10 | 7 |
+| nba | 10 | 10 | 10 | 8 |
 | nfl | 1 | 1 | 1 | 1 |
-| soccer | 3 | 3 | 3 | 3 |
-| tennis | 5 | 0 | 0 | 0 |
 
-Excluded: {"event: model and market disagree strongly": 1, "event: no fresh result-market prices": 5, "event: probability outside research band": 2, "leg: no bookmaker at or above fair value": 10}
+Excluded: {"event: probability outside research band": 2, "leg: no bookmaker at or above fair value": 8}
 
 | Legs | Combinations evaluated | Kept (positive computed EV, beam-capped) |
 |---|---|---|
@@ -28,7 +26,7 @@ Excluded: {"event: model and market disagree strongly": 1, "event: no fresh resu
 | 5 | 0 | 0 |
 | 6 | 0 | 0 |
 
-The Odds API (read from job log, not called here): last run 2026-11-23T15:14:30+00:00, spent 0, remaining 280.
+The Odds API (read from job log, not called here): last run 2026-11-23T20:16:27+00:00, spent 18, remaining 262.
 
 ## 2. Shadow shortlist (not shown on the homepage)
 

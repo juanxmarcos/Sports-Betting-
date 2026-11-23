@@ -1,52 +1,7 @@
 {
-  "generated": "2026-11-23T15:14:43+00:00",
+  "generated": "2026-11-23T20:16:48+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
-    {
-      "rec_id": "a96c4356a4c87930",
-      "event_id": "football:I1:20261123:monza:fiorentina",
-      "league": "I1",
-      "kickoff_utc": "2026-11-23T19:45:00+00:00",
-      "home": "Monza",
-      "away": "Fiorentina",
-      "market": "1X2",
-      "selection": "A",
-      "line": null,
-      "odds": 2.0,
-      "bookmaker": "1xBet",
-      "final_prob": 0.5411794008440545,
-      "ev": 0.08235880168810894
-    },
-    {
-      "rec_id": "0744945ec876dbad",
-      "event_id": "football:E0:20261123:brentford:everton",
-      "league": "E0",
-      "kickoff_utc": "2026-11-23T20:00:00+00:00",
-      "home": "Brentford",
-      "away": "Everton",
-      "market": "1X2",
-      "selection": "D",
-      "line": null,
-      "odds": 3.7,
-      "bookmaker": "1xBet",
-      "final_prob": 0.2800797836722626,
-      "ev": 0.0362951995873717
-    },
-    {
-      "rec_id": "9432255abff6653a",
-      "event_id": "football:SP1:20261123:levante:elche",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-23T20:00:00+00:00",
-      "home": "Levante",
-      "away": "Elche",
-      "market": "1X2",
-      "selection": "H",
-      "line": null,
-      "odds": 2.26,
-      "bookmaker": "1xBet",
-      "final_prob": 0.4700996074280268,
-      "ev": 0.06242511278734053
-    },
     {
       "rec_id": "4f1fa4f65061fdd0",
       "event_id": "nba:NBA:20261124:401910037",
@@ -91,6 +46,21 @@
       "bookmaker": "LeoVegas",
       "final_prob": 0.3567494800554002,
       "ev": 0.052410966163430654
+    },
+    {
+      "rec_id": "b2988171320d20df",
+      "event_id": "football:I1:20261127:venezia:bologna",
+      "league": "I1",
+      "kickoff_utc": "2026-11-27T19:45:00+00:00",
+      "home": "Venezia",
+      "away": "Bologna",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.58,
+      "bookmaker": "1xBet",
+      "final_prob": 0.29350489017235787,
+      "ev": 0.05074750681704111
     },
     {
       "rec_id": "61596d2d3692d55f",
@@ -183,6 +153,51 @@
       "ev": 0.03479333463953637
     },
     {
+      "rec_id": "0c1e7d6f4c9e0a42",
+      "event_id": "football:N1:20261128:excelsior:telstar",
+      "league": "N1",
+      "kickoff_utc": "2026-11-28T15:30:00+00:00",
+      "home": "Excelsior",
+      "away": "Telstar",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 3.55,
+      "bookmaker": "Unibet",
+      "final_prob": 0.29214770904339193,
+      "ev": 0.037124367104041316
+    },
+    {
+      "rec_id": "42f8cf7d71c91231",
+      "event_id": "football:D1:20261128:stuttgart:ein-frankfurt",
+      "league": "D1",
+      "kickoff_utc": "2026-11-28T17:30:00+00:00",
+      "home": "Stuttgart",
+      "away": "Ein Frankfurt",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 4.5,
+      "bookmaker": "Unibet",
+      "final_prob": 0.24078577383102387,
+      "ev": 0.08353598223960733
+    },
+    {
+      "rec_id": "4663cd0cfe51b36c",
+      "event_id": "football:N1:20261128:cambuur:sparta-rotterdam",
+      "league": "N1",
+      "kickoff_utc": "2026-11-28T20:00:00+00:00",
+      "home": "Cambuur",
+      "away": "Sparta Rotterdam",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 2.3,
+      "bookmaker": "Unibet",
+      "final_prob": 0.4480853296410038,
+      "ev": 0.030596258174308666
+    },
+    {
       "rec_id": "3db3c17c9a369043",
       "event_id": "football:E1:20261129:swansea:cardiff",
       "league": "E1",
@@ -243,6 +258,36 @@
       "ev": 0.04546382388565683
     },
     {
+      "rec_id": "6d5d9f59abc856ee",
+      "event_id": "football:D1:20261129:freiburg:rb-leipzig",
+      "league": "D1",
+      "kickoff_utc": "2026-11-29T14:30:00+00:00",
+      "home": "Freiburg",
+      "away": "RB Leipzig",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 2.55,
+      "bookmaker": "Unibet",
+      "final_prob": 0.4054471151882459,
+      "ev": 0.03389014373002696
+    },
+    {
+      "rec_id": "053cd5d1977e507d",
+      "event_id": "football:B1:20261129:antwerp:anderlecht",
+      "league": "B1",
+      "kickoff_utc": "2026-11-29T15:00:00+00:00",
+      "home": "Antwerp",
+      "away": "Anderlecht",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 4.21,
+      "bookmaker": "Pinnacle",
+      "final_prob": 0.25976414447399454,
+      "ev": 0.09360704823551691
+    },
+    {
       "rec_id": "513041e0a05b7edb",
       "event_id": "football:SP1:20261129:la-coruna:barcelona",
       "league": "SP1",
@@ -256,65 +301,69 @@
       "bookmaker": "Unibet",
       "final_prob": 0.7937952040794408,
       "ev": 0.03193376530327319
+    },
+    {
+      "rec_id": "d9c28558eec74200",
+      "event_id": "football:N1:20261129:zwolle:az-alkmaar",
+      "league": "N1",
+      "kickoff_utc": "2026-11-29T15:45:00+00:00",
+      "home": "Zwolle",
+      "away": "AZ Alkmaar",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 6.0,
+      "bookmaker": "Unibet",
+      "final_prob": 0.1775536722440978,
+      "ev": 0.06532203346458676
+    },
+    {
+      "rec_id": "70c9f93f6dfa6e71",
+      "event_id": "football:D1:20261129:hoffenheim:augsburg",
+      "league": "D1",
+      "kickoff_utc": "2026-11-29T16:30:00+00:00",
+      "home": "Hoffenheim",
+      "away": "Augsburg",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 4.36,
+      "bookmaker": "1xBet",
+      "final_prob": 0.2407861168446324,
+      "ev": 0.049827469442597305
+    },
+    {
+      "rec_id": "8228aa2a3b104c36",
+      "event_id": "football:B1:20261129:st-gilloise:gent",
+      "league": "B1",
+      "kickoff_utc": "2026-11-29T18:15:00+00:00",
+      "home": "St. Gilloise",
+      "away": "Gent",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 4.6,
+      "bookmaker": "Tipico",
+      "final_prob": 0.22679233548122266,
+      "ev": 0.04324474321362404
+    },
+    {
+      "rec_id": "888691de12ae88a5",
+      "event_id": "football:F1:20261129:lyon:monaco",
+      "league": "F1",
+      "kickoff_utc": "2026-11-29T19:45:00+00:00",
+      "home": "Lyon",
+      "away": "Monaco",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.62,
+      "bookmaker": "1xBet",
+      "final_prob": 0.28548457395286786,
+      "ev": 0.03345415770938165
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261123:186817",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-23T15:30:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261123:186816",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-23T15:30:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261123:186813",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-23T17:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261123:186823",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-23T17:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261123:186815",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-23T19:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "football:I1:20261123:monza:fiorentina",
-      "league": "I1",
-      "kickoff_utc": "2026-11-23T19:45:00+00:00",
-      "home": "Monza",
-      "away": "Fiorentina"
-    },
-    {
-      "event_id": "football:E0:20261123:brentford:everton",
-      "league": "E0",
-      "kickoff_utc": "2026-11-23T20:00:00+00:00",
-      "home": "Brentford",
-      "away": "Everton"
-    },
-    {
-      "event_id": "football:SP1:20261123:levante:elche",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-23T20:00:00+00:00",
-      "home": "Levante",
-      "away": "Elche"
-    },
     {
       "event_id": "nba:NBA:20261124:401910036",
       "league": "NBA",
@@ -393,13 +442,6 @@
       "away": "San Antonio Spurs"
     },
     {
-      "event_id": "tennis:WTA:20261124:186814",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
-      "home": "Luna Maria Cinalli",
-      "away": "Guiomar Maristany Zuleta De Reales"
-    },
-    {
       "event_id": "tennis:WTA:20261124:186828",
       "league": "TENNIS:WTA",
       "kickoff_utc": "2026-11-24T05:00:00+00:00",
@@ -407,53 +449,60 @@
       "away": "Sol Ailin Larraya Guidi"
     },
     {
-      "event_id": "tennis:WTA:20261124:186827",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
-      "home": "Leyre Romero Gormaz",
-      "away": "Nadia Podoroska"
-    },
-    {
-      "event_id": "tennis:WTA:20261124:186825",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
-      "home": "Sofia Costoulas",
-      "away": "Polona Hercog"
-    },
-    {
-      "event_id": "tennis:WTA:20261124:186818",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
-      "home": "Alicia Herrero Linana",
-      "away": "Lucia Bronzetti"
-    },
-    {
       "event_id": "tennis:WTA:20261124:186819",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "kickoff_utc": "2026-11-24T14:00:00+00:00",
       "home": "Laura Samson",
       "away": "Victoria Bosio"
     },
     {
       "event_id": "tennis:WTA:20261124:186820",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "kickoff_utc": "2026-11-24T14:00:00+00:00",
       "home": "Veronika Erjavec",
       "away": "Zhibek Kulambayeva"
     },
     {
+      "event_id": "tennis:WTA:20261124:186814",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T15:30:00+00:00",
+      "home": "Luna Maria Cinalli",
+      "away": "Guiomar Maristany Zuleta De Reales"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186818",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T15:30:00+00:00",
+      "home": "Alicia Herrero Linana",
+      "away": "Lucia Bronzetti"
+    },
+    {
       "event_id": "tennis:WTA:20261124:186821",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "kickoff_utc": "2026-11-24T18:00:00+00:00",
       "home": "Irene Burillo",
       "away": "Lourdes Ayala"
     },
     {
       "event_id": "tennis:WTA:20261124:186826",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "kickoff_utc": "2026-11-24T18:00:00+00:00",
       "home": "Victoria Jimenez Kasintseva",
       "away": "Solana Sierra"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186827",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T19:30:00+00:00",
+      "home": "Leyre Romero Gormaz",
+      "away": "Nadia Podoroska"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186825",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T19:30:00+00:00",
+      "home": "Sofia Costoulas",
+      "away": "Polona Hercog"
     },
     {
       "event_id": "football:E1:20261124:bristol-city:wrexham",
@@ -601,6 +650,41 @@
       "kickoff_utc": "2026-11-25T05:00:00+00:00",
       "home": "TBD",
       "away": "TBD"
+    },
+    {
+      "event_id": "tennis:WTA:20261125:186828",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "Maria Lourdes Carle",
+      "away": "Sol Ailin Larraya Guidi"
+    },
+    {
+      "event_id": "football:E1:20261125:bolton:west-brom",
+      "league": "E1",
+      "kickoff_utc": "2026-11-25T19:45:00+00:00",
+      "home": "Bolton",
+      "away": "West Brom"
+    },
+    {
+      "event_id": "football:E1:20261125:burnley:birmingham",
+      "league": "E1",
+      "kickoff_utc": "2026-11-25T19:45:00+00:00",
+      "home": "Burnley",
+      "away": "Birmingham"
+    },
+    {
+      "event_id": "football:E1:20261125:watford:blackburn",
+      "league": "E1",
+      "kickoff_utc": "2026-11-25T19:45:00+00:00",
+      "home": "Watford",
+      "away": "Blackburn"
+    },
+    {
+      "event_id": "football:E1:20261125:stoke:millwall",
+      "league": "E1",
+      "kickoff_utc": "2026-11-25T20:00:00+00:00",
+      "home": "Stoke",
+      "away": "Millwall"
     }
   ]
 }
