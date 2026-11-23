@@ -74,6 +74,9 @@ CLUB = {
     "soccer_germany_bundesliga": "D1", "soccer_italy_serie_a": "I1", "soccer_france_ligue_one": "F1",
     "soccer_netherlands_eredivisie": "N1", "soccer_portugal_primeira_liga": "P1",
     "soccer_belgium_first_div": "B1", "soccer_spl": "SC0",
+    # UEFA club competitions (issue #114): matched to the ESPN-created UCL/UEL/UECL events.
+    "soccer_uefa_champs_league": "UCL", "soccer_uefa_europa_league": "UEL",
+    "soccer_uefa_europa_conference_league": "UECL",
 }
 BOOK_NAMES = {"pinnacle": "Pinnacle", "betfair_ex_eu": "Betfair Exchange", "betfair_ex_uk": "Betfair Exchange",
               "matchbook": "Matchbook"}
