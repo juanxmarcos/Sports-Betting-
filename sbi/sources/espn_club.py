@@ -42,6 +42,9 @@ ESPN_LEAGUES = {
     "E0": "eng.1", "E1": "eng.2", "SP1": "esp.1", "D1": "ger.1", "I1": "ita.1", "F1": "fra.1",
     "N1": "ned.1", "P1": "por.1", "B1": "bel.1", "SC0": "sco.1",
 }
+# UEFA club competitions (issue #114). Teams come from many leagues: names are mapped to the
+# football-data name when it is certain (any stored league), otherwise ESPN's display name is kept.
+UEFA_LEAGUES = {"UCL": "uefa.champions", "UEL": "uefa.europa", "UECL": "uefa.europa.conf"}
 
 # ESPN display name -> football-data name, where neither ESPN's display nor short name matches
 # (checked against the ESPN scoreboards and the stored football-data teams on 2026-11-18).
@@ -148,14 +151,17 @@ def _ensure(con):
                      event_id TEXT PRIMARY KEY, espn_id TEXT, espn_league TEXT, updated_at TEXT)""")
 
 
-def store(con, div: str, lg: str, events: list[dict], now: datetime, known: set[str]) -> dict:
-    """Create/refresh club events from parsed ESPN events. Returns counts for the run log."""
+def store(con, div: str, lg: str, events: list[dict], now: datetime, known: set[str],
+          keep_unmapped: bool = False) -> dict:
+    """Create/refresh club events from parsed ESPN events. Returns counts for the run log.
+    keep_unmapped=True (UEFA competitions, #114) keeps ESPN's display name for a team that cannot be
+    mapped to a stored football-data name, instead of skipping the game."""
     _ensure(con)
     out = {"created": 0, "existing": 0, "results_filled": 0, "odds": 0, "unmapped": [], "skipped_past": 0}
     ts = db.utcnow()
     for ev in events:
-        home = resolve(*ev["espn_home"], known)
-        away = resolve(*ev["espn_away"], known)
+        home = resolve(*ev["espn_home"], known) or (ev["espn_home"][0].strip() if keep_unmapped else None)
+        away = resolve(*ev["espn_away"], known) or (ev["espn_away"][0].strip() if keep_unmapped else None)
         if not home or not away or home == away:
             for raw, got in ((ev["espn_home"][0], home), (ev["espn_away"][0], away)):
                 if not got and raw not in out["unmapped"]:
@@ -224,6 +230,28 @@ def ingest(con, now: datetime, ahead_days: int = AHEAD_DAYS, back_days: int = BA
             for key in ("created", "existing", "results_filled", "odds", "skipped_past"):
                 tot[key] += r[key]
             tot["unmapped"] += [u for u in r["unmapped"] if u not in tot["unmapped"]]
+            time.sleep(polite_delay)
+        out["leagues"][div] = tot
+        for key in ("created", "results_filled", "odds"):
+            out[key] += tot[key]
+    # UEFA club competitions (issue #114): same window and catch-up, names from every stored league.
+    from ..catchup import stale_dates
+    known_all = set()
+    for div in leagues.active():
+        known_all |= known_teams(con, div, now)
+    for div, lg in UEFA_LEAGUES.items():
+        tot = {"created": 0, "existing": 0, "results_filled": 0, "odds": 0, "unmapped": [], "skipped_past": 0}
+        days = [now.date() + timedelta(days=k) for k in range(-back_days, ahead_days + 1)]
+        days += sorted(d for d in stale_dates(con, now, div) if d not in days)
+        for d in days:
+            try:
+                evs = scoreboard(lg, d)
+            except Exception as e:  # noqa: BLE001 - one league-day failing never stops the rest
+                out["errors"].append(db.redact(f"{lg} {d}: {e}")[:200])
+                continue
+            r = store(con, div, lg, evs, now, known_all, keep_unmapped=True)
+            for key in ("created", "existing", "results_filled", "odds", "skipped_past"):
+                tot[key] += r[key]
             time.sleep(polite_delay)
         out["leagues"][div] = tot
         for key in ("created", "results_filled", "odds"):

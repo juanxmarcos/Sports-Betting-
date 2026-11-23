@@ -108,7 +108,8 @@ def test_creates_club_events_once_with_football_data_ids(con, monkeypatch):
     assert px == pytest.approx({"H": 1 + 100 / 110, "A": 3.5, "D": 3.6})
     # one request per league-day (2 days back, today, 7 ahead); a league with no stored football-data
     # teams to map names to is reported and not read
-    assert len(urls) == 10 and all("/soccer/eng.1/" in u for u in urls)
+    domestic = [u for u in urls if "/soccer/uefa." not in u]                     # UEFA leagues added in #114
+    assert len(domestic) == 10 and all("/soccer/eng.1/" in u for u in domestic)
     assert any(e.startswith("E1: no stored football-data teams") for e in out["errors"])
     n = con.execute("SELECT COUNT(*) FROM events").fetchone()[0]
     again = ec.ingest(con, NOW + timedelta(hours=12), polite_delay=0)
