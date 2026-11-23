@@ -140,9 +140,11 @@ def _data(ledger_today, recs=None, history=None, record=None):
     est = {"status": "estimated", "kind": pe.ESTIMATE_KIND, "date": DAY, "recommendations": recs or [],
            "ledger_today": ledger_today,
            "record": record or {"rows": 3, "won": 1, "lost": 1, "void": 0, "open": 1, "paper_pl": "10.00",
-                                "staked": "20.00",
-                                "by_legs": {"2": {"rows": 2, "won": 1, "lost": 0, "void": 0, "open": 1, "paper_pl": "20.00"},
-                                            "3": {"rows": 1, "won": 0, "lost": 1, "void": 0, "open": 0, "paper_pl": "-10.00"}}}}
+                                "staked": "20.00", "expected_wins_settled": 0.55,
+                                "by_legs": {"2": {"rows": 2, "won": 1, "lost": 0, "void": 0, "open": 1, "paper_pl": "20.00",
+                                                  "expected_wins_settled": 0.35},
+                                            "3": {"rows": 1, "won": 0, "lost": 1, "void": 0, "open": 0, "paper_pl": "-10.00",
+                                                  "expected_wins_settled": 0.2}}}}
     strict = {"date": DAY, "status": "not_published", "blockers": [{"key": "combined_quote", "text": "x"}], "recommendations": []}
     return {"generated": _iso(NOW), "default_timezone": "America/New_York", "parlays": strict, "estimated_parlays": est,
             "parlay_history": history or [], "picks": [], "history": [], "events": [], "watching": [], "close_to_value": [],
@@ -231,10 +233,10 @@ def test_history_page_lists_every_parlay_with_result_and_record():
     assert "BookA · 2 legs" in won and "T1A to win ✓" in won
     # Issue #65: record-by-size table sits in a card, adds a hit rate, colours P/L and ends in a Total row.
     assert '<div class="card ph-rec"><table data-ph-by-legs>' in html
-    assert '<th scope="row">2 legs</th><td>1–0</td><td>100%</td><td>0</td><td>1</td><td class="pl pos">+$20.00</td>' in html
-    assert '<th scope="row">3 legs</th><td>0–1</td><td>0%</td><td>0</td><td>0</td><td class="pl neg">−$10.00</td>' in html
+    assert '<th scope="row">2 legs</th><td>1–0</td><td data-expected>0.3</td><td>100%</td><td>0</td><td>1</td><td class="pl pos">+$20.00</td>' in html
+    assert '<th scope="row">3 legs</th><td>0–1</td><td data-expected>0.2</td><td>0%</td><td>0</td><td>0</td><td class="pl neg">−$10.00</td>' in html
     # Total row repeats the overall record line (1–1, +$10.00) and the overall open/void counts.
-    assert '<tfoot><tr class="total"><th scope="row">Total</th><td>1–1</td><td>50%</td><td>0</td><td>1</td><td class="pl pos">+$10.00</td></tr></tfoot>' in html
+    assert '<tfoot><tr class="total"><th scope="row">Total</th><td>1–1</td><td data-expected>0.6</td><td>50%</td><td>0</td><td>1</td><td class="pl pos">+$10.00</td></tr></tfoot>' in html
     assert 'href="/' not in html and 'src="/' not in html            # relative paths only
 
 

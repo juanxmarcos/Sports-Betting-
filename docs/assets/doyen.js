@@ -767,6 +767,22 @@
     return `<p class="small muted ph-note" data-be-note>${b !== null ? `Break-even at these odds: about ${b}%. ` : ""}${SMALL_SAMPLE}</p>`;
   }
 
+  // Issue #107: expected vs actual wins. Expected = sum of the model's recorded win probability over the
+  // bets (or legs) that settled won or lost, so it compares directly with the won count. Display only.
+  const EXPECTED_TIP = "Wins the model expected: sum of its recorded win chances for the settled (won or lost) bets";
+  // Long header on wide screens, short one on phones (CSS swaps .lg/.sh), shared by both History tables.
+  const lab = (long, short) => `<span class="lg">${long}</span><span class="sh" aria-hidden="true">${short}</span>`;
+  const expWins = (x) => (typeof x === "number" && isFinite(x) ? x.toFixed(1) : "–");
+  // One muted line naming parlay-leg markets clearly behind expectation: at least 8 settled legs and
+  // actual wins more than 1.5 below expected. Hidden when nothing qualifies.
+  function behindLine(R) {
+    const mk = R.by_market && typeof R.by_market === "object" ? Object.entries(R.by_market) : [];
+    const parts = mk.filter(([, g]) => g && typeof g.expected_wins_settled === "number" && isFinite(g.expected_wins_settled)
+        && (Number(g.won) || 0) + (Number(g.lost) || 0) >= 8 && g.expected_wins_settled - (Number(g.won) || 0) > 1.5)
+      .map(([m, g]) => `${str(g.label) ? g.label : m} legs ${Number(g.won) || 0}–${Number(g.lost) || 0} (expected ~${Math.round(g.expected_wins_settled)})`);
+    return parts.length ? `<p class="small muted ph-note" data-behind-expectation>Behind expectation: ${esc(parts.join(", "))}.</p>` : "";
+  }
+
   // Issue #57: every recorded parlay (ledger/estimated_parlays.csv), newest first, with its result.
   function parlayHistory() {
     const rows = (Array.isArray(S.data.parlay_history) ? S.data.parlay_history : [])
@@ -779,7 +795,7 @@
     // Issue #65: styled record-by-size table. Display only; every number comes from E.record as published.
     const plCls = (x) => { const v = Number(x); return !isFinite(v) || v === 0 ? "zero" : (v > 0 ? "pos" : "neg"); };
     const hit = (g) => { const n = (Number(g.won) || 0) + (Number(g.lost) || 0); return n ? Math.round((Number(g.won) || 0) / n * 100) + "%" : "–"; };
-    const sizeRow = (label, g, cls) => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${esc(label)}</th><td>${esc(g.won)}–${esc(g.lost)}</td><td>${hit(g)}</td><td>${esc(g.void || 0)}</td><td>${esc(g.open || 0)}</td><td class="pl ${plCls(g.paper_pl)}">${signed(g.paper_pl)}</td></tr>`;
+    const sizeRow = (label, g, cls) => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${esc(label)}</th><td>${esc(g.won)}–${esc(g.lost)}</td><td data-expected>${expWins(g.expected_wins_settled)}</td><td>${hit(g)}</td><td>${esc(g.void || 0)}</td><td>${esc(g.open || 0)}</td><td class="pl ${plCls(g.paper_pl)}">${signed(g.paper_pl)}</td></tr>`;
     const byLegs = groups.filter(([, g]) => g && typeof g.won === "number").map(([n, g]) => sizeRow(`${n} legs`, g)).join("");
     const total = byLegs && typeof R.won === "number" && typeof R.lost === "number" ? sizeRow("Total", R, "total") : "";
     const RES = { won: "Won", lost: "Lost", void: "Void", open: "Open" };
@@ -798,12 +814,12 @@
         <ul class="ph-legs small">${legs}</ul>
         <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b>${typeof r.settled_odds === "number" && r.settled_odds > 1 ? ` (settled at ${dec(r.settled_odds)} after a push)` : ""}</span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
     }).join("");
-    const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">Won–lost</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">Hit rate</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">Paper P/L</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
+    const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="${esc(EXPECTED_TIP)}">${lab("Expected", "Exp")}</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">${lab("Hit rate", "Hit")}</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
     return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
       <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void or postponed game voids the whole parlay here; a pushed leg (draw no bet on a draw) counts at odds 1.00 and the rest stands. Nothing is edited or removed.</p>
       <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
-      ${table}${table ? parlayNote(rows) : ""}
+      ${table}${table ? behindLine(R) + parlayNote(rows) : ""}
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 
@@ -812,22 +828,27 @@
   // Display only, computed from the listed picks exactly like the record line above it, so the Total row
   // always equals that line. Singles are graded at a flat 1-unit stake (status.pnl, in units).
   function singlesTable(H) {
+    const p01 = (x) => typeof x === "number" && isFinite(x) && x >= 0 && x <= 1;
     const WON = ["won", "half_won"], LOST = ["lost", "half_lost"];
     const tally = (ps) => {
       const st = ps.filter((p) => p.status && p.status.state === "settled");
       const won = st.filter((p) => WON.includes(p.status.result)).length;
       const lost = st.filter((p) => LOST.includes(p.status.result)).length;
       const pl = Math.round(st.reduce((a, p) => a + (Number(p.status.pnl) || 0), 0) * 100) / 100;
-      return { n: ps.length, won, lost, push: st.length - won - lost, open: ps.length - st.length, staked: st.length, pl };
+      // Issue #107: expected wins = sum of the stored final probability over picks graded won or lost
+      // (halves included, like Won–lost). Blank if any of them has no stored probability.
+      const graded = st.filter((p) => WON.includes(p.status.result) || LOST.includes(p.status.result));
+      const probs = graded.map((p) => Number(p.prob));
+      const exp = probs.length && probs.every((x) => p01(x)) ? probs.reduce((a, x) => a + x, 0) : null;
+      return { n: ps.length, won, lost, push: st.length - won - lost, open: ps.length - st.length, staked: st.length, pl, exp };
     };
     const units = (v) => (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v).toFixed(2) + " u";
     const plCls = (v) => (v === 0 ? "zero" : (v > 0 ? "pos" : "neg"));
-    const row = (label, g, cls) => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${esc(label)}</th><td>${g.won}–${g.lost}</td>`
+    const row = (label, g, cls) => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${esc(label)}</th><td>${g.won}–${g.lost}</td><td data-expected>${expWins(g.exp)}</td>`
       + `<td>${g.won + g.lost ? Math.round(g.won / (g.won + g.lost) * 100) + "%" : "–"}</td><td>${g.push}</td><td>${g.open}</td>`
       + `<td class="pl ${g.staked ? plCls(g.pl) : "zero"}">${g.staked ? units(g.pl) : "–"}</td>`
       + `<td class="pl ${g.staked ? plCls(g.pl) : "zero"}">${g.staked ? (g.pl > 0 ? "+" : (g.pl < 0 ? "−" : "")) + Math.abs(Math.round(g.pl / g.staked * 1000) / 10).toFixed(1) + "%" : "–"}</td></tr>`;
-    const lab = (long, short) => `<span class="lg">${long}</span><span class="sh" aria-hidden="true">${short}</span>`;
-    const head = (first) => `<thead><tr><th scope="col">${first}</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="Won ÷ (won + lost); pushes, voids and open picks excluded">${lab("Hit rate", "Hit")}</th><th scope="col">${lab("Void/push", "Void")}</th><th scope="col" title="Not yet graded, including withdrawn picks">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th><th scope="col" title="Paper P/L ÷ units staked on graded picks">ROI</th></tr></thead>`;
+    const head = (first) => `<thead><tr><th scope="col">${first}</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="${esc(EXPECTED_TIP)}">${lab("Expected", "Exp")}</th><th scope="col" title="Won ÷ (won + lost); pushes, voids and open picks excluded">${lab("Hit rate", "Hit")}</th><th scope="col">${lab("Void/push", "Void")}</th><th scope="col" title="Not yet graded, including withdrawn picks">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th><th scope="col" title="Paper P/L ÷ units staked on graded picks">ROI</th></tr></thead>`;
     const bySport = SPORTS.slice(1).filter(([k]) => sportOk(k, S.hsport)).map(([k, name]) => row(name, tally(H.filter((p) => p.sport === k)))).join("");
     const T = row("Total", tally(H), "total");
     // Issue #99: one muted line with the record since the loosened rules (singles-v2) started, from the same picks.

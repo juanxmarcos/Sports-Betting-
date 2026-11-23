@@ -898,7 +898,9 @@ def settle(con, path=None) -> dict:
     Bet on a draw) is removed at odds 1.00 and the rest stands; all legs pushed = void. P/L at the
     recorded stake and the recorded estimated price (less any pushed legs), so a real slip may have
     paid less. `by_market` (issue #82) is a LEG record per market type: each leg won, lost, push or
-    void, or open, from the same final scores."""
+    void, or open, from the same final scores. Issue #107: `expected_wins_settled` is the sum of the
+    recorded per-leg probabilities (`prob`) over legs that settled won or lost, per size (from
+    `est_hit_chance`) and per market; None for a market where a settled leg has no recorded prob."""
     path = path or ledger_path()
     out = _tally()
     out["by_legs"], out["by_market"] = {}, {}
@@ -913,9 +915,22 @@ def settle(con, path=None) -> dict:
             for t in (out, groups[n]):
                 _add(t, st, r, odds)
             for x, lr in zip(legs, res):
-                markets[str(x.get("market") or "?")][lr] += 1
+                m = markets[str(x.get("market") or "?")]
+                m[lr] += 1
+                if lr in ("won", "lost"):                    # issue #107: expected leg wins
+                    try:
+                        p = float(x.get("prob"))
+                    except (TypeError, ValueError):
+                        p = None
+                    if p is None or not 0.0 <= p <= 1.0:
+                        m["_missing_prob"] = True
+                    else:
+                        m["expected_wins_settled"] += p
     for t in (out, *groups.values()):
         _finish(t)
+    for m in markets.values():
+        # Never show a partial sum: a settled leg without a recorded probability blanks the market.
+        m["expected_wins_settled"] = None if m.pop("_missing_prob", False) else round(m["expected_wins_settled"], 3)
     out["by_legs"] = {n: groups[n] for n in sorted(groups, key=lambda k: (not k.isdigit(), int(k) if k.isdigit() else 0, k))}
     order = lambda m: (MARKET_ORDER.index(m) if m in MARKET_ORDER else len(MARKET_ORDER), m)
     out["by_market"] = {m: {**markets[m], "label": MARKET_LABELS.get(m, m)} for m in sorted(markets, key=order)}
@@ -923,7 +938,7 @@ def settle(con, path=None) -> dict:
 
 
 def _leg_tally() -> dict:
-    return {"won": 0, "lost": 0, "push": 0, "void": 0, "open": 0}
+    return {"won": 0, "lost": 0, "push": 0, "void": 0, "open": 0, "expected_wins_settled": 0.0}
 
 
 def leg_result(con, leg: dict) -> str:
