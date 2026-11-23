@@ -60,6 +60,8 @@ def _form_sentence(team: str, f: dict | None) -> str | None:
 def explain(r: dict, e: dict) -> dict:
     """r: recommendation row (dict), e: evidence dict. Returns {'why': str, 'risk': str, 'risks': [...]}."""
     sel = selection_label(r)
+    if e.get("rules_version") == "singles-v3":          # issue #112: typical price, picked by likelihood
+        return _explain_typical(r, e, sel)
     if e.get("rules_version") == "singles-v2":          # issue #99: loosened rules, value vs Doyen's probability
         return _explain_loose(r, e, sel)
     prices = e.get("all_prices") or {}
@@ -119,7 +121,7 @@ def explain(r: dict, e: dict) -> dict:
             "risk": main, "risks": risks}
 
 
-_PROB_SOURCE = {"model": "Doyen's model", "market_consensus_ex_book": "the other bookmakers' de-vigged consensus",
+_PROB_SOURCE = {"model": "Doyen's model", "market_consensus": "the bookmakers' de-vigged consensus", "market_consensus_ex_book": "the other bookmakers' de-vigged consensus",
                 "market_consensus_incl_book": "the de-vigged consensus of the bookmakers, this one included"}
 
 
@@ -136,6 +138,28 @@ def _explain_loose(r: dict, e: dict, sel: str) -> dict:
     parts.append("Selected under the loosened single-pick rules: one bookmaker's price is enough and there is no "
                  "extra margin above fair value.")
     short = f"{odds:.2f} vs Doyen's fair price of {1 / p:.2f} ({(p * odds - 1) * 100:+.1f}% est. value)."
+    main = e.get("risk_note") or {"soccer": "Lineups aren't confirmed yet; a late absence can move this price quickly.",
+                                  "nfl": "Quarterback and injury news isn't modelled; check the final injury report.",
+                                  "nba": "Late scratches and rest decisions aren't modelled; check availability before tip-off.",
+                                  "tennis": "Fitness and withdrawals aren't modelled; check for late injury news."
+                                  }.get(r.get("sport", "soccer"), "Unmodelled news can move this price.")
+    return {"why": " ".join(parts), "why_short": short, "risk": main, "risks": list(e.get("risks") or [])}
+
+
+def _explain_typical(r: dict, e: dict, sel: str) -> dict:
+    """Plain-language reason for a `singles-v3` pick (issue #112): typical odds, chosen by likelihood.
+    Every number comes from the stored row and evidence; no bookmaker is named."""
+    p, odds = r["final_prob"], r["odds"]
+    src = _PROB_SOURCE.get(e.get("prob_source"), "Doyen's estimate")
+    n = e.get("n_bookmakers")
+    parts = [f"Typical odds {odds:.2f} on {sel} (median across {n} sportsbooks). Doyen's probability is "
+             f"{_pct(p, 1)} ({src}, shrunk and capped toward the market)."]
+    mk = r.get("market_prob")
+    if mk is not None:
+        parts.append(f"The bookmakers' de-vigged consensus is {_pct(mk, 1)}.")
+    parts.append("Chosen as one of the day's most likely picks at odds of 1.60 or longer; the typical price includes "
+                 "the bookmakers' margin, so this is not a value bet. Your sportsbook's price may differ slightly.")
+    short = f"{_pct(p, 0)} likely at typical odds {odds:.2f}."
     main = e.get("risk_note") or {"soccer": "Lineups aren't confirmed yet; a late absence can move this price quickly.",
                                   "nfl": "Quarterback and injury news isn't modelled; check the final injury report.",
                                   "nba": "Late scratches and rest decisions aren't modelled; check availability before tip-off.",

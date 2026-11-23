@@ -64,15 +64,17 @@ def test_rerun_with_new_prices_replaces_previews_without_touching_the_ledger(con
     later = NOW + timedelta(hours=1)
     for d in (1, 2):                                               # a newer, different price on future games
         for i in (1, 2):
-            con.execute("""INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at)
-                           VALUES (?,?,?,?,?,?,?,?,?)""", (f"nba:{d}{i}", "Bet365", "ML", "home", None, 2.25, "pre", "x",
-                                                         (later - timedelta(minutes=5)).isoformat()))
+            for bk in ("Pinnacle", "DraftKings", "Unibet"):        # issue #112: the typical (median) price moves
+                for sel, price in (("home", 1.70), ("away", 2.25)):
+                    con.execute("""INSERT INTO odds(event_id,bookmaker,market,selection,line,price,kind,source,retrieved_at)
+                                   VALUES (?,?,?,?,?,?,?,?,?)""", (f"nba:{d}{i}", bk, "ML", sel, None, price, "pre", "x",
+                                                                 (later - timedelta(minutes=5)).isoformat()))
     con.commit()
     d2 = json.loads(site.build(con, later, write_shadow=True).read_text())["estimated_parlays"]
     assert d2["ledger_rows_added"] == 0 and pe.ledger_path().read_bytes() == ledger
     for a, b in zip(d1["previews"][:2], d2["previews"][:2]):
-        assert a["recommendations"][0]["estimated_odds"] == pytest.approx(2.10 * 2.10)
-        assert b["recommendations"][0]["estimated_odds"] == pytest.approx(2.25 * 2.25)
+        assert a["recommendations"][0]["estimated_odds"] == pytest.approx(1.945 * 1.945, abs=1e-3)
+        assert b["recommendations"][0]["estimated_odds"] == pytest.approx(1.70 * 1.70, abs=1e-3)   # now the likelier side
 
 
 def test_preview_prices_may_be_older_than_today_but_never_after_the_start(con):

@@ -94,14 +94,14 @@ def _legs(pid, started=False):
             {"event_id": f"football:E0:{pid}", "sport": "soccer", "league": "E0", "title": "Home 1 v Away 1"}]
     for i, (leg, p) in enumerate(zip(legs, (1.9, 2.1))):
         leg.update(market="ML", selection="home", selection_text=f"Home {i} to win", status="active", price=p,
-                   prob=round(1 / p + 0.01, 4), prob_source="model", start_utc=_iso(base + timedelta(minutes=i)),
+                   prob=round(1 / p + 0.01, 4), prob_source="model", price_books=3, start_utc=_iso(base + timedelta(minutes=i)),
                    price_at=_iso(NOW - timedelta(minutes=30)), result="open")
     return legs
 
 
 def _data():
     rec = {"parlay_id": "pe-c", "date": DAY, "status": "active", "kind": "estimated_product", "badge": "Estimate",
-           "bookmaker": "BookA", "n_legs": 2, "estimated_odds": 3.99, "stake": 10, "est_hit_chance": 0.3,
+           "price_basis": "consensus", "n_legs": 2, "estimated_odds": 3.99, "stake": 10, "est_hit_chance": 0.3,
            "legs": _legs("c")}
     led = {"parlay_id": "pe-l", "date": DAY, "first_seen": _iso(NOW - timedelta(hours=2)), "kind": "estimated_product",
            "bookmaker": "BookA", "n_legs": 2, "estimated_odds": 3.99, "stake": "10.00", "gross_payout": "39.90",

@@ -65,7 +65,10 @@ def _pick(con, r, now) -> dict:
         "title": f"{r['home']} v {r['away']}",
         "start_utc": r["kickoff_utc"], "published_at": r["published_at"],
         "market": market_label(r["market"]), "selection": selection_label(r),
-        "odds": r["odds"], "bookmaker": r["bookmaker"], "net_odds": e.get("net_odds", r["odds"]),
+        "odds": r["odds"], "net_odds": e.get("net_odds", r["odds"]),
+        # Issue #112: a typical-price pick names no bookmaker ("consensus" is the price basis, not a book).
+        **({"bookmaker": "Typical odds", "price_basis": "consensus", "price_books": e.get("n_bookmakers")}
+           if r["bookmaker"] == "consensus" else {"bookmaker": r["bookmaker"]}),
         "prob": r["final_prob"], "fair_odds": r["fair_odds"], "ev": r["ev"], "ev_plain": ev_plain(r["ev"]),
         "model_prob": r["model_prob"], "market_prob": r["market_prob"],
         "why": x["why"], "why_short": x["why_short"], "risk": x["risk"], "risks": x["risks"],

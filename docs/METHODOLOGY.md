@@ -371,6 +371,8 @@ The new rules apply to **new picks only**. Each one stores `rules_version: "sing
 `evidence_json`. Picks published before have no version (shown as `singles-v1`) and keep their old rules, odds and
 results. Nothing published is edited or deleted. Code: `sbi/singles_loose.py` (job `singles-v2` in the daily run).
 
+Issue #112 (2026-11-23): new picks use `singles-v3`, typical odds picked by likelihood (section 19).
+
 | Rule | singles-v2 |
 |---|---|
 | Games | Soccer, NFL, NBA, Tennis; later today (New York date), not started |
@@ -418,4 +420,38 @@ best overall (log loss 0.5190 at w = 0, 0.5225 at w = 0.25, 0.5436 at w = 1); th
 the best and best for Over/Under and Draw No Bet on the model-above-market legs. Details, tables and limits:
 PARLAYS.md section 11.8. Published parlays, their stored probabilities and the single-pick rules (`singles-v2`)
 are unchanged.
+
+## 19. Typical odds, picked by likelihood: parlays `parlay-estimated-v4` and single picks `singles-v3` (issue #112, 2026-11-23)
+
+**Owner decision (2026-11-23):** *"We don't want to compare sportsbooks since I will not be using any of those. I use
+Betano and Solcasino."* Neither is in the free odds data (31 bookmakers stored, none of them), so a price at one
+specific bookmaker, and an edge from that bookmaker beating the consensus, is of no use to the owner. For **new**
+parlays and single picks:
+
+- **Price = typical market price:** the median of the latest stored pre-match prices across bookmakers (exchanges and
+  aggregates excluded), with the same freshness rules as before, from at least **2** bookmakers. A parlay's
+  estimated combined odds are the product of the typical leg prices.
+- **Probability:** the #106 shrunk and capped probability (section 18), or the de-vigged consensus where there is no
+  model. A leg or pick is kept only when the probability is inside 0.30–0.85, the model is within 0.12 of the market
+  and not below it by more than 0.02.
+- **Selection by likelihood, not by price gaps.** No value requirement: the typical price includes the bookmakers'
+  margin, so estimated value at that price is usually slightly negative. The objective is the win–loss record at
+  typical odds, not value hunting.
+  - Parlays: ranked by joint probability, with a minimum typical combined price per size (2 legs ≥ 2.2, 3 legs ≥ 3.5,
+    4–5 legs ≥ 6.0). Details: PARLAYS.md section 11.9.
+  - Single picks (`singles-v3`): per game the most likely selection with typical odds ≥ **1.60** (about −167); the
+    most likely picks first, at most 5 a day, one per game. Stored with `bookmaker = "consensus"` (the price basis,
+    not a sportsbook), the typical price as `odds`, and `price_basis`, `n_bookmakers`, every bookmaker's price
+    (`all_prices`) and `raw_prob` in the immutable evidence. Same markets as `singles-v2`.
+- **Cards** name no bookmaker and label the price **"Typical odds"** (American and decimal), with one short muted line:
+  *"Typical odds across sportsbooks; your sportsbook's price may differ slightly."*
+- **History:** append-only. `singles-v1`/`singles-v2` picks and `parlay-estimated-v3` parlays keep their bookmaker,
+  odds, probabilities and rules. A muted line on History shows the record since the typical-odds rules started.
+
+Section 17's `singles-v2` rules (one bookmaker, value > 0) apply to picks published before this change. The single
+picks now use the shrunk and capped probability as parlays do (they kept the raw probability under #106).
+
+**Limits.** The owner's sportsbook may price slightly differently from the median of the stored books. Probabilities
+are model estimates; joint parlay probabilities assume independence and are unvalidated. Expected paper P/L at the
+typical price is slightly negative by construction.
 

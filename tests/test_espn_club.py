@@ -243,7 +243,8 @@ def test_preview_day_with_priced_club_games_gets_a_preview_parlay(con, monkeypat
     p = pe.build_preview(con, NOW + timedelta(minutes=5), SAT)
     assert p["coverage"]["by_sport"]["soccer"] == {"events": 2, "with_prices": 2}
     [r] = p["recommendations"]
-    assert r["preview"] is True and len(r["legs"]) == 2 and r["bookmaker"] == "BetVictor"
+    assert r["preview"] is True and len(r["legs"]) == 2 and r["price_basis"] == "consensus"
+    assert all(x["price_books"] >= 2 for x in r["legs"])            # issue #112: typical price, 2+ books
     cov = pe.preview_coverage(con, NOW + timedelta(minutes=5))
     assert list(cov) == ["2026-11-19", "2026-11-20", SAT]
     assert cov[SAT]["events"] == 2 and cov[SAT]["with_prices"] == 2 and cov["2026-11-19"]["events"] == 0

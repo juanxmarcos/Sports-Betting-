@@ -70,11 +70,10 @@ def test_future_scoreboards_fill_the_odds_table_and_the_previews(con, monkeypatc
         cov = p["coverage"]
         assert cov["events_today"] == 2 and cov["events_with_fresh_prices"] == 2
         assert cov["by_sport"] == {"nba": {"events": 2, "with_prices": 2}}
-        [card] = p["recommendations"]                               # one bookmaker is enough (#58)
-        assert card["preview"] is True and card["bookmaker"] == "DraftKings" and card["n_legs"] == 2
-        assert card["estimated_odds"] == pytest.approx(2.2 * 2.2)
-        assert card["prices_at"] == RETRIEVED
-        assert pe.card_problem(card, NOW, p["date"], preview=True) is None
+        # Issue #112: a leg needs a typical price from at least 2 bookmakers; the ESPN scoreboard
+        # carries one (DraftKings), so these games are covered but give no parlay. Never one book's price.
+        assert p["recommendations"] == []
+        assert cov["excluded"] == {"fewer than 2 bookmakers price this leg": 2}
 
 
 def test_inserting_again_never_rewrites_a_stored_quote(con, monkeypatch):

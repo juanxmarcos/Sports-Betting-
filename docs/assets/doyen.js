@@ -316,7 +316,11 @@
   // today in New York (issue #51; before the game starts), and estimated odds equal to the product
   // of those prices. A verified
   // bookmaker-quote card always wins: an estimate never reuses one of its games.
-  const EC = { kind: "estimated_product",
+  // Issue #112: new cards are priced at the typical odds (median across sportsbooks), name no bookmaker,
+  // and must reach a minimum combined price per size.
+  const EC = { kind: "estimated_product", basis: "consensus", minBooks: 2,
+               minOdds: { 2: 2.2, 3: 3.5, 4: 6.0, 5: 6.0 },
+               typical: "Typical odds", note: "Typical odds across sportsbooks; your sportsbook's price may differ slightly.",
                empty: "No parlays today: no verified quotes, and no games later today meet the estimate rules.",
                previewBadge: "Preview: may change at the next daily update", previewEmpty: "No preview yet for this day" };
   // Issue #58: with `preview` the day is a later New York date, the card must carry preview: true,
@@ -330,11 +334,11 @@
     if ((rec.preview === true) !== preview) return "preview flag does not match the day";
     if (rec.date !== day) return preview ? "not this day's preview" : "not today's parlay";
     if (rec.status !== "active") return "parlay is not active";
-    if (!str(rec.bookmaker)) return "missing bookmaker";
+    if (rec.price_basis !== EC.basis) return "not priced at the typical odds";
     const legs = rec.legs;
     if (!Array.isArray(legs) || legs.length < PC.minLegs || legs.length > PC.maxLegs) return "needs 2-6 legs";
     const seen = new Set();
-    let product = 1, weak = 0;
+    let product = 1;
     for (const l of legs) {
       if (!l || typeof l !== "object") return "leg is not an object";
       if (!str(l.event_id) || !str(l.title) || !str(l.selection)) return "leg missing identity";
@@ -352,13 +356,14 @@
       if (at == null || at > now) return "leg price has no valid time";
       if (!preview && nyKey(new Date(at)) !== day) return "leg price is stale";
       if (at >= t) return "leg price read after the start";
-      if (typeof l.prob === "number" && isFinite(l.prob) && l.prob * l.price < 1 - 0.0005 * l.price) weak += 1;
+      if (typeof l.price_books !== "number" || !isFinite(l.price_books) || l.price_books < EC.minBooks) return "leg price from fewer than 2 bookmakers";
       product *= l.price;
     }
-    if (weak > 1) return "more than one leg below its probability";
     const o = rec.estimated_odds;
     if (typeof o !== "number" || !isFinite(o) || o <= 1) return "invalid estimated odds";
     if (Math.abs(o - product) > 0.005 * o) return "estimated odds are not the product of the leg prices";
+    const m = EC.minOdds[legs.length];
+    if (typeof m !== "number" || o < m - 0.005) return "combined odds below the minimum for its size";
     return null;
   }
   function shownEstimates(E, blocked, limit) {
@@ -415,6 +420,7 @@
   // build's display mapping (competition_name); a raw competition name is the fallback, never blank.
   const compName = (x) => String((x && (x.competition_name || x.competition)) || "").trim();
   const legComp = (l) => compName(l) ? `<span class="lg-c" data-comp>${esc(compName(l))}</span>` : "";
+  const oddsNote = () => `<p class="small muted odds-note" data-odds-note>${esc(EC.note)}</p>`;
   function estCard(r, i) {
     const odds = r.estimated_odds;
     // Issue #68: an open injury/lineup note is shown on the leg (muted), never used to hide it.
@@ -428,7 +434,7 @@
       ${r.preview === true ? `<div class="pc-note preview-note" data-preview><span class="pill preview">${esc(EC.previewBadge)}</span></div>` : ""}
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
-        <div><div class="k">Estimated combined odds</div><div class="v">${dec(odds)}</div></div>
+        <div><div class="k">${esc(EC.typical)}</div><div class="v" data-typical-odds>${esc(american(odds))} (${dec(odds)})</div></div>
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
@@ -484,7 +490,9 @@
       <div class="pc-state ${esc(cls)}" data-state-line>${esc(state)}</div>
       <ol class="legs">${legs}</ol>
       <div class="pc-foot">
-        <div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>
+        ${r.price_basis === EC.basis
+          ? `<div><div class="k">${esc(EC.typical)} at publication</div><div class="v" data-typical-odds>${esc(american(r.estimated_odds))} (${dec(r.estimated_odds)})</div></div>`
+          : `<div><div class="k">Estimated odds at publication</div><div class="v">${dec(r.estimated_odds)}</div></div>`}
         ${betInput(i)}
         <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), r.estimated_odds, r.result)}</div></div>
       </div>
@@ -519,7 +527,7 @@
       const day = future[sel - 1], prev = shownPreview(E, day);
       let p = `<div class="eyebrow">${esc(fmtDay(day))}</div><h1 style="margin-top:6px">Preview Parlays</h1>${seg}`;
       p += `<section class="section first" id="parlays" data-preview-day="${esc(day)}">`;
-      if (prev.length) p += `<p class="small muted">Estimates for ${esc(fmtDay(day))}, built from the latest stored prices. Previews are replaced at every daily update and are not recorded; this day's parlays become final on the day itself.</p><div class="grid parlays">${prev.map((r, i) => estCard(r, i)).join("")}</div>`;
+      if (prev.length) p += `<p class="small muted">Estimates for ${esc(fmtDay(day))}, built from the latest stored prices. Previews are replaced at every daily update and are not recorded; this day's parlays become final on the day itself.</p><div class="grid parlays">${prev.map((r, i) => estCard(r, i)).join("")}</div>${oddsNote()}`;
       else p += `<p class="zero" data-preview-empty>${esc(EC.previewEmpty)}</p>`;
       return p + `</section>` + singlesSection(day, true);
     }
@@ -534,6 +542,7 @@
     }
     if (cards.length) h += `<div class="grid parlays">${cards.map(parlayCard).join("")}</div>`;
     if (est.length || rec.length) h += `<div class="grid parlays"${cards.length ? ' style="margin-top:16px"' : ""}>${est.map((r, i) => estCard(r, cards.length + i)).join("")}${rec.map((r, i) => ledgerCard(r, cards.length + est.length + i)).join("")}</div>`;
+    if (est.length || rec.some((r) => r.price_basis === EC.basis)) h += oddsNote();
     if (!cards.length && !est.length && !rec.length) {
       h += E && typeof E === "object" ? `<p class="zero">${esc(EC.empty)} <a href="#/parlays">Why?</a></p>`
         : `<p class="zero">No verified parlays today. <a href="#/parlays">Why?</a></p>`;
@@ -580,9 +589,9 @@
     return `<article class="card parlay single" data-single="${esc(p.id)}" data-parlay="${esc(p.id)}" data-odds="${esc(p.odds)}" data-state="${esc(cls)}"${res ? ` data-result="${esc(res)}"` : ""}>
       <div class="pc-h"><span class="pc-n">Single ${i + 1}</span>${p.preview === true ? "" : statusPill(st)}${p.mock ? '<span class="pill mock">Mock data · testing only</span>' : ""}</div>
       <div class="pc-state ${esc(cls)}" data-state-line>${esc(state)}</div>
-      <ol class="legs"><li><div class="lg-t">${legComp(p)}${vs(p.title)}</div><div class="lg-s">${str(p.market) ? `<span class="lg-m">${esc(p.market)}</span> ` : ""}${esc(p.selection)}</div><div class="lg-when">${esc(fmtClock(start))}${str(p.bookmaker) ? " · " + esc(p.bookmaker) : ""}</div>${note}</li></ol>
+      <ol class="legs"><li><div class="lg-t">${legComp(p)}${vs(p.title)}</div><div class="lg-s">${str(p.market) ? `<span class="lg-m">${esc(p.market)}</span> ` : ""}${esc(p.selection)}</div><div class="lg-when">${esc(fmtClock(start))}</div>${note}</li></ol>
       <div class="pc-foot">
-        <div><div class="k">Odds</div><div class="v" data-single-odds>${esc(american(p.odds))} (${dec(p.odds)})</div></div>
+        <div><div class="k">${p.price_basis === EC.basis ? esc(EC.typical) : "Odds"}</div><div class="v" data-single-odds>${esc(american(p.odds))} (${dec(p.odds)})</div></div>
         ${betInput(i)}
         <div><div class="k">${res ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), p.odds, res)}</div></div>
       </div>
@@ -593,7 +602,7 @@
     const list = shownSingles(day, preview);
     if (list === null) return "";
     let h = `<section class="section" id="singles" data-singles-day="${esc(day)}"><div class="section-h"><h2>Single picks</h2>${list.length ? `<span class="count">${list.length}</span>` : ""}</div>`;
-    if (list.length) h += `${preview && list.some((p) => p.preview === true) ? `<p class="small muted">Previews use the latest stored prices and may change at the next daily update; they are published only on the day itself.</p>` : ""}<div class="grid parlays">${list.map(singleCard).join("")}</div>`;
+    if (list.length) h += `${preview && list.some((p) => p.preview === true) ? `<p class="small muted">Previews use the latest stored prices and may change at the next daily update; they are published only on the day itself.</p>` : ""}<div class="grid parlays">${list.map(singleCard).join("")}</div>${list.some((p) => p.price_basis === EC.basis) ? oddsNote() : ""}`;
     else h += `<p class="zero" data-singles-empty>${esc(preview ? SG.previewEmpty : SG.empty)}</p>`;
     return h + `</section>`;
   }
@@ -690,14 +699,14 @@
       return `<tr><td>${esc(n)} legs</td><td>${esc(g.won)}–${esc(g.lost)}</td><td>${esc(g.open || 0)}</td><td>${esc(g.void || 0)}</td><td>${isFinite(pl) ? sign + usd(Math.abs(pl)) : "–"}</td></tr>`;
     }).join("");
     const byLegs = rows ? `<table class="small" data-by-legs><thead><tr><th>Size</th><th>Won–lost</th><th>Open</th><th>Void</th><th>Paper P/L</th></tr></thead><tbody>${rows}</tbody></table>` : "";
-    const body = `<p class="small">Up to five estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Each uses one bookmaker that priced every leg earlier today, before the game starts; the estimated price is the product of that bookmaker's single-game odds, not a bet-slip quote, so your slip may pay less.</p>
+    const body = `<p class="small">Up to five estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Owner decision (23 Nov 2026): every leg is priced at its <b>typical odds</b>, the median of the latest prices from at least two sportsbooks earlier today (before the game starts; exchanges and aggregates excluded), and the combined odds are the product of those. No sportsbook is named, and your sportsbook's price may differ slightly; it is not a bet-slip quote.</p>
       <ul class="small">
         <li>Two to five legs (cards of 2, 3 and 4–5 legs), one per game, all on games that haven't started. Different games in one competition are allowed; same-game combinations and legs sharing a team or player are not.</li>
-        <li>Each leg uses Doyen's model probability. Where Doyen has no model (tennis) it uses a de-vigged market consensus of at least two bookmakers; a leg with neither is skipped.</li>
+        <li>Each leg uses Doyen's model probability, shrunk and capped toward the market. Where Doyen has no model (tennis) it uses a de-vigged market consensus of at least two bookmakers; a leg with neither is skipped. A leg where the model is below the market is skipped.</li>
         <li>NBA and NFL legs can also be a point spread (e.g. “Lakers −4.5”) or a game total (e.g. “Over 228.5 points”). Their probability is the de-vigged market consensus, because Doyen's model did not beat the market in testing; a push on a whole-number line voids the leg.</li>
-        <li>The whole parlay must have positive estimated value (estimated hit chance × estimated odds above 1). At most one leg may be priced below Doyen's probability, and only inside a positive pair; no further leg may lower the parlay's value.</li>
+        <li>Picked by likelihood, not by price gaps: the goal is the win–loss record at typical odds, not value hunting. The typical price includes the sportsbooks' margin, so no positive value is required. Each card needs minimum combined odds so the payout stays worthwhile: 2 legs 2.2, 3 legs 3.5, 4–5 legs 6.0.</li>
         <li>Picked per size: the best 4–5 leg, 3-leg and 2-leg parlay, then a second of each while room remains. A size with nothing qualifying is skipped, never padded.</li>
-        <li>Within a size, ranked by estimated hit chance × estimated value. The hit chance multiplies leg probabilities as if the legs were independent; it is unvalidated.</li>
+        <li>Within a size, ranked by estimated hit chance (the leg probabilities multiplied as if the legs were independent; unvalidated).</li>
         <li>A verified bookmaker quote always replaces an estimate on the same games.</li></ul>
       ${line ? `<p class="small"><b>${esc(line)}</b>${typeof r.open === "number" ? ` · ${esc(r.open)} open, ${esc(r.void || 0)} void` : ""}. Paper results at the $${PC.stake} display stake and the estimated price, settled from final scores; a void game voids the whole parlay here, a pushed leg counts at odds 1.00.</p>${byLegs}` : ""}`;
     return sec("Estimated parlays", body);
@@ -810,13 +819,13 @@
       const legs = r.legs.map((l) => `<li>${legPrice(l, "span")}${compName(l) ? `<span class="ph-c" data-comp>${esc(compName(l))} · </span>` : ""}${vs(l.title)}: ${esc(l.selection_text || l.selection)}${mk[l.result] || ""}</li>`).join("");
       const res = RES[r.result] || "Open";
       return `<div class="card ph" data-ph="${esc(r.parlay_id)}" data-result="${esc(r.result || "open")}">
-        <div class="ph-h"><span class="t">${esc(fmtDay(r.date))}</span><span>${esc(r.bookmaker)} · ${esc(r.n_legs || r.legs.length)} legs</span><span class="pill ${esc(r.result || "open")}">${esc(res)}</span></div>
+        <div class="ph-h"><span class="t">${esc(fmtDay(r.date))}</span><span>${r.price_basis === EC.basis ? esc(EC.typical) : esc(r.bookmaker)} · ${esc(r.n_legs || r.legs.length)} legs</span><span class="pill ${esc(r.result || "open")}">${esc(res)}</span></div>
         <ul class="ph-legs small">${legs}</ul>
-        <div class="ph-f small"><span>Estimated odds <b>${dec(r.estimated_odds)}</b>${typeof r.settled_odds === "number" && r.settled_odds > 1 ? ` (settled at ${dec(r.settled_odds)} after a push)` : ""}</span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
+        <div class="ph-f small"><span>${r.price_basis === EC.basis ? esc(EC.typical) : "Estimated odds"} <b>${dec(r.estimated_odds)}</b>${typeof r.settled_odds === "number" && r.settled_odds > 1 ? ` (settled at ${dec(r.settled_odds)} after a push)` : ""}</span><span>$${esc(Number(r.stake) || PC.stake)} bet pays <b>${usd(Number(r.gross_payout))}</b></span><span>Paper P/L <b>${r.result === "open" ? "–" : signed(r.paper_pl)}</b></span></div></div>`;
     }).join("");
     const table = byLegs ? `<div class="card ph-rec"><table data-ph-by-legs><caption class="sr">Estimated parlay record by number of legs</caption><thead><tr><th scope="col">Size</th><th scope="col">${lab("Won–lost", "W–L")}</th><th scope="col" title="${esc(EXPECTED_TIP)}">${lab("Expected", "Exp")}</th><th scope="col" title="Won ÷ (won + lost); voids and open parlays excluded">${lab("Hit rate", "Hit")}</th><th scope="col">Void</th><th scope="col">Open</th><th scope="col">${lab("Paper P/L", "P/L")}</th></tr></thead><tbody>${byLegs}</tbody>${total ? `<tfoot>${total}</tfoot>` : ""}</table></div>` : "";
     return `<section class="section" id="parlay-history"><div class="section-h"><h2>Parlays</h2></div>
-      <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the estimated price first shown (product of one bookmaker's single-game odds, not a bet-slip quote). Results come from final scores; paper P/L at the stake shown. A void or postponed game voids the whole parlay here; a pushed leg (draw no bet on a draw) counts at odds 1.00 and the rest stands. Nothing is edited or removed.</p>
+      <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the price first shown: since 23 Nov 2026 the typical odds (product of each leg's median price across sportsbooks), before that the product of one bookmaker's single-game odds; never a bet-slip quote. Results come from final scores; paper P/L at the stake shown. A void or postponed game voids the whole parlay here; a pushed leg (draw no bet on a draw) counts at odds 1.00 and the rest stands. Nothing is edited or removed.</p>
       <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
       ${table}${table ? behindLine(R) + parlayNote(rows) : ""}
@@ -856,8 +865,13 @@
     const g2 = tally(V2);
     const since = V2.reduce((a, p) => (!a || p.published_at < a ? p.published_at : a), null);
     const v2line = V2.length ? `<p class="small muted" data-singles-v2>Since the loosened rules (${since ? esc(fmtDate(since)) : "issue #99"}): ${g2.won}–${g2.lost}${g2.push ? `, ${g2.push} void/push` : ""}, ${g2.open} open, paper P/L ${g2.staked ? units(g2.pl) : "–"}. Earlier picks used the original rules.</p>` : "";
+    // Issue #112: and since the typical-odds rules (singles-v3) started.
+    const V3 = H.filter((p) => p.rules_version === "singles-v3");
+    const g3 = tally(V3);
+    const since3 = V3.reduce((a, p) => (!a || p.published_at < a ? p.published_at : a), null);
+    const v3line = V3.length ? `<p class="small muted" data-singles-v3>Since typical odds (${since3 ? esc(fmtDate(since3)) : "issue #112"}): ${g3.won}–${g3.lost}${g3.push ? `, ${g3.push} void/push` : ""}, ${g3.open} open, paper P/L ${g3.staked ? units(g3.pl) : "–"}.</p>` : "";
     return `<p class="small muted" data-singles-stake>Paper results at a flat 1-unit stake per pick (u = units).</p>
-      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>${v2line}${singlesNote(H)}`;
+      <div class="card ph-rec sg-rec"><table data-singles-by-sport><caption class="sr">Single-pick record by sport</caption>${head("Sport")}<tbody>${bySport}</tbody><tfoot>${T}</tfoot></table></div>${v2line}${v3line}${singlesNote(H)}`;
   }
 
   function history() {
@@ -937,7 +951,7 @@
     const d = p.detail || {};
     const prices = d.prices || {};
     const sel = `<div class="kv">
-        <div class="stat"><div class="k">Best odds</div><div class="v">${dec(p.odds)} <span class="faint small">${esc(p.bookmaker)}</span></div></div>
+        <div class="stat"><div class="k">${p.price_basis === EC.basis ? esc(EC.typical) : "Best odds"}</div><div class="v">${dec(p.odds)} <span class="faint small">${p.price_basis === EC.basis ? esc((p.price_books || "") + (p.price_books ? " sportsbooks" : "")) : esc(p.bookmaker)}</span></div></div>
         <div class="stat"><div class="k">Estimated chance</div><div class="v">${pct(p.prob, 1)}</div></div>
         <div class="stat"><div class="k">Fair odds</div><div class="v">${dec(p.fair_odds)}</div></div>
         <div class="stat"><div class="k">Expected value</div><div class="v pos">${p.ev >= 0 ? "+" : ""}${pct(p.ev, 1)}</div></div></div>
@@ -946,7 +960,7 @@
       d.expected_goals ? `<div class="small muted">Expected goals ${esc(d.expected_goals.home)}–${esc(d.expected_goals.away)}</div>` : "",
       d.model_markets && d.model_markets["1X2:H"] != null ? cmpBars({ Home: d.model_markets["1X2:H"], Draw: d.model_markets["1X2:D"], Away: d.model_markets["1X2:A"] }, null) : "",
       `<div class="kv"><div class="stat"><div class="k">Estimated chance (used)</div><div class="v">${pct(p.prob, 1)}</div><div class="faint small">${p.detail.blend_weight > 0 ? "model + market blend" : "from the sharp market, margin removed"}</div></div>
-        <div class="stat"><div class="k">Sharp market</div><div class="v">${pct(p.market_prob, 1)}</div><div class="faint small">${esc(d.consensus_source || "")}, excl. ${esc(p.bookmaker)}</div></div>
+        <div class="stat"><div class="k">Sharp market</div><div class="v">${pct(p.market_prob, 1)}</div><div class="faint small">${esc(d.consensus_source || "")}${p.price_basis === EC.basis ? "" : ", excl. " + esc(p.bookmaker)}</div></div>
         <div class="stat"><div class="k">Doyen's model</div><div class="v">${pct(p.model_prob, 1)}</div><div class="faint small">independent · context only</div></div></div>`,
       d.context ? `<p class="small">${esc(d.context)}</p>` : "",
       formBlock(d.form), injuriesBlock(d.injuries), weatherBlock(d.weather), extForecast(d.external_forecast),

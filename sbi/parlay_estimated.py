@@ -47,6 +47,21 @@ DC = sum of the covered 1X2 outcomes, DNB = P(win) / (1 - P(draw)). The best sel
 and line is a candidate leg; still at most ONE leg per game, so markets never stack within a game.
 A push leg (Draw No Bet on a draw) settles at odds 1.00 (removed from the parlay, the rest stands).
 
+Typical price and likelihood ranking (owner decision, issue #112, 2026-11-23; supersedes the
+single-bookmaker price, value check and weak-leg rule above for NEW parlays, `parlay-estimated-v4`):
+- The owner bets at sportsbooks that are not in the free odds data, so a leg is priced at the TYPICAL
+  market price: the median of the latest stored pre-match prices across bookmakers (exchanges and
+  aggregate columns excluded; same freshness rules). At least 2 bookmakers must price the leg.
+  Combined odds = the product of the typical leg prices. No bookmaker is named on a card.
+- Leg probability = the #106 shrunk and capped probability (or the de-vigged consensus without a
+  model). A leg is kept when the probability is in the research band (0.30-0.85), the model is not
+  below the market by more than 0.02 (`MAX_MODEL_BELOW_MARKET`) and not 0.12 away from it.
+- Parlays are ranked by joint probability, subject to minimum typical combined odds per size
+  (`MIN_COMBINED_ODDS`: 2 legs 2.2, 3 legs 3.5, 4-5 legs 6.0). There is no value requirement: the
+  typical price includes the bookmakers' margin, so estimated value is usually slightly negative.
+  The goal is the win-loss record at typical odds, not value hunting.
+- Legacy rows (`LEGACY_METHODS`) keep their bookmaker, price and probabilities; nothing is edited.
+
 Previews (issue #58): each run also builds parlays for each of the next `PREVIEW_DAYS` New York
 dates with the same rules, except the price rule: the bookmaker's latest stored price at the time
 of the run, retrieved before the game starts (the same-day rule applies to today only). Previews
@@ -71,13 +86,25 @@ from . import ev as evm
 from .sources.books import normalize_book
 from .sources.football_data import AGGREGATES, EXCHANGES
 
-METHOD = "parlay-estimated-v3"            # v3: shrunk and capped leg probabilities (issue #106)
+METHOD = "parlay-estimated-v4"            # v4: typical (consensus) price, ranked by joint probability (issue #112)
+LEGACY_METHODS = ("parlay-estimated-v3",)    # v3: one bookmaker's price, shrunk/capped probabilities (issue #106)
 ESTIMATE_KIND = "estimated_product"          # never parlays.QUOTE_KIND ("bookmaker_combined")
 BADGE = "Estimate"
 VERIFIED_BADGE = "Verified bookmaker quote"
-PRICE_RULE = "latest price from that bookmaker, retrieved on the same New York day and before the game starts"
-MIN_PRICING_BOOKS = 1                        # the bookmaker pricing the parlay (#51)
-MIN_CONSENSUS_BOOKS = 2                      # independent bookmakers, pricing one included, when no model (#51)
+PRICE_RULE = ("typical odds: the median of the bookmakers' latest prices (exchanges and aggregates excluded), "
+              "each retrieved on the same New York day and before the game starts")
+MIN_PRICING_BOOKS = 1                        # kept for the market-level screen message
+MIN_CONSENSUS_BOOKS = 2                      # independent bookmakers for a de-vigged consensus (#51)
+# Issue #112 (owner, 2026-11-23): "We don't want to compare sportsbooks since I will not be using any of
+# those. I use Betano and Solcasino." Neither is in the free odds data, so a leg is priced at the TYPICAL
+# market price (median across bookmakers), never at one bookmaker, and parlays are ranked by likelihood.
+CONSENSUS = "consensus"                      # pseudo-bookmaker key of the typical price (never a sportsbook)
+PRICE_BASIS = "consensus"
+MIN_PRICE_BOOKS = 2                          # bookmakers that must price a leg for its typical price
+MAX_MODEL_BELOW_MARKET = 0.02                # model must be >= de-vigged market - 0.02 where a model exists
+MIN_COMBINED_ODDS = {"2": 2.2, "3": 3.5, "4-5": 6.0}   # minimum typical combined odds per size
+TYPICAL_ODDS_LABEL = "Typical odds"
+TYPICAL_ODDS_NOTE = "Typical odds across sportsbooks; your sportsbook's price may differ slightly."
 NY = ZoneInfo(parlays.CARD_TIMEZONE)
 MIN_LEGS, MAX_LEGS = parlays.MIN_LEGS, parlays.MAX_LEGS
 MAX_CARDS = parlays.CARD_MAX_CARDS
@@ -86,13 +113,14 @@ PER_SIZE = 2                                 # at most this many cards of one si
 MAX_WEAK_LEGS = 1                            # legs below their own probability bar per parlay (issue #54)
 WEAK_TOLERANCE = 0.0005                      # card contract: rounding slack on the stored leg probability
 DEFAULT_STAKE = parlays.DEFAULT_STAKE
-BEAM = 120                                   # combinations kept per size per bookmaker
-MAX_EVALUATIONS = 200_000                    # hard stop for the whole search
+BEAM = 120                                   # combinations kept per size (per ranking)
+MAX_EVALUATIONS = 400_000                    # hard stop for the whole search
 EMPTY_TEXT = "No parlays today: no verified quotes, and no games later today meet the estimate rules."
 PREVIEW_DAYS = 3                             # next New York dates previewed (issue #58)
 PREVIEW_BADGE = "Preview: may change at the next daily update"
 PREVIEW_EMPTY_TEXT = "No preview yet for this day"
-PREVIEW_PRICE_RULE = "latest stored price from that bookmaker at the time of the run, retrieved before the game starts"
+PREVIEW_PRICE_RULE = ("typical odds: the median of the bookmakers' latest stored prices at the time of the run, "
+                      "each retrieved before the game starts")
 RISK_NOTE_LABEL = "Injury/lineup note open"
 RISK_NOTE_MAX_CHARS = 120                    # short text of one note shown on the leg (issue #68)
 OU_LINES = (1.5, 2.5, 3.5)                   # soccer goal lines offered as legs (issue #82; half lines, no push)
@@ -131,9 +159,30 @@ DISCLOSURE = ("Estimates for paper trading in a personal research project, never
               "often than single picks, and every leg has to win.")
 
 
-def price_label(bookmaker: str) -> str:
-    return (f"Estimated price: product of {bookmaker}'s single-game odds, not a bet-slip quote. "
-            "Your slip may pay less.")
+def price_label(bookmaker: str | None = None) -> str:
+    """Card price label. Issue #112: no bookmaker is named; the price is the typical market price."""
+    return ("Typical combined odds: the product of each leg's typical odds (median across sportsbooks), "
+            "not a bet-slip quote. " + TYPICAL_ODDS_NOTE)
+
+
+def consensus_price(prices) -> float | None:
+    """Issue #112: the typical price of one selection = the median of the bookmakers' prices."""
+    xs = sorted(float(x) for x in prices if x is not None and float(x) > 1.0)
+    if not xs:
+        return None
+    n = len(xs)
+    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2.0
+
+
+def consensus_entry(book: dict, pricing: list[str], s: str, prob: float, raw: float, src: str) -> dict | None:
+    """The leg's single price entry {price, prob, ...} at the typical price, or None when fewer than
+    `MIN_PRICE_BOOKS` bookmakers price the selection (issue #112)."""
+    prices = {bk: float(book[bk][s]) for bk in pricing if book.get(bk, {}).get(s) and float(book[bk][s]) > 1.0}
+    if len(prices) < MIN_PRICE_BOOKS:
+        return None
+    price = round(consensus_price(prices.values()), 4)
+    return {"price": price, "prob": prob, "raw_prob": raw, "value": prob * price - 1.0, "prob_source": src,
+            "n_books": len(prices), "book_prices": prices}
 
 
 # ---------- inputs (read-only) ----------
@@ -267,34 +316,28 @@ def _screen_market(event: dict, sport: str, raw_book: dict, market: str, line, s
         if mp is not None and abs(float(mp) - q) > parlay_engine.MAX_MODEL_DISAGREEMENT:
             reasons["model and market disagree strongly"] += 1
             continue
-        per = {}
-        for bk in pricing:
-            if mp is not None:
-                p, src = float(mp), "model"
-            else:
-                ex, ex_src = evm.consensus_excluding(book, sels, bk)
-                if ex and not str(ex_src or "").startswith("single:"):
-                    p, src = float(ex[s]), "market_consensus_ex_book"
-                elif consensus_ok:
-                    p, src = q, "market_consensus_incl_book"
-                else:
-                    continue
-            price = float(book[bk][s])
-            if adjust:                                # issue #106: capped at the market consensus + 0.05
-                used = used_prob(market, p, q)
-                per[bk] = {"price": price, "prob": used, "raw_prob": p, "value": used * price - 1.0, "prob_source": src}
-            else:
-                per[bk] = {"price": price, "prob": p, "value": p * price - 1.0, "prob_source": src}
-        if not per:
+        if mp is not None and float(mp) < q - MAX_MODEL_BELOW_MARKET:      # issue #112
+            reasons["model below the market"] += 1
+            continue
+        if mp is not None:
+            p, src = float(mp), "model"
+        elif consensus_ok:
+            p, src = q, "market_consensus"
+        else:
             reasons["no model probability and no 2-bookmaker consensus"] += 1
             continue
+        used = used_prob(market, p, q) if adjust else p      # issue #106: capped at the market consensus + 0.05
+        entry = consensus_entry(book, pricing, s, used, p, src)
+        if entry is None:
+            reasons["fewer than 2 bookmakers price this leg"] += 1
+            continue
+        per = {CONSENSUS: entry}
         leg = {"event_id": event["event_id"], "sport": sport, "league": event["league"],
                "competition": event.get("competition") or event["league"],
                "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
                "title": f"{event['home']} v {event['away']}", "market": market, "line": None, "selection": s,
                "consensus_prob": round(q, 6), "model_prob": None if mp is None else round(float(mp), 6),
-               "prob_source": "model" if mp is not None else next(iter(per.values()))["prob_source"],
-               "books": per, "best_value": max(v["value"] for v in per.values()),
+               "prob_source": src, "books": per, "best_value": entry["value"], "best_prob": used,
                "risk_note": risk_note_line(notes)}
         if line is not None:                          # issue #83: spread / total legs
             leg["line"] = float(line)
@@ -362,39 +405,47 @@ def extra_market_legs(event: dict, books: dict, model: dict | None,
             if abs(float(mp) - q) > parlay_engine.MAX_MODEL_DISAGREEMENT:
                 reasons["model and market disagree strongly"] += 1
                 continue
+            if float(mp) < q - MAX_MODEL_BELOW_MARKET:                       # issue #112
+                reasons["model below the market"] += 1
+                continue
             used = used_prob(market, float(mp), q) if adjust else float(mp)   # issue #106: shrunk, then capped
-            per = {bk: {"price": float(book[bk][s]), "prob": used, "value": used * float(book[bk][s]) - 1.0,
-                        "prob_source": "model", **({"raw_prob": float(mp)} if adjust else {})} for bk in pricing}
+            entry = consensus_entry(book, pricing, s, used, float(mp), "model")
+            if entry is None:
+                reasons["fewer than 2 bookmakers price this leg"] += 1
+                continue
+            per = {CONSENSUS: entry}
             legs.append({"event_id": event["event_id"], "sport": "soccer", "league": event["league"],
                          "competition": event.get("competition") or event["league"],
                          "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
                          "title": f"{event['home']} v {event['away']}", "market": market, "line": key_line,
                          "selection": s, "consensus_prob": round(q, 6), "model_prob": round(float(mp), 6),
-                         "prob_source": "model", "books": per, "best_value": max(v["value"] for v in per.values()),
+                         "prob_source": "model", "books": per, "best_value": entry["value"], "best_prob": used,
                          "risk_note": risk_note_line(notes)})
     return legs, reasons
 
 
 def legs_for_event(event: dict, books: dict, model: dict | None,
                    notes: list[str] | None = None, line_model: dict | None = None) -> tuple[dict | None, str | None]:
-    """The single best candidate leg for one game (or None, reason): the highest value at any
-    pricing bookmaker across `candidate_legs`. Kept for callers that want one leg per game."""
+    """The single best candidate leg for one game (or None, reason): the most likely leg across
+    `candidate_legs` (issue #112). Kept for callers that want one leg per game."""
     legs, why = candidate_legs(event, books, model, notes, line_model)
     if why:
         return None, why
-    return max(legs, key=lambda x: (x["best_value"], x["selection"])), None
+    return max(legs, key=lambda x: (x["best_prob"], x["selection"])), None
 
 
 def candidate_legs(event: dict, books: dict, model: dict | None, notes: list[str] | None = None,
-                   line_model: dict | None = None, adjust: bool = True) -> tuple[list[dict], str | None]:
-    """Candidate legs for one game (or [], reason): the best selection (highest value at any pricing
-    bookmaker) per market and line, so a soccer game can offer a match-result leg and, where priced,
+                   line_model: dict | None = None, adjust: bool = True,
+                   every: bool = False) -> tuple[list[dict], str | None]:
+    """Candidate legs for one game (or [], reason): the most likely selection (highest probability
+    used, issue #112; before #112 the highest value at one bookmaker) per market and line, so a soccer game can offer a match-result leg and, where priced,
     Over/Under, BTTS, Double Chance and Draw No Bet legs (issue #82), and an NBA/NFL game the best
 point-spread and the best game-total selection over all lines (issue #83). A parlay still takes at most
     one leg per game (`linked`). Values may be negative here; the parlay-level check is in `search`.
     `model` is keyed (market, selection) as in `parlay_engine.model_probs`, or (market, line,
     selection) as in `model_probs_full`; the match-result screen reads line-less entries.
-    `line_model` is `line_model_probs` for the spread/total legs."""
+    `line_model` is `line_model_probs` for the spread/total legs. `every` returns every screened
+    leg instead of one per market (the single picks filter on a minimum price first)."""
     full = {(k if len(k) == 3 else (k[0], None, k[1])): v for k, v in (model or {}).items()}
     flat = {(m, s): v for (m, ln, s), v in full.items() if ln is None}
     legs, why = screen_event(event, books, flat, notes, line_model, adjust)
@@ -402,18 +453,22 @@ point-spread and the best game-total selection over all lines (issue #83). A par
     legs = list(legs) + extra
     if not legs:
         return [], why or (reasons.most_common(1)[0][0] if reasons else "no selection passed")
+    order = lambda x: (-x["best_prob"], x["market"], x.get("line") or 0, x["selection"])
+    if every:
+        return sorted(legs, key=order), None
     best = {}
     for x in legs:
         k = (x["market"],) if x["market"] in parlay_lines.MARKETS else (x["market"], x.get("line"))
-        rank = lambda y: (y["best_value"], y["selection"], -abs(y.get("line") or 0.0))
+        rank = lambda y: (y["best_prob"], y["selection"], -abs(y.get("line") or 0.0))
         if k not in best or rank(x) > rank(best[k]):
             best[k] = x
-    return sorted(best.values(), key=lambda x: (-x["best_value"], x["market"], x.get("line") or 0, x["selection"])), None
+    return sorted(best.values(), key=order), None
 
 
-def build_pool(con, now: datetime, day: str | None = None, adjust: bool = True) -> tuple[list[dict], dict]:
+def build_pool(con, now: datetime, day: str | None = None, adjust: bool = True,
+               every: bool = False) -> tuple[list[dict], dict]:
     """Leg pool for today, or for the later New York date `day` (a preview, issue #58). `adjust=False`
-    keeps raw leg probabilities (issue #106: the single picks use it, parlays never do)."""
+    keeps raw leg probabilities (issue #106). `every` keeps every screened selection (single picks)."""
     preview = day is not None and day != parlay_engine._day(now)
     events = parlay_engine.todays_events(con, now, day)
     excluded, pool, fresh = Counter(), [], 0
@@ -430,14 +485,14 @@ def build_pool(con, now: datetime, day: str | None = None, adjust: bool = True) 
             sp["with_prices"] += 1
         legs, why = candidate_legs(e, books, model_probs_full(con, e["event_id"], now),
                                    risk_note_texts(con, e["event_id"]), line_model_probs(con, e["event_id"], now),
-                                   adjust)
+                                   adjust, every)
         if why:
             excluded[why] += 1
             continue
         for leg in legs:
             leg["price_ts"] = _price_times(con, e["event_id"], leg, now)
             pool.append(leg)
-    pool.sort(key=lambda x: (-x["best_value"], x["event_id"], x["market"], x.get("line") or 0, x["selection"]))
+    pool.sort(key=lambda x: (-x["best_prob"], x["event_id"], x["market"], x.get("line") or 0, x["selection"]))
     cov = {"events_today": len(events), "events_with_fresh_prices": fresh, "legs": len(pool),
            "excluded": dict(sorted(excluded.items()))}
     if preview:                       # issue #61: which sports on a preview day have prices
@@ -460,7 +515,8 @@ def line_model_probs(con, event_id: str, now: datetime) -> dict:
 
 
 def _price_times(con, event_id: str, leg: dict, now: datetime) -> dict:
-    """Retrieval time of each bookmaker's price used for the leg (latest at or before now)."""
+    """Retrieval time of the prices used for the leg (latest at or before now). Issue #112: the typical
+    price (`CONSENSUS`) is timed at the latest of the bookmaker prices it was taken from."""
     out = {}
     line = leg.get("line")
     rows = (con.execute("""SELECT bookmaker, retrieved_at FROM odds WHERE event_id=? AND kind='pre' AND market=?
@@ -468,12 +524,20 @@ def _price_times(con, event_id: str, leg: dict, now: datetime) -> dict:
             if line is None else
             con.execute("""SELECT bookmaker, retrieved_at FROM odds WHERE event_id=? AND kind='pre' AND market=?
                            AND selection=? AND abs(line - ?) < 1e-9""", (event_id, leg["market"], leg["selection"], line)))
+    used = set(leg["books"])
+    for b in leg["books"].values():
+        used |= set(b.get("book_prices") or {})
     for r in rows:
         bk = normalize_book(r["bookmaker"])
         t = parlays._ts(r["retrieved_at"])
-        if bk in leg["books"] and t is not None and t <= now and (bk not in out or t > out[bk][0]):
+        if bk in used and t is not None and t <= now and (bk not in out or t > out[bk][0]):
             out[bk] = (t, r["retrieved_at"])
-    return {bk: v for bk, (t, v) in out.items()}
+    res = {bk: v for bk, (t, v) in out.items()}
+    for key, b in leg["books"].items():
+        ts = [out[bk] for bk in (b.get("book_prices") or {}) if bk in out]
+        if ts and len(ts) == len(b.get("book_prices") or {}):
+            res[key] = max(ts)[1]
+    return res
 
 
 # ---------- search and selection (pure) ----------
@@ -482,11 +546,18 @@ def linked(a: dict, b: dict) -> list[str]:
     return [r for r in parlays.correlation_reasons(a, b) if r != "same competition"]
 
 
-def score(joint: float, ev: float) -> float:
-    return joint * ev
+def score(joint: float, ev: float | None = None) -> float:
+    """Issue #112: parlays are ranked by joint probability alone (the estimated value is not used)."""
+    return joint
 
 
-def combo(legs: list[dict], bk: str) -> dict:
+def min_odds(n_legs: int) -> float | None:
+    """Minimum typical combined odds for a parlay of `n_legs` (issue #112), None outside the sizes."""
+    b = size_bucket(n_legs)
+    return None if b is None else MIN_COMBINED_ODDS[b]
+
+
+def combo(legs: list[dict], bk: str = CONSENSUS) -> dict:
     odds = prod(x["books"][bk]["price"] for x in legs)
     joint = prod(x["books"][bk]["prob"] for x in legs)
     ev = joint * odds - 1.0
@@ -494,48 +565,53 @@ def combo(legs: list[dict], bk: str) -> dict:
             "estimated_ev": ev, "score": score(joint, ev)}
 
 
-def adds_no_loss(leg: dict, bk: str) -> bool:
-    """A leg does not lower a parlay's estimated value at `bk` when probability x price >= 1."""
+def qualifies(c: dict) -> bool:
+    """A parlay may be shown (issue #112): a card size and typical combined odds at or above that size's
+    minimum. No value check: the typical price includes the bookmakers' margin (owner decision)."""
+    m = min_odds(c["n_legs"])
+    return m is not None and c["estimated_odds"] >= m - 1e-9
+
+
+def adds_no_loss(leg: dict, bk: str = CONSENSUS) -> bool:
+    """Kept for reference: probability x price >= 1 at `bk`. Not a selection rule since issue #112."""
     return leg["books"][bk]["prob"] * leg["books"][bk]["price"] >= 1.0
 
 
 def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS) -> list[dict]:
-    """Per bookmaker, 2..6-leg combinations with positive estimated value (beam search on score).
-    A parlay starts from a pair with joint probability x estimated price > 1, and every further leg
-    must not lower that value (probability x price >= 1). So at most one leg sits below Doyen's
-    probability, and only if it forms a positive-value pair with the parlay's strongest leg. Legs
-    are tried in order of value at the bookmaker, which makes that weak leg the last one tried."""
-    by_book = defaultdict(list)
-    for i, leg in enumerate(pool):
-        for bk in leg["books"]:
-            by_book[bk].append(i)
-    out, evals = [], 0
-    for bk in sorted(by_book):
-        idx = sorted(by_book[bk], key=lambda i: (-pool[i]["books"][bk]["value"], i))
-        pos = {i: n for n, i in enumerate(idx)}
-        frontier = [(i,) for i in idx]
-        for n in range(MIN_LEGS, MAX_LEGS + 1):
-            nxt = {}
-            for c in frontier:
-                for j in idx[pos[c[-1]] + 1:]:
-                    if evals >= max_evals:
-                        break
-                    evals += 1
-                    if any(linked(pool[j], pool[k]) for k in c):
-                        continue
-                    if n > MIN_LEGS and not adds_no_loss(pool[j], bk) and (
-                            not all(adds_no_loss(pool[k], bk) for k in c)
-                            or combo([pool[c[0]], pool[j]], bk)["estimated_ev"] <= 0):
-                        continue
-                    new = c + (j,)
-                    cand = combo([pool[k] for k in new], bk)
-                    if cand["estimated_ev"] > 0:
-                        nxt[new] = cand
-            ranked = sorted(nxt.items(), key=lambda kv: (-kv[1]["score"], sorted(kv[0])))[:beam]
-            out += [c for _, c in ranked]
-            frontier = [k for k, _ in ranked]
-            if not frontier:
-                break
+    """2..5-leg combinations at the typical price (issue #112), at most one leg per game and no linked
+    legs, whose typical combined odds reach the size's minimum (`MIN_COMBINED_ODDS`). Beam search: at
+    each size the frontier keeps the `beam` most likely combinations overall, the `beam` most likely that
+    already reach the minimum odds, and the `beam` with the highest odds-weighted likelihood
+    (joint x odds), so likely-but-short legs can still be extended to a worthwhile payout. Returned
+    candidates all qualify; ranking by joint probability happens in `select`."""
+    bk = CONSENSUS
+    idx = sorted((i for i, leg in enumerate(pool) if bk in leg["books"]),
+                 key=lambda i: (-pool[i]["books"][bk]["prob"], i))
+    pos = {i: n for n, i in enumerate(idx)}
+    frontier, out, evals = [(i,) for i in idx], [], 0
+    top_size = max(hi for _, hi in SIZE_BUCKETS)
+    for n in range(MIN_LEGS, min(MAX_LEGS, top_size) + 1):
+        nxt = {}
+        for c in frontier:
+            for j in idx[pos[c[-1]] + 1:]:
+                if evals >= max_evals:
+                    break
+                evals += 1
+                if any(linked(pool[j], pool[k]) for k in c):
+                    continue
+                new = c + (j,)
+                nxt[new] = combo([pool[k] for k in new], bk)
+        tie = lambda kv: sorted(kv[0])
+        by_joint = sorted(nxt.items(), key=lambda kv: (-kv[1]["joint_prob"], tie(kv)))
+        ok = [kv for kv in by_joint if qualifies(kv[1])]
+        by_pay = sorted(nxt.items(), key=lambda kv: (-kv[1]["joint_prob"] * kv[1]["estimated_odds"], tie(kv)))
+        out += [c for _, c in ok[:beam]]
+        keep = dict(by_joint[:beam])
+        keep.update(ok[:beam])
+        keep.update(by_pay[:beam])
+        frontier = sorted(keep, key=lambda k: sorted(k))
+        if not frontier:
+            break
     return out
 
 
@@ -552,7 +628,8 @@ def parlay_id(c: dict, day: str) -> str:
 
 
 def weak_legs(c: dict) -> int:
-    """Legs priced below their own probability bar at the card's bookmaker (probability x price < 1)."""
+    """Legs below their own probability bar at the card's price (probability x price < 1). Information
+    only since issue #112: at the typical price (margin included) most legs are below it."""
     bk = c["bookmaker"]
     return sum(1 for x in c["legs"] if x["books"][bk]["prob"] * x["books"][bk]["price"] < 1.0)
 
@@ -569,16 +646,17 @@ def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None
            per_size: int | None = None) -> list[dict]:
     """Cards per size (issue #54): the best 4-5 leg, the best 3-leg and the best 2-leg parlay, then a
     second of each while `per_size` and `limit` allow. In the first round the sizes pick games in
-    the order that covers the most sizes (bigger sizes first on a tie). Within a size, best score first (ties: fewer legs). A size with no qualifying combo is
-    skipped, never padded. Every card has positive estimated value and at most one weak leg; a game
+    the order that covers the most sizes (bigger sizes first on a tie). Within a size, the highest
+    joint probability first (issue #112; ties: fewer legs). A size with no qualifying combo is skipped,
+    never padded. Every card reaches its size's minimum typical combined odds (`qualifies`); a game
     appears in at most one card; games in a verified-quote card are skipped (strict mode wins).
     Returned earliest kickoff first."""
     per_size = PER_SIZE if per_size is None else per_size
-    order = lambda c: (-c["score"], c["n_legs"], c["bookmaker"], sorted(x["event_id"] for x in c["legs"]))
+    order = lambda c: (-c["joint_prob"], c["n_legs"], c["bookmaker"], sorted(x["event_id"] for x in c["legs"]))
     buckets = defaultdict(list)
     for c in cands:
         b = size_bucket(c["n_legs"])
-        if b is not None and c["estimated_ev"] > 0 and weak_legs(c) <= MAX_WEAK_LEGS:
+        if b is not None and qualifies(c):
             buckets[b].append(c)
     for b in buckets:
         buckets[b].sort(key=order)
@@ -605,7 +683,7 @@ def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None
         used, out, taken = set(blocked_events or ()), [], set()
         take(list(order), used, out, taken)
         got = {size_bucket(c["n_legs"]) for c in out}
-        key = (len(got), tuple(b in got for b in names), sum(c["score"] for c in out),
+        key = (len(got), tuple(b in got for b in names), sum(c["joint_prob"] for c in out),
                tuple(-names.index(b) for b in order))
         if best is None or key > best[0]:
             best = (key, used, out, taken)
@@ -617,21 +695,25 @@ def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None
 
 
 def card(c: dict, day: str, preview: bool = False) -> dict:
+    """A card at the typical price (issue #112): no bookmaker is named. Each leg carries its typical
+    price, the number of bookmakers it was taken from (`price_books`) and the probability used."""
     bk = c["bookmaker"]
     legs = sorted(c["legs"], key=lambda x: (x["start_utc"], x["event_id"]))
     odds = round(prod(x["books"][bk]["price"] for x in legs), 4)
     times = [x["price_ts"][bk] for x in legs if bk in x.get("price_ts", {})]
     out = {"parlay_id": parlay_id(c, day), "date": day, "status": "active", "kind": ESTIMATE_KIND, "badge": BADGE,
-            "bookmaker": bk, "n_legs": len(legs), "estimated_odds": odds,
-            "price_label": price_label(bk), "prices_at": min(times) if len(times) == len(legs) else None,
+            "method": METHOD, "price_basis": PRICE_BASIS, "odds_label": TYPICAL_ODDS_LABEL,
+            "odds_note": TYPICAL_ODDS_NOTE, "n_legs": len(legs), "estimated_odds": odds,
+            "price_label": price_label(), "prices_at": min(times) if len(times) == len(legs) else None,
             "stake": DEFAULT_STAKE, "gross_payout": str(parlays.gross_payout(DEFAULT_STAKE, odds)),
             "est_hit_chance": round(c["joint_prob"], 4), "est_hit_chance_label": "Model estimate, unvalidated",
             "estimated_ev": round(c["estimated_ev"], 4), "size": size_bucket(len(legs)),
-            "weak_legs": weak_legs(c),
+            "min_odds": min_odds(len(legs)),
             "legs": [{"event_id": x["event_id"], "sport": x["sport"], "league": x["league"], "title": x["title"],
                       "market": x["market"], "market_label": MARKET_LABELS.get(x["market"], x["market"]),
                       "line": x.get("line"), "selection": x["selection"], "selection_text": selection_text(x),
                       "start_utc": x["start_utc"], "status": "active", "price": x["books"][bk]["price"],
+                      "price_books": x["books"][bk].get("n_books"),
                       "prob": round(x["books"][bk]["prob"], 4),
                       **({"raw_prob": round(x["books"][bk]["raw_prob"], 4)}
                          if x["books"][bk].get("raw_prob") is not None else {}),
@@ -697,13 +779,12 @@ def card_problem(rec, now: datetime, day: str | None = None, preview: bool = Fal
         return "not today's parlay" if not preview else "not this day's preview"
     if rec.get("status") != "active":
         return "parlay is not active"
-    bk = rec.get("bookmaker")
-    if not isinstance(bk, str) or not bk.strip():
-        return "missing bookmaker"
+    if rec.get("price_basis") != PRICE_BASIS:
+        return "not priced at the typical odds"      # issue #112: never one bookmaker's price
     legs = rec.get("legs")
     if not isinstance(legs, list) or not MIN_LEGS <= len(legs) <= MAX_LEGS:
         return f"needs {MIN_LEGS}-{MAX_LEGS} legs"
-    seen, prices, weak = set(), [], 0
+    seen, prices = set(), []
     for leg in legs:
         if not isinstance(leg, dict):
             return "leg is not an object"
@@ -736,17 +817,18 @@ def card_problem(rec, now: datetime, day: str | None = None, preview: bool = Fal
             return "leg price is stale"           # not retrieved today (New York); start > now >= at
         if at >= start:
             return "leg price read after the start"
-        q = parlays._num(leg.get("prob"))
-        if q is not None and q * p < 1.0 - WEAK_TOLERANCE * p:
-            weak += 1
+        nb = parlays._num(leg.get("price_books"))
+        if nb is None or nb < MIN_PRICE_BOOKS:
+            return "leg price from fewer than 2 bookmakers"
         prices.append(p)
-    if weak > MAX_WEAK_LEGS:
-        return "more than one leg below its probability"
     odds = parlays._num(rec.get("estimated_odds"))
     if odds is None or odds <= 1.0:
         return "invalid estimated odds"
     if abs(odds - prod(prices)) > 0.005 * odds:
         return "estimated odds are not the product of the leg prices"
+    m = min_odds(len(legs))
+    if m is None or odds < m - 0.005:
+        return "combined odds below the minimum for its size"
     return None
 
 
@@ -868,13 +950,16 @@ def record(block: dict, now: datetime, path=None) -> int:
         seen.add(c["parlay_id"])
         legs = [{**{k: x[k] for k in ("event_id", "market", "selection", "price", "prob", "title", "start_utc")},
                  **({"line": x["line"]} if x.get("line") is not None else {}),       # issue #83
-                 **{k: x[k] for k in ("raw_prob", "market_prob") if x.get(k) is not None}}   # issue #106
+                 **{k: x[k] for k in ("raw_prob", "market_prob") if x.get(k) is not None},   # issue #106
+                 **({"price_basis": c["price_basis"], "price_books": x.get("price_books"),    # issue #112
+                     "rules_version": c.get("method") or METHOD} if c.get("price_basis") else {})}
                 for x in c["legs"]]
         for leg, x in zip(legs, c["legs"]):          # issue #82: the line, only where the market has one
             if x.get("line") is not None:
                 leg["line"] = x["line"]
         new.append({"first_seen": now.isoformat(), "date": c["date"], "parlay_id": c["parlay_id"],
-                    "bookmaker": c["bookmaker"], "n_legs": c["n_legs"], "legs": json.dumps(legs), "kind": ESTIMATE_KIND,
+                    "bookmaker": c.get("bookmaker") or c.get("price_basis"), "n_legs": c["n_legs"],
+                    "legs": json.dumps(legs), "kind": ESTIMATE_KIND,
                     "estimated_odds": c["estimated_odds"], "est_hit_chance": c["est_hit_chance"],
                     "estimated_ev": c["estimated_ev"], "stake": c["stake"]})
     if new:
@@ -1014,6 +1099,7 @@ def ledger_rows(con, path=None, day: str | None = None) -> list[dict]:
                   else (-stake if st == "lost" else Decimal("0")))
             out.append({"parlay_id": r["parlay_id"], "date": r["date"], "first_seen": r["first_seen"],
                         "kind": r.get("kind") or ESTIMATE_KIND, "bookmaker": r["bookmaker"],
+                        **({"price_basis": PRICE_BASIS} if r["bookmaker"] == PRICE_BASIS else {}),
                         "n_legs": int(str(r.get("n_legs") or "").strip() or len(legs)),
                         "estimated_odds": float(odds), "stake": str(stake),
                         "gross_payout": str(parlays.gross_payout(stake, settled if st == "won" and settled else odds)),
@@ -1025,7 +1111,8 @@ def ledger_rows(con, path=None, day: str | None = None) -> list[dict]:
                                   "market_label": MARKET_LABELS.get(x.get("market"), x.get("market")),
                                   "line": x.get("line"),
                                   "selection": x.get("selection"), "selection_text": _ledger_selection_text(x),
-                                  "price": x.get("price"), "start_utc": x.get("start_utc"), "result": lr}
+                                  "price": x.get("price"), "start_utc": x.get("start_utc"), "result": lr,
+                                  **({"price_books": x["price_books"]} if x.get("price_books") else {})}
                                  for x, lr in zip(legs, res)]})
     out.sort(key=lambda x: (x["date"], x["first_seen"], x["_order"]), reverse=True)
     for x in out:
