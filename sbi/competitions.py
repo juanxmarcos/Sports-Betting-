@@ -20,6 +20,9 @@ LEAGUE_NAMES: dict[str, str] = {
     "P1": "Primeira Liga",
     "B1": "Belgian Pro League",
     "SC0": "Scottish Premiership",
+    "UCL": "Champions League",           # UEFA club competitions (issue #114, sbi/sources/espn_uefa.py)
+    "UEL": "Europa League",
+    "UECL": "Conference League",
     "NBA": "NBA",
     "NFL": "NFL",
     "TENNIS:ATP": "ATP",

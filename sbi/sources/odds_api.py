@@ -14,7 +14,8 @@ day's allowance, the evening run what is left of it. The total per New York day 
 allowance, so two runs spend no more than the single run did (issue #53).
 Competitions with a stored event starting LATER TODAY (America/New_York) are bought first, so the
 estimated parlays of the day get fresh prices (issue #51); then future days. Within each group,
-internationals, US and tennis come first (they have no other multi-bookmaker source), then club
+internationals, UEFA club competitions (issue #114), US and tennis come first (they have no other
+multi-bookmaker source), then club
 leagues, soonest start first. The budget and the safeguards below are unchanged: ordering decides
 only which competitions the existing allowance is spent on.
 
@@ -68,6 +69,14 @@ INTERNATIONAL = {
     "soccer_concacaf_gold_cup": "INT:concacaf.gold",
 }
 US = {"americanfootball_nfl": "NFL", "basketball_nba": "NBA"}
+# Issue #114: UEFA club competitions map to the ESPN-based UCL/UEL/UECL events (sbi/sources/espn_uefa.py).
+# Bought in the same priority group as internationals (no other multi-bookmaker source), inside the
+# unchanged daily allowance; today's games still come first (plan_order).
+UEFA = {
+    "soccer_uefa_champs_league": "UCL",
+    "soccer_uefa_europa_league": "UEL",
+    "soccer_uefa_europa_conference_league": "UECL",
+}
 US_MARKETS = "h2h,spreads,totals"
 CLUB = {
     "soccer_epl": "E0", "soccer_efl_champ": "E1", "soccer_spain_la_liga": "SP1",
@@ -354,7 +363,7 @@ def ingest(con, now: datetime, horizon_h: float = 168) -> dict:
     window_end = now + timedelta(hours=horizon_h)
     plan, no_match = [], []
     tennis = {k: ("TENNIS:ATP" if "_atp_" in k else "TENNIS:WTA") for k in active if k.startswith("tennis_")}
-    for prio, mapping in ((0, US), (0, INTERNATIONAL), (0, tennis), (1, CLUB)):
+    for prio, mapping in ((0, US), (0, INTERNATIONAL), (0, UEFA), (0, tennis), (1, CLUB)):
         for sk, league in mapping.items():
             if sk not in active:
                 continue

@@ -84,6 +84,7 @@ from zoneinfo import ZoneInfo
 from . import config, parlay_engine, parlay_lines, parlays
 from . import ev as evm
 from .sources.books import normalize_book
+from .sources.espn_uefa import is_uefa
 from .sources.football_data import AGGREGATES, EXCHANGES
 
 METHOD = "parlay-estimated-v4"            # v4: typical (consensus) price, ranked by joint probability (issue #112)
@@ -342,6 +343,8 @@ def _screen_market(event: dict, sport: str, raw_book: dict, market: str, line, s
         if line is not None:                          # issue #83: spread / total legs
             leg["line"] = float(line)
             leg["prob_note"] = None if mp is not None else parlay_lines.PROB_NOTE_MARKET
+        elif mp is None and is_uefa(event.get("league")):   # issue #114: no model for UEFA club games
+            leg["prob_note"] = parlay_lines.PROB_NOTE_MARKET
         legs.append(leg)
     if not legs:
         return [], reasons
@@ -364,9 +367,12 @@ def extra_market_legs(event: dict, books: dict, model: dict | None,
     reasons = Counter()
     if event.get("site_sport") != "soccer":
         return [], reasons
+    uefa = is_uefa(event.get("league"))               # issue #114: market consensus instead of a model
     one = evm.clean(books.get(("1X2", None)) or {}, parlay_engine.SELECTIONS["1X2"])
     one = {bk: q for bk, q in one.items() if bk not in AGGREGATES or bk == "Avg"}
-    ref1, _ = evm.consensus(one, ["H", "D", "A"]) if one else (None, None)
+    ref1, ref1_src = evm.consensus(one, ["H", "D", "A"]) if one else (None, None)
+    one_ok = bool(ref1) and evm.n_books(one, ["H", "D", "A"]) >= MIN_CONSENSUS_BOOKS \
+        and not str(ref1_src).startswith("single:")
     legs = []
     for (market, line), raw in sorted(books.items(), key=lambda kv: (kv[0][0], -999 if kv[0][1] is None else kv[0][1])):
         sels = EXTRA_MARKETS.get(market)
@@ -380,11 +386,15 @@ def extra_market_legs(event: dict, books: dict, model: dict | None,
             book = {bk: q for bk, q in raw.items() if all(float(q.get(s) or 0) > 1.0 for s in sels)}
             ref = ({"HD": ref1["H"] + ref1["D"], "DA": ref1["D"] + ref1["A"], "HA": ref1["H"] + ref1["A"]}
                    if ref1 else None)
+            ref_ok = one_ok
         else:
             book = evm.clean(raw, sels)
-            ref = evm.consensus(book, sels)[0] if book else None
+            ref, ref_src = evm.consensus(book, sels) if book else (None, None)
+            ref_ok = bool(ref) and evm.n_books(book, sels) >= MIN_CONSENSUS_BOOKS \
+                and not str(ref_src).startswith("single:")
             if not ref and market == "DNB" and ref1 and ref1["H"] + ref1["A"] > 0:
                 ref = {"home": ref1["H"] / (ref1["H"] + ref1["A"]), "away": ref1["A"] / (ref1["H"] + ref1["A"])}
+                ref_ok = one_ok
         pricing = sorted(bk for bk in book if bk not in AGGREGATES and bk not in EXCHANGES)
         if not pricing:
             reasons[f"{market}: no bookmaker price"] += 1
@@ -399,28 +409,40 @@ def extra_market_legs(event: dict, books: dict, model: dict | None,
                 reasons["probability outside research band"] += 1
                 continue
             mp = (model or {}).get((market, key_line, s))
-            if mp is None:
+            if mp is None and uefa:
+                # Issue #114: UEFA club games have no model; the de-vigged consensus of at least 2
+                # independent bookmakers is the probability (as for tennis and spreads), labelled.
+                if not ref_ok:
+                    reasons["no model probability and no 2-bookmaker consensus"] += 1
+                    continue
+                p, src = q, "market_consensus"
+            elif mp is None:
                 reasons[f"{market}: no model probability"] += 1
                 continue
-            if abs(float(mp) - q) > parlay_engine.MAX_MODEL_DISAGREEMENT:
-                reasons["model and market disagree strongly"] += 1
-                continue
-            if float(mp) < q - MAX_MODEL_BELOW_MARKET:                       # issue #112
-                reasons["model below the market"] += 1
-                continue
-            used = used_prob(market, float(mp), q) if adjust else float(mp)   # issue #106: shrunk, then capped
-            entry = consensus_entry(book, pricing, s, used, float(mp), "model")
+            else:
+                if abs(float(mp) - q) > parlay_engine.MAX_MODEL_DISAGREEMENT:
+                    reasons["model and market disagree strongly"] += 1
+                    continue
+                if float(mp) < q - MAX_MODEL_BELOW_MARKET:                       # issue #112
+                    reasons["model below the market"] += 1
+                    continue
+                p, src = float(mp), "model"
+            used = used_prob(market, p, q) if adjust else p      # issue #106: shrunk, then capped
+            entry = consensus_entry(book, pricing, s, used, p, src)
             if entry is None:
                 reasons["fewer than 2 bookmakers price this leg"] += 1
                 continue
             per = {CONSENSUS: entry}
-            legs.append({"event_id": event["event_id"], "sport": "soccer", "league": event["league"],
-                         "competition": event.get("competition") or event["league"],
-                         "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
-                         "title": f"{event['home']} v {event['away']}", "market": market, "line": key_line,
-                         "selection": s, "consensus_prob": round(q, 6), "model_prob": round(float(mp), 6),
-                         "prob_source": "model", "books": per, "best_value": entry["value"], "best_prob": used,
-                         "risk_note": risk_note_line(notes)})
+            leg = {"event_id": event["event_id"], "sport": "soccer", "league": event["league"],
+                   "competition": event.get("competition") or event["league"],
+                   "participants": [event["home"], event["away"]], "start_utc": event["kickoff_utc"],
+                   "title": f"{event['home']} v {event['away']}", "market": market, "line": key_line,
+                   "selection": s, "consensus_prob": round(q, 6), "model_prob": None if mp is None else round(float(mp), 6),
+                   "prob_source": src, "books": per, "best_value": entry["value"], "best_prob": used,
+                   "risk_note": risk_note_line(notes)}
+            if mp is None:
+                leg["prob_note"] = parlay_lines.PROB_NOTE_MARKET
+            legs.append(leg)
     return legs, reasons
 
 
@@ -722,7 +744,8 @@ def card(c: dict, day: str, preview: bool = False) -> dict:
                       "prob_source": x["books"][bk].get("prob_source", x["prob_source"]),
                       "price_at": x.get("price_ts", {}).get(bk),
                       "risk_note": x.get("risk_note"),
-                      **({"prob_note": x.get("prob_note")} if x["market"] in parlay_lines.MARKETS else {})} for x in legs]}
+                      **({"prob_note": x.get("prob_note")}
+                         if x["market"] in parlay_lines.MARKETS or x.get("prob_note") else {})} for x in legs]}
     if preview:
         out.update(preview=True, preview_badge=PREVIEW_BADGE)
     return out

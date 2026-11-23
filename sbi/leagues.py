@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from . import config
 
 ACTIVE, MONITORING = "active", "monitoring"
+UEFA_CLUB = {"UCL": "UEFA Champions League", "UEL": "UEFA Europa League", "UECL": "UEFA Conference League"}
 
 
 @dataclass(frozen=True)
@@ -68,7 +69,10 @@ def stored() -> list[str]:
 
 
 def status(code: str) -> str:
-    """'active', 'monitoring', 'international' (separate connector), or 'unlisted' for anything else."""
+    """'active', 'monitoring', 'international' (separate connector), 'uefa_club' (UEFA club competitions,
+    issue #114: separate connector, market-consensus probabilities, no model), or 'unlisted' otherwise."""
+    if code in UEFA_CLUB:
+        return "uefa_club"
     if code in config.FOOTBALL_LEAGUES:
         return ACTIVE
     if code in LEAGUES:
@@ -77,7 +81,7 @@ def status(code: str) -> str:
 
 
 def name(code: str) -> str:
-    return LEAGUES[code].name if code in LEAGUES else code
+    return LEAGUES[code].name if code in LEAGUES else UEFA_CLUB.get(code, code)
 
 
 def is_analysable(code: str) -> bool:

@@ -173,6 +173,8 @@ def analyse(con, now: datetime | None = None, horizon_h: float = 168) -> dict:
         con, params=(now.isoformat(), (now + timedelta(hours=horizon_h)).isoformat()))
     # Only the active allowlist is ever priced. Monitoring leagues live in a separate local file; even if
     # one reached this database by mistake it would get no prediction, no candidate and no pick.
+    from .sources.espn_uefa import CODES as _uefa
+    events = events[~events["league"].isin(_uefa)]   # issue #114: UEFA club games are never modelled
     ok = events["league"].isin(leagues.active())
     watching, events = events[~ok], events[ok]
     summary = {"events_in_window": int(len(events)), "leagues": {}, "warnings": [], "published": 0,
@@ -340,6 +342,19 @@ def run_daily(con=None, now: datetime | None = None) -> dict:
                 d["_status"] = "partial"
         except Exception as e:  # noqa: BLE001 - one source failing must not stop the run
             db.provider_err(con, "espn:club-fixtures", str(e))
+            d["error"] = f"{type(e).__name__}: {e}"
+            d["_status"] = "partial"
+    with db.job(con, "ingest-uefa-club") as d:
+        # Issue #114: Champions League, Europa League and Conference League fixtures, results and
+        # scoreboard odds (free ESPN). No model runs on them: parlays/singles use the market consensus.
+        from .sources import espn_uefa
+        try:
+            d.update(espn_uefa.ingest(con, now))
+            db.provider_ok(con, "espn:uefa-club", d.get("created", 0))
+            if d.get("errors"):
+                d["_status"] = "partial"
+        except Exception as e:  # noqa: BLE001 - one source failing must not stop the run
+            db.provider_err(con, "espn:uefa-club", str(e))
             d["error"] = f"{type(e).__name__}: {e}"
             d["_status"] = "partial"
     with db.job(con, "settle") as d:

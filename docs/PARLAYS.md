@@ -749,3 +749,18 @@ rows store `bookmaker = "consensus"` (the price basis, not a sportsbook) and, on
 and a real slip may also pay less than the product of single prices. Joint probabilities assume independent legs and
 are unvalidated. With no value requirement the expected paper P/L is slightly negative by construction (the margin);
 the record to watch is the win rate against the expected wins.
+
+### 11.10 Champions League, Europa League and Conference League (issue #114)
+
+UEFA club games (`UCL`, `UEL`, `UECL`; fixtures, odds and results in `sbi/sources/espn_uefa.py`, see
+`docs/DATA_SOURCES.md`) flow into the estimated parlays and the single picks under the current rules (11.9: typical
+price from at least 2 bookmakers, likelihood ranking, per-size minimum combined odds, at most one leg per game, the
+same New York day, previews). Legs show the competition as "Champions League", "Europa League" or
+"Conference League" (`sbi/competitions.py`).
+
+**Probability.** Doyen's domestic Dixon-Coles models cannot rate cross-league matches reliably, so no model runs on
+these games. The match-result leg and the extra markets (Over/Under, BTTS, Double Chance, Draw No Bet) use the
+de-vigged market consensus of at least 2 independent bookmakers, as tennis and NBA/NFL spreads do, and the leg shows
+"Probability: market consensus". Domestic games are unchanged: without a model probability they still offer no
+extra-market leg. A cross-league model may be added later only if it beats the market in a backtest first. No
+threshold, minimum or Odds API budget changed.
