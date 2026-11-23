@@ -1,4 +1,4 @@
-# Parlay candidates (shadow) — 2026-11-23 16:09 New York
+# Parlay candidates (shadow) — 2026-11-23 17:13 New York
 
 Developer-only. **Nothing here is published.** Prices are computed products of single-market quotes (`computed_product_not_a_quote`), not bookmaker combined quotes. Method `parlay-fullslate-shadow-v1`; no network request, no API credit.
 
@@ -26,7 +26,7 @@ Excluded: {"event: probability outside research band": 2, "leg: no bookmaker at 
 | 5 | 0 | 0 |
 | 6 | 0 | 0 |
 
-The Odds API (read from job log, not called here): last run 2026-11-23T21:10:49+00:00, spent 0, remaining 262.
+The Odds API (read from job log, not called here): last run 2026-11-23T22:14:46+00:00, spent 0, remaining 262.
 
 ## 2. Shadow shortlist (not shown on the homepage)
 
