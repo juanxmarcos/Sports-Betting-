@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-23T20:15:21+00:00",
+ "generated": "2026-11-23T21:09:28+00:00",
  "date": "2026-11-23",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -32,10 +32,10 @@
   },
   "candidate_legs": 13,
   "events_with_candidate_legs": 9,
-  "pool_legs": 1,
+  "pool_legs": 0,
   "excluded": {
    "event: probability outside research band": 2,
-   "leg: no bookmaker at or above fair value": 8
+   "leg: no bookmaker at or above fair value": 9
   }
  },
  "search": {
@@ -61,14 +61,14 @@
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 24,
+  "straight_picks_seen": 25,
   "usable_legs_today": 1,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-23T20:16:27+00:00",
-  "credits_spent_last_run": 18,
+  "at": "2026-11-23T21:10:49+00:00",
+  "credits_spent_last_run": 0,
   "credits_remaining": "262"
  },
  "ledger_rows_added": 0,
@@ -90,7 +90,7 @@
  },
  "why_not_3_to_5": [
   "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
-  "Only 1 leg(s) are at or above fair value at any bookmaker.",
+  "Only 0 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]

@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-23
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Mon 23 Nov 15:15 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Mon 23 Nov 16:09 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -10,10 +10,10 @@ All times America/New_York. Generated Mon 23 Nov 15:15 EST. Model `dc-0.1`.*
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
 | Events discovered | 227 |
 | Events with fresh odds | 130 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 109 |
-| Markets evaluated | 1376 |
-| Events passing all rules | 22 |
-| Published today | **27** |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 111 |
+| Markets evaluated | 1146 |
+| Events passing all rules | 24 |
+| Published today | **29** |
 | Highest estimated EV | +27.5% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -167,7 +167,45 @@ model rates this outcome 1.4 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_belgium_first_div/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401878928> 
 
 
-### 5. Swansea to win — Swansea v Cardiff
+### 5. Under 3.5 goals — Levante v Santander
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Spain La Liga |
+| Kick-off | Fri 27 Nov 15:00 EST |
+| Market / selection | OU — **Under 3.5 goals** |
+| Best price | **1.75** @ 1xBet |
+| Model probability (raw) | 43.8% (±14.2 pp param. sd; p10 23.8%) |
+| Market no-vig probability | 58.9% (median) |
+| Final probability (blend) | 58.9% |
+| Fair odds | 1.70 |
+| Expected value | **+3.0%** (pessimistic +3.0%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 7 |
+| Odds snapshot | Mon 23 Nov 16:09 EST |
+
+**Statistical evidence.** Expected goals 2.53–1.45;
+model strength rank 16 vs 26 (of 29).
+Recent form — Levante: DDWLLD (GF 8, GA 9, xG 1.15/1.93);
+Santander: DLWLWW (GF 9, GA 11, xG 1.69/2.51).
+Model 1X2: 54/23/23%,
+O2.5 76%, BTTS 71%.
+
+**Why it may be value.** The best available price (1.75) exceeds the estimated fair
+price (1.70). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by -15.1%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Thin data: a team has only 13 matches in the training window.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882791> 
+
+
+### 6. Swansea to win — Swansea v Cardiff
 
 | Field | Value |
 |---|---|
@@ -203,7 +241,7 @@ model rates this outcome 1.5 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880128> 
 
 
-### 6. Charlotte Hornets to win — Charlotte Hornets v Memphis Grizzlies
+### 7. Charlotte Hornets to win — Charlotte Hornets v Memphis Grizzlies
 
 | Field | Value |
 |---|---|
@@ -234,7 +272,7 @@ model rates this outcome 10.4 pp above the de-vigged consensus.
 Sources: 
 
 
-### 7. Birmingham to win — Birmingham v Bolton
+### 8. Birmingham to win — Birmingham v Bolton
 
 | Field | Value |
 |---|---|
@@ -272,7 +310,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880136> 
 
 
-### 8. Ein Frankfurt to win — Stuttgart v Ein Frankfurt
+### 9. Ein Frankfurt to win — Stuttgart v Ein Frankfurt
 
 | Field | Value |
 |---|---|
@@ -310,7 +348,44 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401884726> 
 
 
-### 9. Draw — Betis v Vallecano
+### 10. Draw — Le Havre v Strasbourg
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — France Ligue 1 |
+| Kick-off | Sat 28 Nov 14:45 EST |
+| Market / selection | 1X2 — **Draw** |
+| Best price | **3.90** @ 1xBet |
+| Model probability (raw) | 23.6% (±2.5 pp param. sd; p10 20.9%) |
+| Market no-vig probability | 26.4% (Betfair Exchange) |
+| Final probability (blend) | 26.4% |
+| Fair odds | 3.79 |
+| Expected value | **+3.0%** (pessimistic +3.0%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 17 |
+| Odds snapshot | Mon 23 Nov 16:09 EST |
+
+**Statistical evidence.** Expected goals 1.26–1.75;
+model strength rank 20 vs 9 (of 24).
+Recent form — Le Havre: LLLLLL (GF 6, GA 18, xG 1.57/2.28);
+Strasbourg: LLLWLL (GF 8, GA 13, xG 1.4/1.49).
+Model 1X2: 25/24/51%,
+O2.5 58%, BTTS 60%.
+
+**Why it may be value.** The best available price (3.90) exceeds the estimated fair
+price (3.79). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_france_ligue_one/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401876391> 
+
+
+### 11. Draw — Betis v Vallecano
 
 | Field | Value |
 |---|---|
@@ -347,7 +422,7 @@ model rates this outcome 0.6 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882796> 
 
 
-### 10. Fiorentina to win — Monza v Fiorentina
+### 12. Fiorentina to win — Monza v Fiorentina
 
 | Field | Value |
 |---|---|
@@ -378,7 +453,7 @@ model rates this outcome 4.3 pp above the de-vigged consensus.
 Sources: 
 
 
-### 11. Barcelona to win — La Coruna v Barcelona
+### 13. Barcelona to win — La Coruna v Barcelona
 
 | Field | Value |
 |---|---|
@@ -416,7 +491,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882794> 
 
 
-### 12. Zwolle to win — Zwolle v AZ Alkmaar
+### 14. Zwolle to win — Zwolle v AZ Alkmaar
 
 | Field | Value |
 |---|---|
@@ -453,7 +528,7 @@ model rates this outcome 4.0 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875532> 
 
 
-### 13. Wrexham to win — Wrexham v Portsmouth
+### 15. Wrexham to win — Wrexham v Portsmouth
 
 | Field | Value |
 |---|---|
@@ -489,7 +564,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880125> 
 
 
-### 14. Levante to win — Levante v Elche
+### 16. Levante to win — Levante v Elche
 
 | Field | Value |
 |---|---|
@@ -520,7 +595,7 @@ model rates this outcome 2.6 pp above the de-vigged consensus.
 Sources: 
 
 
-### 15. Draw — Venezia v Bologna
+### 17. Draw — Venezia v Bologna
 
 | Field | Value |
 |---|---|
@@ -557,7 +632,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_italy_serie_a/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875004> 
 
 
-### 16. Draw — Man United v Brentford
+### 18. Draw — Man United v Brentford
 
 | Field | Value |
 |---|---|
@@ -594,7 +669,7 @@ model rates this outcome 0.4 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879226> 
 
 
-### 17. Augsburg to win — Hoffenheim v Augsburg
+### 19. Augsburg to win — Hoffenheim v Augsburg
 
 | Field | Value |
 |---|---|
@@ -631,7 +706,7 @@ model rates this outcome 0.2 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401884725> 
 
 
-### 18. Blackburn to win — Watford v Blackburn
+### 20. Blackburn to win — Watford v Blackburn
 
 | Field | Value |
 |---|---|
@@ -667,7 +742,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880137> 
 
 
-### 19. Draw — St. Gilloise v Gent
+### 21. Draw — St. Gilloise v Gent
 
 | Field | Value |
 |---|---|
@@ -704,7 +779,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_belgium_first_div/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401878925> 
 
 
-### 20. Draw — Nott'm Forest v Chelsea
+### 22. Draw — Nott'm Forest v Chelsea
 
 | Field | Value |
 |---|---|
@@ -741,7 +816,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879225> 
 
 
-### 21. Telstar to win — Excelsior v Telstar
+### 23. Telstar to win — Excelsior v Telstar
 
 | Field | Value |
 |---|---|
@@ -779,7 +854,7 @@ model rates this outcome 8.7 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875537> 
 
 
-### 22. Draw — Sunderland v Tottenham
+### 24. Draw — Sunderland v Tottenham
 
 | Field | Value |
 |---|---|
@@ -816,7 +891,7 @@ model rates this outcome 0.1 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879224> 
 
 
-### 23. RB Leipzig to win — Freiburg v RB Leipzig
+### 25. RB Leipzig to win — Freiburg v RB Leipzig
 
 | Field | Value |
 |---|---|
@@ -852,7 +927,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_germany_bundesliga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401884724> 
 
 
-### 24. Draw — Valencia v Osasuna
+### 26. Draw — Valencia v Osasuna
 
 | Field | Value |
 |---|---|
@@ -889,7 +964,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882787> 
 
 
-### 25. Draw — Lyon v Monaco
+### 27. Draw — Lyon v Monaco
 
 | Field | Value |
 |---|---|
@@ -926,7 +1001,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_france_ligue_one/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401876389> 
 
 
-### 26. Draw — Brentford v Everton
+### 28. Draw — Brentford v Everton
 
 | Field | Value |
 |---|---|
@@ -963,7 +1038,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879237> <https://www.football-data.co.uk/fixtures.csv> 
 
 
-### 27. Cambuur to win — Cambuur v Sparta Rotterdam
+### 29. Cambuur to win — Cambuur v Sparta Rotterdam
 
 | Field | Value |
 |---|---|

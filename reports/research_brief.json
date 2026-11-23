@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-23T20:16:48+00:00",
+  "generated": "2026-11-23T21:11:08+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -76,6 +76,21 @@
       "bookmaker": "1xBet",
       "final_prob": 0.2804502018607202,
       "ev": 0.04607925294048654
+    },
+    {
+      "rec_id": "3ed14027c3475717",
+      "event_id": "football:SP1:20261127:levante:santander",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-27T20:00:00+00:00",
+      "home": "Levante",
+      "away": "Santander",
+      "market": "OU",
+      "selection": "under",
+      "line": 3.5,
+      "odds": 1.75,
+      "bookmaker": "1xBet",
+      "final_prob": 0.588775109456021,
+      "ev": 0.030356441548036635
     },
     {
       "rec_id": "c1c64919213c8be3",
@@ -181,6 +196,21 @@
       "bookmaker": "Unibet",
       "final_prob": 0.24078577383102387,
       "ev": 0.08353598223960733
+    },
+    {
+      "rec_id": "3953672fb7524fed",
+      "event_id": "football:F1:20261128:le-havre:strasbourg",
+      "league": "F1",
+      "kickoff_utc": "2026-11-28T19:45:00+00:00",
+      "home": "Le Havre",
+      "away": "Strasbourg",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.9,
+      "bookmaker": "1xBet",
+      "final_prob": 0.2641423072992163,
+      "ev": 0.030154998466943583
     },
     {
       "rec_id": "4663cd0cfe51b36c",
