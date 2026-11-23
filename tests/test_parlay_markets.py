@@ -111,7 +111,7 @@ def _predict(con, eid, probs, created):
 ONE_X_TWO = {b: {"H": 2.0, "D": 3.6, "A": 3.9} for b in ("Pinnacle", "Bet365", "DraftKings")}
 # +100 over 2.5 goals at DraftKings. Issue #106: the model (0.58) is shrunk toward the de-vigged
 # market (about 0.478) before value is checked, so the price must beat the SHRUNK probability.
-OU25 = {"DraftKings": {"over": 2.00, "under": 1.83}}
+OU25 = {"DraftKings": {"over": 2.00, "under": 1.83}, "Bet365": {"over": 2.00, "under": 1.83}}   # 2 books (#112)
 MODEL = {("1X2", None, "H"): 0.47, ("1X2", None, "D"): 0.27, ("1X2", None, "A"): 0.26,
          ("OU", 2.5, "over"): 0.58, ("OU", 2.5, "under"): 0.42}
 
@@ -141,7 +141,7 @@ def test_two_same_day_ou_quotes_build_an_over_under_parlay(con):
     _two_games(con)
     b = pe.build(con, NOW)
     [r] = b["recommendations"]
-    assert r["bookmaker"] == "DraftKings" and r["n_legs"] == 2
+    assert r["price_basis"] == "consensus" and r["n_legs"] == 2 and all(x["price_books"] == 2 for x in r["legs"])
     assert [x["market"] for x in r["legs"]] == ["OU", "OU"]
     assert {x["selection_text"] for x in r["legs"]} == {"Over 2.5 goals"}
     assert all(x["line"] == 2.5 and x["price"] == 2.00 and x["market_label"] == "Over/Under" for x in r["legs"])
@@ -167,8 +167,8 @@ def test_extra_market_leg_needs_a_model_probability_and_a_half_line():
     ev = {"event_id": "football:E0:9", "site_sport": "soccer", "league": "E0", "competition": None,
           "home": "Arsenal", "away": "Chelsea", "kickoff_utc": (NOW + timedelta(hours=3)).isoformat()}
     books = {("1X2", None): ONE_X_TWO, ("OU", 2.5): OU25, ("OU", 2.25): OU25,
-             ("DC", None): {"Bet365": {"HD": 1.33, "DA": 1.95, "HA": 1.30}},
-             ("DNB", None): {"Bet365": {"home": 1.45, "away": 2.70}}}
+             ("DC", None): {bk: {"HD": 1.33, "DA": 1.95, "HA": 1.30} for bk in ("Bet365", "DraftKings")},
+             ("DNB", None): {bk: {"home": 1.50, "away": 2.60} for bk in ("Bet365", "DraftKings")}}
     legs, _ = pe.extra_market_legs(ev, books, {})
     assert legs == []                                                   # no model probability, no leg
     full = {(m, ln, s): v for (m, ln, s), v in MODEL.items()}
@@ -181,6 +181,9 @@ def test_extra_market_leg_needs_a_model_probability_and_a_half_line():
     assert {"Over 2.5 goals", "Arsenal or draw", "Arsenal (draw no bet)"} <= texts
     cands, why = pe.candidate_legs(ev, books, full)
     assert why is None and len({(x["market"], x.get("line")) for x in cands}) == len(cands)   # best per market/line
+    # Issue #112: a leg priced by one bookmaker only gets no typical price, so no leg.
+    one = {**books, ("DC", None): {"Bet365": {"HD": 1.33, "DA": 1.95, "HA": 1.30}}}
+    assert not any(x["market"] == "DC" for x in pe.extra_market_legs(ev, one, full)[0])
 
 
 def test_leg_texts():

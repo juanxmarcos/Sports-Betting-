@@ -109,8 +109,8 @@ def test_unfinished_game_stays_open(con):  # noqa: F811
 SHARP = ("Pinnacle", "DraftKings", "Unibet")
 
 
-def _line_books(line, soft_home, soft_away, market="SPREAD", sels=("home", "away")):
-    b = {bk: {sels[0]: 1.91, sels[1]: 1.91} for bk in SHARP}
+def _line_books(line, soft_home, soft_away, market="SPREAD", sels=("home", "away"), sharp=(1.91, 1.91)):
+    b = {bk: {sels[0]: sharp[0], sels[1]: sharp[1]} for bk in SHARP}
     b["Bet365"] = {sels[0]: soft_home, sels[1]: soft_away}
     return {(market, line): b}
 
@@ -122,9 +122,9 @@ def _flat_ml():
 def _seed_day(con):
     t = NOW - timedelta(minutes=40)
     _store(con, "nba:1", "nba", "NBA", NOW + timedelta(hours=8), "Lakers", "Celtics",
-           {**_flat_ml(), **_line_books(-4.5, 2.10, 1.75)}, t)
+           {**_flat_ml(), **_line_books(-4.5, 1.85, 1.95, sharp=(1.80, 2.02))}, t)
     _store(con, "nba:2", "nba", "NBA", NOW + timedelta(hours=9), "Knicks", "Heat",
-           {**_flat_ml(), **_line_books(228.5, 2.08, 1.76, "TOTAL", ("over", "under"))}, t)
+           {**_flat_ml(), **_line_books(228.5, 1.84, 1.96, "TOTAL", ("over", "under"), sharp=(1.80, 2.02))}, t)
     con.commit()
 
 
@@ -133,14 +133,16 @@ def test_fixture_day_builds_a_parlay_with_spread_and_total_legs(con):  # noqa: F
     b = pe.build(con, NOW)
     assert b["coverage"]["legs"] >= 2
     [r] = b["recommendations"]
-    assert r["bookmaker"] == "Bet365" and r["n_legs"] == 2
+    assert r["price_basis"] == "consensus" and "bookmaker" not in r and r["n_legs"] == 2
     legs = {x["event_id"]: x for x in r["legs"]}
     s, t = legs["nba:1"], legs["nba:2"]
     assert (s["market"], s["selection"], s["line"], s["selection_text"]) == ("SPREAD", "home", -4.5, "Lakers −4.5")
     assert (t["market"], t["selection"], t["line"], t["selection_text"]) == ("TOTAL", "over", 228.5, "Over 228.5 points")
-    assert s["price"] == 2.10 and t["price"] == 2.08 and r["estimated_odds"] == pytest.approx(2.10 * 2.08)
-    # Probability is the de-vigged consensus of the other bookmakers, and the card says so.
-    assert s["prob_source"] == "market_consensus_ex_book" and s["prob"] == pytest.approx(0.5)
+    # Issue #112: the typical price (median of 1.80 / 1.80 / 1.80 / Bet365's 1.85 or 1.84).
+    assert s["price"] == 1.80 and t["price"] == 1.80 and r["estimated_odds"] == pytest.approx(1.80 * 1.80)
+    assert s["price_books"] == t["price_books"] == 4
+    # Probability is the de-vigged market consensus (the more likely side beats the 50% moneyline), and the card says so.
+    assert s["prob_source"] == "market_consensus" and s["prob"] == pytest.approx(0.529, abs=0.003)
     assert s["prob_note"] == t["prob_note"] == "Probability: market consensus"
     assert s["market_label"] == "Point spread" and t["market_label"] == "Game total"
     assert pe.card_problem(r, NOW) is None
@@ -206,7 +208,7 @@ def test_card_shows_the_line_odds_and_market_consensus_note(con):  # noqa: F811
     i = html.index(f'data-parlay="{r["parlay_id"]}"')
     card = html[i:html.index("</article>", i)]
     assert "Lakers −4.5" in card and "Over 228.5 points" in card
-    assert 'data-leg-price="2.1">+110 (2.10)<' in card and 'data-leg-price="2.08">+108 (2.08)<' in card
+    assert card.count('data-leg-price="1.8">-125 (1.80)<') == 2
     assert card.count("data-prob-note>Probability: market consensus<") == 2
 
 

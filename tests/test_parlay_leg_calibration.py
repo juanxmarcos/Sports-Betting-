@@ -57,13 +57,15 @@ def test_a_leg_cannot_qualify_on_model_optimism_alone():
     for i in (1, 2):
         legs, _ = pe.extra_market_legs(_soccer_event(i), _ou_books(), model)
         [leg] = [x for x in legs if x["selection"] == "over"]
-        b = leg["books"]["Bet365"]
+        b = leg["books"][pe.CONSENSUS]                              # issue #112: the typical price
         assert b["raw_prob"] == pytest.approx(0.61) and b["prob"] <= 0.55
+        assert b["price"] == pytest.approx(1.95)                   # median of 1.95 / 1.95 / 1.85
         assert b["raw_prob"] * b["price"] > 1.0                    # the raw model would call it value ...
-        assert b["value"] < 0                                      # ... the probability actually used does not
+        assert b["value"] < 0.08                                   # ... the probability actually used is shrunk
         pool.append(leg)
-    # Two such legs: positive value on the raw model (0.61^2 x 1.85^2 = 1.27), none after the adjustment.
-    assert not any(c["bookmaker"] == "Bet365" for c in pe.search(pool))
+    # Ranking uses the probability USED: the raw model's 0.61 never reaches a parlay's joint probability.
+    cands = pe.search(pool)
+    assert cands and all(c["joint_prob"] <= 0.55 ** 2 + 1e-9 for c in cands)
 
 
 def test_moneyline_is_capped_too():
@@ -72,12 +74,12 @@ def test_moneyline_is_capped_too():
     books = {("ML", None): {"Pinnacle": {"home": 1.95, "away": 1.95}, "Bet365": {"home": 1.90, "away": 1.95}}}
     legs, why = pe.screen_event(ev, books, {("ML", "home"): 0.61, ("ML", "away"): 0.39})
     [home] = [x for x in legs if x["selection"] == "home"]
-    assert why is None and home["books"]["Bet365"]["prob"] == pytest.approx(0.55)
-    assert home["books"]["Bet365"]["raw_prob"] == pytest.approx(0.61)
-    # The single picks (singles-v2) keep the raw probability (adjust=False).
+    assert why is None and home["books"][pe.CONSENSUS]["prob"] == pytest.approx(0.55)
+    assert home["books"][pe.CONSENSUS]["raw_prob"] == pytest.approx(0.61)
+    # adjust=False keeps the raw probability (no caller uses it since issue #112).
     legs, _ = pe.screen_event(ev, books, {("ML", "home"): 0.61, ("ML", "away"): 0.39}, adjust=False)
     [home] = [x for x in legs if x["selection"] == "home"]
-    assert home["books"]["Bet365"]["prob"] == pytest.approx(0.61) and "raw_prob" not in home["books"]["Bet365"]
+    assert home["books"][pe.CONSENSUS]["prob"] == pytest.approx(0.61) == home["books"][pe.CONSENSUS]["raw_prob"]
 
 
 # ---------- database ----------
@@ -116,7 +118,7 @@ def _predict(con, eid, probs, created):
 
 
 ONE_X_TWO = {b: {"H": 2.0, "D": 3.6, "A": 3.9} for b in ("Pinnacle", "Bet365", "DraftKings")}
-OU25 = {"DraftKings": {"over": 2.00, "under": 1.83}}
+OU25 = {"DraftKings": {"over": 2.00, "under": 1.83}, "Bet365": {"over": 2.00, "under": 1.83}}   # 2 books (#112)
 MODEL = {("1X2", None, "H"): 0.47, ("1X2", None, "D"): 0.27, ("1X2", None, "A"): 0.26,
          ("OU", 2.5, "over"): 0.58, ("OU", 2.5, "under"): 0.42}
 

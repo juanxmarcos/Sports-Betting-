@@ -200,10 +200,10 @@ def test_open_recorded_card_and_live_card_are_not_duplicated():
     assert re.search(r"Open: first game at 7:00\sPM", card) and "Price from publication time" not in card
     assert "Recorded" not in card and "bet pays" not in card
     # The same parlay_id still in the current block shows once, as the live card.
-    live = {"parlay_id": "pe-open", "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",
+    live = {"parlay_id": "pe-open", "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "price_basis": "consensus",
             "n_legs": 2, "estimated_odds": 4.0, "stake": 10,
             "legs": [{"event_id": f"ev-pe-open-{i}", "sport": "nba", "title": t, "selection": "home", "selection_text": s,
-                      "start_utc": _iso(ko), "status": "active", "price": 2.0, "prob": 0.55,
+                      "start_utc": _iso(ko), "status": "active", "price": 2.0, "prob": 0.55, "price_books": 3,
                       "price_at": _iso(NOW - timedelta(minutes=30))} for i, (t, s, ko) in enumerate(later)]}
     html = _run({"data": _data([_rec("pe-open", legs=later)], recs=[live]), "now": _iso(NOW)})
     assert html.count('data-parlay="pe-open"') == 1 and recorded(html) == []
@@ -243,10 +243,10 @@ def test_history_page_lists_every_parlay_with_result_and_record():
 # ---------- issue #76: editable, display-only bet amount on every parlay card ----------
 def _live(pid, odds_legs=(2.0, 2.0)):
     later = [(f"L{i}H v L{i}A", f"L{i}H to win", NOW + timedelta(hours=1 + i)) for i in range(len(odds_legs))]
-    return {"parlay_id": pid, "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "bookmaker": "BookA",
+    return {"parlay_id": pid, "date": DAY, "status": "active", "kind": pe.ESTIMATE_KIND, "price_basis": "consensus",
             "n_legs": len(later), "estimated_odds": round(odds_legs[0] * odds_legs[1], 4), "stake": 10,
             "legs": [{"event_id": f"ev-{pid}-{i}", "sport": "nba", "title": t, "selection": "home", "selection_text": s,
-                      "start_utc": _iso(ko), "status": "active", "price": p, "prob": 0.55,
+                      "start_utc": _iso(ko), "status": "active", "price": p, "prob": 0.55, "price_books": 3,
                       "price_at": _iso(NOW - timedelta(minutes=30))} for i, ((t, s, ko), p) in enumerate(zip(later, odds_legs))]}
 
 

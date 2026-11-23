@@ -452,6 +452,10 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
   rules below are summarised.
 
 ### 11.2 Rules
+Issue #112 (2026-11-23): new parlays are priced at the **typical odds** (median across sportsbooks) and ranked by
+joint probability with a minimum combined price per size; the one-bookmaker, value and weak-leg rows below apply to
+parlays recorded before that. See section 11.9.
+
 | Rule | Implementation |
 |---|---|
 | Sports | Soccer, NFL, NBA, Tennis only (result market: 1X2 / moneyline; NBA and NFL also point spreads and game totals since #83, section 11.7). |
@@ -706,3 +710,42 @@ comes mostly from one bookmaker pricing above the consensus, so expect fewer est
 values. Re-run `python -m sbi parlay-calibration` as legs settle; the weight changes only with new evidence and
 owner review.
 
+
+### 11.9 Typical odds and likelihood ranking (issue #112, owner decision 2026-11-23)
+
+**Owner decision (2026-11-23):** *"We don't want to compare sportsbooks since I will not be using any of those. I use
+Betano and Solcasino."* Neither sportsbook is in Doyen's free odds data (31 bookmakers stored, none of them). Before
+this change every estimated parlay was priced at one bookmaker, and since #106 its value came mainly from that
+bookmaker pricing above the consensus, an edge the owner cannot use. **For new parlays (`parlay-estimated-v4`)** the
+rules in 11.2 change as follows; everything not listed stays as before.
+
+| Rule | `parlay-estimated-v4` |
+|---|---|
+| Leg price | **Typical odds:** the median of the latest stored pre-match prices across bookmakers (exchanges and aggregate columns excluded), each retrieved on the same New York day and before the game starts (previews: latest stored before the start). `parlay_estimated.consensus_price`. Example: 1.90 / 1.95 / 2.00 / 2.30 → **1.975**. |
+| Bookmakers per leg | At least **2** must price the leg (`MIN_PRICE_BOOKS`); with one, the leg is skipped ("fewer than 2 bookmakers price this leg"). |
+| Combined odds | Product of the typical leg prices. Still an estimate (`estimated_product`), never a bet-slip quote. |
+| Leg probability | Unchanged from #106: the shrunk and capped probability (11.8), or the de-vigged consensus where Doyen has no model. |
+| Leg screens | Probability band 0.30–0.85 and model within 0.12 of the market (kept), plus **model ≥ market − 0.02** where a model exists (`MAX_MODEL_BELOW_MARKET`). |
+| Value | **No value requirement.** The typical price includes the bookmakers' margin, so a leg's estimated value at that price is usually slightly negative. The single-bookmaker rule, the positive-parlay-value rule and the weak-leg rule are dropped for new parlays. |
+| Ranking | **Joint probability** (product of the leg probabilities, independence assumed, unvalidated), subject to a minimum typical combined price per size so the payout stays worthwhile (`MIN_COMBINED_ODDS`): **2 legs ≥ 2.2, 3 legs ≥ 3.5, 4–5 legs ≥ 6.0**. Per-size picks, at most one leg per game, the same-day rule, competition labels and the extra markets (#82, #83) are unchanged. |
+| Candidate legs | Per game and market (and soccer line), the most likely selection (it was the highest value at one bookmaker). |
+| Search | Beam search over 2–5 legs at the typical price; each size keeps the most likely combinations, the most likely ones that already reach the minimum odds, and those with the highest joint × odds, so likely legs can still be extended to a worthwhile price. |
+| Cards | No bookmaker is named. Combined odds show as **"Typical odds"** in American and decimal, and one short muted line per section: *"Typical odds across sportsbooks; your sportsbook's price may differ slightly."* The bet amount and payout stay. The card contract (Python `card_problem`, browser `estProblem`) requires `price_basis: "consensus"`, `price_books ≥ 2` on every leg and the size's minimum combined odds. |
+
+**This is the owner's choice of objective:** the goal is the win–loss record at typical odds, not value hunting.
+A parlay is chosen because it is likely and pays at least the minimum, never because one bookmaker is high.
+
+**Ledger and History (append-only).** Old rows are untouched and keep their bookmaker, price and probabilities. New
+rows store `bookmaker = "consensus"` (the price basis, not a sportsbook) and, on every leg, the typical price in
+`price`, `price_basis: "consensus"`, `price_books` (how many bookmakers it was taken from) and
+`rules_version: "parlay-estimated-v4"`, next to the probabilities stored since #106. The expected-vs-actual columns
+(#107) keep using the stored probabilities. History labels typical-odds rows "Typical odds" instead of a bookmaker.
+
+**Check on stored data (2026-11-23 20:16 UTC, read-only, copy of `data/sbi.sqlite`).** Today's build found 29 legs on
+11 games and produced one card of each size (typical combined odds 2.37, 4.28 and 6.04; estimated hit chances 45%,
+23% and 16%); the three preview days had 2, 2 and 1 cards. The whole build and the previews took under 0.7 s.
+
+**Limits.** The typical price is the median of the books Doyen stores; the owner's sportsbooks may differ slightly,
+and a real slip may also pay less than the product of single prices. Joint probabilities assume independent legs and
+are unvalidated. With no value requirement the expected paper P/L is slightly negative by construction (the margin);
+the record to watch is the win rate against the expected wins.

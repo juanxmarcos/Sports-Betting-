@@ -1,4 +1,6 @@
 """Issue #99: single picks under the owner-approved loosened rules, shown on the Today page.
+Issue #112: new picks (`singles-v3`) use the typical price (median across 2+ bookmakers) and are
+chosen by likelihood with typical odds >= 1.60.
 
 Every price, game and team below is test data built for these tests, never a real quote. The
 database tests use a temporary database; the browser tests run the real docs/assets/doyen.js."""
@@ -52,50 +54,66 @@ def _model(con, eid, probs, at, market="ML"):
                        VALUES (?,?,?,?,?,?,?)""", (run, eid, market, sel, None, p, at.isoformat()))
 
 
-def _game(con, i, *, hours=5, home_price=1.90, model_home=0.56, books=("Bet365",), at=None):
+def _game(con, i, *, hours=5, home_price=1.90, away_price=1.95, model_home=0.56, books=("Bet365", "DraftKings"),
+          at=None):
     """One NBA game priced by `books` (same prices) with a Doyen model probability for the home side."""
     at = at or NOW - timedelta(minutes=30)
     eid = f"nba:{i}"
     _event(con, eid, NOW + timedelta(hours=hours), f"H{i}", f"A{i}")
     for bk in books:
-        _odds(con, eid, bk, {"home": home_price, "away": 1.95}, at)
+        _odds(con, eid, bk, {"home": home_price, "away": away_price}, at)
     _model(con, eid, {"home": model_home, "away": 1 - model_home}, at)
     return eid
 
 
-# ---------- acceptance: one bookmaker, positive value -> published now, not under the old rules ----------
-def test_one_bookmaker_positive_value_pick_is_published_under_the_new_rules_only(con):
-    eid = _game(con, 1)
+# ---------- issue #112: typical price, chosen by likelihood ----------
+def test_typical_price_pick_is_published_under_the_new_rules_only(con):
+    eid = f"nba:1"
+    _event(con, eid, NOW + timedelta(hours=5), "H1", "A1")
+    at = NOW - timedelta(minutes=30)
+    for bk, home in (("Bet365", 1.88), ("DraftKings", 1.90), ("Unibet", 1.95)):
+        _odds(con, eid, bk, {"home": home, "away": 1.95}, at)
+    _model(con, eid, {"home": 0.56, "away": 0.44}, at)
     con.commit()
-    # Old rules (config.SelectionRules, unchanged): the same price fails the bookmaker-count gate.
-    book = engine.books_from_rows([("ML", None, "Bet365", "home", 1.90), ("ML", None, "Bet365", "away", 1.95)])
-    out = {"home": Outcome(pw=0.56, pl=0.44), "away": Outcome(pw=0.44, pl=0.56)}
-    [c] = [c for c in engine.price_generic(lambda m, s, ln: out[s], book, {"ML": 1.0}, 0.05, policy="legacy")
-           if c.selection == "home"]
-    ok, why = engine.passes(c, config.RULES, True)
-    assert not ok and why == "too few bookmakers" and config.RULES.min_bookmakers == 3 and config.RULES.min_ev == 0.03
-    # New rules: published, with its rules version, at the bookmaker's own price.
     s = sl.publish(con, NOW)
-    assert s["published"] == 1 and s["rules_version"] == "singles-v2"
+    assert s["published"] == 1 and s["rules_version"] == "singles-v3"
     [r] = con.execute("SELECT * FROM recommendations").fetchall()
     ev = json.loads(r["evidence_json"])
     assert r["event_id"] == eid and r["market"] == "ML" and r["selection"] == "home"
-    assert r["bookmaker"] == "Bet365" and r["odds"] == 1.90 and r["final_prob"] == pytest.approx(0.56)
-    assert r["ev"] == pytest.approx(0.56 * 1.90 - 1) and r["published_at"] == NOW.isoformat()
-    assert ev["rules_version"] == sl.RULES_VERSION and ev["prob_source"] == "model" and ev["n_bookmakers"] == 1
-    assert sl.is_loose(r) and sl.rules_version(r["evidence_json"]) == "singles-v2"
+    # The typical price (median of 1.88 / 1.90 / 1.95), never one bookmaker's: no sportsbook is named.
+    assert r["bookmaker"] == "consensus" and r["odds"] == pytest.approx(1.90)
+    # Probability used = the #106 cap: at most the de-vigged market + 0.05 (model 0.56 is above it).
+    assert r["final_prob"] < 0.56 and r["final_prob"] == pytest.approx(r["market_prob"] + 0.05)
+    assert r["model_prob"] == pytest.approx(0.56) and r["published_at"] == NOW.isoformat()
+    assert ev["rules_version"] == sl.RULES_VERSION and ev["price_basis"] == "consensus" and ev["n_bookmakers"] == 3
+    assert ev["all_prices"] == {"Bet365": {"home": 1.88}, "DraftKings": {"home": 1.90}, "Unibet": {"home": 1.95}}
+    assert ev["odds_note"] == sl.ODDS_NOTE and ev["raw_prob"] == pytest.approx(0.56)
+    assert sl.is_loose(r) and sl.rules_version(r["evidence_json"]) == "singles-v3"
+    assert r["model_version"] == "singles-v3:model"
     # A second run does not publish the same game twice.
     assert sl.publish(con, NOW + timedelta(minutes=10))["published"] == 0
 
 
-def test_value_must_be_positive_and_the_kept_screens_still_apply(con):
-    _game(con, 1, home_price=1.70, model_home=0.56)       # 0.56 x 1.70 = 0.952: no value
-    _game(con, 2, home_price=1.20, model_home=0.90)       # value, but outside the 0.30-0.85 band
+def test_kept_screens_minimum_odds_and_two_bookmakers(con):
+    _game(con, 1, home_price=1.50, away_price=2.60, model_home=0.70)   # likely, but 1.50 < 1.60; away: model below
+    _game(con, 2, home_price=1.20, model_home=0.90)       # outside the 0.30-0.85 band
     _game(con, 3, home_price=2.40, model_home=0.62)       # model 0.62 vs market ~0.45: disagreement > 0.12
     _game(con, 4, at=NOW - timedelta(hours=16))           # priced yesterday (New York): not same-day
     _game(con, 5, hours=-1)                               # already started
+    _game(con, 6, books=("Bet365",))                      # one bookmaker: no typical price
     con.commit()
-    assert sl.publish(con, NOW)["published"] == 0
+    s = sl.publish(con, NOW)
+    assert s["published"] == 0
+    assert s["excluded"].get("typical odds below 1.60") == 1
+
+
+def test_no_value_is_required_at_the_typical_price(con):
+    # 0.50 at 1.90: estimated value is negative (the margin is in the typical price), yet it is a pick.
+    _game(con, 1, home_price=1.90, away_price=1.90, model_home=0.50)
+    con.commit()
+    assert sl.publish(con, NOW)["published"] == 1
+    r = con.execute("SELECT * FROM recommendations").fetchone()
+    assert r["ev"] < 0 and r["odds"] == pytest.approx(1.90)
 
 
 def test_an_open_injury_note_does_not_exclude_the_pick_and_is_stored(con):
@@ -108,19 +126,23 @@ def test_an_open_injury_note_does_not_exclude_the_pick_and_is_stored(con):
     assert ev["risk_note"] == "Injury/lineup note open: H1 starting guard out"
 
 
-def test_at_most_one_pick_per_game_and_five_per_day_best_value_first(con):
-    # Game 1 has value on both the moneyline and a total: still one pick for that game.
+def test_at_most_one_pick_per_game_and_five_per_day_most_likely_first(con):
+    # Game 1 offers the moneyline and a total: still one pick for that game.
     eid = _game(con, 1, home_price=2.00, model_home=0.55)
-    _odds(con, eid, "Bet365", {"over": 2.10, "under": 1.75}, NOW - timedelta(minutes=30), market="TOTAL", line=220.5)
-    for i in range(2, 9):                                 # 7 more games, value rising with i
-        _game(con, i, home_price=1.90 + 0.01 * i, model_home=0.55)
+    for bk in ("Bet365", "DraftKings"):
+        _odds(con, eid, bk, {"over": 2.10, "under": 1.75}, NOW - timedelta(minutes=30), market="TOTAL", line=220.5)
+    for i in range(2, 9):                                 # 7 more games, likelihood rising with i
+        _game(con, i, home_price=1.90, model_home=0.49 + 0.008 * i)
     con.commit()
     s = sl.publish(con, NOW)
-    rows = con.execute("SELECT event_id, ev, rank FROM recommendations ORDER BY rank").fetchall()
+    rows = con.execute("SELECT event_id, market, selection, final_prob, rank FROM recommendations ORDER BY rank").fetchall()
     assert s["published"] == 5 and len(rows) == 5
     assert len({r["event_id"] for r in rows}) == 5
-    assert [r["ev"] for r in rows] == sorted((r["ev"] for r in rows), reverse=True)
-    assert rows[0]["event_id"] == "nba:1"                # 0.55 x 2.00 is the best value
+    assert [r["final_prob"] for r in rows] == sorted((r["final_prob"] for r in rows), reverse=True)
+    assert [r["event_id"] for r in rows] == ["nba:8", "nba:1", "nba:7", "nba:6", "nba:5"]
+    # Game 1's most likely selection at 1.60 or longer is the total's under (market ~0.549 at 1.75).
+    g1 = next(r for r in rows if r["event_id"] == "nba:1")
+    assert (g1["market"], g1["selection"]) == ("TOTAL", "under")
     # The day is full: a later run adds nothing for today, even with a new game.
     _game(con, 9, home_price=2.20, model_home=0.55)
     con.commit()
@@ -167,19 +189,23 @@ def test_site_block_has_todays_picks_previews_and_the_new_rules_record(con):
     sl.publish(con, NOW)
     d = json.loads(site.build(con, NOW).read_text())
     g = d["singles"]
-    assert g["rules_version"] == "singles-v2" and g["date"] == DAY and g["max_per_day"] == 5
+    assert g["rules_version"] == "singles-v3" and g["date"] == DAY and g["max_per_day"] == 5
+    assert g["min_odds"] == 1.6 and g["odds_note"] == sl.ODDS_NOTE
     [p] = g["days"][DAY]
-    assert p["event_id"] == "nba:1" and p["odds"] == 1.90 and p["rules_version"] == "singles-v2"
+    assert p["event_id"] == "nba:1" and p["odds"] == 1.90 and p["rules_version"] == "singles-v3"
+    assert p["price_basis"] == "consensus" and "bookmaker" not in p
     assert p["status"]["state"] == "active" and p["market"] == "Moneyline" and p["selection"] == "H1 to win"
     [prev] = [x for x in g["previews"] if x["date"] == "2026-11-14"]
     [pv] = prev["recommendations"]
-    assert pv["preview"] is True and pv["event_id"] == "nba:2"
+    assert pv["preview"] is True and pv["event_id"] == "nba:2" and pv["price_basis"] == "consensus"
+    assert "bookmaker" not in pv and pv["price_books"] == 2
     assert con.execute("SELECT COUNT(*) FROM recommendations").fetchone()[0] == 1     # previews never published
     assert g["record"]["picks"] == 1 and g["record"]["open"] == 1
     lite = json.loads((config.ROOT / "docs" / "data" / "parlays.json").read_text())
     assert lite["singles"] == g
     [h] = d["history"]
-    assert h["rules_version"] == "singles-v2" and "Doyen's probability is 56.0%" in h["why"]
+    assert h["rules_version"] == "singles-v3" and "Typical odds 1.90" in h["why"] and "median across 2 sportsbooks" in h["why"]
+    assert h["bookmaker"] == "Typical odds" and h["price_basis"] == "consensus"
 
 
 # ---------- browser ----------
@@ -229,6 +255,22 @@ def test_today_page_shows_single_picks_below_the_parlays():
 
 
 @needs_node
+def test_single_cards_name_no_bookmaker_and_label_typical_odds():
+    """Issue #112: no bookmaker on single cards; a typical-price pick says "Typical odds" plus one muted line."""
+    typical = _pick(1, odds=1.75, rules_version="singles-v3", price_basis="consensus")
+    typical.pop("bookmaker")
+    html = _render(_block([typical, _pick(2, hours=6)]))
+    c1 = html[html.index('data-single="s1"'):]
+    c1 = c1[:c1.index("</article>")]
+    assert '<div class="k">Typical odds</div>' in c1 and "-133 (1.75)" in c1
+    c2 = html[html.index('data-single="s2"'):]
+    c2 = c2[:c2.index("</article>")]
+    assert '<div class="k">Odds</div>' in c2                       # a singles-v2 pick was priced at one book
+    assert "Bet365" not in html and "consensus" not in html.replace("data-", "")
+    assert html.count("data-odds-note") == 1 and "your sportsbook&#39;s price may differ slightly" in html
+
+
+@needs_node
 def test_today_page_says_so_when_there_are_no_single_picks():
     html = _render(_block())
     assert "<h2>Single picks</h2>" in html and "No single picks today." in html
@@ -268,3 +310,9 @@ def test_history_shows_the_record_since_the_loosened_rules():
     assert "data-singles-by-sport" in html
     line = re.search(r"<p class=\"small muted\" data-singles-v2>(.*?)</p>", html).group(1)
     assert "Since the loosened rules" in line and "1–0" in line and "+1.50 u" in line
+    assert "data-singles-v3" not in html                          # no typical-odds picks yet
+    data["history"] = data_hist + [_pick(7, hours=-2, rules_version="singles-v3",
+                                         status={"state": "settled", "label": "Lost", "result": "lost", "pnl": -1})]
+    html = _run({"data": data, "now": NOW.isoformat(), "hash": "#/history"})
+    line = re.search(r"<p class=\"small muted\" data-singles-v3>(.*?)</p>", html).group(1)
+    assert "Since typical odds" in line and "0–1" in line

@@ -25,6 +25,16 @@ Rules (`singles-v2`), mirroring the estimated-parlay leg screens in `sbi.parlay_
   (`engine.SELECTIONS`): match result / moneyline, soccer over/under and both-teams-to-score, NBA and
   NFL point spreads and game totals. Double chance and draw no bet are not used for singles.
 
+Typical price (owner decision, issue #112, 2026-11-23, `singles-v3`, new picks only): the owner bets
+at sportsbooks that are not in the free odds data, so a pick is priced at the TYPICAL market price,
+the median of the latest stored prices across at least 2 bookmakers (exchanges and aggregates
+excluded), and stored with bookmaker "consensus" and the number of bookmakers in its evidence.
+Probability = the #106 shrunk and capped probability used by parlays (or the de-vigged consensus),
+with the model not below the market by more than 0.02. Selection is by likelihood, not value: the
+most likely pick per game with typical odds >= `MIN_ODDS` (1.60, about -167), best 5 a day, one per
+game. There is no value requirement (the typical price includes the bookmakers' margin). Picks
+published under `singles-v1`/`singles-v2` keep their bookmaker, odds and rules.
+
 Previews (Tomorrow, +2, +3) use the same rules with the preview price rule of #58 (latest stored
 price at the time of the run, before the game starts). They are never published or recorded.
 
@@ -43,18 +53,22 @@ from . import config, parlay_engine
 from . import parlay_estimated as pe
 from .engine import SELECTIONS
 
-RULES_VERSION = "singles-v2"            # issue #99: loosened rules, new picks only
+RULES_VERSION = "singles-v3"            # issue #112: typical price, ranked by probability, new picks only
+LOOSE_RULES_VERSIONS = ("singles-v2", "singles-v3")   # #99 loosened rules and their #112 successor
 LEGACY_RULES_VERSION = "singles-v1"     # every pick published before #99 (no rules_version stored)
 METHOD = "singles-loose-v1"
 MAX_PER_DAY = 5                         # a cap, never a target
-MIN_VALUE = 0.0                         # probability x price - 1 must be strictly above this
+MIN_VALUE = 0.0                         # singles-v2 only (kept for reference)
+MIN_ODDS = 1.6                          # issue #112: minimum typical odds (about -167)
+PRICE_BASIS = pe.PRICE_BASIS            # stored as the pick's "bookmaker": never a sportsbook name
 MARKETS = frozenset(SELECTIONS)         # settleable with a market reference (no DC / DNB)
 PREVIEW_BADGE = pe.PREVIEW_BADGE
 EMPTY_TEXT = "No single picks today."
 PREVIEW_EMPTY_TEXT = "No single picks for this day yet."
-RULES_TEXT = ("Loosened rules (issue #99): one bookmaker's price from today, Doyen probability x price > 1, "
-              "probability 30-85%, model within 12 points of the market, injury notes shown not filtered, "
-              "best 5 a day by value, one per game.")
+RULES_TEXT = ("Typical odds (issue #112): the median price across at least 2 sportsbooks from today, odds 1.60 or "
+              "longer, probability 30-85%, model not below the market, injury notes shown not filtered, "
+              "the 5 most likely picks a day, one per game.")
+ODDS_NOTE = pe.TYPICAL_ODDS_NOTE
 
 
 def rules_version(evidence: dict | str | None) -> str:
@@ -73,7 +87,7 @@ def is_loose(row) -> bool:
         ev = row["evidence_json"]
     except (KeyError, IndexError, TypeError):
         ev = None
-    return rules_version(ev) == RULES_VERSION
+    return rules_version(ev) in LOOSE_RULES_VERSIONS
 
 
 def rec_id(event_id: str, market: str, selection: str, line) -> str:
@@ -82,40 +96,39 @@ def rec_id(event_id: str, market: str, selection: str, line) -> str:
 
 
 # ---------- selection (pure) ----------
-def best_price(leg: dict) -> tuple[str, dict] | None:
-    """The pricing bookmaker with the highest positive estimated value for this leg, or None."""
-    ok = [(bk, b) for bk, b in (leg.get("books") or {}).items()
-          if b["prob"] * b["price"] - 1.0 > MIN_VALUE]
-    if not ok:
+def typical_price(leg: dict) -> dict | None:
+    """The leg's typical-price entry (issue #112) when its odds reach `MIN_ODDS`, else None."""
+    b = (leg.get("books") or {}).get(pe.CONSENSUS)
+    if not b or float(b["price"]) < MIN_ODDS - 1e-9:
         return None
-    return max(ok, key=lambda kv: (kv[1]["prob"] * kv[1]["price"] - 1.0, kv[1]["price"], kv[0]))
+    return b
 
 
 def candidates(pool: list[dict]) -> tuple[list[dict], Counter]:
-    """One candidate per game: its best positive-value selection at its best bookmaker."""
+    """One candidate per game (issue #112): its most likely selection at typical odds >= `MIN_ODDS`."""
     best, why = {}, Counter()
     for leg in pool:
         if leg["market"] not in MARKETS:
             why["market not used for singles"] += 1
             continue
-        got = best_price(leg)
-        if not got:
-            why["no positive estimated value"] += 1
+        b = typical_price(leg)
+        if not b:
+            why["typical odds below 1.60"] += 1
             continue
-        bk, b = got
-        c = {**leg, "bookmaker": bk, "price": float(b["price"]), "prob": float(b["prob"]),
-             "value": float(b["prob"]) * float(b["price"]) - 1.0, "prob_source_used": b["prob_source"]}
+        c = {**leg, "bookmaker": PRICE_BASIS, "price": float(b["price"]), "prob": float(b["prob"]),
+             "value": float(b["prob"]) * float(b["price"]) - 1.0, "prob_source_used": b["prob_source"],
+             "n_books": int(b.get("n_books") or 0), "book_prices": dict(b.get("book_prices") or {})}
         k = leg["event_id"]
-        rank = lambda x: (x["value"], x["price"], x["market"], x["selection"])
+        rank = lambda x: (x["prob"], x["price"], x["market"], x["selection"])
         if k not in best or rank(c) > rank(best[k]):
             best[k] = c
-    out = sorted(best.values(), key=lambda x: (-x["value"], x["start_utc"], x["event_id"]))
+    out = sorted(best.values(), key=lambda x: (-x["prob"], x["start_utc"], x["event_id"]))
     return out, why
 
 
 def select(cands: list[dict], blocked_events: set | None = None, already_today: int = 0,
            limit: int = MAX_PER_DAY) -> list[dict]:
-    """The best candidates by value, skipping games that already have a pick, up to the day's cap."""
+    """The most likely candidates, skipping games that already have a pick, up to the day's cap."""
     room = max(0, limit - already_today)
     blocked = set(blocked_events or ())
     out = []
@@ -143,24 +156,25 @@ def _row(c: dict, now: datetime, rank: int) -> tuple:
     from .explain import selection_label
     home, away = c["participants"]
     sel = {"market": c["market"], "selection": c["selection"], "line": c.get("line"), "home": home, "away": away}
-    others = {bk: {c["selection"]: b["price"]} for bk, b in (c.get("books") or {}).items()}
+    others = {bk: {c["selection"]: p} for bk, p in sorted((c.get("book_prices") or {}).items())}
     evidence = {
-        "rules_version": RULES_VERSION, "method": METHOD,
+        "rules_version": RULES_VERSION, "method": METHOD, "price_basis": PRICE_BASIS,
         "prob_source": c["prob_source_used"], "consensus_prob": c.get("consensus_prob"),
-        "consensus_source": {"model": "Doyen model", "market_consensus_ex_book": "other bookmakers' consensus",
-                             "market_consensus_incl_book": "consensus incl. the pricing bookmaker"}.get(c["prob_source_used"]),
-        "n_bookmakers": len(others), "all_prices": others, "price_rule": pe.PRICE_RULE,
-        "competition": c.get("competition"), "risk_note": c.get("risk_note"),
-        "risks": ["Selected under the loosened single-pick rules (issue #99): one bookmaker's price is enough and the "
-                  "only value check is probability x price > 1, so the estimated edge is smaller and less certain "
-                  "than under the original rules."] + ([c["risk_note"]] if c.get("risk_note") else []),
+        "raw_prob": (c.get("books") or {}).get(pe.CONSENSUS, {}).get("raw_prob"),
+        "consensus_source": {"model": "Doyen model (shrunk and capped toward the market)",
+                             "market_consensus": "bookmakers' consensus (margin removed)"}.get(c["prob_source_used"]),
+        "n_bookmakers": c.get("n_books") or len(others), "all_prices": others, "price_rule": pe.PRICE_RULE,
+        "odds_note": ODDS_NOTE, "competition": c.get("competition"), "risk_note": c.get("risk_note"),
+        "risks": ["Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, "
+                  "so the estimated value is usually slightly negative; picks are chosen by likelihood, and your "
+                  "sportsbook's price may differ slightly."] + ([c["risk_note"]] if c.get("risk_note") else []),
         "selection_text": selection_label(sel),
     }
     if c.get("prob_note"):
         evidence["prob_note"] = c["prob_note"]
     ts = (c.get("price_ts") or {}).get(c["bookmaker"])
     model_p = c.get("model_prob")
-    mv = "singles-v2:" + ("model" if c["prob_source_used"] == "model" else "market")
+    mv = RULES_VERSION + ":" + ("model" if c["prob_source_used"] == "model" else "market")
     return (rec_id(c["event_id"], c["market"], c["selection"], c.get("line")), c["event_id"], now.isoformat(),
             {"soccer": "football"}.get(c["sport"], c["sport"]), c["league"], c["start_utc"], home, away,
             c["market"], c["selection"], c.get("line"), c["bookmaker"], c["price"], ts,
@@ -173,7 +187,7 @@ def publish(con, now: datetime) -> dict:
     """Publish today's single picks under the loosened rules. Append-only: `INSERT OR IGNORE`, so a
     pick already published (any rules) is never touched and never published twice."""
     day = parlay_engine._day(now)
-    pool, cov = pe.build_pool(con, now, adjust=False)      # issue #106: singles-v2 keeps raw probabilities
+    pool, cov = pe.build_pool(con, now, every=True)        # issue #112: typical price, shrunk probabilities
     cands, why = candidates(pool)
     blocked = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
     already = _picks_on_day(con, day)
@@ -193,7 +207,7 @@ def publish(con, now: datetime) -> dict:
 
 def preview(con, now: datetime, day: str) -> dict:
     """Single picks the same rules would choose for a later New York date. Never published."""
-    pool, cov = pe.build_pool(con, now, day, adjust=False)
+    pool, cov = pe.build_pool(con, now, day, every=True)
     cands, _ = candidates(pool)
     blocked = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
     picked = select(cands, blocked, _picks_on_day(con, day))
@@ -207,7 +221,7 @@ def preview(con, now: datetime, day: str) -> dict:
                      "market": market_label(c["market"]),
                      "selection": selection_label({"market": c["market"], "selection": c["selection"],
                                                    "line": c.get("line"), "home": home, "away": away}),
-                     "odds": round(c["price"], 4), "bookmaker": c["bookmaker"],
+                     "odds": round(c["price"], 4), "price_basis": PRICE_BASIS, "price_books": c.get("n_books"),
                      "price_at": (c.get("price_ts") or {}).get(c["bookmaker"]), "risk_note": c.get("risk_note"),
                      "rules_version": RULES_VERSION, "status": {"state": "preview", "label": "Preview"}})
     return {"date": day, "badge": PREVIEW_BADGE, "price_rule": pe.PREVIEW_PRICE_RULE,
@@ -230,7 +244,8 @@ def compact(p: dict) -> dict:
     st = p.get("status") or {}
     return {"id": p["id"], "event_id": p["event_id"], "sport": p["sport"], "competition": p.get("competition"),
             "title": p["title"], "start_utc": p["start_utc"], "published_at": p.get("published_at"),
-            "market": p["market"], "selection": p["selection"], "odds": p["odds"], "bookmaker": p.get("bookmaker"),
+            "market": p["market"], "selection": p["selection"], "odds": p["odds"],
+            **({"price_basis": PRICE_BASIS} if p.get("price_basis") == PRICE_BASIS else {}),
             "price_at": p.get("odds_updated"), "risk_note": p.get("risk_note"),
             "rules_version": p.get("rules_version") or LEGACY_RULES_VERSION,
             "status": {k: st.get(k) for k in ("state", "label", "result", "pnl", "note") if st.get(k) is not None}}
@@ -262,5 +277,5 @@ def block(con, now: datetime, picks_all: list[dict]) -> dict:
     for d in by_day:
         by_day[d].sort(key=lambda x: (x["start_utc"], x["title"]))
     return {"method": METHOD, "rules_version": RULES_VERSION, "rules": RULES_TEXT, "date": today,
-            "max_per_day": MAX_PER_DAY, "empty_text": EMPTY_TEXT, "preview_empty_text": PREVIEW_EMPTY_TEXT,
+            "max_per_day": MAX_PER_DAY, "min_odds": MIN_ODDS, "odds_note": ODDS_NOTE, "empty_text": EMPTY_TEXT, "preview_empty_text": PREVIEW_EMPTY_TEXT,
             "days": by_day, "previews": previews(con, now), "record": record(picks_all)}
