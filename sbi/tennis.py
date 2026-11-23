@@ -24,7 +24,8 @@ from datetime import date, datetime, timedelta, timezone
 import numpy as np
 from scipy.optimize import brentq
 
-from . import config, db
+from . import catchup, config, db
+from .catchup import CATCHUP_DAYS, GRACE_HOURS
 from .sources.http import fetch
 
 ESPN = "https://site.api.espn.com/apis/site/v2/sports/tennis/{tour}/scoreboard?dates={d}"
@@ -121,22 +122,51 @@ def _parse(j: dict, tour: str) -> list[dict]:
     return out
 
 
-def matches(start: date, end: date, now: datetime) -> list[dict]:
+def _day(tour: str, d: date, now: datetime, past: bool) -> list[dict]:
+    """One ESPN scoreboard day. A recent past day that was cached while matches were unfinished
+    is read again fresh (the same fix #104 made in `us.nba_history`)."""
+    url = ESPN.format(tour=tour, d=d.strftime("%Y%m%d"))
+    content, _ = fetch(url, max_age_hours=24 * 365 if past else 0.9)
+    ms = _parse(json.loads(content), tour)
+    if past and d >= now.date() - timedelta(days=CATCHUP_DAYS) and any(
+            not m["completed"] and m["date"] <= now - timedelta(hours=GRACE_HOURS) for m in ms):
+        content, _ = fetch(url, max_age_hours=0.9)
+        ms = _parse(json.loads(content), tour)
+    return ms
+
+
+def matches(start: date, end: date, now: datetime, extra_dates=()) -> list[dict]:
+    """Matches on ESPN scoreboards from `start` to `end` (past days weekly, recent days daily), plus
+    `extra_dates` read fresh: past days with unfinished stored matches (missed-run catch-up, #108)."""
     rows, seen = [], set()
-    d = start
+    days, d = [], start
     while d <= end:
         past = d < now.date() - timedelta(days=3)
+        days.append((d, past))
+        d += timedelta(days=7 if past else 1)
+    have = {x for x, _ in days}
+    days += [(x, False) for x in sorted(extra_dates) if x not in have]   # fresh read, not the long cache
+    for d, past in days:
         for tour in TOURS:
             try:
-                content, _ = fetch(ESPN.format(tour=tour, d=d.strftime("%Y%m%d")), max_age_hours=24 * 365 if past else 0.9)
-                for m in _parse(json.loads(content), tour):
+                for m in _day(tour, d, now, past):
                     if m["id"] not in seen:
                         seen.add(m["id"])
                         rows.append(m)
             except Exception as ex:  # noqa: BLE001
                 print(f"warning: tennis {tour} {d}: {ex}")
-        d += timedelta(days=7 if past else 1)
     return rows
+
+
+LEAGUES = ("TENNIS:ATP", "TENNIS:WTA")
+
+
+def stale_dates(con, now: datetime) -> set[date]:
+    """Past New York dates with a stored ATP/WTA match still unfinished (see `sbi.catchup`)."""
+    out: set[date] = set()
+    for lg in LEAGUES:
+        out |= catchup.stale_dates(con, now, lg)
+    return out
 
 
 # ---------------------------------------------------------------- Elo
@@ -255,13 +285,17 @@ def _resolve_eid(con, m) -> str:
 
 def register(con, now: datetime, allm: list[dict] | None = None) -> dict:
     """Store upcoming matches (so odds can be matched) and recent results (so picks settle)."""
-    allm = allm if allm is not None else matches(now.date() - timedelta(days=3), (now + timedelta(days=7)).date(), now)
+    if allm is None:
+        allm = matches(now.date() - timedelta(days=3), (now + timedelta(days=7)).date(), now, stale_dates(con, now))
     con.execute("CREATE TABLE IF NOT EXISTS event_meta (event_id TEXT PRIMARY KEY, neutral INTEGER, competition TEXT)")
     n = 0
     for m in allm:
-        if m["date"] < now - timedelta(days=3) or m["date"] > now + timedelta(days=7):
+        if m["date"] > now + timedelta(days=7) or m["date"] < now - timedelta(days=CATCHUP_DAYS + 1):
             continue
         eid, league = _resolve_eid(con, m), f"TENNIS:{m['tour'].upper()}"
+        if m["date"] < now - timedelta(days=3) and con.execute(
+                "SELECT 1 FROM events WHERE event_id=? AND status='scheduled'", (eid,)).fetchone() is None:
+            continue   # older than 3 days: only fill results of stored unfinished matches (catch-up)
         url = f"https://www.espn.com/tennis/scoreboard/tournament/_/eventId/{m['event_id_espn']}"
         done = m["completed"] and m["winner"] and not m.get("walkover")
         hs, as_ = (m["sets"] if done else (None, None))
@@ -291,7 +325,7 @@ def analyse(con, now: datetime, horizon_h: float = 168, publish_h: float | None 
     from .markets import Outcome
     from .pipeline import _latest_books, publish_pick
     rules = config.RULES
-    allm = matches(date(2024, 1, 1), (now + timedelta(days=7)).date(), now)
+    allm = matches(date(2024, 1, 1), (now + timedelta(days=7)).date(), now, stale_dates(con, now))
     hist = [m for m in allm if m["date"] < now and m["completed"] and m["winner"] and not m.get("walkover")]
     elo = run_elo(hist)
     upcoming = [m for m in allm if not m["completed"] and now < m["date"] <= now + timedelta(hours=horizon_h)
