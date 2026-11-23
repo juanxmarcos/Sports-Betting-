@@ -211,8 +211,10 @@ def ingest(con, now: datetime, ahead_days: int = AHEAD_DAYS, back_days: int = BA
             out["errors"].append(f"{div}: no stored football-data teams to map ESPN names to")
             continue
         tot = {"created": 0, "existing": 0, "results_filled": 0, "odds": 0, "unmapped": [], "skipped_past": 0}
-        for k in range(-back_days, ahead_days + 1):
-            d = now.date() + timedelta(days=k)
+        from ..catchup import stale_dates
+        days = [now.date() + timedelta(days=k) for k in range(-back_days, ahead_days + 1)]
+        days += sorted(d for d in stale_dates(con, now, div) if d not in days)   # missed-run catch-up
+        for d in days:
             try:
                 evs = scoreboard(lg, d)
             except Exception as e:  # noqa: BLE001 - one league-day failing never stops the rest

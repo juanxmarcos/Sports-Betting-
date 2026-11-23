@@ -186,7 +186,10 @@ def nba_history(now: datetime) -> pd.DataFrame:
         stop = min(date.fromisoformat(end) if end else now.date(), now.date() - timedelta(days=1))
         while d <= stop:
             past = d < now.date() - timedelta(days=2)
-            for ev in scoreboard("nba", d, 24 * 365 if past else 1):
+            evs = scoreboard("nba", d, 24 * 365 if past else 1)
+            if past and d >= now.date() - timedelta(days=14) and any(not e["completed"] for e in evs):
+                evs = scoreboard("nba", d, 1)          # cached while games were still in progress
+            for ev in evs:
                 if ev["completed"] and ev["season_type"] in (2, 3, 5, None):
                     rows.append({"home": ev["home"], "away": ev["away"], "hs": ev["hs"], "as": ev["as"],
                                  "kickoff_utc": pd.Timestamp(ev["kickoff_utc"]), "neutral": int(ev["neutral"]),
@@ -343,9 +346,12 @@ def _save(sport, rep, tuned):
 # ---------------------------------------------------------------- live
 
 def ingest(con, now: datetime, sport: str, ahead_days: int = 7) -> dict:
+    from .catchup import stale_dates
     events, errors = [], []
-    for k in range(-2, ahead_days + 1):
-        d = now.date() + timedelta(days=k)
+    days = [now.date() + timedelta(days=k) for k in range(-2, ahead_days + 1)]
+    # Re-read older days that still have unfinished games (missed runs left them "scheduled").
+    days += sorted(d for d in stale_dates(con, now, CFG[sport]["league"]) if d not in days)
+    for d in days:
         try:
             events += scoreboard(sport, d, 0.9)
         except Exception as e:  # noqa: BLE001

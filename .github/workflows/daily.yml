@@ -25,6 +25,7 @@ on:
   workflow_dispatch: {}
 permissions:
   contents: write
+  issues: write      # failure alert: open/close the 'data-run-failed' issue (built-in token only)
 concurrency:
   group: daily-research
   cancel-in-progress: false
@@ -70,3 +71,28 @@ jobs:
           git add data/sbi.sqlite data/*.json data/analysis data/backtest reports docs/dev docs/data ledger || true
           git diff --cached --quiet || git commit -m "Doyen research run $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
+      # Failure alert (owner request 2026-11-23): GitHub emails the owner when this issue is opened or
+      # commented on. Built-in GITHUB_TOKEN only; no secret, no cost. Never labelled ready-for-claude.
+      - name: Alert the owner when the data run fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create data-run-failed --color B60205 --description "Automatic alert: daily data run failed" --force --repo "$GITHUB_REPOSITORY" || true
+          n=$(gh issue list --repo "$GITHUB_REPOSITORY" --label data-run-failed --state open --json number --jq '.[0].number // empty')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --repo "$GITHUB_REPOSITORY" --body "The data run failed again: $RUN_URL"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --label data-run-failed --title "Data run failed: the site is not updating" \
+              --body "The scheduled data run failed, so the site did not update. Details: $RUN_URL. This issue closes itself after the next successful run."
+          fi
+      - name: Close the failure alert after a successful run
+        if: success() && steps.gate.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --repo "$GITHUB_REPOSITORY" --label data-run-failed --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --repo "$GITHUB_REPOSITORY" --comment "Recovered: this run succeeded and the site is updated. $RUN_URL"
+          done
