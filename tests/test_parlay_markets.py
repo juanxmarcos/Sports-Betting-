@@ -256,7 +256,9 @@ def test_dnb_push_counts_at_odds_one_and_the_rest_stands(con):
     assert (s["won"], s["lost"], s["void"]) == (1, 2, 2) and s["paper_pl"] == "-12.00"
     bm = s["by_market"]
     assert list(bm) == ["OU", "BTTS", "DC", "DNB"]
-    assert bm["DNB"] == {"won": 0, "lost": 0, "push": 3, "void": 1, "open": 0, "label": "Draw no bet"}
+    assert bm["DNB"] == {"won": 0, "lost": 0, "push": 3, "void": 1, "open": 0, "label": "Draw no bet",
+                         "expected_wins_settled": 0.0}                # issue #107: pushes add nothing
+    assert bm["OU"]["expected_wins_settled"] == pytest.approx(1.8)     # 3 settled legs x prob 0.6
     assert bm["OU"]["won"] == 2 and bm["OU"]["lost"] == 1 and bm["BTTS"]["won"] == 1
     assert bm["DC"]["won"] == 1 and bm["DC"]["lost"] == 1 and bm["DC"]["label"] == "Double chance"
 

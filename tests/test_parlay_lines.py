@@ -191,8 +191,10 @@ def test_ledger_stores_market_selection_and_line_and_settles_by_market(con):  # 
     s = pe.settle(con)
     assert (s["won"], s["lost"]) == (0, 1)
     assert s["by_market"] == {
-        "SPREAD": {"won": 1, "lost": 0, "push": 0, "void": 0, "open": 0, "label": "Point spread"},
-        "TOTAL": {"won": 0, "lost": 1, "push": 0, "void": 0, "open": 0, "label": "Game total"}}
+        "SPREAD": {"won": 1, "lost": 0, "push": 0, "void": 0, "open": 0, "label": "Point spread",
+                   "expected_wins_settled": round(legs["nba:1"]["prob"], 3)},
+        "TOTAL": {"won": 0, "lost": 1, "push": 0, "void": 0, "open": 0, "label": "Game total",
+                  "expected_wins_settled": round(legs["nba:2"]["prob"], 3)}}
 
 
 # ---------- browser ----------
