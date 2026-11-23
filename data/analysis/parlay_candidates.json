@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-23T14:35:37+00:00",
+ "generated": "2026-11-23T14:44:14+00:00",
  "date": "2026-11-23",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -72,14 +72,14 @@
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 14,
+  "straight_picks_seen": 17,
   "usable_legs_today": 5,
   "combinations_checked": 26,
   "passed_leg_screens": 18
  },
  "quota": {
-  "at": "2026-11-23T14:37:29+00:00",
-  "credits_spent_last_run": 16,
+  "at": "2026-11-23T14:44:57+00:00",
+  "credits_spent_last_run": 0,
   "credits_remaining": "280"
  },
  "ledger_rows_added": 0,

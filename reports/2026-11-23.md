@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-23
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Mon 23 Nov 09:35 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Mon 23 Nov 09:44 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -13,7 +13,7 @@ All times America/New_York. Generated Mon 23 Nov 09:35 EST. Model `dc-0.1`.*
 | Events fully evaluated (3+ independent bookmakers, complete history) | 82 |
 | Markets evaluated | 1171 |
 | Events passing all rules | 13 |
-| Published today | **14** |
+| Published today | **17** |
 | Highest estimated EV | +27.5% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -93,7 +93,44 @@ model rates this outcome 11.5 pp above the de-vigged consensus.
 Sources: 
 
 
-### 3. Swansea to win — Swansea v Cardiff
+### 3. Liverpool to win — Everton v Liverpool
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — England Premier League |
+| Kick-off | Sun 29 Nov 07:00 EST |
+| Market / selection | 1X2 — **Liverpool to win** |
+| Best price | **2.13** @ 1xBet |
+| Model probability (raw) | 42.1% (±8.2 pp param. sd; p10 30.9%) |
+| Market no-vig probability | 48.6% (Betfair Exchange) |
+| Final probability (blend) | 48.6% |
+| Fair odds | 2.06 |
+| Expected value | **+3.5%** (pessimistic +3.5%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 20 |
+| Odds snapshot | Mon 23 Nov 09:44 EST |
+
+**Statistical evidence.** Expected goals 1.17–1.34;
+model strength rank 12 vs 4 (of 27).
+Recent form — Everton: WDLLWW (GF 7, GA 7, xG 1.43/1.48);
+Liverpool: WLWWLW (GF 8, GA 6, xG 1.52/1.31).
+Model 1X2: 30/28/42%,
+O2.5 46%, BTTS 52%.
+
+**Why it may be value.** The best available price (2.13) exceeds the estimated fair
+price (2.06). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by -6.5%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879229> 
+
+
+### 4. Swansea to win — Swansea v Cardiff
 
 | Field | Value |
 |---|---|
@@ -129,7 +166,7 @@ model rates this outcome 1.5 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880128> 
 
 
-### 4. Charlotte Hornets to win — Charlotte Hornets v Memphis Grizzlies
+### 5. Charlotte Hornets to win — Charlotte Hornets v Memphis Grizzlies
 
 | Field | Value |
 |---|---|
@@ -160,7 +197,45 @@ model rates this outcome 10.4 pp above the de-vigged consensus.
 Sources: 
 
 
-### 5. Draw — Betis v Vallecano
+### 6. Birmingham to win — Birmingham v Bolton
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — England Championship |
+| Kick-off | Sat 28 Nov 10:00 EST |
+| Market / selection | 1X2 — **Birmingham to win** |
+| Best price | **1.57** @ LeoVegas |
+| Model probability (raw) | 59.6% (±11.1 pp param. sd; p10 49.2%) |
+| Market no-vig probability | 65.9% (median) |
+| Final probability (blend) | 65.9% |
+| Fair odds | 1.52 |
+| Expected value | **+3.5%** (pessimistic +3.5%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 10 |
+| Odds snapshot | Mon 23 Nov 09:37 EST |
+
+**Statistical evidence.** Expected goals 2.09–0.96;
+model strength rank 8 vs 29 (of 36).
+Recent form — Birmingham: WWLWWW (GF 15, GA 3, xG 1.81/1.45);
+Bolton: WDLLWL (GF 8, GA 12, xG 1.35/2.46).
+Model 1X2: 60/22/18%,
+O2.5 59%, BTTS 54%.
+
+**Why it may be value.** The best available price (1.57) exceeds the estimated fair
+price (1.52). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by -6.3%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Thin data: a team has only 15 matches in the training window.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880136> 
+
+
+### 7. Draw — Betis v Vallecano
 
 | Field | Value |
 |---|---|
@@ -197,7 +272,7 @@ model rates this outcome 0.6 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882796> 
 
 
-### 6. Fiorentina to win — Monza v Fiorentina
+### 8. Fiorentina to win — Monza v Fiorentina
 
 | Field | Value |
 |---|---|
@@ -228,7 +303,45 @@ model rates this outcome 4.3 pp above the de-vigged consensus.
 Sources: 
 
 
-### 7. Wrexham to win — Wrexham v Portsmouth
+### 9. Barcelona to win — La Coruna v Barcelona
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Spain La Liga |
+| Kick-off | Sun 29 Nov 10:15 EST |
+| Market / selection | 1X2 — **Barcelona to win** |
+| Best price | **1.30** @ Unibet |
+| Model probability (raw) | 69.3% (±13.8 pp param. sd; p10 44.2%) |
+| Market no-vig probability | 79.4% (Betfair Exchange) |
+| Final probability (blend) | 79.4% |
+| Fair odds | 1.26 |
+| Expected value | **+3.2%** (pessimistic +3.2%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 14 |
+| Odds snapshot | Mon 23 Nov 09:44 EST |
+
+**Statistical evidence.** Expected goals 1.07–2.21;
+model strength rank 9 vs 1 (of 29).
+Recent form — La Coruna: DLDLWD (GF 6, GA 7, xG 1.59/1.05);
+Barcelona: WWWLWW (GF 20, GA 7, xG 2.39/1.03).
+Model 1X2: 13/18/69%,
+O2.5 64%, BTTS 59%.
+
+**Why it may be value.** The best available price (1.30) exceeds the estimated fair
+price (1.26). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by -10.0%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Thin data: a team has only 12 matches in the training window.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882794> 
+
+
+### 10. Wrexham to win — Wrexham v Portsmouth
 
 | Field | Value |
 |---|---|
@@ -264,7 +377,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880125> 
 
 
-### 8. Levante to win — Levante v Elche
+### 11. Levante to win — Levante v Elche
 
 | Field | Value |
 |---|---|
@@ -295,7 +408,7 @@ model rates this outcome 2.6 pp above the de-vigged consensus.
 Sources: 
 
 
-### 9. Draw — Man United v Brentford
+### 12. Draw — Man United v Brentford
 
 | Field | Value |
 |---|---|
@@ -332,7 +445,7 @@ model rates this outcome 0.4 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879226> 
 
 
-### 10. Blackburn to win — Watford v Blackburn
+### 13. Blackburn to win — Watford v Blackburn
 
 | Field | Value |
 |---|---|
@@ -368,7 +481,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880137> 
 
 
-### 11. Draw — Nott'm Forest v Chelsea
+### 14. Draw — Nott'm Forest v Chelsea
 
 | Field | Value |
 |---|---|
@@ -405,7 +518,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879225> 
 
 
-### 12. Draw — Sunderland v Tottenham
+### 15. Draw — Sunderland v Tottenham
 
 | Field | Value |
 |---|---|
@@ -442,7 +555,7 @@ model rates this outcome 0.1 pp above the de-vigged consensus.
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_epl/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401879224> 
 
 
-### 13. Draw — Valencia v Osasuna
+### 16. Draw — Valencia v Osasuna
 
 | Field | Value |
 |---|---|
@@ -479,7 +592,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: <https://api.the-odds-api.com/v4/sports/soccer_spain_la_liga/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401882787> 
 
 
-### 14. Draw — Brentford v Everton
+### 17. Draw — Brentford v Everton
 
 | Field | Value |
 |---|---|
@@ -540,8 +653,8 @@ No national-team fixtures in the next 48h.
 
 ## Track record (paper, fixed 1-unit stakes)
 
-Settled 29 · W 10 / L 18 / P 1 ·
-profit -8.55u · yield -29.5%
-(95% CI -63.6% to +10.3%) ·
-avg CLV +1.2% · max drawdown 8.55u.
-*Only 29 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*
+Settled 31 · W 11 / L 19 / P 1 ·
+profit -8.62u · yield -27.8%
+(95% CI -60.7% to +9.8%) ·
+avg CLV +1.2% · max drawdown 8.67u.
+*Only 31 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*
