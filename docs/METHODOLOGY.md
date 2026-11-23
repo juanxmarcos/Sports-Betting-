@@ -400,3 +400,22 @@ the same tally.
 **Limits.** Weaker evidence per pick than the original rules: one bookmaker, no margin above fair value, and a
 market-consensus probability that can include the pricing bookmaker. Expect more picks and a smaller, less certain
 estimated edge. No network request and no API credit is used: the job reads prices the daily run already stored.
+
+## 18. Estimated parlays: shrunk and capped leg probabilities (issue #106, 2026-11-23)
+
+After 25 settled estimated parlays the record was 3–22 against about 7.3 expected wins; Over/Under legs went 5–11
+and Double Chance 1–3. The owner chose to adjust the leg probabilities rather than pause parlays. For **new**
+parlays only, the leg probability used for value and ranking is (`parlay_estimated.used_prob`):
+
+- soccer Over/Under, BTTS, Double Chance, Draw No Bet: `0.25 × model + 0.75 × de-vigged market consensus`;
+- every market: capped at the market consensus + 0.05.
+
+`python -m sbi parlay-calibration` writes the evidence to `data/backtest/parlay_calibration.json`: per market, the
+mean probability used, the raw model probability, the hit rate with a Wilson 95% interval and the market
+probability over settled ledger legs, plus a log-loss backtest of the blend weight on 207 finished soccer games
+with pre-kick-off model runs and prices. On that backtest the model alone scored worst and the market alone
+best overall (log loss 0.5190 at w = 0, 0.5225 at w = 0.25, 0.5436 at w = 1); the chosen 0.25 is within 0.004 of
+the best and best for Over/Under and Draw No Bet on the model-above-market legs. Details, tables and limits:
+PARLAYS.md section 11.8. Published parlays, their stored probabilities and the single-pick rules (`singles-v2`)
+are unchanged.
+

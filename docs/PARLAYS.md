@@ -460,7 +460,7 @@ browser mirror: `estProblem` in `docs/assets/doyen.js`; tests: `tests/test_parla
 | Fresh prices | Issue #51: that bookmaker's **latest stored price retrieved on the same New York day and before the game starts** (replaces the 150-minute limit). Checked when built and again in the browser; a leg drops out as soon as its game starts. The card shows "Price as of 9:47 AM EST — check your book." (issue #53). |
 | Estimated price | Product of that bookmaker's own single-leg prices. Data kind `estimated_product`; the `bookmaker_combined` kind stays reserved for real quotes. |
 | Bookmakers per game | Issue #51: **1** is enough, the one pricing the parlay. |
-| Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis): the de-vigged consensus of the *other* bookmakers when it exists, otherwise (#51) the de-vigged consensus of at least **2** independent bookmakers including the pricing one. A leg with neither is skipped. |
+| Leg probability | Doyen's stored model probability (Soccer, NFL, NBA). Where Doyen stores none (Tennis): the de-vigged consensus of the *other* bookmakers when it exists, otherwise (#51) the de-vigged consensus of at least **2** independent bookmakers including the pricing one. A leg with neither is skipped. Issue #106 (2026-11-23): for new parlays this raw probability is then **shrunk and capped** before value and ranking (section 11.8). |
 | Parlay value | Issue #51 removed the per-leg rule (probability × price > 1 at every leg). The **whole parlay** must have positive estimated value: joint probability × estimated odds > 1. A parlay starts from a positive-value pair and no further leg may lower its value (probability × price ≥ 1), so at most one leg sits below Doyen's probability, and only if it forms a positive pair with the parlay's strongest leg. Legs are never forced. |
 | Weak legs | Issue #54 makes it explicit: a leg is **weak** when it is below its own probability bar (probability × price < 1 at the pricing bookmaker). **At most one weak leg per parlay**, and the parlay as a whole must still have positive estimated value. Enforced in the search, again in the selection (`weak_legs`, `MAX_WEAK_LEGS = 1`), and in the card contract in Python and the browser ("more than one leg below its probability", with 0.0005 × price slack for the rounded stored probability). |
 | Leg screens | Estimated-mode screen `parlay_estimated.screen_event` (the shadow engine's `parlay_engine.screen_event` is unchanged): market consensus probability 0.30–0.85 (one bookmaker de-vigged when it is the only one), model within 0.12 of the market (data sanity). Issue #68 (owner decision, 2026-11-18): an open injury/lineup research note is **no longer a screen** for estimated parlays, today's or previews; the leg stays eligible and its card shows a small muted line ("Injury/lineup note open: …" with the note's short text) so the owner can judge. Shown, never used to filter. The shadow engine's availability screen is unchanged. Single picks adopted the same loosened leg rules for new picks in issue #99 (METHODOLOGY.md section 17). |
@@ -642,3 +642,67 @@ alongside moneylines. Model and backtest: METHODOLOGY.md section 16.
 - **Limits.** The consensus probability makes a leg's value a price comparison between bookmakers, not a model
   edge. Same-game correlation is not an issue (one leg per game), but alternate lines are not stored, so a bookmaker's
   line can differ from the consensus line and then has fewer bookmakers to compare against.
+
+### 11.8 Overconfident legs: shrunk and capped leg probabilities (issue #106)
+
+**Owner request (2026-11-23).** After 25 settled estimated parlays the record was **3–22**, while the model
+expected about **7.3** wins (`record.expected_wins_settled`). Leg record by market at the time: Moneyline 15–14,
+soccer match result 5–7, **Over/Under 5–11**, **Double Chance 1–3**, Spread 2–0, Game total 0–2. The leg
+probabilities, above all soccer Over/Under and Double Chance from the Dixon-Coles score matrix (#82), were too
+optimistic. The owner chose to **adjust**, not pause.
+
+**Rule (`parlay_estimated.used_prob`, `PROB_RULE = "parlay-leg-shrink-v1"`, new parlays only).** The probability a
+leg uses for value, weak-leg checks, joint probability and ranking is:
+
+1. Soccer **Over/Under, BTTS, Double Chance and Draw No Bet**: `0.25 × model + 0.75 × market`, where *market* is
+   the de-vigged consensus the leg screen already computes (`SHRINK_MODEL_WEIGHT = 0.25`).
+2. **Every market** (match result, moneyline, spreads, totals, tennis included): at most the market consensus
+   **+ 0.05** (`MAX_OVER_MARKET`). A leg can no longer qualify on model optimism alone; for example a soccer
+   Over/Under leg at 0.62 against a 0.50 market uses 0.53.
+
+Everything else is unchanged: same-day rule, one bookmaker, probability band 0.30–0.85, model within 0.12 of the
+market, at most one weak leg, positive parlay value, per-size picks, competition labels. The single picks
+(`singles-v2`) keep their raw probabilities (`build_pool(adjust=False)`); the issue allowed leaving them.
+
+**Ledger and History.** Published parlays and their stored probabilities are untouched (append-only). New ledger
+legs store the probability actually used in `prob`, plus two optional fields: `raw_prob` (the raw model or
+consensus probability) and `market_prob` (the de-vigged market consensus). Card legs carry the same two fields.
+
+**Evidence (`python -m sbi parlay-calibration` → `data/backtest/parlay_calibration.json`, read-only).**
+
+*Ledger calibration, 2026-11-23* (every settled ledger leg; push/void excluded; market probability reconstructed
+from the stored odds the card saw, since older rows did not store it):
+
+| Market | Settled legs | Mean prob used | Hit rate (95% interval) | Mean market prob |
+|---|---|---|---|---|
+| Match result (1X2) | 12 (5–7) | 0.565 | 0.417 (0.193–0.681) | 0.502 |
+| Moneyline | 29 (15–14) | 0.636 | 0.517 (0.344–0.686) | 0.597 |
+| Over/Under | 16 (5–11) | 0.608 | 0.313 (0.142–0.556) | 0.536 (11 legs) |
+| Double chance | 4 (1–3) | 0.702 | 0.250 (0.046–0.699) | 0.637 |
+| Point spread | 2 (2–0) | 0.529 | 1.000 (0.342–1.000) | 0.521 |
+| Game total | 2 (0–2) | 0.506 | 0.000 (0.000–0.658) | 0.483 |
+| **All** | 65 (28–37) | 0.613 | 0.431 (0.318–0.552) | 0.563 (60 legs) |
+
+The legs ran about 0.18 above their hit rate; the market was closer (about 0.13 above) on a small sample.
+
+*Shrink-weight backtest* (207 finished soccer games in the database with a model run stored before kick-off and
+prices retrieved before kick-off; log loss of `w × model + (1 − w) × market`, lower is better):
+
+| Sample | w = 0 (market) | w = 0.25 | w = 0.5 | w = 1 (model) | Best w |
+|---|---|---|---|---|---|
+| All OU / DC / DNB selections (n = 952) | 0.5190 | 0.5225 | 0.5278 | 0.5436 | 0.00 |
+| Model above market (n = 401) | 0.5689 | 0.5713 | 0.5756 | 0.5902 | 0.00 |
+| — Over/Under only (n = 56) | 0.6688 | 0.6685 | 0.6693 | 0.6741 | 0.20 |
+| — Double chance only (n = 270) | 0.5559 | 0.5601 | 0.5659 | 0.5832 | 0.00 |
+| — Draw no bet only (n = 75) | 0.5410 | 0.5392 | 0.5407 | 0.5530 | 0.25 |
+
+The model alone is the worst weight everywhere. The market alone is best overall and for Double Chance; 0.20–0.25
+is best for Over/Under and Draw No Bet on the "model above market" legs a value search picks. The differences
+between 0 and 0.25 are small, so the owner's **0.25** is kept (one weight for all four markets, no per-market
+tuning on a few hundred games). BTTS has no stored model run and is not tested. The cap applies on top.
+
+**Limits.** 65 settled legs is a small sample and the intervals are wide. With the market weighted 75% a leg's value
+comes mostly from one bookmaker pricing above the consensus, so expect fewer estimated parlays and smaller estimated
+values. Re-run `python -m sbi parlay-calibration` as legs settle; the weight changes only with new evidence and
+owner review.
+

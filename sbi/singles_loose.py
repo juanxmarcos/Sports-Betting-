@@ -173,7 +173,7 @@ def publish(con, now: datetime) -> dict:
     """Publish today's single picks under the loosened rules. Append-only: `INSERT OR IGNORE`, so a
     pick already published (any rules) is never touched and never published twice."""
     day = parlay_engine._day(now)
-    pool, cov = pe.build_pool(con, now)
+    pool, cov = pe.build_pool(con, now, adjust=False)      # issue #106: singles-v2 keeps raw probabilities
     cands, why = candidates(pool)
     blocked = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
     already = _picks_on_day(con, day)
@@ -193,7 +193,7 @@ def publish(con, now: datetime) -> dict:
 
 def preview(con, now: datetime, day: str) -> dict:
     """Single picks the same rules would choose for a later New York date. Never published."""
-    pool, cov = pe.build_pool(con, now, day)
+    pool, cov = pe.build_pool(con, now, day, adjust=False)
     cands, _ = candidates(pool)
     blocked = {r[0] for r in con.execute("SELECT event_id FROM recommendations")}
     picked = select(cands, blocked, _picks_on_day(con, day))
