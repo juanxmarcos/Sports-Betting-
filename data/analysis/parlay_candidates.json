@@ -1,6 +1,6 @@
 {
- "generated": "2026-11-19T21:41:07+00:00",
- "date": "2026-11-19",
+ "generated": "2026-11-23T14:35:37+00:00",
+ "date": "2026-11-23",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
  "price_kind": "computed_product_not_a_quote",
@@ -15,31 +15,38 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 6,
+  "events_today": 19,
   "by_sport": {
    "nba": {
-    "events": 4,
-    "fresh_prices": 4,
-    "stored_model": 4,
-    "events_with_candidate_legs": 2
+    "events": 10,
+    "fresh_prices": 10,
+    "stored_model": 10,
+    "events_with_candidate_legs": 7
    },
    "nfl": {
     "events": 1,
     "fresh_prices": 1,
-    "stored_model": 1
+    "stored_model": 1,
+    "events_with_candidate_legs": 1
+   },
+   "soccer": {
+    "events": 3,
+    "fresh_prices": 3,
+    "stored_model": 3,
+    "events_with_candidate_legs": 3
    },
    "tennis": {
-    "events": 1
+    "events": 5
    }
   },
-  "candidate_legs": 3,
-  "events_with_candidate_legs": 2,
-  "pool_legs": 0,
+  "candidate_legs": 15,
+  "events_with_candidate_legs": 11,
+  "pool_legs": 1,
   "excluded": {
    "event: model and market disagree strongly": 1,
-   "event: no fresh result-market prices": 1,
+   "event: no fresh result-market prices": 5,
    "event: probability outside research band": 2,
-   "leg: no bookmaker at or above fair value": 2
+   "leg: no bookmaker at or above fair value": 10
   }
  },
  "search": {
@@ -65,15 +72,15 @@
  "candidates_found": 0,
  "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 9,
-  "usable_legs_today": 1,
-  "combinations_checked": 0,
-  "passed_leg_screens": 0
+  "straight_picks_seen": 14,
+  "usable_legs_today": 5,
+  "combinations_checked": 26,
+  "passed_leg_screens": 18
  },
  "quota": {
-  "at": "2026-11-19T21:42:42+00:00",
-  "credits_spent_last_run": 0,
-  "credits_remaining": "296"
+  "at": "2026-11-23T14:37:29+00:00",
+  "credits_spent_last_run": 16,
+  "credits_remaining": "280"
  },
  "ledger_rows_added": 0,
  "shadow_settlement": {
@@ -94,7 +101,7 @@
  },
  "why_not_3_to_5": [
   "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
-  "Only 0 leg(s) are at or above fair value at any bookmaker.",
+  "Only 1 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]

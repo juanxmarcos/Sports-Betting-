@@ -1,751 +1,561 @@
 {
-  "generated": "2026-11-20T14:03:02+00:00",
+  "generated": "2026-11-23T14:37:49+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
-      "rec_id": "c482fff4eef8f18b",
-      "event_id": "football:D1:20261121:union-berlin:rb-leipzig",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T14:30:00+00:00",
-      "home": "Union Berlin",
-      "away": "RB Leipzig",
+      "rec_id": "a96c4356a4c87930",
+      "event_id": "football:I1:20261123:monza:fiorentina",
+      "league": "I1",
+      "kickoff_utc": "2026-11-23T19:45:00+00:00",
+      "home": "Monza",
+      "away": "Fiorentina",
       "market": "1X2",
       "selection": "A",
       "line": null,
-      "odds": 1.62,
+      "odds": 2.0,
       "bookmaker": "1xBet",
-      "final_prob": 0.6377061223984868,
-      "ev": 0.03308391828554868
+      "final_prob": 0.5411794008440545,
+      "ev": 0.08235880168810894
     },
     {
-      "rec_id": "6324d1677211dbd1",
-      "event_id": "football:F1:20261121:lille:lyon",
-      "league": "F1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Lille",
-      "away": "Lyon",
+      "rec_id": "0744945ec876dbad",
+      "event_id": "football:E0:20261123:brentford:everton",
+      "league": "E0",
+      "kickoff_utc": "2026-11-23T20:00:00+00:00",
+      "home": "Brentford",
+      "away": "Everton",
       "market": "1X2",
       "selection": "D",
       "line": null,
-      "odds": 3.6,
+      "odds": 3.7,
       "bookmaker": "1xBet",
-      "final_prob": 0.2913098464826459,
-      "ev": 0.04871544733752531
+      "final_prob": 0.2800797836722626,
+      "ev": 0.0362951995873717
     },
     {
-      "rec_id": "4ca65467b33f3d0f",
-      "event_id": "football:SP1:20261122:santander:sociedad",
+      "rec_id": "9432255abff6653a",
+      "event_id": "football:SP1:20261123:levante:elche",
       "league": "SP1",
-      "kickoff_utc": "2026-11-22T15:15:00+00:00",
-      "home": "Santander",
-      "away": "Sociedad",
-      "market": "OU",
-      "selection": "over",
-      "line": 3.5,
-      "odds": 2.05,
+      "kickoff_utc": "2026-11-23T20:00:00+00:00",
+      "home": "Levante",
+      "away": "Elche",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 2.26,
       "bookmaker": "1xBet",
-      "final_prob": 0.5026962091634783,
-      "ev": 0.03052722878513059
+      "final_prob": 0.4700996074280268,
+      "ev": 0.06242511278734053
     },
     {
-      "rec_id": "0795fb50263195c7",
-      "event_id": "nfl:NFL:20261122:401873071",
-      "league": "NFL",
-      "kickoff_utc": "2026-11-22T18:00:00+00:00",
-      "home": "Chicago Bears",
-      "away": "New Orleans Saints",
+      "rec_id": "4f1fa4f65061fdd0",
+      "event_id": "nba:NBA:20261124:401910037",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T00:00:00+00:00",
+      "home": "Philadelphia 76ers",
+      "away": "Portland Trail Blazers",
       "market": "ML",
       "selection": "away",
       "line": null,
-      "odds": 5.9,
-      "bookmaker": "DraftKings",
-      "final_prob": 0.17934550800273213,
-      "ev": 0.05813849721611963
+      "odds": 2.41,
+      "bookmaker": "Pinnacle",
+      "final_prob": 0.5291081482674855,
+      "ev": 0.2751506373246402
     },
     {
-      "rec_id": "1fda43d82c49c811",
-      "event_id": "nfl:NFL:20261122:401873068",
-      "league": "NFL",
-      "kickoff_utc": "2026-11-22T18:00:00+00:00",
-      "home": "Carolina Panthers",
-      "away": "Baltimore Ravens",
+      "rec_id": "052270a1d2a2c2fd",
+      "event_id": "nba:NBA:20261124:401910036",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T00:00:00+00:00",
+      "home": "Charlotte Hornets",
+      "away": "Memphis Grizzlies",
       "market": "ML",
       "selection": "home",
       "line": null,
-      "odds": 1.79,
-      "bookmaker": "Marathon Bet",
-      "final_prob": 0.579443607208054,
-      "ev": 0.03720405690241657
+      "odds": 2.35,
+      "bookmaker": "Winamax",
+      "final_prob": 0.5184282358000366,
+      "ev": 0.21830635413008603
     },
     {
-      "rec_id": "789651e0966c91db",
-      "event_id": "nfl:NFL:20261122:401873072",
-      "league": "NFL",
-      "kickoff_utc": "2026-11-22T18:00:00+00:00",
-      "home": "Detroit Lions",
-      "away": "Tampa Bay Buccaneers",
-      "market": "SPREAD",
-      "selection": "away",
-      "line": -6.5,
-      "odds": 2.04,
-      "bookmaker": "1xBet",
-      "final_prob": 0.5093791418493774,
-      "ev": 0.03913344937272977
-    },
-    {
-      "rec_id": "4bdd1cd21bcd57e4",
-      "event_id": "football:SP1:20261122:getafe:ath-madrid",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-22T20:00:00+00:00",
-      "home": "Getafe",
-      "away": "Ath Madrid",
+      "rec_id": "c024d8f63123f1c8",
+      "event_id": "football:E1:20261125:watford:blackburn",
+      "league": "E1",
+      "kickoff_utc": "2026-11-25T19:45:00+00:00",
+      "home": "Watford",
+      "away": "Blackburn",
       "market": "1X2",
       "selection": "A",
       "line": null,
-      "odds": 1.66,
-      "bookmaker": "1xBet",
-      "final_prob": 0.6225523663163899,
-      "ev": 0.03343692808520715
+      "odds": 2.95,
+      "bookmaker": "LeoVegas",
+      "final_prob": 0.3567494800554002,
+      "ev": 0.052410966163430654
     },
     {
-      "rec_id": "d6a9ad32def67355",
-      "event_id": "nfl:NFL:20261122:401873074",
-      "league": "NFL",
-      "kickoff_utc": "2026-11-22T21:05:00+00:00",
-      "home": "Los Angeles Chargers",
-      "away": "New York Jets",
-      "market": "ML",
-      "selection": "home",
+      "rec_id": "61596d2d3692d55f",
+      "event_id": "football:E0:20261127:nott-m-forest:chelsea",
+      "league": "E0",
+      "kickoff_utc": "2026-11-27T20:00:00+00:00",
+      "home": "Nott'm Forest",
+      "away": "Chelsea",
+      "market": "1X2",
+      "selection": "D",
       "line": null,
-      "odds": 1.64,
-      "bookmaker": "Marathon Bet",
-      "final_prob": 0.6360368763799753,
-      "ev": 0.043100477263159354
+      "odds": 3.73,
+      "bookmaker": "1xBet",
+      "final_prob": 0.2804502018607202,
+      "ev": 0.04607925294048654
+    },
+    {
+      "rec_id": "c1c64919213c8be3",
+      "event_id": "football:SP1:20261128:betis:vallecano",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-28T13:00:00+00:00",
+      "home": "Betis",
+      "away": "Vallecano",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 4.7,
+      "bookmaker": "Unibet",
+      "final_prob": 0.22643488316754648,
+      "ev": 0.06424395088746858
+    },
+    {
+      "rec_id": "1ff1011f8fa08e5c",
+      "event_id": "football:E1:20261128:millwall:burnley",
+      "league": "E1",
+      "kickoff_utc": "2026-11-28T15:00:00+00:00",
+      "home": "Millwall",
+      "away": "Burnley",
+      "market": "1X2",
+      "selection": "A",
+      "line": null,
+      "odds": 3.4,
+      "bookmaker": "LeoVegas",
+      "final_prob": 0.3150999257190861,
+      "ev": 0.07133974744489291
+    },
+    {
+      "rec_id": "38a29bde96f64c58",
+      "event_id": "football:E1:20261128:wrexham:portsmouth",
+      "league": "E1",
+      "kickoff_utc": "2026-11-28T15:00:00+00:00",
+      "home": "Wrexham",
+      "away": "Portsmouth",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 2.14,
+      "bookmaker": "LeoVegas",
+      "final_prob": 0.4949538139822168,
+      "ev": 0.05920116192194391
+    },
+    {
+      "rec_id": "95d65f19c9072991",
+      "event_id": "football:E0:20261128:man-united:brentford",
+      "league": "E0",
+      "kickoff_utc": "2026-11-28T15:00:00+00:00",
+      "home": "Man United",
+      "away": "Brentford",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 4.08,
+      "bookmaker": "1xBet",
+      "final_prob": 0.2581550744197796,
+      "ev": 0.05327270363270076
+    },
+    {
+      "rec_id": "3db3c17c9a369043",
+      "event_id": "football:E1:20261129:swansea:cardiff",
+      "league": "E1",
+      "kickoff_utc": "2026-11-29T12:00:00+00:00",
+      "home": "Swansea",
+      "away": "Cardiff",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 2.06,
+      "bookmaker": "LeoVegas",
+      "final_prob": 0.5193223559986261,
+      "ev": 0.06980405335716977
+    },
+    {
+      "rec_id": "06298ed32aea83b3",
+      "event_id": "football:SP1:20261129:valencia:osasuna",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-29T13:00:00+00:00",
+      "home": "Valencia",
+      "away": "Osasuna",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.56,
+      "bookmaker": "1xBet",
+      "final_prob": 0.292855552477419,
+      "ev": 0.04256576681961177
+    },
+    {
+      "rec_id": "b77319c6a3fbda6f",
+      "event_id": "football:E0:20261129:sunderland:tottenham",
+      "league": "E0",
+      "kickoff_utc": "2026-11-29T14:05:00+00:00",
+      "home": "Sunderland",
+      "away": "Tottenham",
+      "market": "1X2",
+      "selection": "D",
+      "line": null,
+      "odds": 3.65,
+      "bookmaker": "1xBet",
+      "final_prob": 0.28642844490017993,
+      "ev": 0.04546382388565683
     }
   ],
   "upcoming_events": [
     {
-      "event_id": "tennis:ATP:20261120:187513",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-20T19:30:00+00:00",
-      "home": "Frances Tiafoe",
-      "away": "Daniil Medvedev"
-    },
-    {
-      "event_id": "football:D1:20261120:bayern-munich:fc-koln",
-      "league": "D1",
-      "kickoff_utc": "2026-11-20T19:30:00+00:00",
-      "home": "Bayern Munich",
-      "away": "FC Koln"
-    },
-    {
-      "event_id": "football:F1:20261120:troyes:le-havre",
-      "league": "F1",
-      "kickoff_utc": "2026-11-20T19:45:00+00:00",
-      "home": "Troyes",
-      "away": "Le Havre"
-    },
-    {
-      "event_id": "football:B1:20261120:cercle-brugge:westerlo",
-      "league": "B1",
-      "kickoff_utc": "2026-11-20T19:45:00+00:00",
-      "home": "Cercle Brugge",
-      "away": "Westerlo"
-    },
-    {
-      "event_id": "football:SP1:20261120:ath-bilbao:espanol",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-20T20:00:00+00:00",
-      "home": "Ath Bilbao",
-      "away": "Espanol"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909305",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T00:00:00+00:00",
-      "home": "Atlanta Hawks",
-      "away": "Charlotte Hornets"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909306",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T00:30:00+00:00",
-      "home": "Brooklyn Nets",
-      "away": "Orlando Magic"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909307",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T00:30:00+00:00",
-      "home": "Cleveland Cavaliers",
-      "away": "Indiana Pacers"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909308",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T00:30:00+00:00",
-      "home": "Detroit Pistons",
-      "away": "Toronto Raptors"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909309",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T01:00:00+00:00",
-      "home": "Chicago Bulls",
-      "away": "Washington Wizards"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909310",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T01:00:00+00:00",
-      "home": "Oklahoma City Thunder",
-      "away": "New Orleans Pelicans"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909311",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T02:30:00+00:00",
-      "home": "Utah Jazz",
-      "away": "Phoenix Suns"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909312",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T03:00:00+00:00",
-      "home": "Denver Nuggets",
-      "away": "Houston Rockets"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401909313",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-21T03:00:00+00:00",
-      "home": "Los Angeles Lakers",
-      "away": "Sacramento Kings"
-    },
-    {
-      "event_id": "tennis:ATP:20261121:187527",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-21T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:ATP:20261121:187528",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-21T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
-    },
-    {
-      "event_id": "tennis:WTA:20261121:186810",
+      "event_id": "tennis:WTA:20261123:186817",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-21T05:00:00+00:00",
+      "kickoff_utc": "2026-11-23T15:30:00+00:00",
       "home": "TBD",
       "away": "TBD"
     },
     {
-      "event_id": "tennis:WTA:20261121:186811",
+      "event_id": "tennis:WTA:20261123:186816",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-21T05:00:00+00:00",
+      "kickoff_utc": "2026-11-23T15:30:00+00:00",
       "home": "TBD",
       "away": "TBD"
     },
     {
-      "event_id": "football:E0:20261121:man-city:fulham",
-      "league": "E0",
-      "kickoff_utc": "2026-11-21T12:30:00+00:00",
-      "home": "Man City",
-      "away": "Fulham"
+      "event_id": "tennis:WTA:20261123:186813",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-23T17:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:E1:20261121:millwall:qpr",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T12:30:00+00:00",
-      "home": "Millwall",
-      "away": "QPR"
+      "event_id": "tennis:WTA:20261123:186823",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-23T17:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:E1:20261121:norwich:cardiff",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T12:30:00+00:00",
-      "home": "Norwich",
-      "away": "Cardiff"
+      "event_id": "tennis:WTA:20261123:186815",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-23T19:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:E1:20261121:southampton:derby",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T12:30:00+00:00",
-      "home": "Southampton",
-      "away": "Derby"
-    },
-    {
-      "event_id": "football:SP1:20261121:alaves:la-coruna",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-21T13:00:00+00:00",
-      "home": "Alaves",
-      "away": "La Coruna"
-    },
-    {
-      "event_id": "football:I1:20261121:como:cagliari",
+      "event_id": "football:I1:20261123:monza:fiorentina",
       "league": "I1",
-      "kickoff_utc": "2026-11-21T14:00:00+00:00",
-      "home": "Como",
-      "away": "Cagliari"
+      "kickoff_utc": "2026-11-23T19:45:00+00:00",
+      "home": "Monza",
+      "away": "Fiorentina"
     },
     {
-      "event_id": "football:I1:20261121:lazio:lecce",
-      "league": "I1",
-      "kickoff_utc": "2026-11-21T14:00:00+00:00",
-      "home": "Lazio",
-      "away": "Lecce"
-    },
-    {
-      "event_id": "football:D1:20261121:union-berlin:rb-leipzig",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T14:30:00+00:00",
-      "home": "Union Berlin",
-      "away": "RB Leipzig"
-    },
-    {
-      "event_id": "football:D1:20261121:leverkusen:paderborn",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T14:30:00+00:00",
-      "home": "Leverkusen",
-      "away": "Paderborn"
-    },
-    {
-      "event_id": "football:D1:20261121:m-gladbach:dortmund",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T14:30:00+00:00",
-      "home": "M'gladbach",
-      "away": "Dortmund"
-    },
-    {
-      "event_id": "football:D1:20261121:ein-frankfurt:hoffenheim",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T14:30:00+00:00",
-      "home": "Ein Frankfurt",
-      "away": "Hoffenheim"
-    },
-    {
-      "event_id": "football:D1:20261121:elversberg:freiburg",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T14:30:00+00:00",
-      "home": "Elversberg",
-      "away": "Freiburg"
-    },
-    {
-      "event_id": "football:E0:20261121:bournemouth:nott-m-forest",
+      "event_id": "football:E0:20261123:brentford:everton",
       "league": "E0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Bournemouth",
-      "away": "Nott'm Forest"
+      "kickoff_utc": "2026-11-23T20:00:00+00:00",
+      "home": "Brentford",
+      "away": "Everton"
     },
     {
-      "event_id": "football:E0:20261121:aston-villa:sunderland",
-      "league": "E0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Aston Villa",
-      "away": "Sunderland"
-    },
-    {
-      "event_id": "football:E0:20261121:chelsea:leeds",
-      "league": "E0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Chelsea",
-      "away": "Leeds"
-    },
-    {
-      "event_id": "football:E0:20261121:coventry:crystal-palace",
-      "league": "E0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Coventry",
-      "away": "Crystal Palace"
-    },
-    {
-      "event_id": "football:E0:20261121:tottenham:ipswich",
-      "league": "E0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Tottenham",
-      "away": "Ipswich"
-    },
-    {
-      "event_id": "football:E1:20261121:bolton:portsmouth",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Bolton",
-      "away": "Portsmouth"
-    },
-    {
-      "event_id": "football:E1:20261121:lincoln:wrexham",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Lincoln",
-      "away": "Wrexham"
-    },
-    {
-      "event_id": "football:E1:20261121:middlesbrough:bristol-city",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Middlesbrough",
-      "away": "Bristol City"
-    },
-    {
-      "event_id": "football:E1:20261121:sheffield-united:watford",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Sheffield United",
-      "away": "Watford"
-    },
-    {
-      "event_id": "football:E1:20261121:stoke:birmingham",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Stoke",
-      "away": "Birmingham"
-    },
-    {
-      "event_id": "football:E1:20261121:swansea:west-brom",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Swansea",
-      "away": "West Brom"
-    },
-    {
-      "event_id": "football:E1:20261121:west-ham:preston",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "West Ham",
-      "away": "Preston"
-    },
-    {
-      "event_id": "football:E1:20261121:wolves:charlton",
-      "league": "E1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Wolves",
-      "away": "Charlton"
-    },
-    {
-      "event_id": "football:B1:20261121:charleroi:st-truiden",
-      "league": "B1",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Charleroi",
-      "away": "St Truiden"
-    },
-    {
-      "event_id": "football:SC0:20261121:celtic:st-mirren",
-      "league": "SC0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Celtic",
-      "away": "St Mirren"
-    },
-    {
-      "event_id": "football:SC0:20261121:falkirk:st-johnstone",
-      "league": "SC0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Falkirk",
-      "away": "St Johnstone"
-    },
-    {
-      "event_id": "football:SC0:20261121:hibernian:dundee-united",
-      "league": "SC0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Hibernian",
-      "away": "Dundee United"
-    },
-    {
-      "event_id": "football:SC0:20261121:kilmarnock:aberdeen",
-      "league": "SC0",
-      "kickoff_utc": "2026-11-21T15:00:00+00:00",
-      "home": "Kilmarnock",
-      "away": "Aberdeen"
-    },
-    {
-      "event_id": "football:SP1:20261121:vallecano:valencia",
+      "event_id": "football:SP1:20261123:levante:elche",
       "league": "SP1",
-      "kickoff_utc": "2026-11-21T15:15:00+00:00",
-      "home": "Vallecano",
-      "away": "Valencia"
+      "kickoff_utc": "2026-11-23T20:00:00+00:00",
+      "home": "Levante",
+      "away": "Elche"
     },
     {
-      "event_id": "football:N1:20261121:nijmegen:psv-eindhoven",
-      "league": "N1",
-      "kickoff_utc": "2026-11-21T15:30:00+00:00",
-      "home": "Nijmegen",
-      "away": "PSV Eindhoven"
-    },
-    {
-      "event_id": "football:F1:20261121:nice:paris-sg",
-      "league": "F1",
-      "kickoff_utc": "2026-11-21T16:15:00+00:00",
-      "home": "Nice",
-      "away": "Paris SG"
-    },
-    {
-      "event_id": "football:I1:20261121:parma:roma",
-      "league": "I1",
-      "kickoff_utc": "2026-11-21T17:00:00+00:00",
-      "home": "Parma",
-      "away": "Roma"
-    },
-    {
-      "event_id": "football:B1:20261121:genk:raal-la-louviere",
-      "league": "B1",
-      "kickoff_utc": "2026-11-21T17:15:00+00:00",
-      "home": "Genk",
-      "away": "RAAL La Louviere"
-    },
-    {
-      "event_id": "football:E0:20261121:newcastle:arsenal",
-      "league": "E0",
-      "kickoff_utc": "2026-11-21T17:30:00+00:00",
-      "home": "Newcastle",
-      "away": "Arsenal"
-    },
-    {
-      "event_id": "football:SP1:20261121:sevilla:betis",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-21T17:30:00+00:00",
-      "home": "Sevilla",
-      "away": "Betis"
-    },
-    {
-      "event_id": "football:D1:20261121:schalke-04:stuttgart",
-      "league": "D1",
-      "kickoff_utc": "2026-11-21T17:30:00+00:00",
-      "home": "Schalke 04",
-      "away": "Stuttgart"
-    },
-    {
-      "event_id": "football:N1:20261121:utrecht:cambuur",
-      "league": "N1",
-      "kickoff_utc": "2026-11-21T17:45:00+00:00",
-      "home": "Utrecht",
-      "away": "Cambuur"
-    },
-    {
-      "event_id": "football:N1:20261121:feyenoord:excelsior",
-      "league": "N1",
-      "kickoff_utc": "2026-11-21T17:45:00+00:00",
-      "home": "Feyenoord",
-      "away": "Excelsior"
-    },
-    {
-      "event_id": "football:SC0:20261121:dundee:hearts",
-      "league": "SC0",
-      "kickoff_utc": "2026-11-21T17:45:00+00:00",
-      "home": "Dundee",
-      "away": "Hearts"
-    },
-    {
-      "event_id": "nba:NBA:20261121:401910023",
+      "event_id": "nba:NBA:20261124:401910036",
       "league": "NBA",
-      "kickoff_utc": "2026-11-21T18:00:00+00:00",
-      "home": "Philadelphia 76ers",
-      "away": "Milwaukee Bucks"
-    },
-    {
-      "event_id": "football:I1:20261121:napoli:torino",
-      "league": "I1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Napoli",
-      "away": "Torino"
-    },
-    {
-      "event_id": "football:F1:20261121:monaco:auxerre",
-      "league": "F1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Monaco",
-      "away": "Auxerre"
-    },
-    {
-      "event_id": "football:F1:20261121:lens:toulouse",
-      "league": "F1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Lens",
-      "away": "Toulouse"
-    },
-    {
-      "event_id": "football:F1:20261121:lille:lyon",
-      "league": "F1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Lille",
-      "away": "Lyon"
-    },
-    {
-      "event_id": "football:F1:20261121:strasbourg:brest",
-      "league": "F1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Strasbourg",
-      "away": "Brest"
-    },
-    {
-      "event_id": "football:B1:20261121:mechelen:club-brugge",
-      "league": "B1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Mechelen",
-      "away": "Club Brugge"
-    },
-    {
-      "event_id": "football:B1:20261121:waregem:antwerp",
-      "league": "B1",
-      "kickoff_utc": "2026-11-21T19:45:00+00:00",
-      "home": "Waregem",
-      "away": "Antwerp"
-    },
-    {
-      "event_id": "football:SP1:20261121:real-madrid:celta",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-21T20:00:00+00:00",
-      "home": "Real Madrid",
-      "away": "Celta"
-    },
-    {
-      "event_id": "football:N1:20261121:groningen:heerenveen",
-      "league": "N1",
-      "kickoff_utc": "2026-11-21T20:00:00+00:00",
-      "home": "Groningen",
-      "away": "Heerenveen"
-    },
-    {
-      "event_id": "football:N1:20261121:telstar:zwolle",
-      "league": "N1",
-      "kickoff_utc": "2026-11-21T20:00:00+00:00",
-      "home": "Telstar",
-      "away": "Zwolle"
-    },
-    {
-      "event_id": "football:SC0:20261121:motherwell:rangers",
-      "league": "SC0",
-      "kickoff_utc": "2026-11-21T20:00:00+00:00",
-      "home": "Motherwell",
-      "away": "Rangers"
-    },
-    {
-      "event_id": "nba:NBA:20261122:401910024",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-22T00:30:00+00:00",
-      "home": "New York Knicks",
-      "away": "Portland Trail Blazers"
-    },
-    {
-      "event_id": "nba:NBA:20261122:401910025",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-22T01:00:00+00:00",
-      "home": "Dallas Mavericks",
-      "away": "LA Clippers"
-    },
-    {
-      "event_id": "nba:NBA:20261122:401910026",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-22T01:00:00+00:00",
-      "home": "Minnesota Timberwolves",
+      "kickoff_utc": "2026-11-24T00:00:00+00:00",
+      "home": "Charlotte Hornets",
       "away": "Memphis Grizzlies"
     },
     {
-      "event_id": "nba:NBA:20261122:401910027",
+      "event_id": "nba:NBA:20261124:401910037",
       "league": "NBA",
-      "kickoff_utc": "2026-11-22T01:00:00+00:00",
-      "home": "San Antonio Spurs",
-      "away": "New Orleans Pelicans"
+      "kickoff_utc": "2026-11-24T00:00:00+00:00",
+      "home": "Philadelphia 76ers",
+      "away": "Portland Trail Blazers"
     },
     {
-      "event_id": "nba:NBA:20261122:401910028",
+      "event_id": "nba:NBA:20261124:401910038",
       "league": "NBA",
-      "kickoff_utc": "2026-11-22T03:00:00+00:00",
+      "kickoff_utc": "2026-11-24T00:30:00+00:00",
+      "home": "Indiana Pacers",
+      "away": "Oklahoma City Thunder"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910039",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T00:30:00+00:00",
+      "home": "Toronto Raptors",
+      "away": "Milwaukee Bucks"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910040",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T00:30:00+00:00",
+      "home": "Minnesota Timberwolves",
+      "away": "Brooklyn Nets"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910041",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T01:00:00+00:00",
+      "home": "Chicago Bulls",
+      "away": "Cleveland Cavaliers"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910042",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T01:00:00+00:00",
+      "home": "New Orleans Pelicans",
+      "away": "Phoenix Suns"
+    },
+    {
+      "event_id": "nfl:NFL:20261124:401873078",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-24T01:15:00+00:00",
+      "home": "Washington Commanders",
+      "away": "Cincinnati Bengals"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910043",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T01:30:00+00:00",
+      "home": "Houston Rockets",
+      "away": "LA Clippers"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910044",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T03:00:00+00:00",
+      "home": "Los Angeles Lakers",
+      "away": "Utah Jazz"
+    },
+    {
+      "event_id": "nba:NBA:20261124:401910045",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-24T03:00:00+00:00",
       "home": "Sacramento Kings",
+      "away": "San Antonio Spurs"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186814",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Luna Maria Cinalli",
+      "away": "Guiomar Maristany Zuleta De Reales"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186828",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Maria Lourdes Carle",
+      "away": "Sol Ailin Larraya Guidi"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186827",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Leyre Romero Gormaz",
+      "away": "Nadia Podoroska"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186825",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Sofia Costoulas",
+      "away": "Polona Hercog"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186818",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Alicia Herrero Linana",
+      "away": "Lucia Bronzetti"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186819",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Laura Samson",
+      "away": "Victoria Bosio"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186820",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Veronika Erjavec",
+      "away": "Zhibek Kulambayeva"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186821",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Irene Burillo",
+      "away": "Lourdes Ayala"
+    },
+    {
+      "event_id": "tennis:WTA:20261124:186826",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-24T05:00:00+00:00",
+      "home": "Victoria Jimenez Kasintseva",
+      "away": "Solana Sierra"
+    },
+    {
+      "event_id": "football:E1:20261124:bristol-city:wrexham",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Bristol City",
+      "away": "Wrexham"
+    },
+    {
+      "event_id": "football:E1:20261124:cardiff:preston",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Cardiff",
+      "away": "Preston"
+    },
+    {
+      "event_id": "football:E1:20261124:charlton:lincoln",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Charlton",
+      "away": "Lincoln"
+    },
+    {
+      "event_id": "football:E1:20261124:middlesbrough:swansea",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Middlesbrough",
+      "away": "Swansea"
+    },
+    {
+      "event_id": "football:E1:20261124:norwich:qpr",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Norwich",
+      "away": "QPR"
+    },
+    {
+      "event_id": "football:E1:20261124:portsmouth:west-ham",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Portsmouth",
+      "away": "West Ham"
+    },
+    {
+      "event_id": "football:E1:20261124:sheffield-united:southampton",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Sheffield United",
+      "away": "Southampton"
+    },
+    {
+      "event_id": "football:SC0:20261124:hibernian:dundee",
+      "league": "SC0",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Hibernian",
+      "away": "Dundee"
+    },
+    {
+      "event_id": "football:E1:20261124:wolves:derby",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T20:00:00+00:00",
+      "home": "Wolves",
+      "away": "Derby"
+    },
+    {
+      "event_id": "football:SC0:20261124:rangers:aberdeen",
+      "league": "SC0",
+      "kickoff_utc": "2026-11-24T20:00:00+00:00",
+      "home": "Rangers",
+      "away": "Aberdeen"
+    },
+    {
+      "event_id": "nba:NBA:20261125:401909314",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-25T00:00:00+00:00",
+      "home": "Orlando Magic",
+      "away": "Detroit Pistons"
+    },
+    {
+      "event_id": "nba:NBA:20261125:401909315",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-25T01:00:00+00:00",
+      "home": "Washington Wizards",
       "away": "Boston Celtics"
     },
     {
-      "event_id": "tennis:ATP:20261122:187529",
-      "league": "TENNIS:ATP",
-      "kickoff_utc": "2026-11-22T05:00:00+00:00",
-      "home": "TBD",
-      "away": "TBD"
+      "event_id": "nba:NBA:20261125:401909316",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-25T03:00:00+00:00",
+      "home": "Denver Nuggets",
+      "away": "Dallas Mavericks"
     },
     {
-      "event_id": "tennis:WTA:20261122:186812",
+      "event_id": "tennis:WTA:20261125:186840",
       "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-22T05:00:00+00:00",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
       "home": "TBD",
       "away": "TBD"
     },
     {
-      "event_id": "football:N1:20261122:twente:willem-ii",
-      "league": "N1",
-      "kickoff_utc": "2026-11-22T11:15:00+00:00",
-      "home": "Twente",
-      "away": "Willem II"
+      "event_id": "tennis:WTA:20261125:186839",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:I1:20261122:juventus:venezia",
-      "league": "I1",
-      "kickoff_utc": "2026-11-22T11:30:00+00:00",
-      "home": "Juventus",
-      "away": "Venezia"
+      "event_id": "tennis:WTA:20261125:186838",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:E1:20261122:burnley:blackburn",
-      "league": "E1",
-      "kickoff_utc": "2026-11-22T12:00:00+00:00",
-      "home": "Burnley",
-      "away": "Blackburn"
+      "event_id": "tennis:WTA:20261125:186837",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:B1:20261122:beveren:gent",
-      "league": "B1",
-      "kickoff_utc": "2026-11-22T12:30:00+00:00",
-      "home": "Beveren",
-      "away": "Gent"
+      "event_id": "tennis:WTA:20261125:186836",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:SP1:20261122:barcelona:villarreal",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-22T13:00:00+00:00",
-      "home": "Barcelona",
-      "away": "Villarreal"
+      "event_id": "tennis:WTA:20261125:186835",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:N1:20261122:ajax:den-haag",
-      "league": "N1",
-      "kickoff_utc": "2026-11-22T13:30:00+00:00",
-      "home": "Ajax",
-      "away": "Den Haag"
+      "event_id": "tennis:WTA:20261125:186834",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     },
     {
-      "event_id": "football:N1:20261122:sparta-rotterdam:az-alkmaar",
-      "league": "N1",
-      "kickoff_utc": "2026-11-22T13:30:00+00:00",
-      "home": "Sparta Rotterdam",
-      "away": "AZ Alkmaar"
-    },
-    {
-      "event_id": "football:E0:20261122:hull:brighton",
-      "league": "E0",
-      "kickoff_utc": "2026-11-22T14:00:00+00:00",
-      "home": "Hull",
-      "away": "Brighton"
-    },
-    {
-      "event_id": "football:I1:20261122:bologna:udinese",
-      "league": "I1",
-      "kickoff_utc": "2026-11-22T14:00:00+00:00",
-      "home": "Bologna",
-      "away": "Udinese"
-    },
-    {
-      "event_id": "football:I1:20261122:sassuolo:genoa",
-      "league": "I1",
-      "kickoff_utc": "2026-11-22T14:00:00+00:00",
-      "home": "Sassuolo",
-      "away": "Genoa"
-    },
-    {
-      "event_id": "football:F1:20261122:paris-fc:angers",
-      "league": "F1",
-      "kickoff_utc": "2026-11-22T14:00:00+00:00",
-      "home": "Paris FC",
-      "away": "Angers"
+      "event_id": "tennis:WTA:20261125:186833",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-25T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     }
   ]
 }
