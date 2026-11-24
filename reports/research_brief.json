@@ -1,36 +1,81 @@
 {
-  "generated": "2026-11-23T22:15:10+00:00",
+  "generated": "2026-11-24T06:31:50+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
-      "rec_id": "4f1fa4f65061fdd0",
-      "event_id": "nba:NBA:20261124:401910037",
+      "rec_id": "da7696ddbbcee357",
+      "event_id": "football:E1:20261124:sheffield-united:southampton",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Sheffield United",
+      "away": "Southampton",
+      "market": "OU",
+      "selection": "over",
+      "line": 2.5,
+      "odds": 1.6583,
+      "bookmaker": "consensus",
+      "final_prob": 0.5704128492925139,
+      "ev": -0.054084372018224136
+    },
+    {
+      "rec_id": "c8225c4e17be1253",
+      "event_id": "football:E1:20261124:cardiff:preston",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Cardiff",
+      "away": "Preston",
+      "market": "OU",
+      "selection": "under",
+      "line": 3.5,
+      "odds": 1.695,
+      "bookmaker": "consensus",
+      "final_prob": 0.5687061681340813,
+      "ev": -0.036043045012732255
+    },
+    {
+      "rec_id": "35d2e38af5a6af66",
+      "event_id": "football:E1:20261124:charlton:lincoln",
+      "league": "E1",
+      "kickoff_utc": "2026-11-24T19:45:00+00:00",
+      "home": "Charlton",
+      "away": "Lincoln",
+      "market": "OU",
+      "selection": "under",
+      "line": 2.5,
+      "odds": 1.73,
+      "bookmaker": "consensus",
+      "final_prob": 0.5684149274369108,
+      "ev": -0.016642175534144377
+    },
+    {
+      "rec_id": "1241efac6d87b919",
+      "event_id": "football:SC0:20261124:rangers:aberdeen",
+      "league": "SC0",
+      "kickoff_utc": "2026-11-24T20:00:00+00:00",
+      "home": "Rangers",
+      "away": "Aberdeen",
+      "market": "OU",
+      "selection": "under",
+      "line": 3.5,
+      "odds": 1.655,
+      "bookmaker": "consensus",
+      "final_prob": 0.5804468457606532,
+      "ev": -0.039360470266118996
+    },
+    {
+      "rec_id": "e486eb9b44abb2a1",
+      "event_id": "nba:NBA:20261125:401909314",
       "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:00:00+00:00",
-      "home": "Philadelphia 76ers",
-      "away": "Portland Trail Blazers",
+      "kickoff_utc": "2026-11-25T00:00:00+00:00",
+      "home": "Orlando Magic",
+      "away": "Detroit Pistons",
       "market": "ML",
       "selection": "away",
       "line": null,
-      "odds": 2.41,
-      "bookmaker": "Pinnacle",
-      "final_prob": 0.5291081482674855,
-      "ev": 0.2751506373246402
-    },
-    {
-      "rec_id": "052270a1d2a2c2fd",
-      "event_id": "nba:NBA:20261124:401910036",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:00:00+00:00",
-      "home": "Charlotte Hornets",
-      "away": "Memphis Grizzlies",
-      "market": "ML",
-      "selection": "home",
-      "line": null,
-      "odds": 2.35,
-      "bookmaker": "Winamax",
-      "final_prob": 0.5184282358000366,
-      "ev": 0.21830635413008603
+      "odds": 1.76,
+      "bookmaker": "consensus",
+      "final_prob": 0.6043272134614212,
+      "ev": 0.06361589569210113
     },
     {
       "rec_id": "c024d8f63123f1c8",
@@ -46,6 +91,21 @@
       "bookmaker": "LeoVegas",
       "final_prob": 0.3567494800554002,
       "ev": 0.052410966163430654
+    },
+    {
+      "rec_id": "17fe16c52f8cafad",
+      "event_id": "football:E1:20261125:stoke:millwall",
+      "league": "E1",
+      "kickoff_utc": "2026-11-25T20:00:00+00:00",
+      "home": "Stoke",
+      "away": "Millwall",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 2.4,
+      "bookmaker": "LeoVegas",
+      "final_prob": 0.43657925525181346,
+      "ev": 0.04779021260435233
     },
     {
       "rec_id": "b2988171320d20df",
@@ -391,93 +451,24 @@
       "bookmaker": "1xBet",
       "final_prob": 0.28548457395286786,
       "ev": 0.03345415770938165
+    },
+    {
+      "rec_id": "945c641dfe0f6b29",
+      "event_id": "nfl:NFL:20261201:401873094",
+      "league": "NFL",
+      "kickoff_utc": "2026-12-01T01:15:00+00:00",
+      "home": "Tampa Bay Buccaneers",
+      "away": "Carolina Panthers",
+      "market": "ML",
+      "selection": "home",
+      "line": null,
+      "odds": 1.72,
+      "bookmaker": "Marathon Bet",
+      "final_prob": 0.5990265360439918,
+      "ev": 0.030325641995665897
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "nba:NBA:20261124:401910036",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:00:00+00:00",
-      "home": "Charlotte Hornets",
-      "away": "Memphis Grizzlies"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910037",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:00:00+00:00",
-      "home": "Philadelphia 76ers",
-      "away": "Portland Trail Blazers"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910038",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:30:00+00:00",
-      "home": "Indiana Pacers",
-      "away": "Oklahoma City Thunder"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910039",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:30:00+00:00",
-      "home": "Toronto Raptors",
-      "away": "Milwaukee Bucks"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910040",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T00:30:00+00:00",
-      "home": "Minnesota Timberwolves",
-      "away": "Brooklyn Nets"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910041",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T01:00:00+00:00",
-      "home": "Chicago Bulls",
-      "away": "Cleveland Cavaliers"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910042",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T01:00:00+00:00",
-      "home": "New Orleans Pelicans",
-      "away": "Phoenix Suns"
-    },
-    {
-      "event_id": "nfl:NFL:20261124:401873078",
-      "league": "NFL",
-      "kickoff_utc": "2026-11-24T01:15:00+00:00",
-      "home": "Washington Commanders",
-      "away": "Cincinnati Bengals"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910043",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T01:30:00+00:00",
-      "home": "Houston Rockets",
-      "away": "LA Clippers"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910044",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T03:00:00+00:00",
-      "home": "Los Angeles Lakers",
-      "away": "Utah Jazz"
-    },
-    {
-      "event_id": "nba:NBA:20261124:401910045",
-      "league": "NBA",
-      "kickoff_utc": "2026-11-24T03:00:00+00:00",
-      "home": "Sacramento Kings",
-      "away": "San Antonio Spurs"
-    },
-    {
-      "event_id": "tennis:WTA:20261124:186828",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T05:00:00+00:00",
-      "home": "Maria Lourdes Carle",
-      "away": "Sol Ailin Larraya Guidi"
-    },
     {
       "event_id": "tennis:WTA:20261124:186819",
       "league": "TENNIS:WTA",
@@ -848,6 +839,69 @@
       "kickoff_utc": "2026-11-25T22:00:00+00:00",
       "home": "Philadelphia 76ers",
       "away": "Miami Heat"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909318",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T00:00:00+00:00",
+      "home": "Charlotte Hornets",
+      "away": "Chicago Bulls"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909319",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T00:30:00+00:00",
+      "home": "New York Knicks",
+      "away": "Cleveland Cavaliers"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909320",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T00:30:00+00:00",
+      "home": "Oklahoma City Thunder",
+      "away": "Minnesota Timberwolves"
+    },
+    {
+      "event_id": "nfl:NFL:20261126:401873079",
+      "league": "NFL",
+      "kickoff_utc": "2026-11-26T01:00:00+00:00",
+      "home": "Los Angeles Rams",
+      "away": "Green Bay Packers"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909321",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T01:00:00+00:00",
+      "home": "Memphis Grizzlies",
+      "away": "LA Clippers"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909322",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T01:00:00+00:00",
+      "home": "Milwaukee Bucks",
+      "away": "Brooklyn Nets"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909323",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T01:30:00+00:00",
+      "home": "Houston Rockets",
+      "away": "Phoenix Suns"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909324",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T03:00:00+00:00",
+      "home": "Golden State Warriors",
+      "away": "Sacramento Kings"
+    },
+    {
+      "event_id": "nba:NBA:20261126:401909325",
+      "league": "NBA",
+      "kickoff_utc": "2026-11-26T03:00:00+00:00",
+      "home": "Portland Trail Blazers",
+      "away": "San Antonio Spurs"
     }
   ]
 }

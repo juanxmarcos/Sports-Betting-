@@ -1,4 +1,4 @@
-# Parlay candidates (shadow) — 2026-11-23 17:13 New York
+# Parlay candidates (shadow) — 2026-11-24 01:29 New York
 
 Developer-only. **Nothing here is published.** Prices are computed products of single-market quotes (`computed_product_not_a_quote`), not bookmaker combined quotes. Method `parlay-fullslate-shadow-v1`; no network request, no API credit.
 
@@ -6,27 +6,28 @@ Developer-only. **Nothing here is published.** Prices are computed products of s
 
 | Measure | Stage-1 (published picks) | Full-slate engine |
 |---|---|---|
-| Legs considered today | 25 picks | 11 events |
-| Usable legs | 1 | 0 (candidate legs 13, events with a leg 9) |
-| Combinations checked | 0 | 0 (bounded; truncated: False) |
-| Passed leg/combination screens | 0 | 0 |
+| Legs considered today | 30 picks | 30 events |
+| Usable legs | 5 | 5 (candidate legs 22, events with a leg 16) |
+| Combinations checked | 26 | 11 (bounded; truncated: False) |
+| Passed leg/combination screens | 8 | 0 |
 
 | Sport | Events today | Fresh prices | Stored model prob | Events with candidate legs |
 |---|---|---|---|---|
-| nba | 10 | 10 | 10 | 8 |
-| nfl | 1 | 1 | 1 | 1 |
+| nba | 3 | 3 | 3 | 3 |
+| soccer | 19 | 19 | 10 | 13 |
+| tennis | 8 | 0 | 0 | 0 |
 
-Excluded: {"event: probability outside research band": 2, "leg: no bookmaker at or above fair value": 9}
+Excluded: {"event: no fresh result-market prices": 8, "event: probability outside research band": 4, "event: too few independent bookmakers": 2, "leg: no bookmaker at or above fair value": 11}
 
 | Legs | Combinations evaluated | Kept (positive computed EV, beam-capped) |
 |---|---|---|
-| 2 | 0 | 0 |
+| 2 | 11 | 0 |
 | 3 | 0 | 0 |
 | 4 | 0 | 0 |
 | 5 | 0 | 0 |
 | 6 | 0 | 0 |
 
-The Odds API (read from job log, not called here): last run 2026-11-23T22:14:46+00:00, spent 0, remaining 262.
+The Odds API (read from job log, not called here): last run 2026-11-24T06:31:29+00:00, spent 16, remaining 246.
 
 ## 2. Shadow shortlist (not shown on the homepage)
 
@@ -41,6 +42,5 @@ The Odds API (read from job log, not called here): last run 2026-11-23T22:14:46+
 ## 4. Why not 3–5 recommended parlays today
 
 - No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.
-- Only 0 leg(s) are at or above fair value at any bookmaker.
 - Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.
 - Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only).
