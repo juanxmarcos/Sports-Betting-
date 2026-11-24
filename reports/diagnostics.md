@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-24 06:31 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-24 14:04 UTC)
 
 ## Opportunity funnel (next 7 days)
 
@@ -14,14 +14,14 @@
   - market rejections: EV below threshold (41), too few bookmakers (30), odds outside range (1)
   - primary blocker per event: no bookmaker prices yet (38), prices are in line with the sharp market (7)
 
-**TENNIS**: events discovered 57 → complete history 7 → valid forecast 57 → fresh odds available 0 → stale odds only 0 → three plus bookmakers 0 → fully evaluated 0 → markets evaluated 0 → markets positive ev 0 → events positive ev 0 → events passing all rules 0 → final recommendations 0
-  - primary blocker per event: no bookmaker prices yet (57)
+**TENNIS**: events discovered 55 → complete history 5 → valid forecast 55 → fresh odds available 0 → stale odds only 0 → three plus bookmakers 0 → fully evaluated 0 → markets evaluated 0 → markets positive ev 0 → events positive ev 0 → events passing all rules 0 → final recommendations 0
+  - primary blocker per event: no bookmaker prices yet (55)
 
 ## Odds freshness (events in next 48h)
 
-- soccer: {'events_with_odds': 158, 'median_odds_age_h': 0.0, 'median_bookmakers': 18.0, 'share_3plus_books': 0.89}
-- nfl: {'events_with_odds': 16, 'median_odds_age_h': 0.0, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
-- nba: {'events_with_odds': 7, 'median_odds_age_h': 0.0, 'median_bookmakers': 10, 'share_3plus_books': 1.0}
+- soccer: {'events_with_odds': 158, 'median_odds_age_h': 7.6, 'median_bookmakers': 18.0, 'share_3plus_books': 0.89}
+- nfl: {'events_with_odds': 16, 'median_odds_age_h': 7.6, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
+- nba: {'events_with_odds': 7, 'median_odds_age_h': 7.5, 'median_bookmakers': 10, 'share_3plus_books': 1.0}
 - tennis: {'events_with_odds': 0, 'median_odds_age_h': None, 'median_bookmakers': None, 'share_3plus_books': None}
 
 ## The Odds API

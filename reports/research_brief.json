@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-24T06:31:50+00:00",
+  "generated": "2026-11-24T14:03:19+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -469,20 +469,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "tennis:WTA:20261124:186819",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T14:00:00+00:00",
-      "home": "Laura Samson",
-      "away": "Victoria Bosio"
-    },
-    {
-      "event_id": "tennis:WTA:20261124:186820",
-      "league": "TENNIS:WTA",
-      "kickoff_utc": "2026-11-24T14:00:00+00:00",
-      "home": "Veronika Erjavec",
-      "away": "Zhibek Kulambayeva"
-    },
     {
       "event_id": "tennis:WTA:20261124:186814",
       "league": "TENNIS:WTA",

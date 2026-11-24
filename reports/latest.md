@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-24
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 24 Nov 01:29 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Tue 24 Nov 09:04 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -116,7 +116,9 @@ Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regio
 price (1.65). The
 model rates this outcome 8.1 pp above the de-vigged consensus.
 
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+**Context / research flags.** 
+- [interpretation · injury · supports] TalkBasket's 24 Nov 2026 NBA injury report roundup (via search summary; page not directly readable) lists Magic F Paolo Banchero out (high ankle sprain) with Isaac, Penda and Nelson also out, and Pistons G Cade Cunningham probable (right knee soreness) with Duren, Robinson, Prince and Okorie out, ahead of the 7pm ET game; not confirmed against the official NBA report. ([source](https://www.talkbasket.net/229884-nba-injury-report-banchero-cunningham-listed-on-tuesday-november-24), 2026-11-24T14:04:02+00:00)
+
 
 **Reasons this could be wrong.**
 - Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, so the estimated value is usually slightly negative; picks are chosen by likelihood, and your sportsbook's price may differ slightly.
@@ -254,16 +256,6 @@ Sources:
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
-| Frosinone v Parma (I1) | 1X2 A | 6.40 Unibet | 17.1% | +9.6% | +9.6% | odds outside range |
-| Antwerp v Anderlecht (B1) | 1X2 D | 4.21 Pinnacle | 26.0% | +9.4% | +9.4% | ok |
-| Stuttgart v Ein Frankfurt (D1) | 1X2 A | 4.50 Unibet | 24.1% | +8.4% | +8.4% | ok |
-| West Ham v Stoke (E1) | 1X2 A | 6.75 LeoVegas | 16.0% | +8.0% | +8.0% | odds outside range |
-| Millwall v Burnley (E1) | 1X2 A | 3.40 LeoVegas | 31.5% | +7.1% | +7.1% | ok |
-| Swansea v Cardiff (E1) | 1X2 H | 2.07 LeoVegas | 51.6% | +6.8% | +6.8% | ok |
-| Zwolle v AZ Alkmaar (N1) | 1X2 H | 6.00 Unibet | 17.8% | +6.5% | +6.5% | ok |
-| Betis v Vallecano (SP1) | 1X2 D | 4.70 Unibet | 22.6% | +6.4% | +6.4% | ok |
-| Wrexham v Portsmouth (E1) | 1X2 H | 2.14 LeoVegas | 49.6% | +6.1% | +6.1% | ok |
-| Man United v Brentford (E0) | 1X2 D | 4.08 1xBet | 26.0% | +5.9% | +5.9% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)
