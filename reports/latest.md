@@ -1,19 +1,19 @@
 # Sports Betting Doyen — Daily Report, 2026-11-24
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 24 Nov 09:04 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Tue 24 Nov 15:53 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 224 |
-| Events with fresh odds | 127 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 108 |
-| Markets evaluated | 1066 |
-| Events passing all rules | 22 |
-| Published today | **7** |
+| Events discovered | 207 |
+| Events with fresh odds | 117 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 58 |
+| Markets evaluated | 740 |
+| Events passing all rules | 8 |
+| Published today | **10** |
 | Highest estimated EV | +6.4% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
@@ -126,7 +126,75 @@ model rates this outcome 8.1 pp above the de-vigged consensus.
 Sources: 
 
 
-### 4. Under 3.5 goals — Rangers v Aberdeen
+### 4. Ajax to win — Feyenoord v Ajax
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Netherlands Eredivisie |
+| Kick-off | Sun 29 Nov 08:30 EST |
+| Market / selection | 1X2 — **Ajax to win** |
+| Best price | **3.25** @ Unibet |
+| Model probability (raw) | 31.9% (±9.1 pp param. sd; p10 21.6%) |
+| Market no-vig probability | 32.8% (Betfair Exchange) |
+| Final probability (blend) | 32.8% |
+| Fair odds | 3.05 |
+| Expected value | **+6.4%** (pessimistic +6.4%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 15 |
+| Odds snapshot | Tue 24 Nov 15:55 EST |
+
+**Statistical evidence.** Expected goals 1.78–1.55;
+model strength rank 3 vs 2 (of 24).
+Recent form — Feyenoord: WWDDLL (GF 13, GA 13, xG 2.03/1.5);
+Ajax: DWWWDW (GF 14, GA 6, xG 1.48/1.44).
+Model 1X2: 42/27/32%,
+O2.5 65%, BTTS 66%.
+
+**Why it may be value.** The best available price (3.25) exceeds the estimated fair
+price (3.05). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875535> 
+
+
+### 5. Arizona Cardinals to win — Arizona Cardinals v Washington Commanders
+
+| Field | Value |
+|---|---|
+| Sport / competition | NFL — NFL |
+| Kick-off | Sun 29 Nov 16:25 EST |
+| Market / selection | ML — **Arizona Cardinals to win** |
+| Best price | **4.30** @ BetAnything |
+| Model probability (raw) | 38.9% (±0.0 pp param. sd; p10 38.9%) |
+| Market no-vig probability | 24.7% (Betfair Exchange) |
+| Final probability (blend) | 24.7% |
+| Fair odds | 4.06 |
+| Expected value | **+6.0%** (pessimistic +6.0%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Tue 24 Nov 15:55 EST |
+
+**Statistical evidence.** Projected score Arizona Cardinals 22.0 – Washington Commanders 25.2. Doyen's ratings project Arizona Cardinals 22.0 – Washington Commanders 25.2 pts (margin -3.2, total 47.2); power ranks 31 and 19 of 32.
+
+**Why it may be value.** The best available price (4.30) exceeds the estimated fair
+price (4.06). The
+model rates this outcome 14.2 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model weight 0.00: the edge is the price versus the multi-bookmaker consensus, not a model opinion.
+- Model and market disagree by +14.2%.
+
+Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/football/game/_/gameId/401873092> 
+
+
+### 6. Under 3.5 goals — Rangers v Aberdeen
 
 | Field | Value |
 |---|---|
@@ -157,7 +225,44 @@ model rates this outcome 5.9 pp above the de-vigged consensus.
 Sources: 
 
 
-### 5. Over 2.5 goals — Sheffield United v Southampton
+### 7. Norwich to win — Preston v Norwich
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — England Championship |
+| Kick-off | Sat 28 Nov 07:30 EST |
+| Market / selection | 1X2 — **Norwich to win** |
+| Best price | **1.73** @ LeoVegas |
+| Model probability (raw) | 47.3% (±8.1 pp param. sd; p10 37.7%) |
+| Market no-vig probability | 60.4% (Betfair Exchange) |
+| Final probability (blend) | 60.4% |
+| Fair odds | 1.66 |
+| Expected value | **+4.5%** (pessimistic +4.5%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 13 |
+| Odds snapshot | Tue 24 Nov 15:55 EST |
+
+**Statistical evidence.** Expected goals 1.24–1.66;
+model strength rank 30 vs 9 (of 36).
+Recent form — Preston: LDLLWD (GF 6, GA 11, xG 1.08/2.22);
+Norwich: LWWWWW (GF 17, GA 5, xG 1.79/1.05).
+Model 1X2: 27/25/47%,
+O2.5 55%, BTTS 58%.
+
+**Why it may be value.** The best available price (1.73) exceeds the estimated fair
+price (1.66). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Model and market disagree by -13.1%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880131> 
+
+
+### 8. Over 2.5 goals — Sheffield United v Southampton
 
 | Field | Value |
 |---|---|
@@ -188,7 +293,7 @@ comes mainly from the price being out of line with the consensus of other bookma
 Sources: 
 
 
-### 6. Under 3.5 goals — Cardiff v Preston
+### 9. Under 3.5 goals — Cardiff v Preston
 
 | Field | Value |
 |---|---|
@@ -219,7 +324,7 @@ model rates this outcome 9.4 pp above the de-vigged consensus.
 Sources: 
 
 
-### 7. Under 2.5 goals — Charlton v Lincoln
+### 10. Under 2.5 goals — Charlton v Lincoln
 
 | Field | Value |
 |---|---|
@@ -256,6 +361,16 @@ Sources:
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
+| Swansea v Cardiff (E1) | 1X2 A | 3.75 Coolbet | 29.0% | +8.7% | +8.7% | ok |
+| Feyenoord v Ajax (N1) | 1X2 A | 3.25 Unibet | 32.8% | +6.4% | +6.4% | ok |
+| Millwall v Burnley (E1) | 1X2 A | 3.40 LeoVegas | 31.2% | +6.2% | +6.2% | ok |
+| Preston v Norwich (E1) | 1X2 A | 1.73 LeoVegas | 60.4% | +4.5% | +4.5% | ok |
+| Stuttgart v Ein Frankfurt (D1) | 1X2 A | 4.16 1xBet | 24.9% | +3.5% | +3.5% | ok |
+| Freiburg v RB Leipzig (D1) | 1X2 A | 2.53 1xBet | 40.9% | +3.4% | +3.4% | ok |
+| Hoffenheim v Augsburg (D1) | 1X2 A | 4.36 1xBet | 23.6% | +3.1% | +3.1% | ok |
+| West Brom v Bristol City (E1) | 1X2 H | 1.88 LeoVegas | 54.7% | +2.8% | +2.8% | EV below threshold |
+| Nijmegen v Twente (N1) | OU under 3.5 | 1.87 Pinnacle | 54.9% | +2.6% | +2.6% | EV below threshold |
+| Den Haag v Utrecht (N1) | 1X2 H | 2.85 Unibet | 36.0% | +2.6% | +2.6% | EV below threshold |
 
 
 ## International fixtures — model monitoring (not recommendations)
