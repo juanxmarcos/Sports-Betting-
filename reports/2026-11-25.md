@@ -1,18 +1,18 @@
 # Sports Betting Doyen — Daily Report, 2026-11-25
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Wed 25 Nov 09:04 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Wed 25 Nov 15:13 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 228 |
-| Events with fresh odds | 119 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 60 |
-| Markets evaluated | 804 |
-| Events passing all rules | 10 |
+| Events discovered | 231 |
+| Events with fresh odds | 122 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 65 |
+| Markets evaluated | 913 |
+| Events passing all rules | 8 |
 | Published today | **7** |
 | Highest estimated EV | +8.6% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
@@ -272,6 +272,16 @@ Sources:
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
+| Swansea v Cardiff (E1) | 1X2 A | 3.70 LeoVegas | 29.2% | +7.9% | +7.9% | ok |
+| Stuttgart v Ein Frankfurt (D1) | 1X2 A | 4.16 1xBet | 25.6% | +6.4% | +6.4% | ok |
+| West Ham v Stoke (E1) | 1X2 D | 4.41 GTbets | 23.9% | +5.2% | +5.2% | ok |
+| Millwall v Burnley (E1) | 1X2 A | 3.35 LeoVegas | 31.2% | +4.7% | +4.7% | ok |
+| Le Mans v Lille (F1) | 1X2 D | 3.65 1xBet | 28.4% | +3.8% | +3.8% | insufficient team history |
+| Brest v Paris FC (F1) | 1X2 D | 3.69 1xBet | 28.1% | +3.7% | +3.7% | ok |
+| Le Havre v Strasbourg (F1) | 1X2 D | 3.90 1xBet | 26.5% | +3.5% | +3.5% | ok |
+| Paderborn v Schalke 04 (D1) | 1X2 D | 3.73 1xBet | 27.7% | +3.3% | +3.3% | insufficient team history |
+| Lyon v Monaco (F1) | 1X2 D | 3.65 Unibet | 28.3% | +3.1% | +3.1% | ok |
+| Hamburg v Bayern Munich (D1) | OU over 3.5 | 1.84 1xBet | 56.0% | +3.0% | +3.0% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)
