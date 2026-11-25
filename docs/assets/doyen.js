@@ -564,7 +564,9 @@
   function shownSingles(day, preview) {
     const G = (D0() || {}).singles;
     if (!G || typeof G !== "object") return null;
-    const pub = (G.days && Array.isArray(G.days[day]) ? G.days[day] : []).filter((p) => singleOk(p, day) && p.preview !== true);
+    // Owner request 2026-11-25: withdrawn picks are not shown on the Today page (History keeps them).
+    const pub = (G.days && Array.isArray(G.days[day]) ? G.days[day] : []).filter((p) => singleOk(p, day) && p.preview !== true
+      && !(p.status && p.status.state === "withdrawn"));
     const seen = new Set(pub.map((p) => p.event_id));
     const pv = preview ? ((Array.isArray(G.previews) ? G.previews : []).find((x) => x && x.date === day) || {}).recommendations : [];
     const prev = (Array.isArray(pv) ? pv : []).filter((p) => singleOk(p, day) && p.preview === true && !seen.has(p.event_id) && (seen.add(p.event_id), true));
