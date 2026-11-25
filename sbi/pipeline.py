@@ -128,7 +128,13 @@ def _risks(c, model, home, away, rules) -> list[str]:
 
 def publish_pick(con, now, eid, c, ev, base_evidence: dict, books: dict, urls: list, odds_ts, rank: int,
                  model_version: str, risks: list[str]) -> int:
-    """Insert one immutable paper recommendation. Returns 1 if inserted, 0 if duplicate."""
+    """Insert one immutable paper recommendation. Returns 1 if inserted, 0 if duplicate.
+
+    Owner decision 2026-11-25: the legacy best-price engine (singles-v1) no longer publishes new picks,
+    because it compares sportsbooks, which the owner does not use. Picks already published stay in the
+    record and still settle. Set SBI_LEGACY_SINGLES=1 to turn it back on."""
+    if os.environ.get("SBI_LEGACY_SINGLES") != "1":
+        return 0
     evidence = dict(base_evidence)
     evidence.update({
         "consensus_source": c.consensus_src, "n_bookmakers": c.n_books,
