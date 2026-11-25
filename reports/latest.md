@@ -1,20 +1,20 @@
-# Sports Betting Doyen — Daily Report, 2026-11-24
+# Sports Betting Doyen — Daily Report, 2026-11-25
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Tue 24 Nov 15:53 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Wed 25 Nov 00:04 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 207 |
-| Events with fresh odds | 117 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 58 |
-| Markets evaluated | 740 |
-| Events passing all rules | 8 |
-| Published today | **10** |
-| Highest estimated EV | +6.4% |
+| Events discovered | 228 |
+| Events with fresh odds | 119 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 60 |
+| Markets evaluated | 804 |
+| Events passing all rules | 10 |
+| Published today | **7** |
+| Highest estimated EV | +8.6% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
 
 
@@ -26,196 +26,97 @@ Ranking: by **pessimistic EV** (EV computed with the 10th-percentile model proba
 parameter uncertainty), so that thinly estimated edges rank below robust ones.
 
 
-### 1. Stoke to win — Stoke v Millwall
-
-| Field | Value |
-|---|---|
-| Sport / competition | Football — England Championship |
-| Kick-off | Wed 25 Nov 15:00 EST |
-| Market / selection | 1X2 — **Stoke to win** |
-| Best price | **2.40** @ LeoVegas |
-| Model probability (raw) | 41.1% (±8.2 pp param. sd; p10 29.6%) |
-| Market no-vig probability | 43.7% (Betfair Exchange) |
-| Final probability (blend) | 43.7% |
-| Fair odds | 2.29 |
-| Expected value | **+4.8%** (pessimistic +4.8%) |
-| Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 17 |
-| Odds snapshot | Tue 24 Nov 01:31 EST |
-
-**Statistical evidence.** Expected goals 1.29–1.09;
-model strength rank 19 vs 13 (of 36).
-Recent form — Stoke: WDWWWW (GF 8, GA 2, xG 1.23/0.82);
-Millwall: DLWLLL (GF 7, GA 12, xG 1.45/1.66).
-Model 1X2: 41/28/31%,
-O2.5 43%, BTTS 48%.
-
-**Why it may be value.** The best available price (2.40) exceeds the estimated fair
-price (2.29). The edge
-comes mainly from the price being out of line with the consensus of other bookmakers.
-
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
-
-**Reasons this could be wrong.**
-- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
-
-Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880138> 
-
-
-### 2. Tampa Bay Buccaneers to win — Tampa Bay Buccaneers v Carolina Panthers
-
-| Field | Value |
-|---|---|
-| Sport / competition | NFL — NFL |
-| Kick-off | Mon 30 Nov 20:15 EST |
-| Market / selection | ML — **Tampa Bay Buccaneers to win** |
-| Best price | **1.72** @ Marathon Bet |
-| Model probability (raw) | 64.3% (±0.0 pp param. sd; p10 64.3%) |
-| Market no-vig probability | 59.9% (Pinnacle) |
-| Final probability (blend) | 59.9% |
-| Fair odds | 1.67 |
-| Expected value | **+3.0%** (pessimistic +3.0%) |
-| Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 16 |
-| Odds snapshot | Tue 24 Nov 01:31 EST |
-
-**Statistical evidence.** Projected score Tampa Bay Buccaneers 25.6 – Carolina Panthers 21.4. Doyen's ratings project Tampa Bay Buccaneers 25.6 – Carolina Panthers 21.4 pts (margin +4.2, total 47.0); power ranks 15 and 22 of 32.
-
-**Why it may be value.** The best available price (1.72) exceeds the estimated fair
-price (1.67). The
-model rates this outcome 4.4 pp above the de-vigged consensus.
-
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
-
-**Reasons this could be wrong.**
-- Model weight 0.00: the edge is the price versus the multi-bookmaker consensus, not a model opinion.
-
-Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/football/game/_/gameId/401873094> 
-
-
-### 3. Detroit Pistons to win — Orlando Magic v Detroit Pistons
-
-| Field | Value |
-|---|---|
-| Sport / competition | NBA — NBA |
-| Kick-off | Tue 24 Nov 19:00 EST |
-| Market / selection | ML — **Detroit Pistons to win** |
-| Best price | **1.76** @ consensus |
-| Model probability (raw) | 63.6% |
-| Market no-vig probability | 55.4% (Doyen model (shrunk and capped toward the market)) |
-| Final probability (blend) | 60.4% |
-| Fair odds | 1.65 |
-| Expected value | **+6.4%** (pessimistic +6.4%) |
-| Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 19 |
-| Odds snapshot | Tue 24 Nov 01:31 EST |
-
-**Statistical evidence.** No further model detail is stored for this pick.
-
-**Why it may be value.** The best available price (1.76) exceeds the estimated fair
-price (1.65). The
-model rates this outcome 8.1 pp above the de-vigged consensus.
-
-**Context / research flags.** 
-- [interpretation · injury · supports] TalkBasket's 24 Nov 2026 NBA injury report roundup (via search summary; page not directly readable) lists Magic F Paolo Banchero out (high ankle sprain) with Isaac, Penda and Nelson also out, and Pistons G Cade Cunningham probable (right knee soreness) with Duren, Robinson, Prince and Okorie out, ahead of the 7pm ET game; not confirmed against the official NBA report. ([source](https://www.talkbasket.net/229884-nba-injury-report-banchero-cunningham-listed-on-tuesday-november-24), 2026-11-24T14:04:02+00:00)
-
-
-**Reasons this could be wrong.**
-- Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, so the estimated value is usually slightly negative; picks are chosen by likelihood, and your sportsbook's price may differ slightly.
-
-Sources: 
-
-
-### 4. Ajax to win — Feyenoord v Ajax
+### 1. Den Haag to win — Den Haag v Utrecht
 
 | Field | Value |
 |---|---|
 | Sport / competition | Football — Netherlands Eredivisie |
-| Kick-off | Sun 29 Nov 08:30 EST |
-| Market / selection | 1X2 — **Ajax to win** |
-| Best price | **3.25** @ Unibet |
-| Model probability (raw) | 31.9% (±9.1 pp param. sd; p10 21.6%) |
-| Market no-vig probability | 32.8% (Betfair Exchange) |
-| Final probability (blend) | 32.8% |
-| Fair odds | 3.05 |
-| Expected value | **+6.4%** (pessimistic +6.4%) |
+| Kick-off | Sun 29 Nov 06:15 EST |
+| Market / selection | 1X2 — **Den Haag to win** |
+| Best price | **3.00** @ Unibet |
+| Model probability (raw) | 31.1% (±12.4 pp param. sd; p10 18.7%) |
+| Market no-vig probability | 35.9% (Betfair Exchange) |
+| Final probability (blend) | 35.9% |
+| Fair odds | 2.79 |
+| Expected value | **+7.6%** (pessimistic +7.6%) |
 | Stake (paper) | 1.0 unit |
 | Bookmakers quoting | 15 |
-| Odds snapshot | Tue 24 Nov 15:55 EST |
+| Odds snapshot | Wed 25 Nov 00:06 EST |
 
-**Statistical evidence.** Expected goals 1.78–1.55;
-model strength rank 3 vs 2 (of 24).
-Recent form — Feyenoord: WWDDLL (GF 13, GA 13, xG 2.03/1.5);
-Ajax: DWWWDW (GF 14, GA 6, xG 1.48/1.44).
-Model 1X2: 42/27/32%,
-O2.5 65%, BTTS 66%.
+**Statistical evidence.** Expected goals 1.44–1.71;
+model strength rank 16 vs 10 (of 24).
+Recent form — Den Haag: DWLLWL (GF 9, GA 11, xG 1.34/1.87);
+Utrecht: WWDLLL (GF 12, GA 13, xG 1.55/1.49).
+Model 1X2: 31/27/42%,
+O2.5 61%, BTTS 63%.
 
-**Why it may be value.** The best available price (3.25) exceeds the estimated fair
-price (3.05). The edge
+**Why it may be value.** The best available price (3.00) exceeds the estimated fair
+price (2.79). The edge
 comes mainly from the price being out of line with the consensus of other bookmakers.
 
 **Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
 
 **Reasons this could be wrong.**
 - Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Thin data: a team has only 13 matches in the training window.
 
-Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875535> 
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875538> 
 
 
-### 5. Arizona Cardinals to win — Arizona Cardinals v Washington Commanders
+### 2. Denver Broncos to win — Pittsburgh Steelers v Denver Broncos
 
 | Field | Value |
 |---|---|
 | Sport / competition | NFL — NFL |
-| Kick-off | Sun 29 Nov 16:25 EST |
-| Market / selection | ML — **Arizona Cardinals to win** |
-| Best price | **4.30** @ BetAnything |
-| Model probability (raw) | 38.9% (±0.0 pp param. sd; p10 38.9%) |
-| Market no-vig probability | 24.7% (Betfair Exchange) |
-| Final probability (blend) | 24.7% |
-| Fair odds | 4.06 |
-| Expected value | **+6.0%** (pessimistic +6.0%) |
+| Kick-off | Fri 27 Nov 15:00 EST |
+| Market / selection | ML — **Denver Broncos to win** |
+| Best price | **1.67** @ GTbets |
+| Model probability (raw) | 58.7% (±0.0 pp param. sd; p10 58.7%) |
+| Market no-vig probability | 65.0% (Betfair Exchange) |
+| Final probability (blend) | 65.0% |
+| Fair odds | 1.54 |
+| Expected value | **+8.6%** (pessimistic +8.6%) |
 | Stake (paper) | 1.0 unit |
 | Bookmakers quoting | 18 |
-| Odds snapshot | Tue 24 Nov 15:55 EST |
+| Odds snapshot | Wed 25 Nov 00:05 EST |
 
-**Statistical evidence.** Projected score Arizona Cardinals 22.0 – Washington Commanders 25.2. Doyen's ratings project Arizona Cardinals 22.0 – Washington Commanders 25.2 pts (margin -3.2, total 47.2); power ranks 31 and 19 of 32.
+**Statistical evidence.** Projected score Pittsburgh Steelers 19.7 – Denver Broncos 22.2. Doyen's ratings project Pittsburgh Steelers 19.7 – Denver Broncos 22.2 pts (margin -2.5, total 41.9); power ranks 16 and 8 of 32.
 
-**Why it may be value.** The best available price (4.30) exceeds the estimated fair
-price (4.06). The
-model rates this outcome 14.2 pp above the de-vigged consensus.
+**Why it may be value.** The best available price (1.67) exceeds the estimated fair
+price (1.54). The edge
+comes mainly from the price being out of line with the consensus of other bookmakers.
 
 **Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
 
 **Reasons this could be wrong.**
 - Model weight 0.00: the edge is the price versus the multi-bookmaker consensus, not a model opinion.
-- Model and market disagree by +14.2%.
+- Model and market disagree by -6.3%.
 
-Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/football/game/_/gameId/401873092> 
+Sources: <https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=eu&markets=h2h,spreads,totals> <https://www.espn.com/football/game/_/gameId/401873083> 
 
 
-### 6. Under 3.5 goals — Rangers v Aberdeen
+### 3. New York Knicks to win — New York Knicks v Cleveland Cavaliers
 
 | Field | Value |
 |---|---|
-| Sport / competition | Football — SC0 |
-| Kick-off | Tue 24 Nov 15:00 EST |
-| Market / selection | OU — **Under 3.5 goals** |
-| Best price | **1.66** @ consensus |
-| Model probability (raw) | 62.5% |
-| Market no-vig probability | 56.6% (Doyen model (shrunk and capped toward the market)) |
-| Final probability (blend) | 58.0% |
-| Fair odds | 1.72 |
-| Expected value | **-3.9%** (pessimistic -3.9%) |
+| Sport / competition | NBA — NBA |
+| Kick-off | Wed 25 Nov 19:30 EST |
+| Market / selection | ML — **New York Knicks to win** |
+| Best price | **1.62** @ consensus |
+| Model probability (raw) | 68.9% |
+| Market no-vig probability | 59.3% (Doyen model (shrunk and capped toward the market)) |
+| Final probability (blend) | 64.3% |
+| Fair odds | 1.55 |
+| Expected value | **+4.2%** (pessimistic +4.2%) |
 | Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 4 |
-| Odds snapshot | Tue 24 Nov 01:31 EST |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Wed 25 Nov 00:05 EST |
 
 **Statistical evidence.** No further model detail is stored for this pick.
 
-**Why it may be value.** The best available price (1.66) exceeds the estimated fair
-price (1.72). The
-model rates this outcome 5.9 pp above the de-vigged consensus.
+**Why it may be value.** The best available price (1.62) exceeds the estimated fair
+price (1.55). The
+model rates this outcome 9.6 pp above the de-vigged consensus.
 
 **Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
 
@@ -225,127 +126,134 @@ model rates this outcome 5.9 pp above the de-vigged consensus.
 Sources: 
 
 
-### 7. Norwich to win — Preston v Norwich
+### 4. Nijmegen to win — Nijmegen v Twente
+
+| Field | Value |
+|---|---|
+| Sport / competition | Football — Netherlands Eredivisie |
+| Kick-off | Sun 29 Nov 14:00 EST |
+| Market / selection | 1X2 — **Nijmegen to win** |
+| Best price | **4.00** @ Unibet |
+| Model probability (raw) | 28.6% (±7.9 pp param. sd; p10 21.0%) |
+| Market no-vig probability | 26.3% (Betfair Exchange) |
+| Final probability (blend) | 26.4% |
+| Fair odds | 3.80 |
+| Expected value | **+5.4%** (pessimistic +5.4%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 15 |
+| Odds snapshot | Wed 25 Nov 00:06 EST |
+
+**Statistical evidence.** Expected goals 1.41–1.73;
+model strength rank 7 vs 4 (of 24).
+Recent form — Nijmegen: DDDLWL (GF 9, GA 12, xG 1.75/1.6);
+Twente: DLWWDW (GF 17, GA 6, xG 2.67/0.74).
+Model 1X2: 29/27/45%,
+O2.5 61%, BTTS 63%.
+
+**Why it may be value.** The best available price (4.00) exceeds the estimated fair
+price (3.80). The
+model rates this outcome 2.2 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
+- Price above 3.5: higher variance, and model error on longshots is larger.
+
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_netherlands_eredivisie/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401875533> 
+
+
+### 5. Charlotte Hornets to win — Charlotte Hornets v Chicago Bulls
+
+| Field | Value |
+|---|---|
+| Sport / competition | NBA — NBA |
+| Kick-off | Wed 25 Nov 19:00 EST |
+| Market / selection | ML — **Charlotte Hornets to win** |
+| Best price | **1.61** @ consensus |
+| Model probability (raw) | 61.5% |
+| Market no-vig probability | 59.2% (Doyen model (shrunk and capped toward the market)) |
+| Final probability (blend) | 61.5% |
+| Fair odds | 1.63 |
+| Expected value | **-0.6%** (pessimistic -0.6%) |
+| Stake (paper) | 1.0 unit |
+| Bookmakers quoting | 18 |
+| Odds snapshot | Wed 25 Nov 00:05 EST |
+
+**Statistical evidence.** No further model detail is stored for this pick.
+
+**Why it may be value.** The best available price (1.61) exceeds the estimated fair
+price (1.63). The
+model rates this outcome 2.3 pp above the de-vigged consensus.
+
+**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+
+**Reasons this could be wrong.**
+- Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, so the estimated value is usually slightly negative; picks are chosen by likelihood, and your sportsbook's price may differ slightly.
+
+Sources: 
+
+
+### 6. Draw — West Ham v Stoke
 
 | Field | Value |
 |---|---|
 | Sport / competition | Football — England Championship |
-| Kick-off | Sat 28 Nov 07:30 EST |
-| Market / selection | 1X2 — **Norwich to win** |
-| Best price | **1.73** @ LeoVegas |
-| Model probability (raw) | 47.3% (±8.1 pp param. sd; p10 37.7%) |
-| Market no-vig probability | 60.4% (Betfair Exchange) |
-| Final probability (blend) | 60.4% |
-| Fair odds | 1.66 |
-| Expected value | **+4.5%** (pessimistic +4.5%) |
+| Kick-off | Sat 28 Nov 10:00 EST |
+| Market / selection | 1X2 — **Draw** |
+| Best price | **4.41** @ GTbets |
+| Model probability (raw) | 23.0% (±3.9 pp param. sd; p10 14.2%) |
+| Market no-vig probability | 23.9% (Betfair Exchange) |
+| Final probability (blend) | 23.9% |
+| Fair odds | 4.19 |
+| Expected value | **+5.2%** (pessimistic +5.2%) |
 | Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 13 |
-| Odds snapshot | Tue 24 Nov 15:55 EST |
+| Bookmakers quoting | 12 |
+| Odds snapshot | Wed 25 Nov 00:05 EST |
 
-**Statistical evidence.** Expected goals 1.24–1.66;
-model strength rank 30 vs 9 (of 36).
-Recent form — Preston: LDLLWD (GF 6, GA 11, xG 1.08/2.22);
-Norwich: LWWWWW (GF 17, GA 5, xG 1.79/1.05).
-Model 1X2: 27/25/47%,
-O2.5 55%, BTTS 58%.
+**Statistical evidence.** Expected goals 2.23–1.21;
+model strength rank 6 vs 19 (of 36).
+Recent form — West Ham: WLLDLD (GF 9, GA 12, xG 1.84/1.38);
+Stoke: WDWWWW (GF 8, GA 2, xG 1.23/0.82).
+Model 1X2: 54/23/23%,
+O2.5 67%, BTTS 63%.
 
-**Why it may be value.** The best available price (1.73) exceeds the estimated fair
-price (1.66). The edge
+**Why it may be value.** The best available price (4.41) exceeds the estimated fair
+price (4.19). The edge
 comes mainly from the price being out of line with the consensus of other bookmakers.
 
 **Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
 
 **Reasons this could be wrong.**
 - Model uses results/goals only: it does not see lineups, injuries or suspensions beyond what is already reflected in recent results and market prices.
-- Model and market disagree by -13.1%: when the sharp market disagrees this much it often holds information the model lacks (team news).
+- Thin data: a team has only 16 matches in the training window.
+- Price above 3.5: higher variance, and model error on longshots is larger.
 
-Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880131> 
-
-
-### 8. Over 2.5 goals — Sheffield United v Southampton
-
-| Field | Value |
-|---|---|
-| Sport / competition | Football — E1 |
-| Kick-off | Tue 24 Nov 14:45 EST |
-| Market / selection | OU — **Over 2.5 goals** |
-| Best price | **1.66** @ consensus |
-| Model probability (raw) | 55.5% |
-| Market no-vig probability | 57.5% (Doyen model (shrunk and capped toward the market)) |
-| Final probability (blend) | 57.0% |
-| Fair odds | 1.75 |
-| Expected value | **-5.4%** (pessimistic -5.4%) |
-| Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 2 |
-| Odds snapshot | Tue 24 Nov 01:30 EST |
-
-**Statistical evidence.** No further model detail is stored for this pick.
-
-**Why it may be value.** The best available price (1.66) exceeds the estimated fair
-price (1.75). The edge
-comes mainly from the price being out of line with the consensus of other bookmakers.
-
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
-
-**Reasons this could be wrong.**
-- Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, so the estimated value is usually slightly negative; picks are chosen by likelihood, and your sportsbook's price may differ slightly.
-
-Sources: 
+Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=eu&markets=h2h,totals> <https://www.espn.com/soccer/match/_/gameId/401880126> 
 
 
-### 9. Under 3.5 goals — Cardiff v Preston
+### 7. Los Angeles Rams to win — Los Angeles Rams v Green Bay Packers
 
 | Field | Value |
 |---|---|
-| Sport / competition | Football — E1 |
-| Kick-off | Tue 24 Nov 14:45 EST |
-| Market / selection | OU — **Under 3.5 goals** |
-| Best price | **1.70** @ consensus |
-| Model probability (raw) | 64.0% |
-| Market no-vig probability | 54.5% (Doyen model (shrunk and capped toward the market)) |
-| Final probability (blend) | 56.9% |
-| Fair odds | 1.76 |
-| Expected value | **-3.6%** (pessimistic -3.6%) |
+| Sport / competition | NFL — NFL |
+| Kick-off | Wed 25 Nov 20:00 EST |
+| Market / selection | ML — **Los Angeles Rams to win** |
+| Best price | **1.71** @ consensus |
+| Model probability (raw) | 66.1% |
+| Market no-vig probability | 55.8% (Doyen model (shrunk and capped toward the market)) |
+| Final probability (blend) | 60.8% |
+| Fair odds | 1.65 |
+| Expected value | **+4.0%** (pessimistic +4.0%) |
 | Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 2 |
-| Odds snapshot | Tue 24 Nov 01:30 EST |
+| Bookmakers quoting | 19 |
+| Odds snapshot | Wed 25 Nov 00:05 EST |
 
 **Statistical evidence.** No further model detail is stored for this pick.
 
-**Why it may be value.** The best available price (1.70) exceeds the estimated fair
-price (1.76). The
-model rates this outcome 9.4 pp above the de-vigged consensus.
-
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
-
-**Reasons this could be wrong.**
-- Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, so the estimated value is usually slightly negative; picks are chosen by likelihood, and your sportsbook's price may differ slightly.
-
-Sources: 
-
-
-### 10. Under 2.5 goals — Charlton v Lincoln
-
-| Field | Value |
-|---|---|
-| Sport / competition | Football — E1 |
-| Kick-off | Tue 24 Nov 14:45 EST |
-| Market / selection | OU — **Under 2.5 goals** |
-| Best price | **1.73** @ consensus |
-| Model probability (raw) | 63.7% |
-| Market no-vig probability | 54.5% (Doyen model (shrunk and capped toward the market)) |
-| Final probability (blend) | 56.8% |
-| Fair odds | 1.76 |
-| Expected value | **-1.7%** (pessimistic -1.7%) |
-| Stake (paper) | 1.0 unit |
-| Bookmakers quoting | 7 |
-| Odds snapshot | Tue 24 Nov 01:31 EST |
-
-**Statistical evidence.** No further model detail is stored for this pick.
-
-**Why it may be value.** The best available price (1.73) exceeds the estimated fair
-price (1.76). The
-model rates this outcome 9.2 pp above the de-vigged consensus.
+**Why it may be value.** The best available price (1.71) exceeds the estimated fair
+price (1.65). The
+model rates this outcome 10.3 pp above the de-vigged consensus.
 
 **Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
 
@@ -361,16 +269,16 @@ Sources:
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
-| Swansea v Cardiff (E1) | 1X2 A | 3.75 Coolbet | 29.0% | +8.7% | +8.7% | ok |
-| Feyenoord v Ajax (N1) | 1X2 A | 3.25 Unibet | 32.8% | +6.4% | +6.4% | ok |
-| Millwall v Burnley (E1) | 1X2 A | 3.40 LeoVegas | 31.2% | +6.2% | +6.2% | ok |
-| Preston v Norwich (E1) | 1X2 A | 1.73 LeoVegas | 60.4% | +4.5% | +4.5% | ok |
+| Zwolle v AZ Alkmaar (N1) | 1X2 H | 6.25 Unibet | 17.5% | +9.6% | +9.6% | odds outside range |
+| Swansea v Cardiff (E1) | 1X2 A | 3.75 Coolbet | 29.2% | +9.3% | +9.3% | ok |
+| Den Haag v Utrecht (N1) | 1X2 H | 3.00 Unibet | 35.9% | +7.6% | +7.6% | ok |
+| Nijmegen v Twente (N1) | 1X2 H | 4.00 Unibet | 26.4% | +5.4% | +5.4% | ok |
+| West Ham v Stoke (E1) | 1X2 D | 4.41 GTbets | 23.9% | +5.2% | +5.2% | ok |
+| Millwall v Burnley (E1) | 1X2 A | 3.35 LeoVegas | 31.2% | +4.7% | +4.7% | ok |
+| Cambuur v Sparta Rotterdam (N1) | 1X2 H | 2.32 Unibet | 44.8% | +3.9% | +3.9% | ok |
 | Stuttgart v Ein Frankfurt (D1) | 1X2 A | 4.16 1xBet | 24.9% | +3.5% | +3.5% | ok |
 | Freiburg v RB Leipzig (D1) | 1X2 A | 2.53 1xBet | 40.9% | +3.4% | +3.4% | ok |
 | Hoffenheim v Augsburg (D1) | 1X2 A | 4.36 1xBet | 23.6% | +3.1% | +3.1% | ok |
-| West Brom v Bristol City (E1) | 1X2 H | 1.88 LeoVegas | 54.7% | +2.8% | +2.8% | EV below threshold |
-| Nijmegen v Twente (N1) | OU under 3.5 | 1.87 Pinnacle | 54.9% | +2.6% | +2.6% | EV below threshold |
-| Den Haag v Utrecht (N1) | 1X2 H | 2.85 Unibet | 36.0% | +2.6% | +2.6% | EV below threshold |
 
 
 ## International fixtures — model monitoring (not recommendations)
@@ -379,8 +287,8 @@ No national-team fixtures in the next 48h.
 
 ## Track record (paper, fixed 1-unit stakes)
 
-Settled 41 · W 14 / L 26 / P 1 ·
-profit -11.47u · yield -28.0%
-(95% CI -58.3% to +4.7%) ·
-avg CLV +0.7% · max drawdown 11.88u.
-*Only 41 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*
+Settled 46 · W 15 / L 30 / P 1 ·
+profit -14.71u · yield -32.0%
+(95% CI -58.8% to -2.4%) ·
+avg CLV +0.3% · max drawdown 15.47u.
+*Only 46 settled selections. Yield CIs are wide; at typical odds, several hundred to a few thousand bets are needed before ROI distinguishes skill from luck. CLV is the faster, more reliable early indicator.*

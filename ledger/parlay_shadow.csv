@@ -332,3 +332,35 @@ first_seen,date,legs,bookmaker,price_kind,computed_product_odds,joint_prob_indep
 2026-11-24T06:31:47+00:00,2026-11-24,"[""1241efac6d87b919"", ""c8225c4e17be1253""]",Tipico,computed_product_not_a_quote,3.096,0.330104,0.022001
 2026-11-24T06:31:47+00:00,2026-11-24,"[""1241efac6d87b919"", ""35d2e38af5a6af66"", ""e486eb9b44abb2a1""]",Tipico,computed_product_not_a_quote,5.2632,0.199388,0.049421
 2026-11-24T06:31:47+00:00,2026-11-24,"[""1241efac6d87b919"", ""c8225c4e17be1253"", ""e486eb9b44abb2a1""]",Tipico,computed_product_not_a_quote,5.2632,0.199491,0.049959
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",888sport,computed_product_not_a_quote,2.737,0.391061,0.070334
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",BetOnline.ag,computed_product_not_a_quote,2.871,0.391061,0.122736
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Betclic,computed_product_not_a_quote,2.604,0.391061,0.018323
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Betsson,computed_product_not_a_quote,2.754,0.391061,0.076982
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Codere (IT),computed_product_not_a_quote,2.669,0.391061,0.043742
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",DraftKings,computed_product_not_a_quote,2.8176,0.391061,0.101853
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",GTbets,computed_product_not_a_quote,2.7531,0.391061,0.07663
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",LeoVegas,computed_product_not_a_quote,2.835,0.391061,0.108658
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Marathon Bet,computed_product_not_a_quote,2.8336,0.391061,0.10811
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",MyBookie.ag,computed_product_not_a_quote,2.7873,0.391061,0.090004
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Nordic Bet,computed_product_not_a_quote,2.754,0.391061,0.076982
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",PMU,computed_product_not_a_quote,2.4336,0.391061,-0.048314
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Pinnacle,computed_product_not_a_quote,2.835,0.391061,0.108658
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Tipico,computed_product_not_a_quote,2.5885,0.391061,0.012261
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",Unibet,computed_product_not_a_quote,2.8864,0.391061,0.128758
+2026-11-25T05:06:19+00:00,2026-11-25,"[""9dfd0ef72f0f006e"", ""c91b49e429243a1f""]",William Hill,computed_product_not_a_quote,2.754,0.391061,0.076982
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",888sport,computed_product_not_a_quote,2.669,0.374082,-0.001574
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",BetOnline.ag,computed_product_not_a_quote,2.9058,0.374082,0.087009
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Betclic,computed_product_not_a_quote,2.5872,0.374082,-0.032174
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Betsson,computed_product_not_a_quote,2.754,0.374082,0.030223
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Codere (IT),computed_product_not_a_quote,2.635,0.374082,-0.014293
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",DraftKings,computed_product_not_a_quote,2.8729,0.374082,0.074699
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",GTbets,computed_product_not_a_quote,2.7702,0.374082,0.036283
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",LeoVegas,computed_product_not_a_quote,2.7475,0.374082,0.027791
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Marathon Bet,computed_product_not_a_quote,2.8336,0.374082,0.06
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",MyBookie.ag,computed_product_not_a_quote,2.7531,0.374082,0.029886
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Nordic Bet,computed_product_not_a_quote,2.754,0.374082,0.030223
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",PMU,computed_product_not_a_quote,2.3868,0.374082,-0.10714
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Pinnacle,computed_product_not_a_quote,2.8875,0.374082,0.080163
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Tipico,computed_product_not_a_quote,2.7054,0.374082,0.012043
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",Unibet,computed_product_not_a_quote,2.816,0.374082,0.053416
+2026-11-25T05:06:19+00:00,2026-11-25,"[""72404ccee23f46be"", ""9dfd0ef72f0f006e""]",William Hill,computed_product_not_a_quote,2.669,0.374082,-0.001574
