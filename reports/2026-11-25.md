@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-25
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Wed 25 Nov 00:04 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Wed 25 Nov 09:04 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -255,7 +255,10 @@ Sources: <https://api.the-odds-api.com/v4/sports/soccer_efl_champ/odds?regions=e
 price (1.65). The
 model rates this outcome 10.3 pp above the de-vigged consensus.
 
-**Context / research flags.** No contextual research recorded yet (team news is not modelled — check before acting).
+**Context / research flags.** 
+- [verified_fact · injury · against] Packers.com's 24 Nov 2026 Week 12 injury report lists Rams OL Steve Avila (hamstring), OL Coleman Shelton (hamstring) and TE Terrance Ferguson as out for the 25 Nov game v Green Bay; all other Rams players are available. ([source](https://www.packers.com/news/packers-list-eight-questionable-vs-rams-week-12-injury-report), 2026-11-25T14:03:45+00:00)
+- [verified_fact · injury · supports] Packers.com's 24 Nov 2026 injury report lists eight Packers as questionable for the 25 Nov game at the Rams, including RB Josh Jacobs (finger), EDGE Micah Parsons (knee, activated from PUP), G Kevin Zeitler (triceps) and LB Zaire Franklin (shin). ([source](https://www.packers.com/news/packers-list-eight-questionable-vs-rams-week-12-injury-report), 2026-11-25T14:03:45+00:00)
+
 
 **Reasons this could be wrong.**
 - Typical odds (issue #112): the price is the median across sportsbooks and includes their margin, so the estimated value is usually slightly negative; picks are chosen by likelihood, and your sportsbook's price may differ slightly.
@@ -269,16 +272,6 @@ Sources:
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
-| Zwolle v AZ Alkmaar (N1) | 1X2 H | 6.25 Unibet | 17.5% | +9.6% | +9.6% | odds outside range |
-| Swansea v Cardiff (E1) | 1X2 A | 3.75 Coolbet | 29.2% | +9.3% | +9.3% | ok |
-| Den Haag v Utrecht (N1) | 1X2 H | 3.00 Unibet | 35.9% | +7.6% | +7.6% | ok |
-| Nijmegen v Twente (N1) | 1X2 H | 4.00 Unibet | 26.4% | +5.4% | +5.4% | ok |
-| West Ham v Stoke (E1) | 1X2 D | 4.41 GTbets | 23.9% | +5.2% | +5.2% | ok |
-| Millwall v Burnley (E1) | 1X2 A | 3.35 LeoVegas | 31.2% | +4.7% | +4.7% | ok |
-| Cambuur v Sparta Rotterdam (N1) | 1X2 H | 2.32 Unibet | 44.8% | +3.9% | +3.9% | ok |
-| Stuttgart v Ein Frankfurt (D1) | 1X2 A | 4.16 1xBet | 24.9% | +3.5% | +3.5% | ok |
-| Freiburg v RB Leipzig (D1) | 1X2 A | 2.53 1xBet | 40.9% | +3.4% | +3.4% | ok |
-| Hoffenheim v Augsburg (D1) | 1X2 A | 4.36 1xBet | 23.6% | +3.1% | +3.1% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)

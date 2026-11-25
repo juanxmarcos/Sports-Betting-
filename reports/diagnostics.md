@@ -1,4 +1,4 @@
-# Sports Betting Doyen — diagnostics (2026-11-25 05:06 UTC)
+# Sports Betting Doyen — diagnostics (2026-11-25 14:04 UTC)
 
 ## Opportunity funnel (next 7 days)
 
@@ -19,9 +19,9 @@
 
 ## Odds freshness (events in next 48h)
 
-- soccer: {'events_with_odds': 142, 'median_odds_age_h': 0.0, 'median_bookmakers': 18.0, 'share_3plus_books': 0.87}
-- nfl: {'events_with_odds': 16, 'median_odds_age_h': 0.0, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
-- nba: {'events_with_odds': 9, 'median_odds_age_h': 0.0, 'median_bookmakers': 19, 'share_3plus_books': 1.0}
+- soccer: {'events_with_odds': 142, 'median_odds_age_h': 9.0, 'median_bookmakers': 18.0, 'share_3plus_books': 0.87}
+- nfl: {'events_with_odds': 16, 'median_odds_age_h': 9.0, 'median_bookmakers': 22.0, 'share_3plus_books': 1.0}
+- nba: {'events_with_odds': 9, 'median_odds_age_h': 9.0, 'median_bookmakers': 19, 'share_3plus_books': 1.0}
 - tennis: {'events_with_odds': 0, 'median_odds_age_h': None, 'median_bookmakers': None, 'share_3plus_books': None}
 
 ## The Odds API
