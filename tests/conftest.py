@@ -35,3 +35,4 @@ def _parlay_v4_limits(monkeypatch, request):
     monkeypatch.setattr(pe, "MIN_COMBINED_ODDS", {"2": 2.2, "3": 3.5, "4-5": 6.0})
     monkeypatch.setattr(pe, "SIZE_BUCKETS", ((2, 2), (3, 3), (4, 5)))
     monkeypatch.setattr(pe, "MAX_CARDS", 5)
+    monkeypatch.setattr(pe, "PER_SIZE", 2)
