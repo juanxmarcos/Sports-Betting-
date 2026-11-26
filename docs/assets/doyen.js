@@ -421,6 +421,28 @@
   const compName = (x) => String((x && (x.competition_name || x.competition)) || "").trim();
   const legComp = (l) => compName(l) ? `<span class="lg-c" data-comp>${esc(compName(l))}</span>` : "";
   const oddsNote = () => `<p class="small muted odds-note" data-odds-note>${esc(EC.note)}</p>`;
+  // Owner request 2026-11-26: the fair price of a parlay, from each leg's de-vigged market consensus.
+  // If the owner's sportsbook pays more than this, the parlay is paying more than it should.
+  function fairOdds(r) {
+    const ps = (Array.isArray(r && r.legs) ? r.legs : []).map((l) => Number(l && l.market_prob));
+    if (!ps.length || ps.some((q) => !isFinite(q) || q <= 0 || q >= 1)) return null;
+    return 1 / ps.reduce((a, q) => a * q, 1);
+  }
+  function fairLine(r) {
+    const f = fairOdds(r);
+    return f ? `<div class="pc-note" data-fair-odds>Fair price ${esc(american(f))} (${dec(f)}). If your sportsbook pays more than this, it's paying more than it should.</div>` : "";
+  }
+  // Owner request 2026-11-26: does Doyen win as often as it says? Computed by the site build
+  // (estimated_parlays.trust: settled parlays since the current rules started, 24 Nov 2026).
+  function trustLine() {
+    const T = ((D0() || {}).estimated_parlays || {}).trust;
+    if (!T || typeof T !== "object") return "";
+    const n = Number(T.settled), won = Number(T.won), said = Number(T.said);
+    if (!(n > 0) || !isFinite(won) || !isFinite(said)) return "";
+    const verdict = n < 50 ? "Too early to judge (needs about 50)."
+      : (won / n < said - 0.08 ? "Winning less often than it says." : (won / n > said + 0.08 ? "Winning more often than it says." : "On track with what it says."));
+    return `<p class="small trust" data-trust-check><b>Trust check</b> since 24 Nov: said ${esc(pct(said))} would win, actually won ${esc(pct(won / n))} (${won} of ${n} parlays). ${esc(verdict)}</p>`;
+  }
   function estCard(r, i) {
     const odds = r.estimated_odds;
     // Issue #68: an open injury/lineup note is shown on the leg (muted), never used to hide it.
@@ -438,6 +460,7 @@
         ${betInput(i)}
         <div><div class="k">Potential payout</div><div class="v pay" data-payout>${betText(currentBet(), odds)}</div></div>
       </div>
+      ${fairLine(r)}
     </article>`;
   }
   // ---------- today's recorded parlays (issue #57) ----------
@@ -496,7 +519,7 @@
         ${betInput(i)}
         <div><div class="k">${FINAL[r.result] ? "With this amount" : "Potential payout"}</div><div class="v pay" data-payout>${betText(currentBet(), r.estimated_odds, r.result)}</div></div>
       </div>
-      ${closed}${gone}
+      ${started || FINAL[r.result] ? "" : fairLine(r)}${closed}${gone}
     </article>`;
   }
   function parlayCard(r, i) {
@@ -533,7 +556,7 @@
     }
     const rec = recordedToday(E, est.map((r) => r.parlay_id));     // issue #57: started and settled cards stay
     let h = `<div class="eyebrow">${esc(fmtDay(today))}</div><h1 style="margin-top:6px">Recommended Parlays of the Day</h1>${yesterdayLine(E)}${seg}`;
-    h += `<section class="section first" id="parlays">`;
+    h += `<section class="section first" id="parlays">${trustLine()}`;
     // Issue #98: every parlay for today has started or settled and none is open: point to the next day.
     const openRec = rec.some((r) => !FINAL[r.result] && Math.min(...r.legs.map((l) => isoT(l.start_utc))) > Date.now());
     if (rec.length && !cards.length && !est.length && !openRec) {
@@ -709,6 +732,8 @@
         <li>Picked by likelihood, not by price gaps: the goal is the win–loss record at typical odds, not value hunting. The typical price includes the sportsbooks' margin, so no positive value is required. Each card needs minimum combined odds so the payout stays worthwhile: 2 legs 2.2, 3 legs 3.5, 4–5 legs 6.0.</li>
         <li>Picked per size: the best 4–5 leg, 3-leg and 2-leg parlay, then a second of each while room remains. A size with nothing qualifying is skipped, never padded.</li>
         <li>Within a size, ranked by estimated hit chance (the leg probabilities multiplied as if the legs were independent; unvalidated).</li>
+        <li>Each open card shows a <b>fair price</b>: the combined odds with the sportsbooks' margin removed (each leg's de-vigged market consensus, multiplied). If your sportsbook pays more than the fair price, the parlay is paying more than it should.</li>
+        <li>The trust check compares how often Doyen said its parlays would win with how often they did, for parlays since 24 Nov 2026 (the current rules).</li>
         <li>A verified bookmaker quote always replaces an estimate on the same games.</li></ul>
       ${line ? `<p class="small"><b>${esc(line)}</b>${typeof r.open === "number" ? ` · ${esc(r.open)} open, ${esc(r.void || 0)} void` : ""}. Paper results at the $${PC.stake} display stake and the estimated price, settled from final scores; a void game voids the whole parlay here, a pushed leg counts at odds 1.00.</p>${byLegs}` : ""}`;
     return sec("Estimated parlays", body);
@@ -830,7 +855,7 @@
       <p class="small muted">Every estimated parlay Doyen recorded, newest first, at the price first shown: since 23 Nov 2026 the typical odds (product of each leg's median price across sportsbooks), before that the product of one bookmaker's single-game odds; never a bet-slip quote. Results come from final scores; paper P/L at the stake shown. A void or postponed game voids the whole parlay here; a pushed leg (draw no bet on a draw) counts at odds 1.00 and the rest stands. Nothing is edited or removed.</p>
       <p class="small muted" data-record-stake>Record uses $${PC.stake} paper stakes; the bet amount on the parlay cards is display-only.</p>
       ${line ? `<div class="brief"><span><b>${esc(line.replace(/^Estimated parlays record: /, "Record "))}</b></span><span class="dot"></span><span><b>${esc(R.open || 0)}</b> open · ${esc(R.void || 0)} void</span></div>` : ""}
-      ${table}${table ? behindLine(R) + parlayNote(rows) : ""}
+      ${trustLine()}${table}${table ? behindLine(R) + parlayNote(rows) : ""}
       ${list ? `<div class="ph-list">${list}</div>` : `<p class="small muted">No parlays recorded yet.</p>`}</section>`;
   }
 

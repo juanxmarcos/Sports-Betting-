@@ -394,6 +394,20 @@ def pe_history(con) -> list[dict]:
         return []
 
 
+TRUST_SINCE = "2026-11-24"                    # the current parlay rules started on this New York date
+
+
+def trust_summary(rows: list[dict]) -> dict | None:
+    """Owner request 2026-11-26: does Doyen win as often as it says? Settled parlays since TRUST_SINCE:
+    how many, how many won, and the average estimated hit chance it published for them."""
+    done = [r for r in rows if str(r.get("date") or "") >= TRUST_SINCE and r.get("result") in ("won", "lost")
+            and isinstance(r.get("est_hit_chance"), (int, float)) and not r.get("mock") and not r.get("test")]
+    if not done:
+        return None
+    return {"since": TRUST_SINCE, "settled": len(done), "won": sum(r["result"] == "won" for r in done),
+            "said": round(sum(float(r["est_hit_chance"]) for r in done) / len(done), 4)}
+
+
 def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False) -> dict:
     """Estimated parlays of the day (issue #47), built after the strict block so a verified
     bookmaker quote always wins. On the scheduled run every shown estimate is appended to the
@@ -416,6 +430,10 @@ def estimated_block(con, now: datetime, parlay_block: dict, record: bool = False
         block["ledger_rows_added"] = pe.record(block, now)
     block["record"] = pe.settle(con)
     block["record_line"] = pe.record_line(block["record"])
+    try:                                      # owner request 2026-11-26: the trust check
+        block["trust"] = trust_summary(pe.ledger_rows(con))
+    except Exception:                         # never take the site down
+        block["trust"] = None
     # Issue #58: previews for the next New York dates, replaced on every run, never recorded.
     try:
         block["previews"] = pe.build_previews(con, now)
