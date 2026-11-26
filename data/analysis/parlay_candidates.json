@@ -1,6 +1,6 @@
 {
- "generated": "2026-11-26T04:29:23+00:00",
- "date": "2026-11-25",
+ "generated": "2026-11-26T05:16:21+00:00",
+ "date": "2026-11-26",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
  "price_kind": "computed_product_not_a_quote",
@@ -15,68 +15,168 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 0,
-  "by_sport": {},
-  "candidate_legs": 0,
-  "events_with_candidate_legs": 0,
-  "pool_legs": 0,
+  "events_today": 43,
+  "by_sport": {
+   "nfl": {
+    "events": 3,
+    "fresh_prices": 3,
+    "stored_model": 3,
+    "events_with_candidate_legs": 2
+   },
+   "soccer": {
+    "events": 36,
+    "fresh_prices": 36,
+    "events_with_candidate_legs": 31
+   },
+   "tennis": {
+    "events": 4
+   }
+  },
+  "candidate_legs": 41,
+  "events_with_candidate_legs": 33,
+  "pool_legs": 11,
   "excluded": {
-   "leg: no bookmaker at or above fair value": 0
+   "event: model and market disagree strongly": 1,
+   "event: no fresh result-market prices": 4,
+   "event: probability outside research band": 2,
+   "event: too few independent bookmakers": 3,
+   "leg: no bookmaker at or above fair value": 22
   }
  },
  "search": {
-  "evaluated": 0,
+  "evaluated": 44,
   "by_size": {
-   "2": 0,
-   "3": 0,
+   "2": 42,
+   "3": 2,
    "4": 0,
    "5": 0,
    "6": 0
   },
   "passing_by_size": {
-   "2": 0,
+   "2": 12,
    "3": 0,
    "4": 0,
    "5": 0,
    "6": 0
   },
-  "rejected_linked": 0,
+  "rejected_linked": 32,
   "truncated": false,
-  "bookmakers": 0
+  "bookmakers": 2
  },
- "candidates_found": 0,
- "shortlist": [],
+ "candidates_found": 12,
+ "shortlist": [
+  {
+   "id": "pc-894cbdedf61b",
+   "bookmaker": "Unibet",
+   "n_legs": 2,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 3.5984,
+   "joint_prob_independent": 0.28471,
+   "computed_ev": 0.024502,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "nfl:NFL:20261126:401873081",
+     "sport": "nfl",
+     "league": "NFL",
+     "title": "Detroit Lions v Chicago Bears",
+     "market": "ML",
+     "selection": "home",
+     "start_utc": "2026-11-26T18:00:00+00:00",
+     "price": 2.08,
+     "fair_prob_ex_book": 0.480861,
+     "model_prob": 0.590446,
+     "odds_updated": "2026-11-26T05:17:06+00:00"
+    },
+    {
+     "event_id": "football:UEL:20261126:torreense:celtic",
+     "sport": "soccer",
+     "league": "UEL",
+     "title": "Torreense v Celtic",
+     "market": "1X2",
+     "selection": "A",
+     "start_utc": "2026-11-26T20:00:00+00:00",
+     "price": 1.73,
+     "fair_prob_ex_book": 0.592085,
+     "model_prob": null,
+     "odds_updated": "2026-11-26T05:17:06+00:00"
+    }
+   ]
+  },
+  {
+   "id": "pc-b8f9d2b1f759",
+   "bookmaker": "1xBet",
+   "n_legs": 2,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 3.0636,
+   "joint_prob_independent": 0.331673,
+   "computed_ev": 0.016113,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "football:UEL:20261126:marseille:levski-sofia",
+     "sport": "soccer",
+     "league": "UEL",
+     "title": "Marseille v Levski Sofia",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-26T17:45:00+00:00",
+     "price": 1.38,
+     "fair_prob_ex_book": 0.727971,
+     "model_prob": null,
+     "odds_updated": "2026-11-26T05:17:06+00:00"
+    },
+    {
+     "event_id": "football:UECL:20261126:hajduk-split:st-truiden",
+     "sport": "soccer",
+     "league": "UECL",
+     "title": "Hajduk Split v St Truiden",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-26T20:00:00+00:00",
+     "price": 2.22,
+     "fair_prob_ex_book": 0.455612,
+     "model_prob": null,
+     "odds_updated": "2026-11-26T05:17:06+00:00"
+    }
+   ]
+  }
+ ],
  "baseline_straight_picks": {
-  "straight_picks_seen": 12,
+  "straight_picks_seen": 8,
   "usable_legs_today": 0,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-26T04:31:19+00:00",
-  "credits_spent_last_run": 5,
-  "credits_remaining": "189"
+  "at": "2026-11-26T05:17:10+00:00",
+  "credits_spent_last_run": null,
+  "credits_remaining": null
  },
- "ledger_rows_added": 0,
+ "ledger_rows_added": 2,
  "shadow_settlement": {
-  "rows": 2,
+  "rows": 4,
   "won": 1,
   "lost": 1,
   "void": 0,
-  "open": 0,
+  "open": 2,
   "expected_wins_settled": 0.682,
   "by_legs": {
    "2": {
     "won": 1,
     "lost": 1,
     "void": 0,
-    "open": 0
+    "open": 2
    }
   }
  },
  "why_not_3_to_5": [
-  "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
-  "Only 0 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]
