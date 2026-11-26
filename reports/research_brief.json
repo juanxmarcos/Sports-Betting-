@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-26T05:17:26+00:00",
+  "generated": "2026-11-26T14:02:49+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -958,6 +958,41 @@
       "kickoff_utc": "2026-11-28T05:00:00+00:00",
       "home": "TBD",
       "away": "TBD"
+    },
+    {
+      "event_id": "football:E1:20261128:blackburn:charlton",
+      "league": "E1",
+      "kickoff_utc": "2026-11-28T12:30:00+00:00",
+      "home": "Blackburn",
+      "away": "Charlton"
+    },
+    {
+      "event_id": "football:E1:20261128:lincoln:wolves",
+      "league": "E1",
+      "kickoff_utc": "2026-11-28T12:30:00+00:00",
+      "home": "Lincoln",
+      "away": "Wolves"
+    },
+    {
+      "event_id": "football:E1:20261128:preston:norwich",
+      "league": "E1",
+      "kickoff_utc": "2026-11-28T12:30:00+00:00",
+      "home": "Preston",
+      "away": "Norwich"
+    },
+    {
+      "event_id": "football:SP1:20261128:betis:vallecano",
+      "league": "SP1",
+      "kickoff_utc": "2026-11-28T13:00:00+00:00",
+      "home": "Betis",
+      "away": "Vallecano"
+    },
+    {
+      "event_id": "football:I1:20261128:frosinone:parma",
+      "league": "I1",
+      "kickoff_utc": "2026-11-28T14:00:00+00:00",
+      "home": "Frosinone",
+      "away": "Parma"
     }
   ]
 }
