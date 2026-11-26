@@ -1,4 +1,4 @@
-# Parlay candidates (shadow) — 2026-11-25 15:13 New York
+# Parlay candidates (shadow) — 2026-11-25 23:29 New York
 
 Developer-only. **Nothing here is published.** Prices are computed products of single-market quotes (`computed_product_not_a_quote`), not bookmaker combined quotes. Method `parlay-fullslate-shadow-v1`; no network request, no API credit.
 
@@ -6,18 +6,15 @@ Developer-only. **Nothing here is published.** Prices are computed products of s
 
 | Measure | Stage-1 (published picks) | Full-slate engine |
 |---|---|---|
-| Legs considered today | 12 picks | 11 events |
-| Usable legs | 0 | 1 (candidate legs 13, events with a leg 8) |
+| Legs considered today | 12 picks | 0 events |
+| Usable legs | 0 | 0 (candidate legs 0, events with a leg 0) |
 | Combinations checked | 0 | 0 (bounded; truncated: False) |
 | Passed leg/combination screens | 0 | 0 |
 
 | Sport | Events today | Fresh prices | Stored model prob | Events with candidate legs |
 |---|---|---|---|---|
-| nba | 9 | 9 | 9 | 8 |
-| nfl | 1 | 1 | 1 | 0 |
-| tennis | 1 | 0 | 0 | 0 |
 
-Excluded: {"event: model and market disagree strongly": 1, "event: no fresh result-market prices": 1, "event: open injury/lineup research note": 1, "leg: no bookmaker at or above fair value": 7}
+Excluded: {"leg: no bookmaker at or above fair value": 0}
 
 | Legs | Combinations evaluated | Kept (positive computed EV, beam-capped) |
 |---|---|---|
@@ -27,7 +24,7 @@ Excluded: {"event: model and market disagree strongly": 1, "event: no fresh resu
 | 5 | 0 | 0 |
 | 6 | 0 | 0 |
 
-The Odds API (read from job log, not called here): last run 2026-11-25T20:14:43+00:00, spent 18, remaining 194.
+The Odds API (read from job log, not called here): last run 2026-11-26T04:31:19+00:00, spent 5, remaining 189.
 
 ## 2. Shadow shortlist (not shown on the homepage)
 
@@ -42,6 +39,6 @@ The Odds API (read from job log, not called here): last run 2026-11-25T20:14:43+
 ## 4. Why not 3–5 recommended parlays today
 
 - No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.
-- Only 1 leg(s) are at or above fair value at any bookmaker.
+- Only 0 leg(s) are at or above fair value at any bookmaker.
 - Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.
 - Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only).
