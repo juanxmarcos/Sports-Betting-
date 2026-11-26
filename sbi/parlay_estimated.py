@@ -86,8 +86,8 @@ from . import ev as evm
 from .sources.books import normalize_book
 from .sources.football_data import AGGREGATES, EXCHANGES
 
-METHOD = "parlay-estimated-v4"            # v4: typical (consensus) price, ranked by joint probability (issue #112)
-LEGACY_METHODS = ("parlay-estimated-v3",)    # v3: one bookmaker's price, shrunk/capped probabilities (issue #106)
+METHOD = "parlay-estimated-v5"            # v5: sensible parlays (owner, 2026-11-26): strong legs only, 2-3 legs, max 3
+LEGACY_METHODS = ("parlay-estimated-v4", "parlay-estimated-v3")   # v4: typical price, joint probability (#112); v3: one bookmaker (#106)
 ESTIMATE_KIND = "estimated_product"          # never parlays.QUOTE_KIND ("bookmaker_combined")
 BADGE = "Estimate"
 VERIFIED_BADGE = "Verified bookmaker quote"
@@ -102,13 +102,20 @@ CONSENSUS = "consensus"                      # pseudo-bookmaker key of the typic
 PRICE_BASIS = "consensus"
 MIN_PRICE_BOOKS = 2                          # bookmakers that must price a leg for its typical price
 MAX_MODEL_BELOW_MARKET = 0.02                # model must be >= de-vigged market - 0.02 where a model exists
-MIN_COMBINED_ODDS = {"2": 2.2, "3": 3.5, "4-5": 6.0}   # minimum typical combined odds per size
+# Owner decision 2026-11-26 ("good, sensible parlays, professionally studied; not the ones that pay the
+# most"): every leg must be clearly likely by the whole market (de-vigged consensus >= 65%), Doyen's model
+# must agree where it has one (not below the market by more than MAX_MODEL_BELOW_MARKET), and a leg must
+# still pay something (typical price >= 1.15). Two or three legs, at most three parlays a day. The low
+# minimum combined odds only stop a parlay of near-certainties that pays almost nothing.
+MIN_LEG_MARKET_PROB = 0.65
+MIN_LEG_PRICE = 1.15
+MIN_COMBINED_ODDS = {"2": 1.6, "3": 1.9}      # minimum typical combined odds per size (v4: 2.2 / 3.5 / 6.0)
 TYPICAL_ODDS_LABEL = "Typical odds"
 TYPICAL_ODDS_NOTE = "Typical odds across sportsbooks; your sportsbook's price may differ slightly."
 NY = ZoneInfo(parlays.CARD_TIMEZONE)
 MIN_LEGS, MAX_LEGS = parlays.MIN_LEGS, parlays.MAX_LEGS
-MAX_CARDS = parlays.CARD_MAX_CARDS
-SIZE_BUCKETS = ((2, 2), (3, 3), (4, 5))      # cards are picked per size (issue #54)
+MAX_CARDS = 3                                # owner decision 2026-11-26 (was parlays.CARD_MAX_CARDS = 5)
+SIZE_BUCKETS = ((2, 2), (3, 3))              # cards are picked per size (issue #54); 4-5 legs dropped 2026-11-26
 PER_SIZE = 2                                 # at most this many cards of one size, within MAX_CARDS
 MAX_WEAK_LEGS = 1                            # legs below their own probability bar per parlay (issue #54)
 WEAK_TOLERANCE = 0.0005                      # card contract: rounding slack on the stored leg probability
@@ -577,6 +584,17 @@ def adds_no_loss(leg: dict, bk: str = CONSENSUS) -> bool:
     return leg["books"][bk]["prob"] * leg["books"][bk]["price"] >= 1.0
 
 
+def sensible(leg: dict, bk: str = CONSENSUS) -> bool:
+    """Owner decision 2026-11-26: a leg may join a parlay only if the whole market rates it clearly likely
+    (de-vigged consensus >= MIN_LEG_MARKET_PROB), it pays something (typical price >= MIN_LEG_PRICE), and
+    Doyen's model, where it has one, is not below the market by more than MAX_MODEL_BELOW_MARKET."""
+    q, b = leg.get("consensus_prob"), leg.get("books", {}).get(bk)
+    if q is None or b is None or q < MIN_LEG_MARKET_PROB or b["price"] < MIN_LEG_PRICE - 1e-9:
+        return False
+    mp = leg.get("model_prob")
+    return mp is None or mp >= q - MAX_MODEL_BELOW_MARKET - 1e-9
+
+
 def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS) -> list[dict]:
     """2..5-leg combinations at the typical price (issue #112), at most one leg per game and no linked
     legs, whose typical combined odds reach the size's minimum (`MIN_COMBINED_ODDS`). Beam search: at
@@ -585,7 +603,7 @@ def search(pool: list[dict], beam: int = BEAM, max_evals: int = MAX_EVALUATIONS)
     (joint x odds), so likely-but-short legs can still be extended to a worthwhile payout. Returned
     candidates all qualify; ranking by joint probability happens in `select`."""
     bk = CONSENSUS
-    idx = sorted((i for i, leg in enumerate(pool) if bk in leg["books"]),
+    idx = sorted((i for i, leg in enumerate(pool) if bk in leg["books"] and sensible(leg, bk)),
                  key=lambda i: (-pool[i]["books"][bk]["prob"], i))
     pos = {i: n for n, i in enumerate(idx)}
     frontier, out, evals = [(i,) for i in idx], [], 0
@@ -642,7 +660,7 @@ def size_bucket(n_legs: int) -> str | None:
     return None
 
 
-def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None = None,
+def select(cands: list[dict], limit: int | None = None, blocked_events: set | None = None,
            per_size: int | None = None) -> list[dict]:
     """Cards per size (issue #54): the best 4-5 leg, the best 3-leg and the best 2-leg parlay, then a
     second of each while `per_size` and `limit` allow. In the first round the sizes pick games in
@@ -652,6 +670,7 @@ def select(cands: list[dict], limit: int = MAX_CARDS, blocked_events: set | None
     appears in at most one card; games in a verified-quote card are skipped (strict mode wins).
     Returned earliest kickoff first."""
     per_size = PER_SIZE if per_size is None else per_size
+    limit = MAX_CARDS if limit is None else limit
     order = lambda c: (-c["joint_prob"], c["n_legs"], c["bookmaker"], sorted(x["event_id"] for x in c["legs"]))
     buckets = defaultdict(list)
     for c in cands:
@@ -758,6 +777,64 @@ def selection_text(leg: dict) -> str:
 
 
 # ---------- card contract (mirrored in docs/assets/doyen.js estProblem) ----------
+def team_form(con, team: str, sport: str, before: str, n: int = 5) -> str | None:
+    """The team's last `n` finished results before `before`, newest first, as e.g. "W W L D W"
+    (from stored final scores only). None when fewer than 3 results are stored."""
+    rows = con.execute("""SELECT home, away, home_score, away_score FROM events WHERE sport=? AND status='finished'
+                          AND (home=? OR away=?) AND kickoff_utc < ? AND home_score IS NOT NULL AND away_score IS NOT NULL
+                          ORDER BY kickoff_utc DESC LIMIT ?""", (sport, team, team, before, n)).fetchall()
+    if len(rows) < 3:
+        return None
+    out = []
+    for r in rows:
+        mine, theirs = (r["home_score"], r["away_score"]) if r["home"] == team else (r["away_score"], r["home_score"])
+        out.append("W" if mine > theirs else ("L" if mine < theirs else "D"))
+    return " ".join(out)
+
+
+def leg_why(con, leg: dict) -> list[str]:
+    """Owner request 2026-11-26: the homework behind a leg, in short lines built only from stored data
+    (market consensus, Doyen's model, recent results, NBA/NFL injury reports). Nothing is invented; a
+    line whose data is missing is left out."""
+    out = []
+    q, nb = leg.get("market_prob"), leg.get("price_books")
+    if isinstance(q, (int, float)):
+        out.append(f"{nb} sportsbooks: {round(q * 100)}% likely" if nb else f"Market: {round(q * 100)}% likely")
+    raw = leg.get("raw_prob")
+    if leg.get("prob_source") == "model" and isinstance(raw, (int, float)):
+        out.append(f"Doyen's model: {round(raw * 100)}%")
+    try:
+        ev = con.execute("SELECT sport, home, away, kickoff_utc FROM events WHERE event_id=?", (leg["event_id"],)).fetchone()
+    except Exception:
+        ev = None
+    if ev:
+        forms = [(t, team_form(con, t, ev["sport"], ev["kickoff_utc"])) for t in (ev["home"], ev["away"])]
+        if all(f for _, f in forms):
+            out.append("Last 5: " + " · ".join(f"{t} {f}" for t, f in forms))
+        if leg.get("sport") in ("nba", "nfl"):
+            try:
+                from .sources import espn_extra
+                inj = espn_extra.context_for(con, leg["event_id"], leg["sport"], ev["home"], ev["away"]).get("injuries") or {}
+            except Exception:
+                inj = {}
+            key = {t: [x["player"] for x in v if x.get("key") and x.get("status") in ("Out", "Doubtful")] for t, v in inj.items()}
+            miss = [f"{t}: {', '.join(p[:2])}" + (f" +{len(p) - 2}" if len(p) > 2 else "") for t, p in key.items() if p]
+            if miss:
+                out.append("Key players out: " + "; ".join(miss))
+    return out
+
+
+def annotate(con, recs: list[dict]) -> list[dict]:
+    """Adds `why` lines to every leg of the given cards (display only; never a selection rule)."""
+    for r in recs:
+        for leg in r.get("legs", []):
+            try:
+                leg["why"] = leg_why(con, leg)
+            except Exception:                 # explanations must never stop a build
+                leg["why"] = []
+    return recs
+
+
 def card_problem(rec, now: datetime, day: str | None = None, preview: bool = False) -> str | None:
     """Why an estimated card must NOT be shown. None = it may be shown. Unknown data is rejected.
     With `preview` (issue #58) `day` is a later New York date: the card must be marked as a preview
@@ -832,8 +909,9 @@ def card_problem(rec, now: datetime, day: str | None = None, preview: bool = Fal
     return None
 
 
-def shown(block: dict | None, now: datetime, blocked_events: set | None = None, limit: int = MAX_CARDS) -> list[dict]:
+def shown(block: dict | None, now: datetime, blocked_events: set | None = None, limit: int | None = None) -> list[dict]:
     """Estimated cards the homepage may show, earliest first, skipping games in verified cards."""
+    limit = MAX_CARDS if limit is None else limit
     if not isinstance(block, dict) or block.get("status") != "estimated":
         return []
     from zoneinfo import ZoneInfo
@@ -868,7 +946,7 @@ def build(con, now: datetime, verified_cards: list[dict] | None = None,
     pool, cov = build_pool(con, now)
     cands = search(pool)
     picked = [card(c, day) for c in select(cands, limit, blocked)] if limit else []
-    recs = [r for r in picked if card_problem(r, now, day) is None]
+    recs = annotate(con, [r for r in picked if card_problem(r, now, day) is None])
     return {"status": "estimated", "method": METHOD, "kind": ESTIMATE_KIND, "date": day,
             "timezone": parlays.CARD_TIMEZONE, "generated": now.isoformat(), "badge": BADGE,
             "verified_badge": VERIFIED_BADGE, "empty_text": EMPTY_TEXT, "disclosure": DISCLOSURE,
@@ -889,7 +967,7 @@ def build_preview(con, now: datetime, day: str) -> dict:
     pool, cov = build_pool(con, now, day)
     cands = search(pool)
     picked = [card(c, day, preview=True) for c in select(cands, MAX_CARDS)]
-    recs = [r for r in picked if card_problem(r, now, day, preview=True) is None]
+    recs = annotate(con, [r for r in picked if card_problem(r, now, day, preview=True) is None])
     return {"status": "preview", "preview": True, "method": METHOD, "kind": ESTIMATE_KIND, "date": day,
             "timezone": parlays.CARD_TIMEZONE, "generated": now.isoformat(), "badge": BADGE,
             "preview_badge": PREVIEW_BADGE, "empty_text": PREVIEW_EMPTY_TEXT, "price_rule": PREVIEW_PRICE_RULE,
