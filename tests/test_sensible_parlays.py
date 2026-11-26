@@ -1,5 +1,5 @@
 """Owner decision 2026-11-26 (parlay-estimated-v5): good, sensible parlays. Strong legs only (whole
-market >= 65%, Doyen's model agrees, price >= 1.15), two or three legs, at most three parlays a day,
+market >= 60%, Doyen's model agrees, price >= 1.15), two or three legs, up to five parlays a day,
 and the homework behind each leg. Every game, price and probability here is test data."""
 from datetime import timedelta
 
@@ -20,14 +20,14 @@ def _leg(i, price, q, model=None, **kw):
 
 def test_production_rules():
     assert pe.METHOD == "parlay-estimated-v5" and "parlay-estimated-v4" in pe.LEGACY_METHODS
-    assert (pe.MIN_LEG_MARKET_PROB, pe.MIN_LEG_PRICE, pe.MAX_CARDS) == (0.65, 1.15, 3)
+    assert (pe.MIN_LEG_MARKET_PROB, pe.MIN_LEG_PRICE, pe.MAX_CARDS, pe.PER_SIZE) == (0.60, 1.15, 5, 3)
     assert pe.MIN_COMBINED_ODDS == {"2": 1.6, "3": 1.9} and pe.SIZE_BUCKETS == ((2, 2), (3, 3))
     assert [pe.min_odds(n) for n in (1, 2, 3, 4)] == [None, 1.6, 1.9, None]
 
 
 def test_only_strong_legs_the_model_agrees_with():
     assert pe.sensible(_leg(1, 1.35, 0.70))
-    assert not pe.sensible(_leg(2, 1.60, 0.60))                    # coin-flip-ish: market below 65%
+    assert not pe.sensible(_leg(2, 1.70, 0.55))                    # coin-flip-ish: market below 60%
     assert not pe.sensible(_leg(3, 1.10, 0.88))                    # pays almost nothing
     assert not pe.sensible(_leg(4, 1.35, 0.70, model=0.66))        # Doyen's model disagrees
     assert pe.sensible(_leg(5, 1.35, 0.70, model=0.69))            # within 2 points: agrees
@@ -43,14 +43,14 @@ def test_search_never_uses_a_weak_leg_and_cards_pay_something():
     assert cands and all(x["event_id"] in {s["event_id"] for s in strong} for c in cands for x in c["legs"])
     assert all(c["n_legs"] in (2, 3) for c in cands)
     picked = pe.select(cands)
-    assert 1 <= len(picked) <= 3 and all(pe.qualifies(c) for c in picked)
+    assert 1 <= len(picked) <= 5 and all(pe.qualifies(c) for c in picked)
     short = pe.combo([_leg(20, 1.2, 0.8), _leg(21, 1.2, 0.8)])     # 1.44 combined: below 1.6
     assert not pe.qualifies(short)
 
 
-def test_at_most_three_parlays_a_day():
-    legs = [_leg(i, 1.40, 0.68) for i in range(12)]
-    assert len(pe.select(pe.search(legs))) == 3
+def test_up_to_five_parlays_a_day():
+    legs = [_leg(i, 1.40, 0.68) for i in range(16)]
+    assert len(pe.select(pe.search(legs))) == 5
 
 
 def test_why_lines_come_only_from_stored_data(tmp_path, monkeypatch):

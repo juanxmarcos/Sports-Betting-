@@ -103,24 +103,24 @@ PRICE_BASIS = "consensus"
 MIN_PRICE_BOOKS = 2                          # bookmakers that must price a leg for its typical price
 MAX_MODEL_BELOW_MARKET = 0.02                # model must be >= de-vigged market - 0.02 where a model exists
 # Owner decision 2026-11-26 ("good, sensible parlays, professionally studied; not the ones that pay the
-# most"): every leg must be clearly likely by the whole market (de-vigged consensus >= 65%), Doyen's model
+# most"): every leg must be clearly likely by the whole market (de-vigged consensus >= 60%), Doyen's model
 # must agree where it has one (not below the market by more than MAX_MODEL_BELOW_MARKET), and a leg must
-# still pay something (typical price >= 1.15). Two or three legs, at most three parlays a day. The low
+# still pay something (typical price >= 1.15). Two or three legs, up to five parlays a day. The low
 # minimum combined odds only stop a parlay of near-certainties that pays almost nothing.
-MIN_LEG_MARKET_PROB = 0.65
+MIN_LEG_MARKET_PROB = 0.60                   # 0.65 for a few hours on 2026-11-26; owner wanted more parlays
 MIN_LEG_PRICE = 1.15
 MIN_COMBINED_ODDS = {"2": 1.6, "3": 1.9}      # minimum typical combined odds per size (v4: 2.2 / 3.5 / 6.0)
 TYPICAL_ODDS_LABEL = "Typical odds"
 TYPICAL_ODDS_NOTE = "Typical odds across sportsbooks; your sportsbook's price may differ slightly."
 NY = ZoneInfo(parlays.CARD_TIMEZONE)
 MIN_LEGS, MAX_LEGS = parlays.MIN_LEGS, parlays.MAX_LEGS
-MAX_CARDS = 3                                # owner decision 2026-11-26 (was parlays.CARD_MAX_CARDS = 5)
+MAX_CARDS = parlays.CARD_MAX_CARDS           # owner 2026-11-26: keep up to 5 a day with the stricter legs
 SIZE_BUCKETS = ((2, 2), (3, 3))              # cards are picked per size (issue #54); 4-5 legs dropped 2026-11-26
-PER_SIZE = 2                                 # at most this many cards of one size, within MAX_CARDS
+PER_SIZE = 3                                 # at most this many cards of one size, within MAX_CARDS (2 sizes since v5)
 MAX_WEAK_LEGS = 1                            # legs below their own probability bar per parlay (issue #54)
 WEAK_TOLERANCE = 0.0005                      # card contract: rounding slack on the stored leg probability
 DEFAULT_STAKE = parlays.DEFAULT_STAKE
-BEAM = 120                                   # combinations kept per size (per ranking)
+BEAM = 1000                                  # combinations kept per size (per ranking); 120 before v5 (few strong legs now)
 MAX_EVALUATIONS = 400_000                    # hard stop for the whole search
 EMPTY_TEXT = "No parlays today: no verified quotes, and no games later today meet the estimate rules."
 PREVIEW_DAYS = 3                             # next New York dates previewed (issue #58)
