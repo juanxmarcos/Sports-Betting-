@@ -277,7 +277,7 @@ def test_cards_carry_size_and_ten_dollar_payout():
     c = pe.card(pe.combo([_pool_leg(i, {"B": (2.0, 0.55)}) for i in range(4)]), DAY)
     assert c["n_legs"] == 4 and c["size"] == "4-5" and c["stake"] == 10 and c["min_odds"] == 6.0
     assert c["gross_payout"] == "160.00" and c["estimated_odds"] == 16.0 and c["est_hit_chance"] == round(0.55 ** 4, 4)
-    assert c["price_basis"] == "consensus" and c["method"] == "parlay-estimated-v4" and "bookmaker" not in c
+    assert c["price_basis"] == "consensus" and c["method"] == "parlay-estimated-v5" and "bookmaker" not in c
     assert all(x["price_books"] == 3 for x in c["legs"])
 
 
@@ -429,7 +429,7 @@ def test_build_end_to_end_no_started_yesterday_or_tomorrow_legs(con):
     con.commit()
     b = pe.build(con, NOW)
     assert b["status"] == "estimated" and b["kind"] == "estimated_product" and b["date"] == DAY
-    assert b["method"] == "parlay-estimated-v4" and "same New York day" in b["price_rule"]
+    assert b["method"] == "parlay-estimated-v5" and "same New York day" in b["price_rule"]
     assert "median" in b["price_rule"]
     cov = b["coverage"]
     assert cov["events_today"] == 3 and cov["events_with_fresh_prices"] == 2
@@ -517,7 +517,7 @@ def test_ledger_is_append_only_and_settles_wins_losses_voids_and_open(con, monke
         assert r["bookmaker"] == "consensus"
         for leg in json.loads(r["legs"]):
             assert leg["price_basis"] == "consensus" and leg["price_books"] == 4
-            assert leg["rules_version"] == "parlay-estimated-v4"
+            assert leg["rules_version"] == "parlay-estimated-v5"
     assert pe.ledger_path().read_text() == before                  # settlement never edits the ledger
     assert pe.record_line({"won": 0, "lost": 2, "paper_pl": "-20.00"}) == "Estimated parlays record: 0–2, paper P/L −$20.00"
 
@@ -668,7 +668,7 @@ def test_parlay_rules_page_explains_estimated_mode():
     assert "Estimated parlays" in html and "not a bet-slip quote" in html and "unvalidated" in html
     assert "150 minutes" not in html and "typical odds" in html and "Picked by likelihood" in html
     assert "Estimated parlays record: 1–2, paper P/L −$2.10" in html
-    assert "Picked per size" in html and "2 legs 2.2, 3 legs 3.5, 4–5 legs 6.0" in html
+    assert "Picked per size" in html and "2 legs 1.6, 3 legs 1.9" in html and "Sensible parlays" in html
 
 
 @needs_node

@@ -341,3 +341,13 @@ def test_history_shows_record_by_market_type():
     assert "data-ph-by-market" not in html          # owner removed the by-market table (2026-11-18)
     assert "Arsenal (draw no bet) (push)" in html and "Over 2.5 goals ✓" in html
     assert "(settled at 1.80 after a push)" in html
+
+
+def test_home_card_shows_the_why_line(con):  # owner request 2026-11-26
+    _two_games(con)
+    b = pe.build(con, NOW)
+    assert all(isinstance(leg.get("why"), list) for r in b["recommendations"] for leg in r["legs"])
+    b["recommendations"][0]["legs"][0]["why"] = ["18 sportsbooks: 70% likely", "Last 5: A W W L · B L L D"]
+    html = _run({"data": _data(b), "now": NOW.isoformat()})
+    card = html[html.index("<article"):html.index("</article>")]
+    assert "Why: 18 sportsbooks: 70% likely · Last 5: A W W L · B L L D" in card

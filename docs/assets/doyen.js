@@ -447,7 +447,9 @@
     const odds = r.estimated_odds;
     // Issue #68: an open injury/lineup note is shown on the leg (muted), never used to hide it.
     const note = (l) => (str(l.prob_note) ? `<div class="lg-n" data-prob-note>${esc(l.prob_note)}</div>` : "")
-      + (str(l.risk_note) ? `<div class="lg-n" data-risk-note>${esc(l.risk_note)}</div>` : "");
+      + (str(l.risk_note) ? `<div class="lg-n" data-risk-note>${esc(l.risk_note)}</div>` : "")
+      // Owner request 2026-11-26: the homework behind each leg, built by the site from stored data only.
+      + (Array.isArray(l.why) && l.why.some(str) ? `<div class="lg-n lg-why" data-why>Why: ${l.why.filter(str).map(esc).join(" · ")}</div>` : "");
     const legs = r.legs.map((l) => `<li><div class="lg-t">${legComp(l)}${vs(l.title)}</div><div class="lg-s">${esc(l.selection_text || l.selection)}</div><div class="lg-when">${esc(fmtClock(l.start_utc))}</div>${legPrice(l)}${note(l)}</li>`).join("");
     const hit = typeof r.est_hit_chance === "number" && r.est_hit_chance > 0 && r.est_hit_chance < 1
       ? `<div class="pc-note">Estimated hit chance ${esc(pct(r.est_hit_chance))} (model estimate, unvalidated).</div>` : "";
@@ -724,13 +726,15 @@
       return `<tr><td>${esc(n)} legs</td><td>${esc(g.won)}–${esc(g.lost)}</td><td>${esc(g.open || 0)}</td><td>${esc(g.void || 0)}</td><td>${isFinite(pl) ? sign + usd(Math.abs(pl)) : "–"}</td></tr>`;
     }).join("");
     const byLegs = rows ? `<table class="small" data-by-legs><thead><tr><th>Size</th><th>Won–lost</th><th>Open</th><th>Void</th><th>Paper P/L</th></tr></thead><tbody>${rows}</tbody></table>` : "";
-    const body = `<p class="small">Up to five estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Owner decision (23 Nov 2026): every leg is priced at its <b>typical odds</b>, the median of the latest prices from at least two sportsbooks earlier today (before the game starts; exchanges and aggregates excluded), and the combined odds are the product of those. No sportsbook is named, and your sportsbook's price may differ slightly; it is not a bet-slip quote.</p>
+    const body = `<p class="small">Up to three estimated parlays a day for today's games (New York date), shown with an <b>Estimate</b> badge. Owner decision (23 Nov 2026): every leg is priced at its <b>typical odds</b>, the median of the latest prices from at least two sportsbooks earlier today (before the game starts; exchanges and aggregates excluded), and the combined odds are the product of those. No sportsbook is named, and your sportsbook's price may differ slightly; it is not a bet-slip quote.</p>
       <ul class="small">
-        <li>Two to five legs (cards of 2, 3 and 4–5 legs), one per game, all on games that haven't started. Different games in one competition are allowed; same-game combinations and legs sharing a team or player are not.</li>
+        <li><b>Sensible parlays</b> (owner decision, 26 Nov 2026): every leg must be clearly likely by the whole market (at least 65% once the sportsbooks' margin is removed), Doyen's model must agree where it has one, and each leg must pay at least 1.15. Two or three legs, at most three parlays a day; a day with nothing good shows nothing.</li>
+        <li>Each leg shows <b>Why</b>: how many sportsbooks price it and how likely they rate it, Doyen's model, both teams' last five results and (NBA/NFL) key players out, all from stored data.</li>
+        <li>Two or three legs, one per game, all on games that haven't started. Different games in one competition are allowed; same-game combinations and legs sharing a team or player are not.</li>
         <li>Each leg uses Doyen's model probability, shrunk and capped toward the market. Where Doyen has no model (tennis) it uses a de-vigged market consensus of at least two bookmakers; a leg with neither is skipped. A leg where the model is below the market is skipped.</li>
         <li>NBA and NFL legs can also be a point spread (e.g. “Lakers −4.5”) or a game total (e.g. “Over 228.5 points”). Their probability is the de-vigged market consensus, because Doyen's model did not beat the market in testing; a push on a whole-number line voids the leg.</li>
-        <li>Picked by likelihood, not by price gaps: the goal is the win–loss record at typical odds, not value hunting. The typical price includes the sportsbooks' margin, so no positive value is required. Each card needs minimum combined odds so the payout stays worthwhile: 2 legs 2.2, 3 legs 3.5, 4–5 legs 6.0.</li>
-        <li>Picked per size: the best 4–5 leg, 3-leg and 2-leg parlay, then a second of each while room remains. A size with nothing qualifying is skipped, never padded.</li>
+        <li>Picked by likelihood, not by price gaps: the goal is the win–loss record at typical odds, not value hunting. The typical price includes the sportsbooks' margin, so no positive value is required. Minimum combined odds only stop a parlay that pays almost nothing: 2 legs 1.6, 3 legs 1.9.</li>
+        <li>Picked per size: the best 3-leg and 2-leg parlay, then another while room remains (three at most). A size with nothing qualifying is skipped, never padded.</li>
         <li>Within a size, ranked by estimated hit chance (the leg probabilities multiplied as if the legs were independent; unvalidated).</li>
         <li>Each open card shows a <b>fair price</b>: the combined odds with the sportsbooks' margin removed (each leg's de-vigged market consensus, multiplied). If your sportsbook pays more than the fair price, the parlay is paying more than it should.</li>
         <li>The trust check compares how often Doyen said its parlays would win with how often they did, for parlays since 24 Nov 2026 (the current rules).</li>
