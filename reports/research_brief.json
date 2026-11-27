@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-27T04:38:41+00:00",
+  "generated": "2026-11-27T05:15:24+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
     {
@@ -16,6 +16,21 @@
       "bookmaker": "1xBet",
       "final_prob": 0.29350489017235787,
       "ev": 0.05074750681704111
+    },
+    {
+      "rec_id": "7413175461906808",
+      "event_id": "football:B1:20261127:oud-heverlee-leuven:kortrijk",
+      "league": "B1",
+      "kickoff_utc": "2026-11-27T19:45:00+00:00",
+      "home": "Oud-Heverlee Leuven",
+      "away": "Kortrijk",
+      "market": "1X2",
+      "selection": "H",
+      "line": null,
+      "odds": 1.8698,
+      "bookmaker": "consensus",
+      "final_prob": 0.555068595657482,
+      "ev": 0.037867260160359795
     },
     {
       "rec_id": "61596d2d3692d55f",
@@ -1014,6 +1029,13 @@
       "kickoff_utc": "2026-11-29T01:30:00+00:00",
       "home": "Houston Rockets",
       "away": "Philadelphia 76ers"
+    },
+    {
+      "event_id": "tennis:WTA:20261129:186843",
+      "league": "TENNIS:WTA",
+      "kickoff_utc": "2026-11-29T05:00:00+00:00",
+      "home": "TBD",
+      "away": "TBD"
     }
   ]
 }
