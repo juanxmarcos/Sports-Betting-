@@ -1,18 +1,18 @@
 # Sports Betting Doyen — Daily Report, 2026-11-27
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Fri 27 Nov 00:14 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Fri 27 Nov 14:40 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 239 |
-| Events with fresh odds | 133 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 118 |
-| Markets evaluated | 1138 |
-| Events passing all rules | 18 |
+| Events discovered | 237 |
+| Events with fresh odds | 134 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 123 |
+| Markets evaluated | 1298 |
+| Events passing all rules | 24 |
 | Published today | **1** |
 | Highest estimated EV | +3.8% |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
@@ -63,16 +63,16 @@ Sources:
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
-| Nott'm Forest v Chelsea (E0) | 1X2 D | 3.72 Marathon Bet | 28.5% | +5.8% | +5.8% | ok |
+| Nott'm Forest v Chelsea (E0) | OU under 2.5 | 2.17 Marathon Bet | 49.7% | +8.0% | +8.0% | ok |
+| Swansea v Cardiff (E1) | 1X2 A | 3.45 LeoVegas | 30.9% | +6.5% | +6.5% | ok |
 | Kilmarnock v Hibernian (SC0) | 1X2 A | 2.02 Unibet | 52.2% | +5.4% | +5.4% | ok |
-| Torino v Lazio (I1) | 1X2 D | 3.71 1xBet | 28.3% | +5.1% | +5.1% | ok |
+| Udinese v Fiorentina (I1) | 1X2 D | 3.81 1xBet | 27.6% | +5.3% | +5.3% | ok |
+| Torino v Lazio (I1) | 1X2 D | 3.69 1xBet | 28.4% | +4.7% | +4.7% | ok |
 | Zwolle v AZ Alkmaar (N1) | 1X2 H | 6.10 Unibet | 17.2% | +4.7% | +4.7% | odds outside range |
-| Crystal Palace v Hull (E0) | 1X2 A | 4.25 Unibet | 24.6% | +4.6% | +4.6% | insufficient team history |
-| Como v Juventus (I1) | 1X2 D | 3.85 1xBet | 27.1% | +4.4% | +4.4% | ok |
+| For Sittard v Heerenveen (N1) | 1X2 H | 4.00 Bet365 | 26.2% | +4.6% | +4.6% | ok |
 | Den Haag v Utrecht (N1) | 1X2 H | 2.88 Unibet | 36.1% | +4.0% | +4.0% | ok |
-| Sunderland v Tottenham (E0) | 1X2 D | 3.67 1xBet | 28.3% | +3.9% | +3.9% | ok |
-| Venezia v Bologna (I1) | 1X2 D | 3.46 1xBet | 30.0% | +3.9% | +3.9% | ok |
-| Le Havre v Strasbourg (F1) | 1X2 D | 3.85 1xBet | 26.9% | +3.6% | +3.6% | ok |
+| Le Havre v Strasbourg (F1) | 1X2 D | 3.84 1xBet | 27.0% | +3.8% | +3.8% | ok |
+| Ipswich v Aston Villa (E0) | 1X2 D | 4.11 1xBet | 25.2% | +3.6% | +3.6% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)
