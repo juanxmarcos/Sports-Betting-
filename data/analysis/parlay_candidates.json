@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-26T19:51:14+00:00",
+ "generated": "2026-11-27T04:36:11+00:00",
  "date": "2026-11-26",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
@@ -15,128 +15,68 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 22,
-  "by_sport": {
-   "nfl": {
-    "events": 2,
-    "fresh_prices": 2,
-    "stored_model": 2,
-    "events_with_candidate_legs": 1
-   },
-   "soccer": {
-    "events": 18,
-    "fresh_prices": 18,
-    "events_with_candidate_legs": 15
-   },
-   "tennis": {
-    "events": 2
-   }
-  },
-  "candidate_legs": 21,
-  "events_with_candidate_legs": 16,
-  "pool_legs": 6,
+  "events_today": 0,
+  "by_sport": {},
+  "candidate_legs": 0,
+  "events_with_candidate_legs": 0,
+  "pool_legs": 0,
   "excluded": {
-   "event: model and market disagree strongly": 1,
-   "event: no fresh result-market prices": 2,
-   "event: probability outside research band": 1,
-   "event: too few independent bookmakers": 2,
-   "leg: no bookmaker at or above fair value": 10
+   "leg: no bookmaker at or above fair value": 0
   }
  },
  "search": {
-  "evaluated": 10,
+  "evaluated": 0,
   "by_size": {
-   "2": 7,
-   "3": 3,
-   "4": 0,
-   "5": 0,
-   "6": 0
-  },
-  "passing_by_size": {
-   "2": 3,
+   "2": 0,
    "3": 0,
    "4": 0,
    "5": 0,
    "6": 0
   },
-  "rejected_linked": 7,
+  "passing_by_size": {
+   "2": 0,
+   "3": 0,
+   "4": 0,
+   "5": 0,
+   "6": 0
+  },
+  "rejected_linked": 0,
   "truncated": false,
-  "bookmakers": 2
+  "bookmakers": 0
  },
- "candidates_found": 3,
- "shortlist": [
-  {
-   "id": "pc-732f4e87444e",
-   "bookmaker": "1xBet",
-   "n_legs": 2,
-   "price_kind": "computed_product_not_a_quote",
-   "computed_product_odds": 4.095,
-   "joint_prob_independent": 0.248535,
-   "computed_ev": 0.017752,
-   "production_blockers": [
-    "no verified bookmaker combined quote (price shown is a computed product)",
-    "joint calibration criteria not met"
-   ],
-   "legs": [
-    {
-     "event_id": "football:UECL:20261126:fc-nordsj-lland:panathinaikos",
-     "sport": "soccer",
-     "league": "UECL",
-     "title": "FC Nordsj\u00e6lland v Panathinaikos",
-     "market": "1X2",
-     "selection": "A",
-     "start_utc": "2026-11-26T20:00:00+00:00",
-     "price": 3.15,
-     "fair_prob_ex_book": 0.319183,
-     "model_prob": null,
-     "odds_updated": "2026-11-26T19:52:42+00:00"
-    },
-    {
-     "event_id": "football:UEL:20261126:sunderland:jagiellonia-bialystok",
-     "sport": "soccer",
-     "league": "UEL",
-     "title": "Sunderland v Jagiellonia Bialystok",
-     "market": "1X2",
-     "selection": "H",
-     "start_utc": "2026-11-26T20:00:00+00:00",
-     "price": 1.3,
-     "fair_prob_ex_book": 0.778662,
-     "model_prob": null,
-     "odds_updated": "2026-11-26T19:52:45+00:00"
-    }
-   ]
-  }
- ],
+ "candidates_found": 0,
+ "shortlist": [],
  "baseline_straight_picks": {
-  "straight_picks_seen": 22,
-  "usable_legs_today": 5,
-  "combinations_checked": 26,
-  "passed_leg_screens": 1
+  "straight_picks_seen": 17,
+  "usable_legs_today": 0,
+  "combinations_checked": 0,
+  "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-26T19:52:44+00:00",
-  "credits_spent_last_run": 30,
-  "credits_remaining": "159"
+  "at": "2026-11-27T04:38:18+00:00",
+  "credits_spent_last_run": 10,
+  "credits_remaining": "149"
  },
- "ledger_rows_added": 1,
+ "ledger_rows_added": 0,
  "shadow_settlement": {
   "rows": 5,
   "won": 1,
-  "lost": 1,
+  "lost": 4,
   "void": 0,
-  "open": 3,
-  "expected_wins_settled": 0.682,
+  "open": 0,
+  "expected_wins_settled": 1.546,
   "by_legs": {
    "2": {
     "won": 1,
-    "lost": 1,
+    "lost": 4,
     "void": 0,
-    "open": 3
+    "open": 0
    }
   }
  },
  "why_not_3_to_5": [
-  "Legs cluster in few competitions, and two legs from one competition are never combined.",
+  "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
+  "Only 0 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]
