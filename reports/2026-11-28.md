@@ -1,7 +1,7 @@
 # Sports Betting Doyen — Daily Report, 2026-11-28
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Sat 28 Nov 03:53 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Sat 28 Nov 09:03 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
@@ -32,16 +32,6 @@ No pick is better than a weak pick.
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
-| Cambuur v Sparta Rotterdam (N1) | 1X2 A | 3.55 DraftKings | 31.1% | +10.4% | +10.4% | ok |
-| Torino v Lazio (I1) | 1X2 D | 3.69 1xBet | 28.8% | +6.2% | +6.2% | ok |
-| Como v Juventus (I1) | 1X2 D | 3.85 1xBet | 27.4% | +5.4% | +5.4% | ok |
-| Udinese v Fiorentina (I1) | 1X2 D | 3.81 1xBet | 27.6% | +5.3% | +5.3% | ok |
-| Paderborn v Schalke 04 (D1) | 1X2 D | 3.79 1xBet | 27.7% | +4.9% | +4.9% | insufficient team history |
-| Crystal Palace v Hull (E0) | 1X2 D | 4.00 1xBet | 26.2% | +4.8% | +4.8% | insufficient team history |
-| For Sittard v Heerenveen (N1) | 1X2 H | 4.00 Bet365 | 26.2% | +4.6% | +4.6% | ok |
-| Man City v Leeds (E0) | 1X2 A | 5.86 1xBet | 17.8% | +4.5% | +4.5% | ok |
-| Fulham v Bournemouth (E0) | 1X2 D | 3.72 1xBet | 28.0% | +4.2% | +4.2% | ok |
-| Lommel SK v Waregem (B1) | 1X2 A | 2.45 Bwin | 42.3% | +3.6% | +3.6% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)

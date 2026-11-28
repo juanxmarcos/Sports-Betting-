@@ -1,37 +1,7 @@
 {
-  "generated": "2026-11-28T08:55:29+00:00",
+  "generated": "2026-11-28T14:02:33+00:00",
   "instructions": "For each open selection, check team news (injuries, suspensions, expected/confirmed lineups, rotation, motivation, schedule congestion, weather, travel). Record each finding with `python -m sbi note --event <event_id> --category <cat> --evidence-type <verified_fact|interpretation|speculation> --direction <supports|against|neutral> --claim '<text>' --url <source>`. Only 'verified_fact' needs a primary/reputable source URL. Never alter probabilities or odds. Do not invent information; if nothing is found, record nothing.",
   "open_selections": [
-    {
-      "rec_id": "87157fd19db1f2cc",
-      "event_id": "football:E1:20261128:preston:norwich",
-      "league": "E1",
-      "kickoff_utc": "2026-11-28T12:30:00+00:00",
-      "home": "Preston",
-      "away": "Norwich",
-      "market": "1X2",
-      "selection": "A",
-      "line": null,
-      "odds": 1.73,
-      "bookmaker": "LeoVegas",
-      "final_prob": 0.603899314246232,
-      "ev": 0.04474581364598129
-    },
-    {
-      "rec_id": "c1c64919213c8be3",
-      "event_id": "football:SP1:20261128:betis:vallecano",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-28T13:00:00+00:00",
-      "home": "Betis",
-      "away": "Vallecano",
-      "market": "1X2",
-      "selection": "D",
-      "line": null,
-      "odds": 4.7,
-      "bookmaker": "Unibet",
-      "final_prob": 0.22643488316754648,
-      "ev": 0.06424395088746858
-    },
     {
       "rec_id": "1ff1011f8fa08e5c",
       "event_id": "football:E1:20261128:millwall:burnley",
@@ -409,41 +379,6 @@
     }
   ],
   "upcoming_events": [
-    {
-      "event_id": "football:E1:20261128:blackburn:charlton",
-      "league": "E1",
-      "kickoff_utc": "2026-11-28T12:30:00+00:00",
-      "home": "Blackburn",
-      "away": "Charlton"
-    },
-    {
-      "event_id": "football:E1:20261128:lincoln:wolves",
-      "league": "E1",
-      "kickoff_utc": "2026-11-28T12:30:00+00:00",
-      "home": "Lincoln",
-      "away": "Wolves"
-    },
-    {
-      "event_id": "football:E1:20261128:preston:norwich",
-      "league": "E1",
-      "kickoff_utc": "2026-11-28T12:30:00+00:00",
-      "home": "Preston",
-      "away": "Norwich"
-    },
-    {
-      "event_id": "football:SP1:20261128:betis:vallecano",
-      "league": "SP1",
-      "kickoff_utc": "2026-11-28T13:00:00+00:00",
-      "home": "Betis",
-      "away": "Vallecano"
-    },
-    {
-      "event_id": "football:I1:20261128:frosinone:parma",
-      "league": "I1",
-      "kickoff_utc": "2026-11-28T14:00:00+00:00",
-      "home": "Frosinone",
-      "away": "Parma"
-    },
     {
       "event_id": "football:D1:20261128:fc-koln:elversberg",
       "league": "D1",
