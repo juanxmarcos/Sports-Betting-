@@ -1,18 +1,18 @@
-# Sports Betting Doyen — Daily Report, 2026-11-27
+# Sports Betting Doyen — Daily Report, 2026-11-28
 
 *Research and paper-trading only. Not financial advice. No bets are placed automatically.
-All times America/New_York. Generated Fri 27 Nov 23:19 EST. Model `dc-0.1`.*
+All times America/New_York. Generated Sat 28 Nov 03:53 EST. Model `dc-0.1`.*
 
 ## Daily overview
 
 | Item | Value |
 |---|---|
 | Period | next 7 days (rolling 168h, same as the website "This Week") |
-| Events discovered | 222 |
-| Events with fresh odds | 124 |
-| Events fully evaluated (3+ independent bookmakers, complete history) | 110 |
-| Markets evaluated | 1013 |
-| Events passing all rules | 20 |
+| Events discovered | 230 |
+| Events with fresh odds | 126 |
+| Events fully evaluated (3+ independent bookmakers, complete history) | 100 |
+| Markets evaluated | 963 |
+| Events passing all rules | 18 |
 | Published today | **0** |
 | Highest estimated EV | — |
 | Blend weight on model (1X2/OU/AH) | 0.00/0.00/0.00 |
@@ -32,16 +32,16 @@ No pick is better than a weak pick.
 
 | Match | Market | Odds | Final p | EV | Pess. EV | Status |
 |---|---|---|---|---|---|---|
-| Blackburn v Charlton (E1) | 1X2 A | 4.10 LeoVegas | 26.2% | +7.4% | +7.4% | ok |
-| Kilmarnock v Hibernian (SC0) | 1X2 A | 2.02 Unibet | 52.2% | +5.4% | +5.4% | ok |
+| Cambuur v Sparta Rotterdam (N1) | 1X2 A | 3.55 DraftKings | 31.1% | +10.4% | +10.4% | ok |
+| Torino v Lazio (I1) | 1X2 D | 3.69 1xBet | 28.8% | +6.2% | +6.2% | ok |
+| Como v Juventus (I1) | 1X2 D | 3.85 1xBet | 27.4% | +5.4% | +5.4% | ok |
 | Udinese v Fiorentina (I1) | 1X2 D | 3.81 1xBet | 27.6% | +5.3% | +5.3% | ok |
-| Torino v Lazio (I1) | 1X2 D | 3.69 1xBet | 28.4% | +4.7% | +4.7% | ok |
+| Paderborn v Schalke 04 (D1) | 1X2 D | 3.79 1xBet | 27.7% | +4.9% | +4.9% | insufficient team history |
+| Crystal Palace v Hull (E0) | 1X2 D | 4.00 1xBet | 26.2% | +4.8% | +4.8% | insufficient team history |
 | For Sittard v Heerenveen (N1) | 1X2 H | 4.00 Bet365 | 26.2% | +4.6% | +4.6% | ok |
-| Le Havre v Strasbourg (F1) | 1X2 D | 3.84 1xBet | 27.0% | +3.8% | +3.8% | ok |
-| Ipswich v Aston Villa (E0) | 1X2 D | 4.11 1xBet | 25.2% | +3.6% | +3.6% | ok |
-| Arsenal v Man City (E0) | 1X2 D | 3.96 Marathon Bet | 26.1% | +3.5% | +3.5% | ok |
-| Como v Juventus (I1) | 1X2 D | 3.85 1xBet | 26.9% | +3.5% | +3.5% | ok |
-| Valencia v Osasuna (SP1) | 1X2 D | 3.45 1xBet | 30.0% | +3.5% | +3.5% | ok |
+| Man City v Leeds (E0) | 1X2 A | 5.86 1xBet | 17.8% | +4.5% | +4.5% | ok |
+| Fulham v Bournemouth (E0) | 1X2 D | 3.72 1xBet | 28.0% | +4.2% | +4.2% | ok |
+| Lommel SK v Waregem (B1) | 1X2 A | 2.45 Bwin | 42.3% | +3.6% | +3.6% | ok |
 
 
 ## International fixtures — model monitoring (not recommendations)

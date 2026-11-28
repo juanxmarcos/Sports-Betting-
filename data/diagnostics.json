@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-28T04:21:26+00:00",
+  "generated": "2026-11-28T08:55:24+00:00",
   "funnel_7d": {
     "soccer": {
       "funnel": {
@@ -8,27 +8,29 @@
         "3_valid_forecast": 109,
         "4_fresh_odds_available": 107,
         "4b_stale_odds_only": 0,
-        "5_three_plus_bookmakers": 102,
-        "5b_fully_evaluated": 93,
-        "6_markets_evaluated": 815,
-        "7_markets_positive_ev": 89,
-        "8_events_positive_ev": 61,
-        "9_events_passing_all_rules": 19,
+        "5_three_plus_bookmakers": 98,
+        "5b_fully_evaluated": 89,
+        "6_markets_evaluated": 799,
+        "7_markets_positive_ev": 84,
+        "8_events_positive_ev": 60,
+        "9_events_passing_all_rules": 17,
         "10_final_recommendations": 25
       },
       "market_rejections": {
-        "too few bookmakers": 350,
-        "EV below threshold": 334,
-        "insufficient team history": 74,
-        "odds outside range": 38
+        "too few bookmakers": 343,
+        "EV below threshold": 327,
+        "insufficient team history": 76,
+        "odds outside range": 35,
+        "extreme disagreement (review)": 1
       },
       "primary_blocker_by_event": {
-        "EV below threshold": 60,
-        "qualified": 19,
-        "too few bookmakers": 11,
+        "EV below threshold": 59,
+        "qualified": 17,
+        "too few bookmakers": 14,
         "insufficient team history": 10,
-        "odds outside range": 7,
-        "no odds": 2
+        "odds outside range": 6,
+        "no odds": 2,
+        "extreme disagreement (review)": 1
       }
     },
     "nfl": {
@@ -38,56 +40,56 @@
         "3_valid_forecast": 12,
         "4_fresh_odds_available": 12,
         "4b_stale_odds_only": 0,
-        "5_three_plus_bookmakers": 12,
-        "5b_fully_evaluated": 12,
-        "6_markets_evaluated": 132,
-        "7_markets_positive_ev": 6,
-        "8_events_positive_ev": 5,
+        "5_three_plus_bookmakers": 6,
+        "5b_fully_evaluated": 6,
+        "6_markets_evaluated": 82,
+        "7_markets_positive_ev": 5,
+        "8_events_positive_ev": 4,
         "9_events_passing_all_rules": 1,
         "10_final_recommendations": 2
       },
       "market_rejections": {
-        "EV below threshold": 66,
-        "too few bookmakers": 62,
-        "odds outside range": 3
+        "too few bookmakers": 56,
+        "EV below threshold": 25
       },
       "primary_blocker_by_event": {
-        "EV below threshold": 8,
-        "too few bookmakers": 3,
+        "too few bookmakers": 6,
+        "EV below threshold": 5,
         "qualified": 1
       }
     },
     "nba": {
       "funnel": {
-        "1_events_discovered": 44,
-        "2_complete_history": 44,
-        "3_valid_forecast": 44,
-        "4_fresh_odds_available": 5,
+        "1_events_discovered": 48,
+        "2_complete_history": 48,
+        "3_valid_forecast": 48,
+        "4_fresh_odds_available": 7,
         "4b_stale_odds_only": 0,
         "5_three_plus_bookmakers": 5,
         "5b_fully_evaluated": 5,
-        "6_markets_evaluated": 66,
+        "6_markets_evaluated": 82,
         "7_markets_positive_ev": 0,
         "8_events_positive_ev": 0,
         "9_events_passing_all_rules": 0,
         "10_final_recommendations": 0
       },
       "market_rejections": {
+        "too few bookmakers": 46,
         "EV below threshold": 34,
-        "too few bookmakers": 30,
         "odds outside range": 2
       },
       "primary_blocker_by_event": {
-        "no odds": 39,
+        "no odds": 41,
         "EV below threshold": 3,
-        "odds outside range": 2
+        "odds outside range": 2,
+        "too few bookmakers": 2
       }
     },
     "tennis": {
       "funnel": {
-        "1_events_discovered": 57,
+        "1_events_discovered": 61,
         "2_complete_history": 2,
-        "3_valid_forecast": 57,
+        "3_valid_forecast": 61,
         "4_fresh_odds_available": 0,
         "4b_stale_odds_only": 0,
         "5_three_plus_bookmakers": 0,
@@ -100,7 +102,7 @@
       },
       "market_rejections": {},
       "primary_blocker_by_event": {
-        "no odds": 57
+        "no odds": 61
       }
     }
   },
@@ -112,26 +114,28 @@
         "3_valid_forecast": 79,
         "4_fresh_odds_available": 79,
         "4b_stale_odds_only": 0,
-        "5_three_plus_bookmakers": 77,
-        "5b_fully_evaluated": 70,
-        "6_markets_evaluated": 651,
-        "7_markets_positive_ev": 70,
-        "8_events_positive_ev": 46,
-        "9_events_passing_all_rules": 13,
+        "5_three_plus_bookmakers": 71,
+        "5b_fully_evaluated": 65,
+        "6_markets_evaluated": 631,
+        "7_markets_positive_ev": 63,
+        "8_events_positive_ev": 44,
+        "9_events_passing_all_rules": 12,
         "10_final_recommendations": 25
       },
       "market_rejections": {
-        "too few bookmakers": 288,
-        "EV below threshold": 261,
-        "insufficient team history": 61,
-        "odds outside range": 28
+        "too few bookmakers": 278,
+        "EV below threshold": 256,
+        "insufficient team history": 59,
+        "odds outside range": 25,
+        "extreme disagreement (review)": 1
       },
       "primary_blocker_by_event": {
-        "EV below threshold": 45,
-        "qualified": 13,
-        "too few bookmakers": 8,
+        "EV below threshold": 42,
+        "qualified": 12,
+        "too few bookmakers": 12,
         "insufficient team history": 7,
-        "odds outside range": 6
+        "odds outside range": 5,
+        "extreme disagreement (review)": 1
       }
     },
     "nfl": {
@@ -141,22 +145,21 @@
         "3_valid_forecast": 10,
         "4_fresh_odds_available": 10,
         "4b_stale_odds_only": 0,
-        "5_three_plus_bookmakers": 10,
-        "5b_fully_evaluated": 10,
-        "6_markets_evaluated": 110,
-        "7_markets_positive_ev": 5,
-        "8_events_positive_ev": 4,
+        "5_three_plus_bookmakers": 4,
+        "5b_fully_evaluated": 4,
+        "6_markets_evaluated": 60,
+        "7_markets_positive_ev": 4,
+        "8_events_positive_ev": 3,
         "9_events_passing_all_rules": 1,
         "10_final_recommendations": 1
       },
       "market_rejections": {
-        "EV below threshold": 54,
-        "too few bookmakers": 52,
-        "odds outside range": 3
+        "too few bookmakers": 44,
+        "EV below threshold": 15
       },
       "primary_blocker_by_event": {
-        "EV below threshold": 6,
-        "too few bookmakers": 3,
+        "too few bookmakers": 6,
+        "EV below threshold": 3,
         "qualified": 1
       }
     },
@@ -169,7 +172,7 @@
         "4b_stale_odds_only": 0,
         "5_three_plus_bookmakers": 5,
         "5b_fully_evaluated": 5,
-        "6_markets_evaluated": 66,
+        "6_markets_evaluated": 70,
         "7_markets_positive_ev": 0,
         "8_events_positive_ev": 0,
         "9_events_passing_all_rules": 0,
@@ -177,7 +180,7 @@
       },
       "market_rejections": {
         "EV below threshold": 34,
-        "too few bookmakers": 30,
+        "too few bookmakers": 34,
         "odds outside range": 2
       },
       "primary_blocker_by_event": {
@@ -188,9 +191,9 @@
     },
     "tennis": {
       "funnel": {
-        "1_events_discovered": 3,
+        "1_events_discovered": 36,
         "2_complete_history": 2,
-        "3_valid_forecast": 3,
+        "3_valid_forecast": 36,
         "4_fresh_odds_available": 0,
         "4b_stale_odds_only": 0,
         "5_three_plus_bookmakers": 0,
@@ -203,90 +206,90 @@
       },
       "market_rejections": {},
       "primary_blocker_by_event": {
-        "no odds": 3
+        "no odds": 36
       }
     }
   },
   "providers": {
     "football-data:fixtures": {
-      "last_success": "2026-11-28T04:19:31+00:00",
+      "last_success": "2026-11-28T08:53:53+00:00",
       "last_error": null,
       "rows": 93
     },
     "football-data:E0": {
-      "last_success": "2026-11-28T04:19:32+00:00",
+      "last_success": "2026-11-28T08:53:53+00:00",
       "last_error": null,
       "rows": 110
     },
     "football-data:E1": {
-      "last_success": "2026-11-28T04:19:33+00:00",
+      "last_success": "2026-11-28T08:53:53+00:00",
       "last_error": null,
       "rows": 204
     },
     "football-data:SP1": {
-      "last_success": "2026-11-28T04:19:34+00:00",
+      "last_success": "2026-11-28T08:53:53+00:00",
       "last_error": null,
       "rows": 129
     },
     "football-data:D1": {
-      "last_success": "2026-11-28T04:19:35+00:00",
+      "last_success": "2026-11-28T08:53:53+00:00",
       "last_error": null,
       "rows": 90
     },
     "football-data:I1": {
-      "last_success": "2026-11-28T04:19:36+00:00",
+      "last_success": "2026-11-28T08:53:53+00:00",
       "last_error": null,
       "rows": 120
     },
     "football-data:F1": {
-      "last_success": "2026-11-28T04:19:37+00:00",
+      "last_success": "2026-11-28T08:53:54+00:00",
       "last_error": null,
       "rows": 99
     },
     "football-data:N1": {
-      "last_success": "2026-11-28T04:19:38+00:00",
+      "last_success": "2026-11-28T08:53:54+00:00",
       "last_error": null,
       "rows": 117
     },
     "football-data:P1": {
-      "last_success": "2026-11-28T04:19:39+00:00",
+      "last_success": "2026-11-28T08:53:54+00:00",
       "last_error": null,
       "rows": 98
     },
     "football-data:B1": {
-      "last_success": "2026-11-28T04:19:39+00:00",
+      "last_success": "2026-11-28T08:53:54+00:00",
       "last_error": null,
       "rows": 108
     },
     "football-data:SC0": {
-      "last_success": "2026-11-28T04:19:41+00:00",
+      "last_success": "2026-11-28T08:53:54+00:00",
       "last_error": null,
       "rows": 83
     },
     "espn:international": {
-      "last_success": "2026-11-28T04:20:52+00:00",
+      "last_success": "2026-11-28T08:54:53+00:00",
       "last_error": null,
       "rows": 54
     },
     "the-odds-api": {
-      "last_success": "2026-11-28T04:21:10+00:00",
+      "last_success": "2026-11-28T08:55:04+00:00",
       "last_error": "2026-11-26T05:17:11+00:00 The Odds API quota/rate limit reached (HTTP 429)",
-      "rows": 2028
+      "rows": 5833
     },
     "espn:nfl": {
-      "last_success": "2026-11-28T04:20:53+00:00",
+      "last_success": "2026-11-28T08:54:53+00:00",
       "last_error": null,
       "rows": 16
     },
     "espn:nba": {
-      "last_success": "2026-11-28T04:20:53+00:00",
+      "last_success": "2026-11-28T08:54:53+00:00",
       "last_error": null,
       "rows": 59
     },
     "espn:tennis": {
-      "last_success": "2026-11-28T04:21:24+00:00",
+      "last_success": "2026-11-28T08:55:20+00:00",
       "last_error": null,
-      "rows": 57
+      "rows": 61
     },
     "espn:golf": {
       "last_success": "2026-11-12T20:55:40+00:00",
@@ -294,14 +297,14 @@
       "rows": 2
     },
     "espn:context": {
-      "last_success": "2026-11-28T04:21:04+00:00",
+      "last_success": "2026-11-28T08:55:00+00:00",
       "last_error": null,
-      "rows": 5
+      "rows": 12
     },
     "espn:club-fixtures": {
-      "last_success": "2026-11-28T04:20:12+00:00",
+      "last_success": "2026-11-28T08:54:20+00:00",
       "last_error": null,
-      "rows": 47
+      "rows": 0
     }
   },
   "odds_freshness": {
@@ -309,7 +312,7 @@
       "events_with_odds": 107,
       "median_odds_age_h": 0.0,
       "median_bookmakers": 27,
-      "share_3plus_books": 0.97
+      "share_3plus_books": 0.99
     },
     "nfl": {
       "events_with_odds": 12,
@@ -318,10 +321,10 @@
       "share_3plus_books": 1.0
     },
     "nba": {
-      "events_with_odds": 5,
+      "events_with_odds": 7,
       "median_odds_age_h": 0.0,
-      "median_bookmakers": 19,
-      "share_3plus_books": 1.0
+      "median_bookmakers": 18,
+      "share_3plus_books": 0.71
     },
     "tennis": {
       "events_with_odds": 0,
@@ -332,16 +335,19 @@
   },
   "odds_api": {
     "skipped": null,
-    "credits_remaining_after": "110",
-    "credits_spent": 7,
+    "credits_remaining_after": "96",
+    "credits_spent": 14,
     "fetched": [
-      "basketball_nba",
       "soccer_efl_champ",
-      "soccer_spain_la_liga"
+      "soccer_spain_la_liga",
+      "soccer_italy_serie_a",
+      "soccer_germany_bundesliga",
+      "soccer_belgium_first_div",
+      "soccer_epl",
+      "soccer_spl"
     ],
-    "matched": 27,
+    "matched": 80,
     "unmatched": [
-      "basketball_nba: Atlanta Hawks v Philadelphia 76ers",
       "soccer_efl_champ: Lincoln City v Wolverhampton Wanderers",
       "soccer_efl_champ: Queens Park Rangers v Sheffield United"
     ],

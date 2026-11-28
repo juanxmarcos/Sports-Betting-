@@ -1,6 +1,6 @@
 {
- "generated": "2026-11-28T04:19:29+00:00",
- "date": "2026-11-27",
+ "generated": "2026-11-28T08:53:51+00:00",
+ "date": "2026-11-28",
  "timezone": "America/New_York",
  "method": "parlay-fullslate-shadow-v1",
  "price_kind": "computed_product_not_a_quote",
@@ -15,68 +15,229 @@
   "max_evaluations": 250000
  },
  "coverage": {
-  "events_today": 0,
-  "by_sport": {},
-  "candidate_legs": 0,
-  "events_with_candidate_legs": 0,
-  "pool_legs": 0,
+  "events_today": 53,
+  "by_sport": {
+   "nba": {
+    "events": 5,
+    "fresh_prices": 5,
+    "stored_model": 5,
+    "events_with_candidate_legs": 4
+   },
+   "soccer": {
+    "events": 46,
+    "fresh_prices": 46,
+    "stored_model": 46,
+    "events_with_candidate_legs": 31
+   },
+   "tennis": {
+    "events": 2
+   }
+  },
+  "candidate_legs": 45,
+  "events_with_candidate_legs": 35,
+  "pool_legs": 10,
   "excluded": {
-   "leg: no bookmaker at or above fair value": 0
+   "event: model and market disagree strongly": 2,
+   "event: no fresh result-market prices": 2,
+   "event: probability outside research band": 6,
+   "event: too few independent bookmakers": 8,
+   "leg: no bookmaker at or above fair value": 25
   }
  },
  "search": {
-  "evaluated": 0,
+  "evaluated": 16,
   "by_size": {
-   "2": 0,
-   "3": 0,
-   "4": 0,
+   "2": 11,
+   "3": 4,
+   "4": 1,
    "5": 0,
    "6": 0
   },
   "passing_by_size": {
-   "2": 0,
-   "3": 0,
+   "2": 9,
+   "3": 2,
    "4": 0,
    "5": 0,
    "6": 0
   },
-  "rejected_linked": 0,
+  "rejected_linked": 5,
   "truncated": false,
-  "bookmakers": 0
+  "bookmakers": 6
  },
- "candidates_found": 0,
- "shortlist": [],
+ "candidates_found": 11,
+ "shortlist": [
+  {
+   "id": "pc-4b4283db206d",
+   "bookmaker": "DraftKings",
+   "n_legs": 2,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 6.2808,
+   "joint_prob_independent": 0.179891,
+   "computed_ev": 0.129855,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "football:F1:20261128:nice:troyes",
+     "sport": "soccer",
+     "league": "F1",
+     "title": "Nice v Troyes",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-28T19:45:00+00:00",
+     "price": 1.7692307692307692,
+     "fair_prob_ex_book": 0.578217,
+     "model_prob": 0.515471,
+     "odds_updated": "2026-11-28T08:54:54+00:00"
+    },
+    {
+     "event_id": "football:N1:20261128:cambuur:sparta-rotterdam",
+     "sport": "soccer",
+     "league": "N1",
+     "title": "Cambuur v Sparta Rotterdam",
+     "market": "1X2",
+     "selection": "A",
+     "start_utc": "2026-11-28T20:00:00+00:00",
+     "price": 3.55,
+     "fair_prob_ex_book": 0.311113,
+     "model_prob": 0.209669,
+     "odds_updated": "2026-11-28T08:54:54+00:00"
+    }
+   ]
+  },
+  {
+   "id": "pc-cfbec32f341b",
+   "bookmaker": "1xBet",
+   "n_legs": 3,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 3.817,
+   "joint_prob_independent": 0.269389,
+   "computed_ev": 0.028269,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "football:E0:20261128:leeds:coventry",
+     "sport": "soccer",
+     "league": "E0",
+     "title": "Leeds v Coventry",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-28T15:00:00+00:00",
+     "price": 1.53,
+     "fair_prob_ex_book": 0.660452,
+     "model_prob": 0.568693,
+     "odds_updated": "2026-11-28T08:55:03+00:00"
+    },
+    {
+     "event_id": "football:D1:20261128:stuttgart:ein-frankfurt",
+     "sport": "soccer",
+     "league": "D1",
+     "title": "Stuttgart v Ein Frankfurt",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-28T17:30:00+00:00",
+     "price": 1.89,
+     "fair_prob_ex_book": 0.535975,
+     "model_prob": 0.586569,
+     "odds_updated": "2026-11-28T08:54:54+00:00"
+    },
+    {
+     "event_id": "football:I1:20261128:inter:genoa",
+     "sport": "soccer",
+     "league": "I1",
+     "title": "Inter v Genoa",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-28T19:45:00+00:00",
+     "price": 1.32,
+     "fair_prob_ex_book": 0.761016,
+     "model_prob": 0.759041,
+     "odds_updated": "2026-11-28T08:54:56+00:00"
+    }
+   ]
+  },
+  {
+   "id": "pc-63fefb30e786",
+   "bookmaker": "Unibet",
+   "n_legs": 2,
+   "price_kind": "computed_product_not_a_quote",
+   "computed_product_odds": 5.301,
+   "joint_prob_independent": 0.193265,
+   "computed_ev": 0.024496,
+   "production_blockers": [
+    "no verified bookmaker combined quote (price shown is a computed product)",
+    "joint calibration criteria not met"
+   ],
+   "legs": [
+    {
+     "event_id": "football:E0:20261128:man-united:brentford",
+     "sport": "soccer",
+     "league": "E0",
+     "title": "Man United v Brentford",
+     "market": "1X2",
+     "selection": "A",
+     "start_utc": "2026-11-28T15:00:00+00:00",
+     "price": 3.1,
+     "fair_prob_ex_book": 0.329971,
+     "model_prob": 0.350152,
+     "odds_updated": "2026-11-28T08:55:03+00:00"
+    },
+    {
+     "event_id": "football:E1:20261128:west-ham:stoke",
+     "sport": "soccer",
+     "league": "E1",
+     "title": "West Ham v Stoke",
+     "market": "1X2",
+     "selection": "H",
+     "start_utc": "2026-11-28T15:00:00+00:00",
+     "price": 1.71,
+     "fair_prob_ex_book": 0.585702,
+     "model_prob": 0.517871,
+     "odds_updated": "2026-11-28T08:54:55+00:00"
+    }
+   ]
+  }
+ ],
  "baseline_straight_picks": {
-  "straight_picks_seen": 13,
+  "straight_picks_seen": 8,
   "usable_legs_today": 0,
   "combinations_checked": 0,
   "passed_leg_screens": 0
  },
  "quota": {
-  "at": "2026-11-28T04:21:08+00:00",
-  "credits_spent_last_run": 7,
-  "credits_remaining": "110"
+  "at": "2026-11-28T08:55:02+00:00",
+  "credits_spent_last_run": 14,
+  "credits_remaining": "96"
  },
- "ledger_rows_added": 0,
+ "ledger_rows_added": 3,
  "shadow_settlement": {
-  "rows": 7,
+  "rows": 10,
   "won": 1,
-  "lost": 5,
+  "lost": 6,
   "void": 0,
-  "open": 1,
-  "expected_wins_settled": 1.844,
+  "open": 3,
+  "expected_wins_settled": 1.948,
   "by_legs": {
    "2": {
     "won": 1,
-    "lost": 5,
+    "lost": 6,
+    "void": 0,
+    "open": 2
+   },
+   "3": {
+    "won": 0,
+    "lost": 0,
     "void": 0,
     "open": 1
    }
   }
  },
  "why_not_3_to_5": [
-  "No combination of today's legs is priced at or above leave-one-out fair value at one bookmaker after the screens; 0 candidates is the honest result.",
-  "Only 0 leg(s) are at or above fair value at any bookmaker.",
   "Every candidate is shadow: no free source returns a bookmaker's own combined price, so the shown price is a computed product of single-market prices, not a quote.",
   "Joint calibration not passed (66 disjoint settled pairs of 200 required; 2-leg, six club leagues only)."
  ]
